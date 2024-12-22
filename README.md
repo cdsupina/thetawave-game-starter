@@ -7,3 +7,7 @@ rustup component add rustc-codegen-cranelift-preview --toolchain nightly
 ```bash
 cargo build
 ```
+## Run
+```bash
+cargo run
+```
