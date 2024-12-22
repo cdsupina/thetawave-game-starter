@@ -1,6 +1,11 @@
-use bevy::{asset::Handle, image::Image, prelude::Resource};
+use bevy::{
+    asset::Handle,
+    image::Image,
+    prelude::{Res, Resource},
+};
 use bevy_asset_loader::asset_collection::AssetCollection;
 use bevy_hui::prelude::HtmlTemplate;
+use rand::Rng;
 
 // Main menu assets including HTML templates for various UI components
 #[derive(AssetCollection, Resource)]
@@ -19,7 +24,14 @@ pub(crate) struct MainMenuAssets {
 // Assets for background images
 #[derive(AssetCollection, Resource)]
 pub(crate) struct BackgroundAssets {
-    // Blue space background image
-    #[asset(path = "media/images/backgrounds/blue.png")]
-    pub blue_space_bg: Handle<Image>,
+    // all space backgrounds
+    #[asset(path = "media/images/backgrounds", collection(typed))]
+    pub space_backgrounds: Vec<Handle<Image>>,
+}
+
+impl BackgroundAssets {
+    pub(crate) fn get_random_space_bg(&self) -> Handle<Image> {
+        self.space_backgrounds[rand::thread_rng().gen_range(0..self.space_backgrounds.len())]
+            .clone()
+    }
 }

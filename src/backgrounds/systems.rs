@@ -17,10 +17,10 @@ pub(super) fn spawn_bg(
 ) {
     // Create a semi-transparent material with the blue space background texture
     let material_handle = materials.add(StandardMaterial {
-        base_color_texture: Some(bg_assets.blue_space_bg.clone()),
+        base_color_texture: Some(bg_assets.get_random_space_bg()),
         unlit: true,
         alpha_mode: AlphaMode::Blend,
-        base_color: Color::default().with_alpha(0.6),
+        base_color: Color::default().with_alpha(0.1),
         ..default()
     });
     // Spawn a rectangle mesh with material and transform
