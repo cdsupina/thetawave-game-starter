@@ -1,0 +1,30 @@
+<template>
+    <node padding="1.5vh">
+        <image
+            src="media/images/ui/menu_button_released.png"
+            width="360px"
+            height="80px"
+        >
+            <button
+                id="button"
+                padding="10px"
+                margin="30px 75px 40px 75px"
+                on_press="{action}"
+                justify_content="center"
+                width="100%"
+                height="45px"
+            >
+                <text
+                    watch="button"
+                    font_size="20"
+                    font_color="#FFF"
+                    hover:font_color="#752"
+                    position="absolute"
+                    bottom="30%"
+                >
+                    {text}
+                </text>
+            </button>
+        </image>
+    </node>
+</template>
