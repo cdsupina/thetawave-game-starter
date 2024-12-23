@@ -5,6 +5,7 @@ use bevy::{
     math::Vec3,
     pbr::{MeshMaterial3d, StandardMaterial},
     prelude::{AlphaMode, Commands, Mesh, Mesh3d, Rectangle, Res, ResMut, Transform},
+    scene::SceneRoot,
     utils::default,
 };
 
@@ -29,4 +30,6 @@ pub(super) fn spawn_bg(
         MeshMaterial3d(material_handle),
         Transform::default().with_scale(Vec3::splat(250.0).with_z(-10.0)),
     ));
+
+    cmds.spawn(SceneRoot(bg_assets.get_random_planet()));
 }
