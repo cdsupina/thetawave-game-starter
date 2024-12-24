@@ -8,6 +8,7 @@ use bevy::{
     scene::SceneRoot,
     utils::default,
 };
+use rand::Rng;
 
 /// Function to spawn a background element in the game
 pub(super) fn spawn_bg(
@@ -28,8 +29,19 @@ pub(super) fn spawn_bg(
     cmds.spawn((
         Mesh3d(meshes.add(Rectangle::default())),
         MeshMaterial3d(material_handle),
-        Transform::default().with_scale(Vec3::splat(250.0).with_z(-10.0)),
+        Transform::default()
+            .with_scale(Vec3::splat(250.0))
+            .with_translation(Vec3::new(0.0, 0.0, -100.0)),
     ));
 
-    cmds.spawn(SceneRoot(bg_assets.get_random_planet()));
+    // give planet a random position
+    let mut rng = rand::thread_rng();
+    cmds.spawn((
+        SceneRoot(bg_assets.get_random_planet()),
+        Transform::default().with_translation(Vec3::new(
+            rng.gen_range(-12.0..=12.0),
+            rng.gen_range(-8.0..=8.0),
+            rng.gen_range(-30.0..=-15.0),
+        )),
+    ));
 }
