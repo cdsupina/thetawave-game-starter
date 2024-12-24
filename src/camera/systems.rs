@@ -9,7 +9,7 @@ use bevy::{
 };
 
 // Setup function that spawns a 2D camera
-pub(super) fn setup(mut cmd: Commands) {
+pub(super) fn setup_cameras_system(mut cmd: Commands) {
     // Necessary for viewing 2d sprites
     // Both cameras can view UI indepently
     /*

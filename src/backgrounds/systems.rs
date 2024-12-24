@@ -6,7 +6,7 @@ use bevy::{
     pbr::{MeshMaterial3d, PointLight, StandardMaterial},
     prelude::{
         AlphaMode, BuildChildren, ChildBuild, ChildBuilder, Commands, Mesh, Mesh3d, Meshable,
-        Rectangle, Res, ResMut, Sphere, Transform,
+        Rectangle, Res, ResMut, Sphere, Transform, Visibility,
     },
     scene::SceneRoot,
     utils::default,
@@ -14,7 +14,7 @@ use bevy::{
 use rand::{rngs::ThreadRng, Rng};
 
 /// Function to spawn a background element in the game
-pub(super) fn spawn_bg(
+pub(super) fn spawn_bg_system(
     mut cmds: Commands,
     bg_assets: Res<BackgroundAssets>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -67,10 +67,9 @@ pub(super) fn spawn_bg(
         rng.gen_range(0.0..=8.0)
     };
 
-    cmds.spawn(Transform::from_xyz(
-        star_x,
-        star_y,
-        rng.gen_range(-40.0..=-25.0),
+    cmds.spawn((
+        Transform::from_xyz(star_x, star_y, rng.gen_range(-40.0..=-25.0)),
+        Visibility::default(),
     ))
     .with_children(|parent| {
         spawn_star(
@@ -127,6 +126,7 @@ fn spawn_star(
     cb.spawn((
         Mesh3d(meshes.add(Sphere::new(rng.gen_range(0.5..=2.0)).mesh().uv(32, 18))),
         Transform::from_translation(pos),
+        Visibility::default(),
         MeshMaterial3d(materials.add(StandardMaterial {
             emissive: star_color.into(),
             ..default()

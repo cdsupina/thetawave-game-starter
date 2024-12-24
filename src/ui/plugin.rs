@@ -1,4 +1,4 @@
-use super::systems::{button_system, print_nav_events, setup};
+use super::systems::{button_system, print_nav_events, setup_ui_system};
 use crate::states::AppState;
 use bevy::{
     app::{Plugin, Update},
@@ -16,7 +16,7 @@ impl Plugin for ThetawaveUiPlugin {
         app.add_plugins(HuiPlugin);
 
         // Initialize UI setup when asset loading is finished
-        app.add_systems(OnEnter(AppState::MainMenu), setup);
+        app.add_systems(OnEnter(AppState::MainMenu), setup_ui_system);
 
         // Add UI systems that run after navigation system:
         // - Button system for handling button interactions
