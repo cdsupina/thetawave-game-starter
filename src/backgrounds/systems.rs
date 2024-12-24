@@ -5,13 +5,13 @@ use bevy::{
     math::Vec3,
     pbr::{MeshMaterial3d, PointLight, StandardMaterial},
     prelude::{
-        AlphaMode, BuildChildren, Commands, Mesh, Mesh3d, Meshable, Rectangle, Res, ResMut, Sphere,
-        Transform,
+        AlphaMode, BuildChildren, ChildBuild, ChildBuilder, Commands, Mesh, Mesh3d, Meshable,
+        Rectangle, Res, ResMut, Sphere, Transform,
     },
     scene::SceneRoot,
     utils::default,
 };
-use rand::Rng;
+use rand::{rngs::ThreadRng, Rng};
 
 /// Function to spawn a background element in the game
 pub(super) fn spawn_bg(
@@ -54,11 +54,6 @@ pub(super) fn spawn_bg(
     ));
 
     // Spawn a star with a random color
-    let star_color = Color::srgb(
-        1.0 + rng.gen_range(0.0..1.0),
-        1.0 + rng.gen_range(0.0..1.0),
-        1.0 + rng.gen_range(0.0..1.0),
-    );
 
     let star_x = if planet_x > 0.0 {
         rng.gen_range(-18.0..=-5.0)
@@ -71,9 +66,67 @@ pub(super) fn spawn_bg(
     } else {
         rng.gen_range(0.0..=8.0)
     };
-    cmds.spawn((
-        Mesh3d(meshes.add(Sphere::new(rng.gen_range(0.0..=3.0)).mesh().uv(32, 18))),
-        Transform::from_xyz(star_x, star_y, rng.gen_range(-40.0..=-25.0)),
+
+    cmds.spawn(Transform::from_xyz(
+        star_x,
+        star_y,
+        rng.gen_range(-40.0..=-25.0),
+    ))
+    .with_children(|parent| {
+        spawn_star(
+            parent,
+            Vec3::new(0., 0., 0.),
+            &mut materials,
+            &mut meshes,
+            &mut rng,
+        );
+
+        if rng.gen_bool(0.5) {
+            spawn_star(
+                parent,
+                Vec3::new(
+                    rng.gen_range(6.0..=10.0),
+                    rng.gen_range(6.0..=10.0),
+                    rng.gen_range(-10.0..=10.0),
+                ),
+                &mut materials,
+                &mut meshes,
+                &mut rng,
+            );
+        }
+
+        if rng.gen_bool(0.5) {
+            spawn_star(
+                parent,
+                Vec3::new(
+                    rng.gen_range(-10.0..=-6.0),
+                    rng.gen_range(-10.0..=-6.0),
+                    rng.gen_range(-10.0..=10.0),
+                ),
+                &mut materials,
+                &mut meshes,
+                &mut rng,
+            );
+        }
+    });
+}
+
+fn spawn_star(
+    cb: &mut ChildBuilder,
+    pos: Vec3,
+    materials: &mut Assets<StandardMaterial>,
+    meshes: &mut Assets<Mesh>,
+    rng: &mut ThreadRng,
+) {
+    let star_color = Color::srgb(
+        1.5 + rng.gen_range(0.0..=1.0),
+        1.5 + rng.gen_range(0.0..=1.0),
+        1.5 + rng.gen_range(0.0..=1.0),
+    );
+
+    cb.spawn((
+        Mesh3d(meshes.add(Sphere::new(rng.gen_range(0.5..=2.0)).mesh().uv(32, 18))),
+        Transform::from_translation(pos),
         MeshMaterial3d(materials.add(StandardMaterial {
             emissive: star_color.into(),
             ..default()
