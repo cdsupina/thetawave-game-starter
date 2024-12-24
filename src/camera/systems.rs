@@ -1,13 +1,9 @@
 use bevy::{
     color::Color,
-    core_pipeline::{
-        bloom::{Bloom, BloomPrefilter},
-        tonemapping::Tonemapping,
-    },
+    core_pipeline::{bloom::Bloom, tonemapping::Tonemapping},
     math::Vec3,
     prelude::{
-        Camera, Camera2d, Camera3d, ClearColorConfig, Commands, PerspectiveProjection, Projection,
-        Transform,
+        Camera, Camera3d, ClearColorConfig, Commands, PerspectiveProjection, Projection, Transform,
     },
     utils::default,
 };
@@ -16,12 +12,13 @@ use bevy::{
 pub(super) fn setup(mut cmd: Commands) {
     // Necessary for viewing 2d sprites
     // Both cameras can view UI indepently
+    /*
     cmd.spawn((
         Camera2d,
         Camera {
             order: 1,
             hdr: true,
-            clear_color: ClearColorConfig::Custom(Color::BLACK),
+            clear_color: ClearColorConfig::Custom(Color::NONE),
             ..default()
         },
         Tonemapping::TonyMcMapface,
@@ -33,6 +30,7 @@ pub(super) fn setup(mut cmd: Commands) {
             ..Bloom::OLD_SCHOOL
         },
     ));
+    */
 
     // Necessary for viewing 3D assets
     cmd.spawn((
@@ -49,5 +47,6 @@ pub(super) fn setup(mut cmd: Commands) {
             far: 10000.0,
             ..Default::default()
         }),
+        Bloom::NATURAL,
     ));
 }
