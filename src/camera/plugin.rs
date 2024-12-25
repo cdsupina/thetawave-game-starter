@@ -1,12 +1,12 @@
 use bevy::app::{Plugin, Startup};
 
-use super::systems::setup;
+use super::systems::setup_cameras_system;
 
 /// A plugin for managing the Thetawave game's camera systems
 pub(crate) struct ThetawaveCameraPlugin;
 
 impl Plugin for ThetawaveCameraPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Startup, setup);
+        app.add_systems(Startup, setup_cameras_system);
     }
 }

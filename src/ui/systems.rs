@@ -21,7 +21,7 @@ use webbrowser;
 
 /// Setup function for the main menu UI
 /// Spawns the main menu HTML node and registers necessary functions and components
-pub(super) fn setup(
+pub(super) fn setup_ui_system(
     mut cmd: Commands,
     mut html_funcs: HtmlFunctions,
     mut html_comps: HtmlComponents,
