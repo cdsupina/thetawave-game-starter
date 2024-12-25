@@ -158,7 +158,7 @@ fn spawn_star(
             ..default()
         })),
     ))
-    // Add point light to make star glow
+    // Add point light to make star glow with a random light intensity
     .with_child(PointLight {
         color: star_color,
         intensity: rng.gen_range(8000000.0..=50000000.0),
