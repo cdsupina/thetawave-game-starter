@@ -142,9 +142,9 @@ fn spawn_star(
 ) {
     // Generate random bright color for the star
     let star_color = Color::srgb(
-        1.5 + rng.gen_range(0.0..=1.0),
-        1.5 + rng.gen_range(0.0..=1.0),
-        1.5 + rng.gen_range(0.0..=1.0),
+        rng.gen_range(0.0..=1.0),
+        rng.gen_range(0.0..=1.0),
+        rng.gen_range(0.0..=1.0),
     );
 
     // Spawn star mesh with emissive material
@@ -154,13 +154,14 @@ fn spawn_star(
         Visibility::default(),
         MeshMaterial3d(materials.add(StandardMaterial {
             emissive: star_color.into(),
+            diffuse_transmission: 1.0,
             ..default()
         })),
     ))
     // Add point light to make star glow
     .with_child(PointLight {
         color: star_color,
-        intensity: 30000000.0,
+        intensity: rng.gen_range(8000000.0..=50000000.0),
         range: 100.0,
         ..default()
     });
