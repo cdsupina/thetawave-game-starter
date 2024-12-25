@@ -47,6 +47,6 @@ pub(super) fn setup_cameras_system(mut cmd: Commands) {
             far: 10000.0,
             ..Default::default()
         }),
-        Bloom::NATURAL,
+        Bloom::OLD_SCHOOL,
     ));
 }
