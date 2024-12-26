@@ -12,18 +12,22 @@ mod states;
 mod ui;
 
 fn main() {
-    App::new()
-        .add_plugins((
-            DefaultPlugins.set(ImagePlugin::default_nearest()), // necessary for crisp pixel art
-            // custom plugins for Thetawave
-            ui::ThetawaveUiPlugin,
-            input::ThetawaveInputPlugin,
-            states::ThetawaveStatesPlugin,
-            camera::ThetawaveCameraPlugin,
-            assets::ThetawaveAssetsPlugin,
-            backgrounds::ThetawaveBackgroundsPlugin,
-            // plugin for inspecting entiies
-            WorldInspectorPlugin::new(),
-        ))
-        .run();
+    let mut app = App::new();
+
+    app.add_plugins((
+        DefaultPlugins.set(ImagePlugin::default_nearest()), // necessary for crisp pixel art
+        // custom plugins for Thetawave
+        ui::ThetawaveUiPlugin,
+        input::ThetawaveInputPlugin,
+        states::ThetawaveStatesPlugin,
+        camera::ThetawaveCameraPlugin,
+        assets::ThetawaveAssetsPlugin,
+        backgrounds::ThetawaveBackgroundsPlugin,
+    ));
+
+    if cfg!(feature = "world_inspector") {
+        app.add_plugins(WorldInspectorPlugin::new());
+    }
+
+    app.run();
 }
