@@ -39,3 +39,4 @@ default = ["dynamic_linking"]
 dynamic_linking = [
     "bevy/dynamic_linking",
 ] # make sure to run --no-default-features for release build to disable dynamic linking
+world_inspector = []
