@@ -9,8 +9,10 @@ It contains all the required features of a Thetawave style game.
   - [ ] Arcade Mode
   - [ ] Control Rebinding
   - [ ] Volume Controls
-- [ ] 2D + 3D Backgrounds
-- [ ] Exit Game
+- [x] 2D + 3D Backgrounds
+- [x] Exit Game
+- [x] Embedded Assets
+- [x] Loading Screens
 - [ ] Character Selection
 - [ ] Pause Menu
 - [ ] Save Games
@@ -32,4 +34,10 @@ cargo build
 ## Run
 ```bash
 cargo run
+```
+
+## Release
+Do not use default features for release build so that dynamic linking is disabled.
+```bash
+cargo build --release --no-default-features
 ```
