@@ -2,10 +2,10 @@ use super::{
     data::OptionsRes,
     systems::{
         button_system, init_options_res_system, options_menu_system, print_nav_events,
-        setup_main_menu_system, setup_options_menu_system, setup_ui_system,
+        setup_options_menu_system, setup_title_menu_system, setup_ui_system,
     },
 };
-use crate::states::AppState;
+use crate::states::{AppState, MainMenuState};
 use bevy::{
     app::{Plugin, Startup, Update},
     prelude::{in_state, IntoSystemConfigs, OnEnter},
@@ -27,11 +27,14 @@ impl Plugin for ThetawaveUiPlugin {
         // Init the options menu to track the current options on startup
         app.add_systems(Startup, init_options_res_system);
 
-        app.add_systems(
-            OnEnter(AppState::MainMenu),
-            (setup_ui_system, setup_main_menu_system).chain(),
-        );
-        app.add_systems(OnEnter(AppState::OptionsMenu), setup_options_menu_system);
+        // Add systems to setup UI and main menu when entering MainMenu state
+        app.add_systems(OnEnter(AppState::MainMenu), setup_ui_system);
+
+        // Setup the title menu ui
+        app.add_systems(OnEnter(MainMenuState::Title), setup_title_menu_system);
+
+        // Add system to setup options menu when entering OptionsMenu state
+        app.add_systems(OnEnter(MainMenuState::Options), setup_options_menu_system);
 
         // Add UI systems that run after navigation system:
         // - Button system for handling button interactions
@@ -41,7 +44,7 @@ impl Plugin for ThetawaveUiPlugin {
             (
                 button_system.after(NavRequestSystem),
                 print_nav_events.after(NavRequestSystem),
-                options_menu_system.run_if(in_state(AppState::OptionsMenu)),
+                options_menu_system.run_if(in_state(MainMenuState::Options)),
             ),
         );
     }

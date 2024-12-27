@@ -1,6 +1,6 @@
 use crate::{
     assets::MainMenuAssets,
-    states::{AppState, MainMenuCleanup, OptionsMenuCleanup},
+    states::{MainMenuState, OptionsMenuCleanup, TitleMenuCleanup},
 };
 use bevy::{
     app::AppExit,
@@ -43,7 +43,7 @@ pub(super) fn setup_ui_system(
     html_funcs.register("open_bluesky_action", open_bluesky_website);
     html_funcs.register("open_github_action", open_github_website);
     html_funcs.register("apply_options_action", apply_options);
-    html_funcs.register("enter_main_menu_action", enter_main_menu);
+    html_funcs.register("enter_main_menu_action", enter_title);
 
     // Register footer button component for website links
     html_comps.register(
@@ -61,18 +61,25 @@ pub(super) fn setup_ui_system(
     egui_settings.single_mut().scale_factor = 2.0;
 }
 
+/// System to set up the options menu interface
+/// Spawns the options menu HTML node and adds the cleanup component for proper teardown
 pub(super) fn setup_options_menu_system(mut cmds: Commands, main_menu_assets: Res<MainMenuAssets>) {
     // Spawn the main menu HTML node with cleanup component
     cmds.spawn(HtmlNode(main_menu_assets.options_menu_html.clone()))
         .insert(OptionsMenuCleanup);
 }
 
-pub(super) fn setup_main_menu_system(mut cmds: Commands, main_menu_assets: Res<MainMenuAssets>) {
+/// System to set up the title menu interface
+/// Spawns the main menu HTML node and adds the cleanup component for proper teardown
+pub(super) fn setup_title_menu_system(mut cmds: Commands, main_menu_assets: Res<MainMenuAssets>) {
     // Spawn the main menu HTML node with cleanup component
     cmds.spawn(HtmlNode(main_menu_assets.main_menu_html.clone()))
-        .insert(MainMenuCleanup);
+        .insert(TitleMenuCleanup);
 }
 
+/// Applies the selected options to the game window
+/// Takes the entity that triggered the action, options resource, and window query
+/// Updates window mode and resolution based on selected options
 fn apply_options(
     In(entity): In<Entity>,
     mut options_res: ResMut<OptionsRes>,
@@ -80,33 +87,38 @@ fn apply_options(
 ) {
     info!("{entity} pressed. Applying new options.");
     if let Ok(mut window) = primary_window_q.get_single_mut() {
-        if matches!(options_res.window_mode, WindowMode::Fullscreen(_)) {
-            if matches!(window.mode, WindowMode::Fullscreen(_)) {
-                options_res.window_resolution = window.resolution.clone();
-            }
+        // If fullscreen is selected, preserve the current resolution
+        if matches!(options_res.window_mode, WindowMode::Fullscreen(_))
+            && matches!(window.mode, WindowMode::Fullscreen(_))
+        {
+            options_res.window_resolution = window.resolution.clone();
         }
 
+        // Apply the selected options
         window.mode = options_res.window_mode;
         window.resolution = options_res.window_resolution.clone();
     }
 }
 
 /// Handler for the start game action
-fn enter_main_menu(In(entity): In<Entity>, mut next_state: ResMut<NextState<AppState>>) {
-    info!("{entity} pressed. Entering AppState::MainMenu.");
-    next_state.set(AppState::MainMenu);
+fn enter_title(In(entity): In<Entity>, mut next_state: ResMut<NextState<MainMenuState>>) {
+    info!("{entity} pressed. Entering MainMenuState::Title.");
+    next_state.set(MainMenuState::Title);
 }
 
 /// Handler for the start game action
-fn enter_character_selection(In(entity): In<Entity>, mut next_state: ResMut<NextState<AppState>>) {
-    info!("{entity} pressed. Entering AppState::CharacterSelectionMenu.");
-    next_state.set(AppState::CharacterSelectionMenu);
+fn enter_character_selection(
+    In(entity): In<Entity>,
+    mut next_state: ResMut<NextState<MainMenuState>>,
+) {
+    info!("{entity} pressed. Entering MainMenuState::CharacterSelection.");
+    next_state.set(MainMenuState::CharacterSelection);
 }
 
 /// Handler for the start game action
-fn enter_options(In(entity): In<Entity>, mut next_state: ResMut<NextState<AppState>>) {
-    info!("{entity} pressed. Entering AppState::OptionsMenu.");
-    next_state.set(AppState::OptionsMenu);
+fn enter_options(In(entity): In<Entity>, mut next_state: ResMut<NextState<MainMenuState>>) {
+    info!("{entity} pressed. Entering MainMenuState::Options.");
+    next_state.set(MainMenuState::Options);
 }
 
 /// Handler for the start game action

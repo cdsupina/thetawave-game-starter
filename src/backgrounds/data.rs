@@ -1,20 +1,4 @@
-use bevy::prelude::{Component, Resource};
-
-// Resource to manage background regeneration state
-#[derive(Resource)]
-pub(super) struct BackgroundRes {
-    // Flag to determine if background needs to be regenerated upon returning to the main manu
-    pub regenerate_bg: bool,
-}
-
-// Implements default values for BackgroundRes
-impl Default for BackgroundRes {
-    fn default() -> Self {
-        BackgroundRes {
-            regenerate_bg: true,
-        }
-    }
-}
+use bevy::prelude::Component;
 
 // Component to handle planet rotation behavior
 #[derive(Component)]
