@@ -1,10 +1,13 @@
 use super::{
     data::OptionsRes,
-    systems::{button_system, options_menu_system, print_nav_events, setup_ui_system},
+    systems::{
+        button_system, init_options_res_system, options_menu_system, print_nav_events,
+        setup_main_menu_system, setup_options_menu_system, setup_ui_system,
+    },
 };
 use crate::states::AppState;
 use bevy::{
-    app::{Plugin, Update},
+    app::{Plugin, Startup, Update},
     prelude::{in_state, IntoSystemConfigs, OnEnter},
 };
 use bevy_alt_ui_navigation_lite::NavRequestSystem;
@@ -21,8 +24,14 @@ impl Plugin for ThetawaveUiPlugin {
         // Add HuiPlugin and HuiAutoLoadPlugin with UI components path
         app.add_plugins((HuiPlugin, EguiPlugin));
 
-        // Initialize UI setup when asset loading is finished
-        app.add_systems(OnEnter(AppState::MainMenu), setup_ui_system);
+        // Init the options menu to track the current options on startup
+        app.add_systems(Startup, init_options_res_system);
+
+        app.add_systems(
+            OnEnter(AppState::MainMenu),
+            (setup_ui_system, setup_main_menu_system).chain(),
+        );
+        app.add_systems(OnEnter(AppState::OptionsMenu), setup_options_menu_system);
 
         // Add UI systems that run after navigation system:
         // - Button system for handling button interactions

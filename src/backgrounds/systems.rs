@@ -1,4 +1,4 @@
-use super::data::PlanetRotationComponent;
+use super::data::{BackgroundRes, PlanetRotationComponent};
 use crate::assets::BackgroundAssets;
 use bevy::{
     asset::Assets,
@@ -22,10 +22,10 @@ const BACKGROUND_SCALE: f32 = 250.0; // Scale factor for the background mesh
 const BACKGROUND_POS: Vec3 = Vec3::new(0.0, 0.0, -100.0); // Position of the background in 3D space
 
 // Planet position ranges
-const PLANET_LOWER_X_RANGE: RangeInclusive<f32> = -12.0..=-5.0; // Left side X coordinate range
-const PLANET_UPPER_X_RANGE: RangeInclusive<f32> = 5.0..=12.0; // Right side X coordinate range
-const PLANET_LOWER_Y_RANGE: RangeInclusive<f32> = -8.0..=-2.0; // Bottom side Y coordinate range
-const PLANET_UPPER_Y_RANGE: RangeInclusive<f32> = 2.0..=8.0; // Top side Y coordinate range
+const PLANET_LOWER_X_RANGE: RangeInclusive<f32> = -12.0..=-6.0; // Left side X coordinate range
+const PLANET_UPPER_X_RANGE: RangeInclusive<f32> = 6.0..=12.0; // Right side X coordinate range
+const PLANET_LOWER_Y_RANGE: RangeInclusive<f32> = -8.0..=-4.0; // Bottom side Y coordinate range
+const PLANET_UPPER_Y_RANGE: RangeInclusive<f32> = 4.0..=8.0; // Top side Y coordinate range
 const PLANET_Z_RANGE: RangeInclusive<f32> = -50.0..=-20.0; // Depth range for planets
 const PLANET_ROTATION_SPEED_RANGE: RangeInclusive<f32> = 0.01..=0.03; // Range of rotation speeds
 
@@ -54,106 +54,113 @@ pub(super) fn spawn_bg_system(
     bg_assets: Res<BackgroundAssets>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut background_res: ResMut<BackgroundRes>,
 ) {
-    // Create a semi-transparent material with a random space background texture
-    // that will serve as the backdrop
-    let material_handle = materials.add(StandardMaterial {
-        base_color_texture: Some(bg_assets.get_random_space_bg()),
-        unlit: true,
-        alpha_mode: AlphaMode::Blend,
-        base_color: Color::default().with_alpha(BACKGROUND_ALPHA),
-        ..default()
-    });
+    // check if the background needs to be regenerated
+    if background_res.regenerate_bg {
+        // after generating the background, it doesn't need to be regenerated until the game is started
+        background_res.regenerate_bg = false;
 
-    // Spawn a large rectangle mesh that will display the space background texture
-    cmds.spawn((
-        Mesh3d(meshes.add(Rectangle::default())),
-        MeshMaterial3d(material_handle),
-        Transform::default()
-            .with_scale(Vec3::splat(BACKGROUND_SCALE))
-            .with_translation(BACKGROUND_POS),
-    ));
+        // Create a semi-transparent material with a random space background texture
+        // that will serve as the backdrop
+        let material_handle = materials.add(StandardMaterial {
+            base_color_texture: Some(bg_assets.get_random_space_bg()),
+            unlit: true,
+            alpha_mode: AlphaMode::Blend,
+            base_color: Color::default().with_alpha(BACKGROUND_ALPHA),
+            ..default()
+        });
 
-    // Initialize random number generator for positioning elements
-    let mut rng = rand::thread_rng();
+        // Spawn a large rectangle mesh that will display the space background texture
+        cmds.spawn((
+            Mesh3d(meshes.add(Rectangle::default())),
+            MeshMaterial3d(material_handle),
+            Transform::default()
+                .with_scale(Vec3::splat(BACKGROUND_SCALE))
+                .with_translation(BACKGROUND_POS),
+        ));
 
-    // Calculate random X position for planet, ensuring it's not in the center
-    let planet_x = if rng.gen_bool(0.5) {
-        rng.gen_range(PLANET_LOWER_X_RANGE)
-    } else {
-        rng.gen_range(PLANET_UPPER_X_RANGE)
-    };
+        // Initialize random number generator for positioning elements
+        let mut rng = rand::thread_rng();
 
-    // Calculate random Y position for planet, ensuring it's not in the center
-    let planet_y = if rng.gen_bool(0.5) {
-        rng.gen_range(PLANET_LOWER_Y_RANGE)
-    } else {
-        rng.gen_range(PLANET_UPPER_Y_RANGE)
-    };
+        // Calculate random X position for planet, ensuring it's not in the center
+        let planet_x = if rng.gen_bool(0.5) {
+            rng.gen_range(PLANET_LOWER_X_RANGE)
+        } else {
+            rng.gen_range(PLANET_UPPER_X_RANGE)
+        };
 
-    // Spawn a random planet model with rotation behavior
-    cmds.spawn((
-        SceneRoot(bg_assets.get_random_planet()),
-        Transform::default().with_translation(Vec3::new(
-            planet_x,
-            planet_y,
-            rng.gen_range(PLANET_Z_RANGE),
-        )),
-        PlanetRotationComponent::new(rng.gen_range(PLANET_ROTATION_SPEED_RANGE)),
-    ));
+        // Calculate random Y position for planet, ensuring it's not in the center
+        let planet_y = if rng.gen_bool(0.5) {
+            rng.gen_range(PLANET_LOWER_Y_RANGE)
+        } else {
+            rng.gen_range(PLANET_UPPER_Y_RANGE)
+        };
 
-    // Calculate star position on opposite side of screen from planet
-    let star_x = if planet_x > 0.0 {
-        rng.gen_range(STAR_CLUSTER_LOWER_X_RANGE)
-    } else {
-        rng.gen_range(STAR_CLUSTER_UPPER_X_RANGE)
-    };
+        // Spawn a random planet model with rotation behavior
+        cmds.spawn((
+            SceneRoot(bg_assets.get_random_planet()),
+            Transform::default().with_translation(Vec3::new(
+                planet_x,
+                planet_y,
+                rng.gen_range(PLANET_Z_RANGE),
+            )),
+            PlanetRotationComponent::new(rng.gen_range(PLANET_ROTATION_SPEED_RANGE)),
+        ));
 
-    let star_y = if planet_y > 0.0 {
-        rng.gen_range(STAR_CLUSTER_LOWER_Y_RANGE)
-    } else {
-        rng.gen_range(STAR_CLUSTER_UPPER_Y_RANGE)
-    };
+        // Calculate star position on opposite side of screen from planet
+        let star_x = if planet_x > 0.0 {
+            rng.gen_range(STAR_CLUSTER_LOWER_X_RANGE)
+        } else {
+            rng.gen_range(STAR_CLUSTER_UPPER_X_RANGE)
+        };
 
-    // Spawn star cluster with potential additional stars
-    cmds.spawn((
-        Transform::from_xyz(star_x, star_y, rng.gen_range(STAR_CLUSTER_Z_RANGE)),
-        Visibility::default(),
-    ))
-    .with_children(|parent| {
-        // Spawn central star
-        spawn_star(parent, Vec3::ZERO, &mut materials, &mut meshes, &mut rng);
+        let star_y = if planet_y > 0.0 {
+            rng.gen_range(STAR_CLUSTER_LOWER_Y_RANGE)
+        } else {
+            rng.gen_range(STAR_CLUSTER_UPPER_Y_RANGE)
+        };
 
-        // 15% chance to spawn additional star to the upper right
-        if rng.gen_bool(ADDITIONAL_STAR_CHANCE) {
-            spawn_star(
-                parent,
-                Vec3::new(
-                    rng.gen_range(STAR_UPPER_RIGHT_X_RANGE),
-                    rng.gen_range(STAR_UPPER_RIGHT_Y_RANGE),
-                    rng.gen_range(STAR_Z_RANGE),
-                ),
-                &mut materials,
-                &mut meshes,
-                &mut rng,
-            );
-        }
+        // Spawn star cluster with potential additional stars
+        cmds.spawn((
+            Transform::from_xyz(star_x, star_y, rng.gen_range(STAR_CLUSTER_Z_RANGE)),
+            Visibility::default(),
+        ))
+        .with_children(|parent| {
+            // Spawn central star
+            spawn_star(parent, Vec3::ZERO, &mut materials, &mut meshes, &mut rng);
 
-        // 15% chance to spawn additional star to the lower left
-        if rng.gen_bool(ADDITIONAL_STAR_CHANCE) {
-            spawn_star(
-                parent,
-                Vec3::new(
-                    rng.gen_range(STAR_LOWER_LEFT_X_RANGE),
-                    rng.gen_range(STAR_LOWER_LEFT_Y_RANGE),
-                    rng.gen_range(STAR_Z_RANGE),
-                ),
-                &mut materials,
-                &mut meshes,
-                &mut rng,
-            );
-        }
-    });
+            // 15% chance to spawn additional star to the upper right
+            if rng.gen_bool(ADDITIONAL_STAR_CHANCE) {
+                spawn_star(
+                    parent,
+                    Vec3::new(
+                        rng.gen_range(STAR_UPPER_RIGHT_X_RANGE),
+                        rng.gen_range(STAR_UPPER_RIGHT_Y_RANGE),
+                        rng.gen_range(STAR_Z_RANGE),
+                    ),
+                    &mut materials,
+                    &mut meshes,
+                    &mut rng,
+                );
+            }
+
+            // 15% chance to spawn additional star to the lower left
+            if rng.gen_bool(ADDITIONAL_STAR_CHANCE) {
+                spawn_star(
+                    parent,
+                    Vec3::new(
+                        rng.gen_range(STAR_LOWER_LEFT_X_RANGE),
+                        rng.gen_range(STAR_LOWER_LEFT_Y_RANGE),
+                        rng.gen_range(STAR_Z_RANGE),
+                    ),
+                    &mut materials,
+                    &mut meshes,
+                    &mut rng,
+                );
+            }
+        });
+    }
 }
 
 /// Helper function to spawn an individual star with random properties

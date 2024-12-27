@@ -1,16 +1,16 @@
 use crate::{
     assets::MainMenuAssets,
-    states::{AppState, MainMenuCleanup},
+    states::{AppState, MainMenuCleanup, OptionsMenuCleanup},
 };
 use bevy::{
     app::AppExit,
     color::palettes::css::{DARK_GRAY, ORANGE_RED},
     prelude::{
         Commands, Entity, EntityCommands, EventReader, EventWriter, In, NextState, Query, Res,
-        ResMut,
+        ResMut, With,
     },
     ui::BackgroundColor,
-    window::{MonitorSelection, WindowMode, WindowResolution},
+    window::{MonitorSelection, PrimaryWindow, Window, WindowMode, WindowResolution},
 };
 use bevy_alt_ui_navigation_lite::{
     events::NavEvent,
@@ -26,26 +26,24 @@ use super::data::OptionsRes;
 /// Setup function for the main menu UI
 /// Spawns the main menu HTML node and registers necessary functions and components
 pub(super) fn setup_ui_system(
-    mut cmd: Commands,
     mut html_funcs: HtmlFunctions,
     mut html_comps: HtmlComponents,
     main_menu_assets: Res<MainMenuAssets>,
     mut egui_settings: Query<&mut EguiSettings>,
 ) {
-    // Spawn the main menu HTML node with cleanup component
-    cmd.spawn(HtmlNode(main_menu_assets.main_menu_html.clone()))
-        .insert(MainMenuCleanup);
-
-    // Register action handlers for HTML button clicks:
-    // - Play button: Start a new game by entering character selection
-    // - Options button: Open the game options menu
-    // - Exit button: Close the application
-    // - Social links: Open external websites for Bluesky and GitHub
+    // Register HTML function handlers:
+    // Character selection: Start game and enter character selection screen
+    // Options: Open options menu for game settings
+    // Exit: Quit the application
+    // Social media: Open Bluesky profile and GitHub repository
+    // Menu navigation: Apply options and return to main menu
     html_funcs.register("main_menu_play_action", enter_character_selection);
     html_funcs.register("main_menu_options_action", enter_options);
     html_funcs.register("main_menu_exit_action", exit_app);
     html_funcs.register("open_bluesky_action", open_bluesky_website);
     html_funcs.register("open_github_action", open_github_website);
+    html_funcs.register("apply_options_action", apply_options);
+    html_funcs.register("enter_main_menu_action", enter_main_menu);
 
     // Register footer button component for website links
     html_comps.register(
@@ -59,7 +57,44 @@ pub(super) fn setup_ui_system(
         spawn_menu_button,
     );
 
+    // Set the egui scale factor to a readable size
     egui_settings.single_mut().scale_factor = 2.0;
+}
+
+pub(super) fn setup_options_menu_system(mut cmds: Commands, main_menu_assets: Res<MainMenuAssets>) {
+    // Spawn the main menu HTML node with cleanup component
+    cmds.spawn(HtmlNode(main_menu_assets.options_menu_html.clone()))
+        .insert(OptionsMenuCleanup);
+}
+
+pub(super) fn setup_main_menu_system(mut cmds: Commands, main_menu_assets: Res<MainMenuAssets>) {
+    // Spawn the main menu HTML node with cleanup component
+    cmds.spawn(HtmlNode(main_menu_assets.main_menu_html.clone()))
+        .insert(MainMenuCleanup);
+}
+
+fn apply_options(
+    In(entity): In<Entity>,
+    mut options_res: ResMut<OptionsRes>,
+    mut primary_window_q: Query<&mut Window, With<PrimaryWindow>>,
+) {
+    info!("{entity} pressed. Applying new options.");
+    if let Ok(mut window) = primary_window_q.get_single_mut() {
+        if matches!(options_res.window_mode, WindowMode::Fullscreen(_)) {
+            if matches!(window.mode, WindowMode::Fullscreen(_)) {
+                options_res.window_resolution = window.resolution.clone();
+            }
+        }
+
+        window.mode = options_res.window_mode;
+        window.resolution = options_res.window_resolution.clone();
+    }
+}
+
+/// Handler for the start game action
+fn enter_main_menu(In(entity): In<Entity>, mut next_state: ResMut<NextState<AppState>>) {
+    info!("{entity} pressed. Entering AppState::MainMenu.");
+    next_state.set(AppState::MainMenu);
 }
 
 /// Handler for the start game action
@@ -147,18 +182,8 @@ pub(super) fn options_menu_system(mut contexts: EguiContexts, mut options_res: R
                         );
                         ui.selectable_value(
                             &mut options_res.window_mode,
-                            WindowMode::BorderlessFullscreen(MonitorSelection::Current),
-                            "Borderless Fullscreen",
-                        );
-                        ui.selectable_value(
-                            &mut options_res.window_mode,
                             WindowMode::Fullscreen(MonitorSelection::Current),
                             "Fullscreen",
-                        );
-                        ui.selectable_value(
-                            &mut options_res.window_mode,
-                            WindowMode::SizedFullscreen(MonitorSelection::Current),
-                            "Sized Fullscreen",
                         );
                     });
             });
@@ -250,4 +275,14 @@ fn window_resolution_to_string(resolution: &WindowResolution) -> String {
     let res_vec = resolution.size();
 
     format!("{}x{}", res_vec.x, res_vec.y)
+}
+
+pub(super) fn init_options_res_system(
+    mut options_res: ResMut<OptionsRes>,
+    primary_window_q: Query<&Window, With<PrimaryWindow>>,
+) {
+    if let Ok(window) = primary_window_q.get_single() {
+        options_res.window_mode = window.mode;
+        options_res.window_resolution = window.resolution.clone();
+    }
 }

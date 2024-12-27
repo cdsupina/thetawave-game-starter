@@ -30,6 +30,10 @@ pub(crate) enum GameState {
 #[derive(Component)]
 pub(crate) struct MainMenuCleanup;
 
+/// Component marker for options menu cleanup
+#[derive(Component)]
+pub(crate) struct OptionsMenuCleanup;
+
 /// Component marker for character selection cleanup
 #[derive(Component)]
 pub(crate) struct CharacterSelectionCleanup;
