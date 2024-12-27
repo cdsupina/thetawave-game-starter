@@ -274,6 +274,8 @@ pub(super) fn options_menu_system(mut contexts: EguiContexts, mut options_res: R
         });
 }
 
+/// Converts WindowMode enum to a string representation
+/// Returns a string slice describing the window mode (e.g. "Windowed", "Fullscreen", etc.)
 fn window_mode_to_string(mode: &WindowMode) -> &str {
     match mode {
         WindowMode::Windowed => "Windowed",
@@ -283,12 +285,16 @@ fn window_mode_to_string(mode: &WindowMode) -> &str {
     }
 }
 
+/// Converts WindowResolution to a formatted string
+/// Takes a WindowResolution reference and returns a string in the format "WIDTHxHEIGHT"
 fn window_resolution_to_string(resolution: &WindowResolution) -> String {
     let res_vec = resolution.size();
 
     format!("{}x{}", res_vec.x, res_vec.y)
 }
 
+/// Initializes the options resource with values from the primary window
+/// Updates window mode and resolution settings based on current window state
 pub(super) fn init_options_res_system(
     mut options_res: ResMut<OptionsRes>,
     primary_window_q: Query<&Window, With<PrimaryWindow>>,
