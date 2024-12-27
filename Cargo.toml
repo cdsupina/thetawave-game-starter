@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 bevy = { version = "0.15" }
+bevy_egui = "0.31"
 bevy-alt-ui-navigation-lite = "0.3.1"
 bevy-inspector-egui = "0.28.0"
 bevy_asset_loader = "0.22.0"
@@ -38,3 +39,4 @@ default = ["dynamic_linking"]
 dynamic_linking = [
     "bevy/dynamic_linking",
 ] # make sure to run --no-default-features for release build to disable dynamic linking
+world_inspector = []

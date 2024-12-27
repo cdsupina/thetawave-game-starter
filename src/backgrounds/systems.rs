@@ -1,5 +1,8 @@
 use super::data::PlanetRotationComponent;
-use crate::assets::BackgroundAssets;
+use crate::{
+    assets::BackgroundAssets,
+    states::{InGameCleanup, MainMenuCleanup},
+};
 use bevy::{
     asset::Assets,
     color::{Alpha, Color},
@@ -22,10 +25,10 @@ const BACKGROUND_SCALE: f32 = 250.0; // Scale factor for the background mesh
 const BACKGROUND_POS: Vec3 = Vec3::new(0.0, 0.0, -100.0); // Position of the background in 3D space
 
 // Planet position ranges
-const PLANET_LOWER_X_RANGE: RangeInclusive<f32> = -12.0..=-5.0; // Left side X coordinate range
-const PLANET_UPPER_X_RANGE: RangeInclusive<f32> = 5.0..=12.0; // Right side X coordinate range
-const PLANET_LOWER_Y_RANGE: RangeInclusive<f32> = -8.0..=-2.0; // Bottom side Y coordinate range
-const PLANET_UPPER_Y_RANGE: RangeInclusive<f32> = 2.0..=8.0; // Top side Y coordinate range
+const PLANET_LOWER_X_RANGE: RangeInclusive<f32> = -12.0..=-6.0; // Left side X coordinate range
+const PLANET_UPPER_X_RANGE: RangeInclusive<f32> = 6.0..=12.0; // Right side X coordinate range
+const PLANET_LOWER_Y_RANGE: RangeInclusive<f32> = -8.0..=-4.0; // Bottom side Y coordinate range
+const PLANET_UPPER_Y_RANGE: RangeInclusive<f32> = 4.0..=8.0; // Top side Y coordinate range
 const PLANET_Z_RANGE: RangeInclusive<f32> = -50.0..=-20.0; // Depth range for planets
 const PLANET_ROTATION_SPEED_RANGE: RangeInclusive<f32> = 0.01..=0.03; // Range of rotation speeds
 
@@ -72,6 +75,8 @@ pub(super) fn spawn_bg_system(
         Transform::default()
             .with_scale(Vec3::splat(BACKGROUND_SCALE))
             .with_translation(BACKGROUND_POS),
+        MainMenuCleanup,
+        InGameCleanup,
     ));
 
     // Initialize random number generator for positioning elements
@@ -100,6 +105,8 @@ pub(super) fn spawn_bg_system(
             rng.gen_range(PLANET_Z_RANGE),
         )),
         PlanetRotationComponent::new(rng.gen_range(PLANET_ROTATION_SPEED_RANGE)),
+        MainMenuCleanup,
+        InGameCleanup,
     ));
 
     // Calculate star position on opposite side of screen from planet
@@ -119,6 +126,8 @@ pub(super) fn spawn_bg_system(
     cmds.spawn((
         Transform::from_xyz(star_x, star_y, rng.gen_range(STAR_CLUSTER_Z_RANGE)),
         Visibility::default(),
+        MainMenuCleanup,
+        InGameCleanup,
     ))
     .with_children(|parent| {
         // Spawn central star
