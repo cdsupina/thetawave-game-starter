@@ -10,6 +10,7 @@ mod assets;
 mod backgrounds;
 mod camera;
 mod input;
+mod options;
 mod states;
 mod ui;
 
@@ -31,6 +32,7 @@ fn main() {
             }), // necessary for crisp pixel art
         // custom plugins for Thetawave
         ui::ThetawaveUiPlugin,
+        options::ThetawaveOptionsPlugin,
         input::ThetawaveInputPlugin,
         states::ThetawaveStatesPlugin,
         camera::ThetawaveCameraPlugin,

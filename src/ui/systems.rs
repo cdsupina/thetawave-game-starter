@@ -1,5 +1,6 @@
 use crate::{
     assets::MainMenuAssets,
+    options::{ApplyOptionsEvent, OptionsRes},
     states::{MainMenuState, OptionsMenuCleanup, TitleMenuCleanup},
 };
 use bevy::{
@@ -7,10 +8,10 @@ use bevy::{
     color::palettes::css::{DARK_GRAY, ORANGE_RED},
     prelude::{
         Commands, Entity, EntityCommands, EventReader, EventWriter, In, NextState, Query, Res,
-        ResMut, With,
+        ResMut,
     },
     ui::BackgroundColor,
-    window::{MonitorSelection, PrimaryWindow, Window, WindowMode, WindowResolution},
+    window::{MonitorSelection, WindowMode, WindowResolution},
 };
 use bevy_alt_ui_navigation_lite::{
     events::NavEvent,
@@ -20,8 +21,6 @@ use bevy_egui::{egui, EguiContexts, EguiSettings};
 use bevy_hui::prelude::{HtmlComponents, HtmlFunctions, HtmlNode};
 use log::{info, warn};
 use webbrowser;
-
-use super::data::OptionsRes;
 
 /// Setup function for the main menu UI
 /// Spawns the main menu HTML node and registers necessary functions and components
@@ -77,27 +76,11 @@ pub(super) fn setup_title_menu_system(mut cmds: Commands, main_menu_assets: Res<
         .insert(TitleMenuCleanup);
 }
 
-/// Applies the selected options to the game window
-/// Takes the entity that triggered the action, options resource, and window query
-/// Updates window mode and resolution based on selected options
-fn apply_options(
-    In(entity): In<Entity>,
-    mut options_res: ResMut<OptionsRes>,
-    mut primary_window_q: Query<&mut Window, With<PrimaryWindow>>,
-) {
+/// Sends an ApplyOptionsEvent when the options apply action is triggered
+/// Takes the entity that triggered the action and sends a new event to apply options changes
+fn apply_options(In(entity): In<Entity>, mut apply_options_events: EventWriter<ApplyOptionsEvent>) {
     info!("{entity} pressed. Applying new options.");
-    if let Ok(mut window) = primary_window_q.get_single_mut() {
-        // If fullscreen is selected, preserve the current resolution
-        if matches!(options_res.window_mode, WindowMode::Fullscreen(_))
-            && matches!(window.mode, WindowMode::Fullscreen(_))
-        {
-            options_res.window_resolution = window.resolution.clone();
-        }
-
-        // Apply the selected options
-        window.mode = options_res.window_mode;
-        window.resolution = options_res.window_resolution.clone();
-    }
+    apply_options_events.send(ApplyOptionsEvent);
 }
 
 /// Handler for the start game action
@@ -163,7 +146,7 @@ pub(super) fn button_system(mut interaction_query: Query<(&Focusable, &mut Backg
     }
 }
 
-/// Debug system to print navigation events
+/// Debug system to print navigation events from bevy_alt_ui_navigation
 pub(super) fn print_nav_events(mut events: EventReader<NavEvent>) {
     for event in events.read() {
         println!("{:?}", event);
@@ -289,18 +272,5 @@ fn window_mode_to_string(mode: &WindowMode) -> &str {
 /// Takes a WindowResolution reference and returns a string in the format "WIDTHxHEIGHT"
 fn window_resolution_to_string(resolution: &WindowResolution) -> String {
     let res_vec = resolution.size();
-
     format!("{}x{}", res_vec.x, res_vec.y)
-}
-
-/// Initializes the options resource with values from the primary window
-/// Updates window mode and resolution settings based on current window state
-pub(super) fn init_options_res_system(
-    mut options_res: ResMut<OptionsRes>,
-    primary_window_q: Query<&Window, With<PrimaryWindow>>,
-) {
-    if let Ok(window) = primary_window_q.get_single() {
-        options_res.window_mode = window.mode;
-        options_res.window_resolution = window.resolution.clone();
-    }
 }
