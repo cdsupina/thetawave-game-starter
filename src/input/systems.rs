@@ -1,9 +1,12 @@
-use bevy::prelude::ResMut;
+use bevy::prelude::{KeyCode, ResMut};
 use bevy_alt_ui_navigation_lite::systems::InputMapping;
 
 /// Setup function for input mapping configuration
-/// Sets focus to follow mouse movement and enables keyboard navigation
 pub(super) fn setup_input_system(mut input_mapping: ResMut<InputMapping>) {
+    // Set action keyboard binding to enter
+    input_mapping.key_action = KeyCode::Enter;
+
+    // Sets focus to follow mouse movement and enables keyboard navigation
     input_mapping.focus_follows_mouse = true;
     input_mapping.keyboard_navigation = true;
 }
