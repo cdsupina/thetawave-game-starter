@@ -52,14 +52,6 @@ pub(super) fn setup_ui_system(
         attach_focusable,
     );
 
-    // Register the phantom main menu button component.
-    // It uses a spawn function to also establish the focus behaviour on it.
-    html_comps.register_with_spawn_fn(
-        "phantom_menu_button",
-        main_menu_assets.phantom_menu_button_html.clone(),
-        attach_focusable,
-    );
-
     // Set the egui scale factor to 2.0, this ensures visible and readable UI.
     egui_settings.single_mut().scale_factor = 2.0;
 }
