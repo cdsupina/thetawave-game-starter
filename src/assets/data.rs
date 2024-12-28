@@ -12,6 +12,9 @@ pub(crate) struct MainMenuAssets {
     // HTML template for menu buttons
     #[asset(path = "ui/components/menu_button.html")]
     pub menu_button_html: Handle<HtmlTemplate>,
+    // HTML template for phantom menu buttons
+    #[asset(path = "ui/components/phantom_menu_button.html")]
+    pub phantom_menu_button_html: Handle<HtmlTemplate>,
     // HTML template for website footer button
     #[asset(path = "ui/components/website_footer_button.html")]
     pub website_footer_button_html: Handle<HtmlTemplate>,

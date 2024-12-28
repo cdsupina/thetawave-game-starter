@@ -1,5 +1,5 @@
 use super::systems::{
-    button_system, options_menu_system, print_nav_events, setup_options_menu_system,
+    button_system, menu_button_action_system, options_menu_system, setup_options_menu_system,
     setup_title_menu_system, setup_ui_system,
 };
 use crate::states::{AppState, MainMenuState};
@@ -35,7 +35,7 @@ impl Plugin for ThetawaveUiPlugin {
             Update,
             (
                 button_system.after(NavRequestSystem),
-                print_nav_events.after(NavRequestSystem),
+                menu_button_action_system.after(NavRequestSystem),
                 options_menu_system.run_if(in_state(MainMenuState::Options)),
             ),
         );
