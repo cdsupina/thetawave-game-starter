@@ -1,0 +1,13 @@
+<template>
+    <node
+        on_spawn="setup_menu_button_sprite"
+        tag:first="{is_first}"
+        width="410px"
+        height="95px"
+        justify_content="center"
+    >
+        <node margin="20px" flex_direction="column" justify_content="flex_end">
+            <text font_size="20"> {text} </text>
+        </node>
+    </node>
+</template>

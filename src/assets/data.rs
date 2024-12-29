@@ -13,6 +13,9 @@ pub(crate) struct MainMenuAssets {
     // HTML template for menu buttons
     #[asset(path = "ui/components/menu_button.html")]
     pub menu_button_html: Handle<HtmlTemplate>,
+    // HTML template for menu button sprites
+    #[asset(path = "ui/components/menu_button_sprite.html")]
+    pub menu_button_sprite_html: Handle<HtmlTemplate>,
     // HTML template for website footer button
     #[asset(path = "ui/components/website_footer_button.html")]
     pub website_footer_button_html: Handle<HtmlTemplate>,
@@ -25,6 +28,15 @@ pub(crate) struct MainMenuAssets {
     // Animated title logo Aseprite
     #[asset(path = "media/aseprite/thetawave_logo.aseprite")]
     pub thetawave_logo_aseprite: Handle<Aseprite>,
+    // Animated menu button Aseprite
+    #[asset(path = "media/aseprite/menu_button.aseprite")]
+    pub menu_button_aseprite: Handle<Aseprite>,
+    // Animated github logo Aseprite
+    #[asset(path = "media/aseprite/bluesky_logo.aseprite")]
+    pub bluesky_logo_aseprite: Handle<Aseprite>,
+    // Animated github logo Aseprite
+    #[asset(path = "media/aseprite/github_logo.aseprite")]
+    pub github_logo_aseprite: Handle<Aseprite>,
 }
 
 // Assets for background images

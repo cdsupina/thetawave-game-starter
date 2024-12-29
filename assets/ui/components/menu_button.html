@@ -1,19 +1,10 @@
 <template>
-    <node margin="1.5vh" tag:button_action="{action}" on_spawn="assign_action">
-        <image
-            src="media/images/ui/menu_button_released.png"
-            width="360px"
-            height="80px"
-            justify_content="center"
-        >
-            <node
-                background="#5559"
-                margin="20px"
-                flex_direction="column"
-                justify_content="flex_end"
-            >
-                <text font_size="20" background="#9999"> {text} </text>
-            </node>
-        </image>
+    <node
+        margin="1.0vh"
+        tag:button_action="{action}"
+        on_spawn="assign_action_to_menu_button"
+    >
+        <menu_button_sprite text="{text}" is_first="{is_first}">
+        </menu_button_sprite>
     </node>
 </template>

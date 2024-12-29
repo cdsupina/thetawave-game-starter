@@ -21,7 +21,7 @@ fn main() {
     app.add_plugins((
         assets::ThetawaveAssetsPlugin, // must be registered before AssetPlugin due to EmbeddedAssetPlugin
         DefaultPlugins
-            .set(ImagePlugin::default_nearest())
+            .set(ImagePlugin::default_nearest()) // necessary for crisp pixel art
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     mode: WindowMode::Windowed,
@@ -30,8 +30,8 @@ fn main() {
                     ..default()
                 }),
                 ..default()
-            }), // necessary for crisp pixel art
-        AsepriteUltraPlugin,
+            }),
+        AsepriteUltraPlugin, // plugin for using Aseprite assets
         // custom plugins for Thetawave
         ui::ThetawaveUiPlugin,
         options::ThetawaveOptionsPlugin,

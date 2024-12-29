@@ -5,18 +5,13 @@ use crate::{
 };
 use bevy::{
     app::AppExit,
-    color::palettes::css::{DARK_GRAY, ORANGE_RED},
     prelude::{
-        Commands, Entity, EntityCommands, EventReader, EventWriter, In, NextState, Query, Res,
-        ResMut, With,
+        Children, Commands, Entity, EntityCommands, EventReader, EventWriter, In, NextState, Query,
+        Res, ResMut, With,
     },
-    ui::BackgroundColor,
     window::{MonitorSelection, WindowMode, WindowResolution},
 };
-use bevy_alt_ui_navigation_lite::{
-    events::NavEvent,
-    prelude::{FocusState, Focusable},
-};
+use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
 use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
 use bevy_egui::{egui, EguiContexts, EguiSettings};
 use bevy_hui::prelude::{HtmlComponents, HtmlFunctions, HtmlNode, Tags};
@@ -36,7 +31,7 @@ pub(super) fn setup_ui_system(
     mut egui_settings: Query<&mut EguiSettings>,
 ) {
     // Register the "assign_action" function that links UI components and their actions.
-    html_funcs.register("assign_action", assign_action_to_button);
+    html_funcs.register("assign_action_to_menu_button", assign_action_to_menu_button);
 
     // Register the footer button component which is used for website links.
     // It uses a spawn function to also establish the focus behaviour on it.
@@ -54,6 +49,11 @@ pub(super) fn setup_ui_system(
         attach_focusable,
     );
 
+    html_comps.register(
+        "menu_button_sprite",
+        main_menu_assets.menu_button_sprite_html.clone(),
+    );
+
     // Registers the thetawave logo component
     html_comps.register(
         "thetawave_logo",
@@ -63,8 +63,16 @@ pub(super) fn setup_ui_system(
     // Registers setup function for the title logo
     html_funcs.register("setup_title_logo", setup_title_logo);
 
+    // Register the setup function for menu button sprites which handles animations
+    html_funcs.register("setup_menu_button_sprite", setup_menu_button_sprite);
+
+    // Register the setup function for website footer buttons which handles website linking
+    html_funcs.register("setup_website_footer_button", setup_website_footer_button);
+
     // Set the egui scale factor to 2.0, this ensures visible and readable UI.
-    egui_settings.single_mut().scale_factor = 2.0;
+    if !cfg!(feature = "world_inspector") {
+        egui_settings.single_mut().scale_factor = 2.0;
+    }
 }
 
 /// This function sets up the options menu interface.
@@ -83,27 +91,88 @@ pub(super) fn setup_title_menu_system(mut cmds: Commands, main_menu_assets: Res<
         .insert(TitleMenuCleanup);
 }
 
-/// This function sets up the title logo animation for the menu
-fn setup_title_logo(
+/// Sets up website footer buttons with appropriate animations and actions
+/// Takes an entity, queries for tags, and sets up the button based on its action type
+fn setup_website_footer_button(
     In(entity): In<Entity>,
     tags: Query<&Tags>,
     mut cmds: Commands,
     main_menu_assets: Res<MainMenuAssets>,
 ) {
-    // Get the tags for the current entity
     if let Ok(tags) = tags.get(entity) {
-        // If an animation tag exists, set up the animation component
-        if let Some(animation_str) = tags.get("animation") {
+        if let Some(button_action_str) = tags.get("button_action") {
+            match ButtonAction::try_from(button_action_str) {
+                Ok(button_action) => match button_action {
+                    // Handle Bluesky website button - add animation and action
+                    ButtonAction::OpenBlueskyWebsite => {
+                        cmds.entity(entity)
+                            .insert(AseUiAnimation {
+                                animation: Animation::tag("released"),
+                                aseprite: main_menu_assets.bluesky_logo_aseprite.clone(),
+                            })
+                            .insert(ButtonAction::OpenBlueskyWebsite);
+                    }
+                    // Handle Github website button - add animation and action
+                    ButtonAction::OpenGithubWebsite => {
+                        cmds.entity(entity)
+                            .insert(AseUiAnimation {
+                                animation: Animation::tag("released"),
+                                aseprite: main_menu_assets.github_logo_aseprite.clone(),
+                            })
+                            .insert(ButtonAction::OpenGithubWebsite);
+                    }
+                    _ => {
+                        warn!("Button action was not able to be mapped to a website action.")
+                    }
+                },
+                Err(msg) => {
+                    // If the action fails to convert, it is logged as a warning.
+                    warn!("{}", msg);
+                }
+            };
+        }
+    }
+}
+
+/// Sets up menu button sprite animations based on whether it's the first button
+/// Takes an entity, queries tags, and configures the animation state
+fn setup_menu_button_sprite(
+    In(entity): In<Entity>,
+    tags: Query<&Tags>,
+    mut cmds: Commands,
+    main_menu_assets: Res<MainMenuAssets>,
+) {
+    // Get tags for the entity
+    if let Ok(tags) = tags.get(entity) {
+        // Check if this is marked as the first button
+        if let Some(first_str) = tags.get("first") {
+            // Insert animation component with pressed/released state based on first status
             cmds.entity(entity).insert(AseUiAnimation {
-                animation: Animation::tag(animation_str),
-                aseprite: main_menu_assets.thetawave_logo_aseprite.clone(),
+                animation: Animation::tag(if first_str == "true" {
+                    "pressed"
+                } else {
+                    "released"
+                }),
+                aseprite: main_menu_assets.menu_button_aseprite.clone(),
             });
         }
     }
 }
 
+/// Sets up the title logo animation for the game's main menu
+fn setup_title_logo(
+    In(entity): In<Entity>,
+    mut cmds: Commands,
+    main_menu_assets: Res<MainMenuAssets>,
+) {
+    cmds.entity(entity).insert(AseUiAnimation {
+        animation: Animation::tag("title").with_speed(1.25),
+        aseprite: main_menu_assets.thetawave_logo_aseprite.clone(),
+    });
+}
+
 // This function assigns actions to buttons based on their tags.
-fn assign_action_to_button(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds: Commands) {
+fn assign_action_to_menu_button(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds: Commands) {
     if let Ok(tags) = tags.get(entity) {
         if let Some(button_action_str) = tags.get("button_action") {
             match ButtonAction::try_from(button_action_str) {
@@ -125,7 +194,7 @@ fn assign_action_to_button(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds:
 fn open_website(url: &str) {
     if webbrowser::open(url).is_ok() {
         // If opening the URL was successful, it is logged as an information.
-        info!("Opening Bluesky webiste: {url}");
+        info!("Opening webiste: {url}");
     } else {
         // If opening the URL has failed, it is logged as a warning.
         warn!("Failed to open website: {url}");
@@ -137,15 +206,55 @@ fn attach_focusable(mut cmds: EntityCommands) {
     cmds.insert(Focusable::default());
 }
 
-/// This system handles button focus states and changes button background color accordingly.
-pub(super) fn button_system(mut interaction_query: Query<(&Focusable, &mut BackgroundColor)>) {
-    for (focusable, mut color) in interaction_query.iter_mut() {
-        // If the button is in focus, it's color is set to ORANGE_RED.
-        if let FocusState::Focused = focusable.state() {
-            color.0 = ORANGE_RED.into();
-        } else {
-            // If the button is not focused, it's color is set back to DARK_GRAY.
-            color.0 = DARK_GRAY.into();
+/// System that handles the focus state of menu buttons
+/// Updates the animation state of buttons when focus changes
+/// Takes navigation events and queries for focusable entities and their animations
+pub(super) fn menu_button_focus_system(
+    mut nav_events: EventReader<NavEvent>,
+    focusable_q: Query<&Children, With<Focusable>>,
+    mut ase_q: Query<&mut AseUiAnimation>,
+) {
+    for event in nav_events.read() {
+        if let NavEvent::FocusChanged { to, from } = event {
+            // Handle newly focused button - set to pressed animation
+            if let Ok(children) = focusable_q.get(*to.first()) {
+                for child in children.iter() {
+                    if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
+                        ase_animation.animation.play_loop("pressed");
+                    }
+                }
+            }
+
+            // Handle previously focused button - set to released animation
+            if let Ok(children) = focusable_q.get(*from.first()) {
+                for child in children.iter() {
+                    if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
+                        ase_animation.animation.play_loop("released");
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// System that handles the focus state of website footer buttons
+/// Updates the animation state when focus changes between buttons
+/// Takes navigation events and queries for focusable animations
+pub(super) fn website_footer_button_focus_system(
+    mut nav_events: EventReader<NavEvent>,
+    mut focusable_q: Query<&mut AseUiAnimation, With<Focusable>>,
+) {
+    for event in nav_events.read() {
+        if let NavEvent::FocusChanged { to, from } = event {
+            // Set newly focused button to pressed animation
+            if let Ok(mut ase_animation) = focusable_q.get_mut(*to.first()) {
+                ase_animation.animation.play_loop("pressed");
+            }
+
+            // Set previously focused button to released animation
+            if let Ok(mut ase_animation) = focusable_q.get_mut(*from.first()) {
+                ase_animation.animation.play_loop("released");
+            }
         }
     }
 }
