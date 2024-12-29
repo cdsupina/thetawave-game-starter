@@ -4,6 +4,7 @@ use bevy::{
     utils::default,
     window::{Window, WindowMode, WindowPlugin, WindowResolution},
 };
+use bevy_aseprite_ultra::AsepriteUltraPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 mod assets;
@@ -30,6 +31,7 @@ fn main() {
                 }),
                 ..default()
             }), // necessary for crisp pixel art
+        AsepriteUltraPlugin,
         // custom plugins for Thetawave
         ui::ThetawaveUiPlugin,
         options::ThetawaveOptionsPlugin,

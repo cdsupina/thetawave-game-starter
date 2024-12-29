@@ -1,4 +1,5 @@
 use bevy::{asset::Handle, image::Image, prelude::Resource, scene::Scene};
+use bevy_aseprite_ultra::prelude::Aseprite;
 use bevy_asset_loader::asset_collection::AssetCollection;
 use bevy_hui::prelude::HtmlTemplate;
 use rand::Rng;
@@ -18,6 +19,12 @@ pub(crate) struct MainMenuAssets {
     // HTML template for options menu layout
     #[asset(path = "ui/menus/options_menu.html")]
     pub options_menu_html: Handle<HtmlTemplate>,
+    // HTML template for thetawave logo
+    #[asset(path = "ui/components/thetawave_logo.html")]
+    pub thetawave_logo_html: Handle<HtmlTemplate>,
+    // Animated title logo Aseprite
+    #[asset(path = "media/aseprite/thetawave_logo.aseprite")]
+    pub thetawave_logo_aseprite: Handle<Aseprite>,
 }
 
 // Assets for background images

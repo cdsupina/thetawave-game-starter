@@ -17,6 +17,7 @@ use bevy_alt_ui_navigation_lite::{
     events::NavEvent,
     prelude::{FocusState, Focusable},
 };
+use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
 use bevy_egui::{egui, EguiContexts, EguiSettings};
 use bevy_hui::prelude::{HtmlComponents, HtmlFunctions, HtmlNode, Tags};
 use log::{info, warn};
@@ -44,6 +45,7 @@ pub(super) fn setup_ui_system(
         main_menu_assets.website_footer_button_html.clone(),
         attach_focusable,
     );
+
     // Register the main menu button component.
     // It uses a spawn function to also establish the focus behaviour on it.
     html_comps.register_with_spawn_fn(
@@ -51,6 +53,15 @@ pub(super) fn setup_ui_system(
         main_menu_assets.menu_button_html.clone(),
         attach_focusable,
     );
+
+    // Registers the thetawave logo component
+    html_comps.register(
+        "thetawave_logo",
+        main_menu_assets.thetawave_logo_html.clone(),
+    );
+
+    // Registers setup function for the title logo
+    html_funcs.register("setup_title_logo", setup_title_logo);
 
     // Set the egui scale factor to 2.0, this ensures visible and readable UI.
     egui_settings.single_mut().scale_factor = 2.0;
@@ -70,6 +81,25 @@ pub(super) fn setup_title_menu_system(mut cmds: Commands, main_menu_assets: Res<
     // Create an HTMLNode with main menu HTML and link the TitleMenuCleanup component.
     cmds.spawn(HtmlNode(main_menu_assets.main_menu_html.clone()))
         .insert(TitleMenuCleanup);
+}
+
+/// This function sets up the title logo animation for the menu
+fn setup_title_logo(
+    In(entity): In<Entity>,
+    tags: Query<&Tags>,
+    mut cmds: Commands,
+    main_menu_assets: Res<MainMenuAssets>,
+) {
+    // Get the tags for the current entity
+    if let Ok(tags) = tags.get(entity) {
+        // If an animation tag exists, set up the animation component
+        if let Some(animation_str) = tags.get("animation") {
+            cmds.entity(entity).insert(AseUiAnimation {
+                animation: Animation::tag(animation_str),
+                aseprite: main_menu_assets.thetawave_logo_aseprite.clone(),
+            });
+        }
+    }
 }
 
 // This function assigns actions to buttons based on their tags.
