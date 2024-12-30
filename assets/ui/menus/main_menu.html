@@ -12,12 +12,7 @@
             justify_content="center"
             align_items="center"
         >
-            <image
-                src="media/images/ui/thetawave_title_logo.png"
-                height="375px"
-                width="878px"
-            >
-            </image>
+            <thetawave_logo></thetawave_logo>
         </node>
 
         <node
@@ -27,9 +22,17 @@
             align_items="center"
             width="100%"
         >
-            <menu_button text="Play" action="enter_character_selection" />
-            <menu_button text="Options" action="enter_options" />
-            <menu_button text="Exit" action="exit" />
+            <menu_button
+                text="Play"
+                action="enter_character_selection"
+                is_first="true"
+            />
+            <menu_button
+                text="Options"
+                action="enter_options"
+                is_first="false"
+            />
+            <menu_button text="Exit" action="exit" is_first="false" />
         </node>
         <node
             width="100%"
@@ -38,11 +41,9 @@
             justify_content="end"
         >
             <website_footer_button
-                image_path="media/images/ui/bluesky_logo.png"
                 action="open_bluesky_website"
             ></website_footer_button>
             <website_footer_button
-                image_path="media/images/ui/github_logo.png"
                 action="open_github_website"
             ></website_footer_button>
         </node>
