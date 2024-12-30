@@ -2,12 +2,16 @@
     <node
         on_spawn="setup_menu_button_sprite"
         tag:first="{is_first}"
-        height="15vh"
-        width="64.736vh"
+        width="410px"
+        height="95px"
         justify_content="center"
     >
-        <node margin="20px" flex_direction="column" justify_content="flex_end">
-            <text font_size="20"> {text} </text>
+        <node
+            margin="1px 1px 18px 1px"
+            flex_direction="column"
+            justify_content="flex_end"
+        >
+            <text font_size="30"> {text} </text>
         </node>
     </node>
 </template>
