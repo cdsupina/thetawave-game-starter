@@ -87,7 +87,7 @@ pub(super) fn setup_options_menu_system(mut cmds: Commands, main_menu_assets: Re
 /// It spawns the main menu HTML node and associates the cleanup component with it.
 pub(super) fn setup_title_menu_system(mut cmds: Commands, main_menu_assets: Res<MainMenuAssets>) {
     // Create an HTMLNode with main menu HTML and link the TitleMenuCleanup component.
-    cmds.spawn(HtmlNode(main_menu_assets.main_menu_html.clone()))
+    cmds.spawn(HtmlNode(main_menu_assets.title_menu_html.clone()))
         .insert(TitleMenuCleanup);
 }
 
