@@ -1,7 +1,7 @@
 use super::systems::{
     menu_button_action_system, menu_button_focus_system, options_menu_system,
-    setup_options_menu_system, setup_title_menu_system, setup_ui_system,
-    website_footer_button_focus_system,
+    setup_character_selection_system, setup_options_menu_system, setup_title_menu_system,
+    setup_ui_system, website_footer_button_focus_system,
 };
 use crate::states::{AppState, MainMenuState};
 use bevy::{
@@ -28,6 +28,12 @@ impl Plugin for ThetawaveUiPlugin {
 
         // Initialize and setup the options menu UI components when entering Options state
         app.add_systems(OnEnter(MainMenuState::Options), setup_options_menu_system);
+
+        // Initialize and setup the character selection UI components when entering Character Selection state
+        app.add_systems(
+            OnEnter(MainMenuState::CharacterSelection),
+            setup_character_selection_system,
+        );
 
         // Add update systems that run every frame:
         // - Handle menu button clicks after navigation

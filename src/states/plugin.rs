@@ -6,7 +6,7 @@ use bevy::{
 use super::{
     data::{AppState, GameState, InGameCleanup, MainMenuCleanup, MainMenuState},
     systems::{cleanup_state_system, enter_title_menu_state_system},
-    OptionsMenuCleanup, TitleMenuCleanup,
+    CharacterSelectionCleanup, OptionsMenuCleanup, TitleMenuCleanup,
 };
 
 /// Plugin for managing game states and their transitions
@@ -32,6 +32,11 @@ impl Plugin for ThetawaveStatesPlugin {
             .add_systems(
                 OnExit(MainMenuState::Options),
                 cleanup_state_system::<OptionsMenuCleanup>,
+            )
+            // Add cleanup system for when exiting ChracterSelection state
+            .add_systems(
+                OnExit(MainMenuState::CharacterSelection),
+                cleanup_state_system::<CharacterSelectionCleanup>,
             )
             // Add cleanup system for when exiting TitleMenu state
             .add_systems(

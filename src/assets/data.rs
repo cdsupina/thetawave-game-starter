@@ -37,6 +37,9 @@ pub(crate) struct MainMenuAssets {
     // Animated github logo Aseprite
     #[asset(path = "media/aseprite/github_logo.aseprite")]
     pub github_logo_aseprite: Handle<Aseprite>,
+    // HTML template for character selection layout
+    #[asset(path = "ui/menus/character_selection.html")]
+    pub character_selection_html: Handle<HtmlTemplate>,
 }
 
 // Assets for background images

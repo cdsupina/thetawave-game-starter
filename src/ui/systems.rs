@@ -1,7 +1,7 @@
 use crate::{
     assets::MainMenuAssets,
     options::{ApplyOptionsEvent, OptionsRes},
-    states::{MainMenuState, OptionsMenuCleanup, TitleMenuCleanup},
+    states::{CharacterSelectionCleanup, MainMenuState, OptionsMenuCleanup, TitleMenuCleanup},
 };
 use bevy::{
     app::AppExit,
@@ -73,6 +73,17 @@ pub(super) fn setup_ui_system(
     if !cfg!(feature = "world_inspector") {
         egui_settings.single_mut().scale_factor = 2.0;
     }
+}
+
+/// This function sets up the character selection interface.
+/// It spawns the options menu HTML node and associates the cleanup component with it.
+pub(super) fn setup_character_selection_system(
+    mut cmds: Commands,
+    main_menu_assets: Res<MainMenuAssets>,
+) {
+    // Create an HTMLNode with options menu HTML and link the OptionsMenuCleanup component.
+    cmds.spawn(HtmlNode(main_menu_assets.character_selection_html.clone()))
+        .insert(CharacterSelectionCleanup);
 }
 
 /// This function sets up the options menu interface.
