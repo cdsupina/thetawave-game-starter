@@ -7,7 +7,7 @@ use super::{data::ApplyOptionsEvent, OptionsRes};
 
 /// Initializes the options resource with values from the primary window
 /// Updates window mode and resolution settings based on current window state
-pub(super) fn init_options_res_system(
+pub(super) fn sync_options_res_system(
     mut options_res: ResMut<OptionsRes>,
     primary_window_q: Query<&Window, With<PrimaryWindow>>,
 ) {
@@ -38,7 +38,10 @@ pub(super) fn apply_options_system(
 
             // Apply the selected options to the window
             window.mode = options_res.window_mode;
-            window.resolution = options_res.window_resolution.clone();
+            window.resolution = options_res
+                .window_resolution
+                .clone()
+                .with_scale_factor_override(1.0);
         }
 
         // Clear the event channel to prevent processing same events multiple times

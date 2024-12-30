@@ -345,66 +345,14 @@ pub(super) fn options_menu_system(mut contexts: EguiContexts, mut options_res: R
                         window_resolution_to_string(&options_res.window_resolution)
                     ))
                     .show_ui(ui, |ui| {
-                        ui.selectable_value(
-                            &mut options_res.window_resolution,
-                            WindowResolution::new(800., 600.),
-                            "800x600",
-                        );
-                        ui.selectable_value(
-                            &mut options_res.window_resolution,
-                            WindowResolution::new(1024., 768.),
-                            "1024x768",
-                        );
-                        ui.selectable_value(
-                            &mut options_res.window_resolution,
-                            WindowResolution::new(1280., 720.),
-                            "1280x720",
-                        );
-                        ui.selectable_value(
-                            &mut options_res.window_resolution,
-                            WindowResolution::new(1280., 800.),
-                            "1280x800",
-                        );
-                        ui.selectable_value(
-                            &mut options_res.window_resolution,
-                            WindowResolution::new(1280., 960.),
-                            "1280x960",
-                        );
-                        ui.selectable_value(
-                            &mut options_res.window_resolution,
-                            WindowResolution::new(1366., 768.),
-                            "1366x768",
-                        );
-                        ui.selectable_value(
-                            &mut options_res.window_resolution,
-                            WindowResolution::new(1440., 900.),
-                            "1440x900",
-                        );
-                        ui.selectable_value(
-                            &mut options_res.window_resolution,
-                            WindowResolution::new(1600., 900.),
-                            "1600x900",
-                        );
-                        ui.selectable_value(
-                            &mut options_res.window_resolution,
-                            WindowResolution::new(1680., 1050.),
-                            "1680x1050",
-                        );
-                        ui.selectable_value(
-                            &mut options_res.window_resolution,
-                            WindowResolution::new(1600., 1200.),
-                            "1600x1200",
-                        );
-                        ui.selectable_value(
-                            &mut options_res.window_resolution,
-                            WindowResolution::new(1920., 1080.),
-                            "1920x1080",
-                        );
-                        ui.selectable_value(
-                            &mut options_res.window_resolution,
-                            WindowResolution::new(1920., 1200.),
-                            "1920x1200",
-                        );
+                        // Iterate through every available resolution and create a selectable value
+                        for resolution in options_res.get_resolutions() {
+                            ui.selectable_value(
+                                &mut options_res.window_resolution,
+                                resolution.clone(),
+                                window_resolution_to_string(&resolution),
+                            );
+                        }
                     });
             });
         });
