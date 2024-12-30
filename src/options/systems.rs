@@ -1,5 +1,6 @@
 use bevy::{
     prelude::{EventReader, Query, ResMut, With},
+    ui::UiScale,
     window::{PrimaryWindow, Window, WindowMode},
 };
 
@@ -46,5 +47,16 @@ pub(super) fn apply_options_system(
 
         // Clear the event channel to prevent processing same events multiple times
         apply_options_events.clear();
+    }
+}
+
+/// System that updates UI scale based on window height
+pub(super) fn update_ui_scale_system(
+    mut ui_scale: ResMut<UiScale>,
+    primary_window_q: Query<&Window, With<PrimaryWindow>>,
+) {
+    if let Ok(window) = primary_window_q.get_single() {
+        // Calculate UI scale based on physical window height relative to 720p baseline
+        ui_scale.0 = (1. / 720.) * (window.resolution.physical_height() as f32);
     }
 }

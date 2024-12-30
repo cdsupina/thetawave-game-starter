@@ -7,7 +7,7 @@ use crate::states::MainMenuState;
 
 use super::{
     data::OptionsRes,
-    systems::{apply_options_system, sync_options_res_system},
+    systems::{apply_options_system, sync_options_res_system, update_ui_scale_system},
     ApplyOptionsEvent,
 };
 
@@ -26,7 +26,10 @@ impl Plugin for ThetawaveOptionsPlugin {
         // Add system to apply options changes, but only when in Options menu state
         app.add_systems(
             Update,
-            apply_options_system.run_if(in_state(MainMenuState::Options)),
+            (
+                apply_options_system.run_if(in_state(MainMenuState::Options)),
+                update_ui_scale_system.run_if(in_state(MainMenuState::Options)),
+            ),
         );
     }
 }
