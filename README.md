@@ -1,10 +1,10 @@
 # Summary
 This game is a starter template for Thetawave space shooter games.
 It contains all the required features of a Thetawave style game.
-- [ ] Main Menu
+- [x] Main Menu
 - [ ] Options Menu
-  - [ ] Display Resolutions
-  - [ ] Fullscreen
+  - [x] Display Resolutions
+  - [x] Fullscreen
   - [ ] Graphics Settings
   - [ ] Arcade Mode
   - [ ] Control Rebinding
