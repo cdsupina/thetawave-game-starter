@@ -1,7 +1,9 @@
 use crate::{
     assets::MainMenuAssets,
     options::{ApplyOptionsEvent, OptionsRes},
-    states::{CharacterSelectionCleanup, MainMenuState, OptionsMenuCleanup, TitleMenuCleanup},
+    states::{
+        AppState, CharacterSelectionCleanup, MainMenuState, OptionsMenuCleanup, TitleMenuCleanup,
+    },
 };
 use bevy::{
     app::AppExit,
@@ -274,7 +276,8 @@ pub(super) fn website_footer_button_focus_system(
 pub(super) fn menu_button_action_system(
     mut nav_events: EventReader<NavEvent>,
     focusable_q: Query<&ButtonAction, With<Focusable>>,
-    mut next_state: ResMut<NextState<MainMenuState>>,
+    mut next_main_menu_state: ResMut<NextState<MainMenuState>>,
+    mut next_app_state: ResMut<NextState<AppState>>,
     mut exit_events: EventWriter<AppExit>,
     mut apply_options_events: EventWriter<ApplyOptionsEvent>,
 ) {
@@ -284,11 +287,11 @@ pub(super) fn menu_button_action_system(
                 match button_action {
                     ButtonAction::EnterOptions => {
                         // Transition to the Options state.
-                        next_state.set(MainMenuState::Options);
+                        next_main_menu_state.set(MainMenuState::Options);
                     }
                     ButtonAction::EnterCharacterSelection => {
                         // Transition to the CharacterSelection state.
-                        next_state.set(MainMenuState::CharacterSelection);
+                        next_main_menu_state.set(MainMenuState::CharacterSelection);
                     }
                     ButtonAction::Exit => {
                         // Trigger the AppExit event.
@@ -300,7 +303,7 @@ pub(super) fn menu_button_action_system(
                     }
                     ButtonAction::EnterTitle => {
                         // Transition to the Title state.
-                        next_state.set(MainMenuState::Title);
+                        next_main_menu_state.set(MainMenuState::Title);
                     }
                     ButtonAction::OpenBlueskyWebsite => {
                         // Open the web browser to navigate to the Bluesky website.
@@ -309,6 +312,11 @@ pub(super) fn menu_button_action_system(
                     ButtonAction::OpenGithubWebsite => {
                         // Open the web browser to navigate to the Github website.
                         open_website(GITHUB_URL);
+                    }
+                    ButtonAction::EnterGame => {
+                        // Enter the game loading state and reset the main menu state
+                        next_app_state.set(AppState::GameLoading);
+                        next_main_menu_state.set(MainMenuState::None);
                     }
                 }
             }

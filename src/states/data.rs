@@ -8,8 +8,10 @@ pub(crate) enum AppState {
     MainMenuLoading,
     /// State for the main menu to go to other parts of the game
     MainMenu,
-    /// Active gameplay state when player is in the main game
-    InGame,
+    /// State for loading the game assets
+    GameLoading,
+    /// State for actually playing the game
+    Game,
 }
 
 /// States enum for managing gameplay states

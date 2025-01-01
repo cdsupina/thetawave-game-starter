@@ -4,6 +4,7 @@ use bevy::prelude::Component;
 pub(super) enum ButtonAction {
     EnterOptions,
     EnterCharacterSelection,
+    EnterGame,
     Exit,
     ApplyOptions,
     EnterTitle,
@@ -18,6 +19,7 @@ impl TryFrom<&String> for ButtonAction {
         match value.as_str() {
             "enter_options" => Ok(Self::EnterOptions),
             "enter_character_selection" => Ok(Self::EnterCharacterSelection),
+            "enter_game" => Ok(Self::EnterGame),
             "exit" => Ok(Self::Exit),
             "apply_options" => Ok(Self::ApplyOptions),
             "enter_title" => Ok(Self::EnterTitle),

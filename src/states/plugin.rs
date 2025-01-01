@@ -25,7 +25,7 @@ impl Plugin for ThetawaveStatesPlugin {
             )
             // Add cleanup system for when exiting InGame state
             .add_systems(
-                OnExit(AppState::InGame),
+                OnExit(AppState::Game),
                 cleanup_state_system::<InGameCleanup>,
             )
             // Add cleanup system for when exiting OptionsMenu state
