@@ -1,7 +1,9 @@
 use crate::{
     assets::MainMenuAssets,
     options::{ApplyOptionsEvent, OptionsRes},
-    states::{MainMenuState, OptionsMenuCleanup, TitleMenuCleanup},
+    states::{
+        AppState, CharacterSelectionCleanup, MainMenuState, OptionsMenuCleanup, TitleMenuCleanup,
+    },
 };
 use bevy::{
     app::AppExit,
@@ -16,7 +18,6 @@ use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
 use bevy_egui::{egui, EguiContexts, EguiSettings};
 use bevy_hui::prelude::{HtmlComponents, HtmlFunctions, HtmlNode, Tags};
 use log::{info, warn};
-use webbrowser;
 
 use super::data::ButtonAction;
 
@@ -75,6 +76,17 @@ pub(super) fn setup_ui_system(
     }
 }
 
+/// This function sets up the character selection interface.
+/// It spawns the options menu HTML node and associates the cleanup component with it.
+pub(super) fn setup_character_selection_system(
+    mut cmds: Commands,
+    main_menu_assets: Res<MainMenuAssets>,
+) {
+    // Create an HTMLNode with options menu HTML and link the OptionsMenuCleanup component.
+    cmds.spawn(HtmlNode(main_menu_assets.character_selection_html.clone()))
+        .insert(CharacterSelectionCleanup);
+}
+
 /// This function sets up the options menu interface.
 /// It spawns the options menu HTML node and associates the cleanup component with it.
 pub(super) fn setup_options_menu_system(mut cmds: Commands, main_menu_assets: Res<MainMenuAssets>) {
@@ -87,7 +99,7 @@ pub(super) fn setup_options_menu_system(mut cmds: Commands, main_menu_assets: Re
 /// It spawns the main menu HTML node and associates the cleanup component with it.
 pub(super) fn setup_title_menu_system(mut cmds: Commands, main_menu_assets: Res<MainMenuAssets>) {
     // Create an HTMLNode with main menu HTML and link the TitleMenuCleanup component.
-    cmds.spawn(HtmlNode(main_menu_assets.main_menu_html.clone()))
+    cmds.spawn(HtmlNode(main_menu_assets.title_menu_html.clone()))
         .insert(TitleMenuCleanup);
 }
 
@@ -263,7 +275,8 @@ pub(super) fn website_footer_button_focus_system(
 pub(super) fn menu_button_action_system(
     mut nav_events: EventReader<NavEvent>,
     focusable_q: Query<&ButtonAction, With<Focusable>>,
-    mut next_state: ResMut<NextState<MainMenuState>>,
+    mut next_main_menu_state: ResMut<NextState<MainMenuState>>,
+    mut next_app_state: ResMut<NextState<AppState>>,
     mut exit_events: EventWriter<AppExit>,
     mut apply_options_events: EventWriter<ApplyOptionsEvent>,
 ) {
@@ -273,11 +286,11 @@ pub(super) fn menu_button_action_system(
                 match button_action {
                     ButtonAction::EnterOptions => {
                         // Transition to the Options state.
-                        next_state.set(MainMenuState::Options);
+                        next_main_menu_state.set(MainMenuState::Options);
                     }
                     ButtonAction::EnterCharacterSelection => {
                         // Transition to the CharacterSelection state.
-                        next_state.set(MainMenuState::CharacterSelection);
+                        next_main_menu_state.set(MainMenuState::CharacterSelection);
                     }
                     ButtonAction::Exit => {
                         // Trigger the AppExit event.
@@ -289,7 +302,7 @@ pub(super) fn menu_button_action_system(
                     }
                     ButtonAction::EnterTitle => {
                         // Transition to the Title state.
-                        next_state.set(MainMenuState::Title);
+                        next_main_menu_state.set(MainMenuState::Title);
                     }
                     ButtonAction::OpenBlueskyWebsite => {
                         // Open the web browser to navigate to the Bluesky website.
@@ -298,6 +311,11 @@ pub(super) fn menu_button_action_system(
                     ButtonAction::OpenGithubWebsite => {
                         // Open the web browser to navigate to the Github website.
                         open_website(GITHUB_URL);
+                    }
+                    ButtonAction::EnterGame => {
+                        // Enter the game loading state and reset the main menu state
+                        next_app_state.set(AppState::GameLoading);
+                        next_main_menu_state.set(MainMenuState::None);
                     }
                 }
             }
@@ -318,10 +336,7 @@ pub(super) fn options_menu_system(mut contexts: EguiContexts, mut options_res: R
             ui.horizontal(|ui| {
                 ui.label("Window Mode");
                 egui::ComboBox::from_id_salt("window_mode_combobox")
-                    .selected_text(format!(
-                        "{}",
-                        window_mode_to_string(&options_res.window_mode)
-                    ))
+                    .selected_text(window_mode_to_string(&options_res.window_mode).to_string())
                     .show_ui(ui, |ui| {
                         ui.selectable_value(
                             &mut options_res.window_mode,
@@ -340,10 +355,9 @@ pub(super) fn options_menu_system(mut contexts: EguiContexts, mut options_res: R
             ui.horizontal(|ui| {
                 ui.label("Resolution");
                 egui::ComboBox::from_id_salt("resolution_combobox")
-                    .selected_text(format!(
-                        "{}",
-                        window_resolution_to_string(&options_res.window_resolution)
-                    ))
+                    .selected_text(
+                        window_resolution_to_string(&options_res.window_resolution).to_string(),
+                    )
                     .show_ui(ui, |ui| {
                         // Iterate through every available resolution and create a selectable value
                         for resolution in options_res.get_resolutions() {

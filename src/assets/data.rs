@@ -8,8 +8,8 @@ use rand::Rng;
 #[derive(AssetCollection, Resource)]
 pub(crate) struct MainMenuAssets {
     // HTML template for main menu layout
-    #[asset(path = "ui/menus/main_menu.html")]
-    pub main_menu_html: Handle<HtmlTemplate>,
+    #[asset(path = "ui/menus/title_menu.html")]
+    pub title_menu_html: Handle<HtmlTemplate>,
     // HTML template for menu buttons
     #[asset(path = "ui/components/menu_button.html")]
     pub menu_button_html: Handle<HtmlTemplate>,
@@ -37,6 +37,9 @@ pub(crate) struct MainMenuAssets {
     // Animated github logo Aseprite
     #[asset(path = "media/aseprite/github_logo.aseprite")]
     pub github_logo_aseprite: Handle<Aseprite>,
+    // HTML template for character selection layout
+    #[asset(path = "ui/menus/character_selection.html")]
+    pub character_selection_html: Handle<HtmlTemplate>,
 }
 
 // Assets for background images

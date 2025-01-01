@@ -19,6 +19,9 @@ impl Plugin for ThetawaveAssetsPlugin {
                 .continue_to_state(AppState::MainMenu)
                 .load_collection::<MainMenuAssets>()
                 .load_collection::<BackgroundAssets>(),
+        )
+        .add_loading_state(
+            LoadingState::new(AppState::GameLoading).continue_to_state(AppState::Game),
         );
     }
 }
