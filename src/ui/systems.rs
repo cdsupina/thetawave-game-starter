@@ -18,7 +18,6 @@ use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
 use bevy_egui::{egui, EguiContexts, EguiSettings};
 use bevy_hui::prelude::{HtmlComponents, HtmlFunctions, HtmlNode, Tags};
 use log::{info, warn};
-use webbrowser;
 
 use super::data::ButtonAction;
 
@@ -337,10 +336,7 @@ pub(super) fn options_menu_system(mut contexts: EguiContexts, mut options_res: R
             ui.horizontal(|ui| {
                 ui.label("Window Mode");
                 egui::ComboBox::from_id_salt("window_mode_combobox")
-                    .selected_text(format!(
-                        "{}",
-                        window_mode_to_string(&options_res.window_mode)
-                    ))
+                    .selected_text(window_mode_to_string(&options_res.window_mode).to_string())
                     .show_ui(ui, |ui| {
                         ui.selectable_value(
                             &mut options_res.window_mode,
@@ -359,10 +355,9 @@ pub(super) fn options_menu_system(mut contexts: EguiContexts, mut options_res: R
             ui.horizontal(|ui| {
                 ui.label("Resolution");
                 egui::ComboBox::from_id_salt("resolution_combobox")
-                    .selected_text(format!(
-                        "{}",
-                        window_resolution_to_string(&options_res.window_resolution)
-                    ))
+                    .selected_text(
+                        window_resolution_to_string(&options_res.window_resolution).to_string(),
+                    )
                     .show_ui(ui, |ui| {
                         // Iterate through every available resolution and create a selectable value
                         for resolution in options_res.get_resolutions() {
