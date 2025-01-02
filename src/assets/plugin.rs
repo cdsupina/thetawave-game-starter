@@ -1,4 +1,4 @@
-use super::data::{BackgroundAssets, MainMenuAssets};
+use super::data::{BackgroundAssets, UiAssets};
 use crate::states::AppState;
 use bevy::app::Plugin;
 use bevy_asset_loader::loading_state::{
@@ -17,7 +17,7 @@ impl Plugin for ThetawaveAssetsPlugin {
         .add_loading_state(
             LoadingState::new(AppState::MainMenuLoading)
                 .continue_to_state(AppState::MainMenu)
-                .load_collection::<MainMenuAssets>()
+                .load_collection::<UiAssets>()
                 .load_collection::<BackgroundAssets>(),
         )
         .add_loading_state(

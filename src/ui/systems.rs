@@ -1,8 +1,10 @@
 use crate::{
-    assets::MainMenuAssets,
+    assets::UiAssets,
     options::{ApplyOptionsEvent, OptionsRes},
     states::{
-        AppState, CharacterSelectionCleanup, MainMenuState, OptionsMenuCleanup, TitleMenuCleanup,
+        AppState, CharacterSelectionCleanup, GameCleanup, GameState, MainMenuState,
+        OptionsMenuCleanup, PauseCleanup, PauseMainCleanup, PauseMenuState, PauseOptionsCleanup,
+        TitleMenuCleanup,
     },
 };
 use bevy::{
@@ -29,30 +31,27 @@ const BLUESKY_URL: &str = "https://bsky.app/profile/carlo.metalmancy.tech";
 pub(super) fn setup_ui_system(
     mut html_funcs: HtmlFunctions,
     mut html_comps: HtmlComponents,
-    main_menu_assets: Res<MainMenuAssets>,
+    ui_assets: Res<UiAssets>,
     mut egui_settings: Query<&mut EguiSettings>,
 ) {
     // Register the footer button component which is used for website links.
     // It uses a spawn function to also establish the focus behaviour on it.
     html_comps.register(
         "website_footer_button",
-        main_menu_assets.website_footer_button_html.clone(),
+        ui_assets.website_footer_button_html.clone(),
     );
 
     // Register the main menu button component.
     // It uses a spawn function to also establish the focus behaviour on it.
-    html_comps.register("menu_button", main_menu_assets.menu_button_html.clone());
+    html_comps.register("menu_button", ui_assets.menu_button_html.clone());
 
     html_comps.register(
         "menu_button_sprite",
-        main_menu_assets.menu_button_sprite_html.clone(),
+        ui_assets.menu_button_sprite_html.clone(),
     );
 
     // Registers the thetawave logo component
-    html_comps.register(
-        "thetawave_logo",
-        main_menu_assets.thetawave_logo_html.clone(),
-    );
+    html_comps.register("thetawave_logo", ui_assets.thetawave_logo_html.clone());
 
     // Register the "assign_action" function that links UI components and their actions.
     html_funcs.register("setup_menu_button", setup_menu_button);
@@ -74,13 +73,10 @@ pub(super) fn setup_ui_system(
 
 /// This function sets up the character selection interface.
 /// It spawns the options menu HTML node and associates the cleanup component with it.
-pub(super) fn setup_character_selection_system(
-    mut cmds: Commands,
-    main_menu_assets: Res<MainMenuAssets>,
-) {
+pub(super) fn setup_character_selection_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
     // Create an HTMLNode with options menu HTML and link the OptionsMenuCleanup component.
     cmds.spawn((
-        HtmlNode(main_menu_assets.character_selection_html.clone()),
+        HtmlNode(ui_assets.character_selection_html.clone()),
         CharacterSelectionCleanup,
         Name::new("Character Selection Menu"),
     ));
@@ -88,10 +84,10 @@ pub(super) fn setup_character_selection_system(
 
 /// This function sets up the options menu interface.
 /// It spawns the options menu HTML node and associates the cleanup component with it.
-pub(super) fn setup_options_menu_system(mut cmds: Commands, main_menu_assets: Res<MainMenuAssets>) {
+pub(super) fn setup_options_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
     // Create an HTMLNode with options menu HTML and link the OptionsMenuCleanup component.
     cmds.spawn((
-        HtmlNode(main_menu_assets.options_menu_html.clone()),
+        HtmlNode(ui_assets.options_main_menu_html.clone()),
         OptionsMenuCleanup,
         Name::new("Options Menu"),
     ));
@@ -99,12 +95,39 @@ pub(super) fn setup_options_menu_system(mut cmds: Commands, main_menu_assets: Re
 
 /// This system sets up the title menu interface.
 /// It spawns the main menu HTML node and associates the cleanup component with it.
-pub(super) fn setup_title_menu_system(mut cmds: Commands, main_menu_assets: Res<MainMenuAssets>) {
+pub(super) fn setup_title_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
     // Create an HTMLNode with main menu HTML and link the TitleMenuCleanup component.
     cmds.spawn((
-        HtmlNode(main_menu_assets.title_menu_html.clone()),
+        HtmlNode(ui_assets.title_menu_html.clone()),
         TitleMenuCleanup,
         Name::new("Title Menu"),
+    ));
+}
+
+/// This system sets up the title menu interface.
+/// It spawns the main menu HTML node and associates the cleanup component with it.
+pub(super) fn setup_pause_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
+    // Create an HTMLNode with main menu HTML and link the TitleMenuCleanup component.
+
+    cmds.spawn((
+        HtmlNode(ui_assets.pause_menu_html.clone()),
+        PauseCleanup,
+        PauseMainCleanup,
+        GameCleanup,
+        Name::new("Pause Menu"),
+    ));
+}
+
+/// This system sets up the title menu interface.
+/// It spawns the main menu HTML node and associates the cleanup component with it.
+pub(super) fn setup_pause_options_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
+    // Create an HTMLNode with main menu HTML and link the TitleMenuCleanup component.
+    cmds.spawn((
+        HtmlNode(ui_assets.options_pause_menu_html.clone()),
+        PauseCleanup,
+        PauseOptionsCleanup,
+        GameCleanup,
+        Name::new("Pause Menu"),
     ));
 }
 
@@ -114,7 +137,7 @@ fn setup_website_footer_button(
     In(entity): In<Entity>,
     tags: Query<&Tags>,
     mut cmds: Commands,
-    main_menu_assets: Res<MainMenuAssets>,
+    ui_assets: Res<UiAssets>,
 ) {
     if let Ok(tags) = tags.get(entity) {
         if let Some(button_action_str) = tags.get("button_action") {
@@ -125,7 +148,7 @@ fn setup_website_footer_button(
                         cmds.entity(entity).insert((
                             AseUiAnimation {
                                 animation: Animation::tag("released"),
-                                aseprite: main_menu_assets.bluesky_logo_aseprite.clone(),
+                                aseprite: ui_assets.bluesky_logo_aseprite.clone(),
                             },
                             ButtonAction::OpenBlueskyWebsite,
                             Name::new("Bluesky Website Button"),
@@ -136,7 +159,7 @@ fn setup_website_footer_button(
                         cmds.entity(entity).insert((
                             AseUiAnimation {
                                 animation: Animation::tag("released"),
-                                aseprite: main_menu_assets.github_logo_aseprite.clone(),
+                                aseprite: ui_assets.github_logo_aseprite.clone(),
                             },
                             ButtonAction::OpenGithubWebsite,
                             Name::new("Github Website Button"),
@@ -165,7 +188,7 @@ fn setup_menu_button_sprite(
     In(entity): In<Entity>,
     tags: Query<&Tags>,
     mut cmds: Commands,
-    main_menu_assets: Res<MainMenuAssets>,
+    ui_assets: Res<UiAssets>,
 ) {
     // Get tags for the entity
     if let Ok(tags) = tags.get(entity) {
@@ -179,7 +202,7 @@ fn setup_menu_button_sprite(
                     } else {
                         "released"
                     }),
-                    aseprite: main_menu_assets.menu_button_aseprite.clone(),
+                    aseprite: ui_assets.menu_button_aseprite.clone(),
                 },
                 Name::new("Menu Button Sprite"),
             ));
@@ -188,15 +211,11 @@ fn setup_menu_button_sprite(
 }
 
 /// Sets up the title logo animation for the game's main menu
-fn setup_title_logo(
-    In(entity): In<Entity>,
-    mut cmds: Commands,
-    main_menu_assets: Res<MainMenuAssets>,
-) {
+fn setup_title_logo(In(entity): In<Entity>, mut cmds: Commands, ui_assets: Res<UiAssets>) {
     cmds.entity(entity).insert((
         AseUiAnimation {
             animation: Animation::tag("title").with_speed(1.25),
-            aseprite: main_menu_assets.thetawave_logo_aseprite.clone(),
+            aseprite: ui_assets.thetawave_logo_aseprite.clone(),
         },
         Name::new("Title Logo"),
     ));
@@ -298,6 +317,8 @@ pub(super) fn menu_button_action_system(
     focusable_q: Query<&ButtonAction, With<Focusable>>,
     mut next_main_menu_state: ResMut<NextState<MainMenuState>>,
     mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+    mut next_pause_state: ResMut<NextState<PauseMenuState>>,
     mut exit_events: EventWriter<AppExit>,
     mut apply_options_events: EventWriter<ApplyOptionsEvent>,
 ) {
@@ -305,7 +326,7 @@ pub(super) fn menu_button_action_system(
         if let NavEvent::NoChanges { from, .. } = event {
             if let Ok(button_action) = focusable_q.get(*from.first()) {
                 match button_action {
-                    ButtonAction::EnterOptions => {
+                    ButtonAction::EnterMainMenuOptions => {
                         // Transition to the Options state.
                         next_main_menu_state.set(MainMenuState::Options);
                     }
@@ -337,6 +358,21 @@ pub(super) fn menu_button_action_system(
                         // Enter the game loading state and reset the main menu state
                         next_app_state.set(AppState::GameLoading);
                         next_main_menu_state.set(MainMenuState::None);
+                        next_game_state.set(GameState::Playing);
+                        next_pause_state.set(PauseMenuState::None);
+                    }
+                    ButtonAction::EnterMainMenu => {
+                        next_app_state.set(AppState::MainMenuLoading);
+                    }
+                    ButtonAction::EnterPauseMenuOptions => {
+                        next_pause_state.set(PauseMenuState::Options);
+                    }
+                    ButtonAction::EnterPlaying => {
+                        next_game_state.set(GameState::Playing);
+                        next_pause_state.set(PauseMenuState::None);
+                    }
+                    ButtonAction::EnterMainPause => {
+                        next_pause_state.set(PauseMenuState::Main);
                     }
                 }
             }

@@ -3,7 +3,8 @@ mod plugin;
 mod systems;
 
 pub(crate) use data::{
-    AppState, CharacterSelectionCleanup, InGameCleanup, MainMenuCleanup, MainMenuState,
-    OptionsMenuCleanup, TitleMenuCleanup,
+    AppState, CharacterSelectionCleanup, GameCleanup, GameState, MainMenuCleanup, MainMenuState,
+    OptionsMenuCleanup, PauseCleanup, PauseMainCleanup, PauseMenuState, PauseOptionsCleanup,
+    TitleMenuCleanup,
 };
 pub(crate) use plugin::ThetawaveStatesPlugin;

@@ -6,7 +6,7 @@ use rand::Rng;
 
 // Main menu assets including HTML templates for various UI components
 #[derive(AssetCollection, Resource)]
-pub(crate) struct MainMenuAssets {
+pub(crate) struct UiAssets {
     // HTML template for main menu layout
     #[asset(path = "ui/menus/title_menu.html")]
     pub title_menu_html: Handle<HtmlTemplate>,
@@ -20,8 +20,11 @@ pub(crate) struct MainMenuAssets {
     #[asset(path = "ui/components/website_footer_button.html")]
     pub website_footer_button_html: Handle<HtmlTemplate>,
     // HTML template for options menu layout
-    #[asset(path = "ui/menus/options_menu.html")]
-    pub options_menu_html: Handle<HtmlTemplate>,
+    #[asset(path = "ui/menus/options_main_menu.html")]
+    pub options_main_menu_html: Handle<HtmlTemplate>,
+    // HTML template for options pause menu layout
+    #[asset(path = "ui/menus/options_pause_menu.html")]
+    pub options_pause_menu_html: Handle<HtmlTemplate>,
     // HTML template for thetawave logo
     #[asset(path = "ui/components/thetawave_logo.html")]
     pub thetawave_logo_html: Handle<HtmlTemplate>,
@@ -40,6 +43,9 @@ pub(crate) struct MainMenuAssets {
     // HTML template for character selection layout
     #[asset(path = "ui/menus/character_selection.html")]
     pub character_selection_html: Handle<HtmlTemplate>,
+    // HTML template for the pause menu
+    #[asset(path = "ui/menus/pause_menu.html")]
+    pub pause_menu_html: Handle<HtmlTemplate>,
 }
 
 // Assets for background images
