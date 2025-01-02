@@ -1,9 +1,9 @@
 use bevy::{
     app::{Plugin, Update},
-    prelude::{in_state, IntoSystemConfigs, OnEnter},
+    prelude::{in_state, Condition, IntoSystemConfigs, OnEnter},
 };
 
-use crate::states::MainMenuState;
+use crate::states::{MainMenuState, PauseMenuState};
 
 use super::{
     data::OptionsRes,
@@ -27,8 +27,10 @@ impl Plugin for ThetawaveOptionsPlugin {
         app.add_systems(
             Update,
             (
-                apply_options_system.run_if(in_state(MainMenuState::Options)),
-                update_ui_scale_system.run_if(in_state(MainMenuState::Options)),
+                apply_options_system
+                    .run_if(in_state(MainMenuState::Options).or(in_state(PauseMenuState::Options))),
+                update_ui_scale_system
+                    .run_if(in_state(MainMenuState::Options).or(in_state(PauseMenuState::Options))),
             ),
         );
     }

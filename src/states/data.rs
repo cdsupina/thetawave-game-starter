@@ -38,6 +38,15 @@ pub(crate) enum GameState {
     Paused,
 }
 
+/// States enum for managing pause menu states
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
+pub(crate) enum PauseMenuState {
+    #[default]
+    None,
+    Main,
+    Options,
+}
+
 /// Component marker for main menu cleanup
 #[derive(Component)]
 pub(crate) struct MainMenuCleanup;
@@ -61,3 +70,9 @@ pub(crate) struct GameCleanup;
 /// Component marker for pause cleanup
 #[derive(Component)]
 pub(crate) struct PauseCleanup;
+
+#[derive(Component)]
+pub(crate) struct PauseMainCleanup;
+
+#[derive(Component)]
+pub(crate) struct PauseOptionsCleanup;

@@ -20,8 +20,11 @@ pub(crate) struct UiAssets {
     #[asset(path = "ui/components/website_footer_button.html")]
     pub website_footer_button_html: Handle<HtmlTemplate>,
     // HTML template for options menu layout
-    #[asset(path = "ui/menus/options_menu.html")]
-    pub options_menu_html: Handle<HtmlTemplate>,
+    #[asset(path = "ui/menus/options_main_menu.html")]
+    pub options_main_menu_html: Handle<HtmlTemplate>,
+    // HTML template for options pause menu layout
+    #[asset(path = "ui/menus/options_pause_menu.html")]
+    pub options_pause_menu_html: Handle<HtmlTemplate>,
     // HTML template for thetawave logo
     #[asset(path = "ui/components/thetawave_logo.html")]
     pub thetawave_logo_html: Handle<HtmlTemplate>,

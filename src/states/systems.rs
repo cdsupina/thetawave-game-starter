@@ -1,4 +1,4 @@
-use super::{GameState, MainMenuState};
+use super::{GameState, MainMenuState, PauseMenuState};
 use bevy::{
     input::ButtonInput,
     prelude::{
@@ -25,14 +25,21 @@ pub(super) fn enter_title_menu_state_system(mut next_state: ResMut<NextState<Mai
 
 /// Toggle weather the game is paused or playing
 pub(super) fn toggle_game_state(
-    mut next_state: ResMut<NextState<GameState>>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+    mut next_pause_state: ResMut<NextState<PauseMenuState>>,
     current_state: Res<State<GameState>>,
     keys: Res<ButtonInput<KeyCode>>,
 ) {
     if keys.just_released(KeyCode::Escape) {
-        next_state.set(match **current_state {
-            GameState::Playing => GameState::Paused,
-            GameState::Paused => GameState::Playing,
-        });
+        match **current_state {
+            GameState::Playing => {
+                next_game_state.set(GameState::Paused);
+                next_pause_state.set(PauseMenuState::Main);
+            }
+            GameState::Paused => {
+                next_game_state.set(GameState::Playing);
+                next_pause_state.set(PauseMenuState::None);
+            }
+        };
     }
 }

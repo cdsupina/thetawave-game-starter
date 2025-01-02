@@ -3,7 +3,8 @@ use crate::{
     options::{ApplyOptionsEvent, OptionsRes},
     states::{
         AppState, CharacterSelectionCleanup, GameCleanup, GameState, MainMenuState,
-        OptionsMenuCleanup, PauseCleanup, TitleMenuCleanup,
+        OptionsMenuCleanup, PauseCleanup, PauseMainCleanup, PauseMenuState, PauseOptionsCleanup,
+        TitleMenuCleanup,
     },
 };
 use bevy::{
@@ -86,7 +87,7 @@ pub(super) fn setup_character_selection_system(mut cmds: Commands, ui_assets: Re
 pub(super) fn setup_options_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
     // Create an HTMLNode with options menu HTML and link the OptionsMenuCleanup component.
     cmds.spawn((
-        HtmlNode(ui_assets.options_menu_html.clone()),
+        HtmlNode(ui_assets.options_main_menu_html.clone()),
         OptionsMenuCleanup,
         Name::new("Options Menu"),
     ));
@@ -107,9 +108,24 @@ pub(super) fn setup_title_menu_system(mut cmds: Commands, ui_assets: Res<UiAsset
 /// It spawns the main menu HTML node and associates the cleanup component with it.
 pub(super) fn setup_pause_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
     // Create an HTMLNode with main menu HTML and link the TitleMenuCleanup component.
+
     cmds.spawn((
         HtmlNode(ui_assets.pause_menu_html.clone()),
         PauseCleanup,
+        PauseMainCleanup,
+        GameCleanup,
+        Name::new("Pause Menu"),
+    ));
+}
+
+/// This system sets up the title menu interface.
+/// It spawns the main menu HTML node and associates the cleanup component with it.
+pub(super) fn setup_pause_options_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
+    // Create an HTMLNode with main menu HTML and link the TitleMenuCleanup component.
+    cmds.spawn((
+        HtmlNode(ui_assets.options_pause_menu_html.clone()),
+        PauseCleanup,
+        PauseOptionsCleanup,
         GameCleanup,
         Name::new("Pause Menu"),
     ));
@@ -302,6 +318,7 @@ pub(super) fn menu_button_action_system(
     mut next_main_menu_state: ResMut<NextState<MainMenuState>>,
     mut next_app_state: ResMut<NextState<AppState>>,
     mut next_game_state: ResMut<NextState<GameState>>,
+    mut next_pause_state: ResMut<NextState<PauseMenuState>>,
     mut exit_events: EventWriter<AppExit>,
     mut apply_options_events: EventWriter<ApplyOptionsEvent>,
 ) {
@@ -309,7 +326,7 @@ pub(super) fn menu_button_action_system(
         if let NavEvent::NoChanges { from, .. } = event {
             if let Ok(button_action) = focusable_q.get(*from.first()) {
                 match button_action {
-                    ButtonAction::EnterOptions => {
+                    ButtonAction::EnterMainMenuOptions => {
                         // Transition to the Options state.
                         next_main_menu_state.set(MainMenuState::Options);
                     }
@@ -328,8 +345,6 @@ pub(super) fn menu_button_action_system(
                     ButtonAction::EnterTitle => {
                         // Transition to the Title state.
                         next_main_menu_state.set(MainMenuState::Title);
-                        next_app_state.set(AppState::MainMenuLoading);
-                        next_game_state.set(GameState::Playing);
                     }
                     ButtonAction::OpenBlueskyWebsite => {
                         // Open the web browser to navigate to the Bluesky website.
@@ -343,6 +358,21 @@ pub(super) fn menu_button_action_system(
                         // Enter the game loading state and reset the main menu state
                         next_app_state.set(AppState::GameLoading);
                         next_main_menu_state.set(MainMenuState::None);
+                        next_game_state.set(GameState::Playing);
+                        next_pause_state.set(PauseMenuState::None);
+                    }
+                    ButtonAction::EnterMainMenu => {
+                        next_app_state.set(AppState::MainMenuLoading);
+                    }
+                    ButtonAction::EnterPauseMenuOptions => {
+                        next_pause_state.set(PauseMenuState::Options);
+                    }
+                    ButtonAction::EnterPlaying => {
+                        next_game_state.set(GameState::Playing);
+                        next_pause_state.set(PauseMenuState::None);
+                    }
+                    ButtonAction::EnterMainPause => {
+                        next_pause_state.set(PauseMenuState::Main);
                     }
                 }
             }

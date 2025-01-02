@@ -1,12 +1,13 @@
 use super::systems::{
     menu_button_action_system, menu_button_focus_system, options_menu_system,
     setup_character_selection_system, setup_options_menu_system, setup_pause_menu_system,
-    setup_title_menu_system, setup_ui_system, website_footer_button_focus_system,
+    setup_pause_options_system, setup_title_menu_system, setup_ui_system,
+    website_footer_button_focus_system,
 };
-use crate::states::{AppState, GameState, MainMenuState};
+use crate::states::{AppState, MainMenuState, PauseMenuState};
 use bevy::{
     app::{Plugin, Update},
-    prelude::{in_state, IntoSystemConfigs, OnEnter},
+    prelude::{in_state, Condition, IntoSystemConfigs, OnEnter},
 };
 use bevy_alt_ui_navigation_lite::NavRequestSystem;
 use bevy_egui::EguiPlugin;
@@ -36,7 +37,10 @@ impl Plugin for ThetawaveUiPlugin {
         );
 
         // Initialize and setup the pause menu ui components when entering the paused state
-        app.add_systems(OnEnter(GameState::Paused), setup_pause_menu_system);
+        app.add_systems(OnEnter(PauseMenuState::Main), setup_pause_menu_system);
+
+        // Initialize and setup the options pause menu when inetering the paused options state
+        app.add_systems(OnEnter(PauseMenuState::Options), setup_pause_options_system);
 
         // Add update systems that run every frame:
         app.add_systems(
@@ -45,7 +49,8 @@ impl Plugin for ThetawaveUiPlugin {
                 menu_button_action_system.after(NavRequestSystem),
                 menu_button_focus_system.after(NavRequestSystem),
                 website_footer_button_focus_system.after(NavRequestSystem),
-                options_menu_system.run_if(in_state(MainMenuState::Options)),
+                options_menu_system
+                    .run_if(in_state(MainMenuState::Options).or(in_state(PauseMenuState::Options))),
             ),
         );
     }
