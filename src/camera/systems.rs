@@ -1,5 +1,6 @@
 use bevy::{
     color::Color,
+    core::Name,
     core_pipeline::{bloom::Bloom, tonemapping::Tonemapping},
     math::Vec3,
     prelude::{
@@ -48,5 +49,6 @@ pub(super) fn setup_cameras_system(mut cmd: Commands) {
             ..Default::default()
         }),
         Bloom::OLD_SCHOOL,
+        Name::new("3D Camera"),
     ));
 }
