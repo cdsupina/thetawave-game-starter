@@ -6,7 +6,7 @@ use rand::Rng;
 
 // Main menu assets including HTML templates for various UI components
 #[derive(AssetCollection, Resource)]
-pub(crate) struct MainMenuAssets {
+pub(crate) struct UiAssets {
     // HTML template for main menu layout
     #[asset(path = "ui/menus/title_menu.html")]
     pub title_menu_html: Handle<HtmlTemplate>,
