@@ -14,7 +14,7 @@ It contains all the required features of a Thetawave style game.
 - [x] Embedded Assets
 - [x] Loading Screens
 - [ ] Character Selection
-- [ ] Pause Menu
+- [x] Pause Menu
 - [ ] Save Games
 - [ ] Background Music Player
 
