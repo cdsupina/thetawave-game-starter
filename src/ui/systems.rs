@@ -7,9 +7,10 @@ use crate::{
 };
 use bevy::{
     app::AppExit,
+    core::Name,
     prelude::{
-        Children, Commands, Entity, EntityCommands, EventReader, EventWriter, In, NextState, Query,
-        Res, ResMut, With,
+        Children, Commands, Entity, EventReader, EventWriter, In, NextState, Query, Res, ResMut,
+        With,
     },
     window::{MonitorSelection, WindowMode, WindowResolution},
 };
@@ -31,24 +32,16 @@ pub(super) fn setup_ui_system(
     main_menu_assets: Res<MainMenuAssets>,
     mut egui_settings: Query<&mut EguiSettings>,
 ) {
-    // Register the "assign_action" function that links UI components and their actions.
-    html_funcs.register("assign_action_to_menu_button", assign_action_to_menu_button);
-
     // Register the footer button component which is used for website links.
     // It uses a spawn function to also establish the focus behaviour on it.
-    html_comps.register_with_spawn_fn(
+    html_comps.register(
         "website_footer_button",
         main_menu_assets.website_footer_button_html.clone(),
-        attach_focusable,
     );
 
     // Register the main menu button component.
     // It uses a spawn function to also establish the focus behaviour on it.
-    html_comps.register_with_spawn_fn(
-        "menu_button",
-        main_menu_assets.menu_button_html.clone(),
-        attach_focusable,
-    );
+    html_comps.register("menu_button", main_menu_assets.menu_button_html.clone());
 
     html_comps.register(
         "menu_button_sprite",
@@ -60,6 +53,9 @@ pub(super) fn setup_ui_system(
         "thetawave_logo",
         main_menu_assets.thetawave_logo_html.clone(),
     );
+
+    // Register the "assign_action" function that links UI components and their actions.
+    html_funcs.register("setup_menu_button", setup_menu_button);
 
     // Registers setup function for the title logo
     html_funcs.register("setup_title_logo", setup_title_logo);
@@ -83,24 +79,33 @@ pub(super) fn setup_character_selection_system(
     main_menu_assets: Res<MainMenuAssets>,
 ) {
     // Create an HTMLNode with options menu HTML and link the OptionsMenuCleanup component.
-    cmds.spawn(HtmlNode(main_menu_assets.character_selection_html.clone()))
-        .insert(CharacterSelectionCleanup);
+    cmds.spawn((
+        HtmlNode(main_menu_assets.character_selection_html.clone()),
+        CharacterSelectionCleanup,
+        Name::new("Character Selection Menu"),
+    ));
 }
 
 /// This function sets up the options menu interface.
 /// It spawns the options menu HTML node and associates the cleanup component with it.
 pub(super) fn setup_options_menu_system(mut cmds: Commands, main_menu_assets: Res<MainMenuAssets>) {
     // Create an HTMLNode with options menu HTML and link the OptionsMenuCleanup component.
-    cmds.spawn(HtmlNode(main_menu_assets.options_menu_html.clone()))
-        .insert(OptionsMenuCleanup);
+    cmds.spawn((
+        HtmlNode(main_menu_assets.options_menu_html.clone()),
+        OptionsMenuCleanup,
+        Name::new("Options Menu"),
+    ));
 }
 
 /// This system sets up the title menu interface.
 /// It spawns the main menu HTML node and associates the cleanup component with it.
 pub(super) fn setup_title_menu_system(mut cmds: Commands, main_menu_assets: Res<MainMenuAssets>) {
     // Create an HTMLNode with main menu HTML and link the TitleMenuCleanup component.
-    cmds.spawn(HtmlNode(main_menu_assets.title_menu_html.clone()))
-        .insert(TitleMenuCleanup);
+    cmds.spawn((
+        HtmlNode(main_menu_assets.title_menu_html.clone()),
+        TitleMenuCleanup,
+        Name::new("Title Menu"),
+    ));
 }
 
 /// Sets up website footer buttons with appropriate animations and actions
@@ -117,21 +122,25 @@ fn setup_website_footer_button(
                 Ok(button_action) => match button_action {
                     // Handle Bluesky website button - add animation and action
                     ButtonAction::OpenBlueskyWebsite => {
-                        cmds.entity(entity)
-                            .insert(AseUiAnimation {
+                        cmds.entity(entity).insert((
+                            AseUiAnimation {
                                 animation: Animation::tag("released"),
                                 aseprite: main_menu_assets.bluesky_logo_aseprite.clone(),
-                            })
-                            .insert(ButtonAction::OpenBlueskyWebsite);
+                            },
+                            ButtonAction::OpenBlueskyWebsite,
+                            Name::new("Bluesky Website Button"),
+                        ));
                     }
                     // Handle Github website button - add animation and action
                     ButtonAction::OpenGithubWebsite => {
-                        cmds.entity(entity)
-                            .insert(AseUiAnimation {
+                        cmds.entity(entity).insert((
+                            AseUiAnimation {
                                 animation: Animation::tag("released"),
                                 aseprite: main_menu_assets.github_logo_aseprite.clone(),
-                            })
-                            .insert(ButtonAction::OpenGithubWebsite);
+                            },
+                            ButtonAction::OpenGithubWebsite,
+                            Name::new("Github Website Button"),
+                        ));
                     }
                     _ => {
                         warn!("Button action was not able to be mapped to a website action.")
@@ -143,7 +152,11 @@ fn setup_website_footer_button(
                 }
             };
         }
+    } else {
+        warn!("No tags found for website footer button.")
     }
+
+    cmds.entity(entity).insert(Focusable::default());
 }
 
 /// Sets up menu button sprite animations based on whether it's the first button
@@ -159,14 +172,17 @@ fn setup_menu_button_sprite(
         // Check if this is marked as the first button
         if let Some(first_str) = tags.get("first") {
             // Insert animation component with pressed/released state based on first status
-            cmds.entity(entity).insert(AseUiAnimation {
-                animation: Animation::tag(if first_str == "true" {
-                    "pressed"
-                } else {
-                    "released"
-                }),
-                aseprite: main_menu_assets.menu_button_aseprite.clone(),
-            });
+            cmds.entity(entity).insert((
+                AseUiAnimation {
+                    animation: Animation::tag(if first_str == "true" {
+                        "pressed"
+                    } else {
+                        "released"
+                    }),
+                    aseprite: main_menu_assets.menu_button_aseprite.clone(),
+                },
+                Name::new("Menu Button Sprite"),
+            ));
         }
     }
 }
@@ -177,14 +193,17 @@ fn setup_title_logo(
     mut cmds: Commands,
     main_menu_assets: Res<MainMenuAssets>,
 ) {
-    cmds.entity(entity).insert(AseUiAnimation {
-        animation: Animation::tag("title").with_speed(1.25),
-        aseprite: main_menu_assets.thetawave_logo_aseprite.clone(),
-    });
+    cmds.entity(entity).insert((
+        AseUiAnimation {
+            animation: Animation::tag("title").with_speed(1.25),
+            aseprite: main_menu_assets.thetawave_logo_aseprite.clone(),
+        },
+        Name::new("Title Logo"),
+    ));
 }
 
 // This function assigns actions to buttons based on their tags.
-fn assign_action_to_menu_button(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds: Commands) {
+fn setup_menu_button(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds: Commands) {
     if let Ok(tags) = tags.get(entity) {
         if let Some(button_action_str) = tags.get("button_action") {
             match ButtonAction::try_from(button_action_str) {
@@ -197,8 +216,15 @@ fn assign_action_to_menu_button(In(entity): In<Entity>, tags: Query<&Tags>, mut 
                     warn!("{}", msg);
                 }
             };
+
+            cmds.entity(entity)
+                .insert(Name::new(format!("Menu Button {}", button_action_str)));
         }
+    } else {
+        warn!("No tags not found for menu button.");
     }
+
+    cmds.entity(entity).insert(Focusable::default());
 }
 
 /// This function handles the opening of certain websites.
@@ -211,11 +237,6 @@ fn open_website(url: &str) {
         // If opening the URL has failed, it is logged as a warning.
         warn!("Failed to open website: {url}");
     }
-}
-
-// This function inserts Focusable component into given entity.
-fn attach_focusable(mut cmds: EntityCommands) {
-    cmds.insert(Focusable::default());
 }
 
 /// System that handles the focus state of menu buttons

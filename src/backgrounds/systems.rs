@@ -6,6 +6,7 @@ use crate::{
 use bevy::{
     asset::Assets,
     color::{Alpha, Color},
+    core::Name,
     math::Vec3,
     pbr::{MeshMaterial3d, PointLight, StandardMaterial},
     prelude::{
@@ -77,6 +78,7 @@ pub(super) fn spawn_bg_system(
             .with_translation(BACKGROUND_POS),
         MainMenuCleanup,
         InGameCleanup,
+        Name::new("Background Image"),
     ));
 
     // Initialize random number generator for positioning elements
@@ -107,6 +109,7 @@ pub(super) fn spawn_bg_system(
         PlanetRotationComponent::new(rng.gen_range(PLANET_ROTATION_SPEED_RANGE)),
         MainMenuCleanup,
         InGameCleanup,
+        Name::new("Planet"),
     ));
 
     // Calculate star position on opposite side of screen from planet
@@ -128,6 +131,7 @@ pub(super) fn spawn_bg_system(
         Visibility::default(),
         MainMenuCleanup,
         InGameCleanup,
+        Name::new("Star Cluster"),
     ))
     .with_children(|parent| {
         // Spawn central star
@@ -192,14 +196,18 @@ fn spawn_star(
             diffuse_transmission: 1.0,
             ..default()
         })),
+        Name::new("Star"),
     ))
     // Add point light to make star glow with a random light intensity
-    .with_child(PointLight {
-        color: star_color,
-        intensity: rng.gen_range(STAR_POINT_LIGHT_INTENSITY_RANGE),
-        range: STAR_POINT_LIGHT_RANGE,
-        ..default()
-    });
+    .with_child((
+        PointLight {
+            color: star_color,
+            intensity: rng.gen_range(STAR_POINT_LIGHT_INTENSITY_RANGE),
+            range: STAR_POINT_LIGHT_RANGE,
+            ..default()
+        },
+        Name::new("Star Point Light"),
+    ));
 }
 
 /// System to handle planet rotation animation
