@@ -2,7 +2,8 @@ use crate::{
     assets::UiAssets,
     options::{ApplyOptionsEvent, OptionsRes},
     states::{
-        AppState, CharacterSelectionCleanup, MainMenuState, OptionsMenuCleanup, TitleMenuCleanup,
+        AppState, CharacterSelectionCleanup, GameCleanup, GameState, MainMenuState,
+        OptionsMenuCleanup, PauseCleanup, TitleMenuCleanup,
     },
 };
 use bevy::{
@@ -99,6 +100,18 @@ pub(super) fn setup_title_menu_system(mut cmds: Commands, ui_assets: Res<UiAsset
         HtmlNode(ui_assets.title_menu_html.clone()),
         TitleMenuCleanup,
         Name::new("Title Menu"),
+    ));
+}
+
+/// This system sets up the title menu interface.
+/// It spawns the main menu HTML node and associates the cleanup component with it.
+pub(super) fn setup_pause_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
+    // Create an HTMLNode with main menu HTML and link the TitleMenuCleanup component.
+    cmds.spawn((
+        HtmlNode(ui_assets.pause_menu_html.clone()),
+        PauseCleanup,
+        GameCleanup,
+        Name::new("Pause Menu"),
     ));
 }
 
@@ -288,6 +301,7 @@ pub(super) fn menu_button_action_system(
     focusable_q: Query<&ButtonAction, With<Focusable>>,
     mut next_main_menu_state: ResMut<NextState<MainMenuState>>,
     mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_game_state: ResMut<NextState<GameState>>,
     mut exit_events: EventWriter<AppExit>,
     mut apply_options_events: EventWriter<ApplyOptionsEvent>,
 ) {
@@ -314,6 +328,8 @@ pub(super) fn menu_button_action_system(
                     ButtonAction::EnterTitle => {
                         // Transition to the Title state.
                         next_main_menu_state.set(MainMenuState::Title);
+                        next_app_state.set(AppState::MainMenuLoading);
+                        next_game_state.set(GameState::Playing);
                     }
                     ButtonAction::OpenBlueskyWebsite => {
                         // Open the web browser to navigate to the Bluesky website.

@@ -1,9 +1,9 @@
 use super::systems::{
     menu_button_action_system, menu_button_focus_system, options_menu_system,
-    setup_character_selection_system, setup_options_menu_system, setup_title_menu_system,
-    setup_ui_system, website_footer_button_focus_system,
+    setup_character_selection_system, setup_options_menu_system, setup_pause_menu_system,
+    setup_title_menu_system, setup_ui_system, website_footer_button_focus_system,
 };
-use crate::states::{AppState, MainMenuState};
+use crate::states::{AppState, GameState, MainMenuState};
 use bevy::{
     app::{Plugin, Update},
     prelude::{in_state, IntoSystemConfigs, OnEnter},
@@ -35,11 +35,10 @@ impl Plugin for ThetawaveUiPlugin {
             setup_character_selection_system,
         );
 
+        // Initialize and setup the pause menu ui components when entering the paused state
+        app.add_systems(OnEnter(GameState::Paused), setup_pause_menu_system);
+
         // Add update systems that run every frame:
-        // - Handle menu button clicks after navigation
-        // - Update menu button focus states after navigation
-        // - Handle website footer button focus after navigation
-        // - Process options menu logic when in Options state
         app.add_systems(
             Update,
             (

@@ -1,7 +1,7 @@
 use super::data::PlanetRotationComponent;
 use crate::{
     assets::BackgroundAssets,
-    states::{InGameCleanup, MainMenuCleanup},
+    states::{GameCleanup, MainMenuCleanup},
 };
 use bevy::{
     asset::Assets,
@@ -77,7 +77,7 @@ pub(super) fn spawn_bg_system(
             .with_scale(Vec3::splat(BACKGROUND_SCALE))
             .with_translation(BACKGROUND_POS),
         MainMenuCleanup,
-        InGameCleanup,
+        GameCleanup,
         Name::new("Background Image"),
     ));
 
@@ -108,7 +108,7 @@ pub(super) fn spawn_bg_system(
         )),
         PlanetRotationComponent::new(rng.gen_range(PLANET_ROTATION_SPEED_RANGE)),
         MainMenuCleanup,
-        InGameCleanup,
+        GameCleanup,
         Name::new("Planet"),
     ));
 
@@ -130,7 +130,7 @@ pub(super) fn spawn_bg_system(
         Transform::from_xyz(star_x, star_y, rng.gen_range(STAR_CLUSTER_Z_RANGE)),
         Visibility::default(),
         MainMenuCleanup,
-        InGameCleanup,
+        GameCleanup,
         Name::new("Star Cluster"),
     ))
     .with_children(|parent| {

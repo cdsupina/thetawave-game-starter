@@ -40,6 +40,9 @@ pub(crate) struct UiAssets {
     // HTML template for character selection layout
     #[asset(path = "ui/menus/character_selection.html")]
     pub character_selection_html: Handle<HtmlTemplate>,
+    // HTML template for the pause menu
+    #[asset(path = "ui/menus/pause_menu.html")]
+    pub pause_menu_html: Handle<HtmlTemplate>,
 }
 
 // Assets for background images

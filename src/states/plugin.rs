@@ -1,12 +1,12 @@
 use bevy::{
-    app::Plugin,
-    prelude::{AppExtStates, OnEnter, OnExit},
+    app::{Plugin, Update},
+    prelude::{in_state, AppExtStates, IntoSystemConfigs, OnEnter, OnExit},
 };
 
 use super::{
-    data::{AppState, GameState, InGameCleanup, MainMenuCleanup, MainMenuState},
-    systems::{cleanup_state_system, enter_title_menu_state_system},
-    CharacterSelectionCleanup, OptionsMenuCleanup, TitleMenuCleanup,
+    data::{AppState, GameCleanup, GameState, MainMenuCleanup, MainMenuState},
+    systems::{cleanup_state_system, enter_title_menu_state_system, toggle_game_state},
+    CharacterSelectionCleanup, OptionsMenuCleanup, PauseCleanup, TitleMenuCleanup,
 };
 
 /// Plugin for managing game states and their transitions
@@ -23,10 +23,12 @@ impl Plugin for ThetawaveStatesPlugin {
                 OnExit(AppState::MainMenu),
                 cleanup_state_system::<MainMenuCleanup>,
             )
-            // Add cleanup system for when exiting InGame state
+            // Add cleanup system for when exiting Game state
+            .add_systems(OnExit(AppState::Game), cleanup_state_system::<GameCleanup>)
+            // Add cleanup system for when exiting Paused state
             .add_systems(
-                OnExit(AppState::Game),
-                cleanup_state_system::<InGameCleanup>,
+                OnExit(GameState::Paused),
+                cleanup_state_system::<PauseCleanup>,
             )
             // Add cleanup system for when exiting OptionsMenu state
             .add_systems(
@@ -42,6 +44,7 @@ impl Plugin for ThetawaveStatesPlugin {
             .add_systems(
                 OnExit(MainMenuState::Title),
                 cleanup_state_system::<TitleMenuCleanup>,
-            );
+            )
+            .add_systems(Update, toggle_game_state.run_if(in_state(AppState::Game)));
     }
 }

@@ -56,4 +56,8 @@ pub(crate) struct CharacterSelectionCleanup;
 
 /// Component marker for in-game cleanup
 #[derive(Component)]
-pub(crate) struct InGameCleanup;
+pub(crate) struct GameCleanup;
+
+/// Component marker for pause cleanup
+#[derive(Component)]
+pub(crate) struct PauseCleanup;
