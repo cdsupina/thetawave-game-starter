@@ -1,6 +1,6 @@
 use super::{
-    data::{BackgroundAssets, UiAssets},
-    systems::print_progress,
+    data::{BackgroundAssets, LoadingProgressEvent, UiAssets},
+    systems::get_loading_progress_system,
 };
 use crate::states::AppState;
 use bevy::{
@@ -28,6 +28,7 @@ impl Plugin for ThetawaveAssetsPlugin {
                 .with_state_transition(AppState::GameLoading, AppState::Game),
             FrameTimeDiagnosticsPlugin,
         ))
+        .add_event::<LoadingProgressEvent>()
         .add_loading_state(
             LoadingState::new(AppState::MainMenuLoading)
                 .load_collection::<UiAssets>()
@@ -38,7 +39,7 @@ impl Plugin for ThetawaveAssetsPlugin {
         )
         .add_systems(
             Update,
-            print_progress
+            get_loading_progress_system
                 .run_if(in_state(AppState::MainMenuLoading).or(in_state(AppState::GameLoading)))
                 .after(LoadingStateSet(AppState::MainMenuLoading))
                 .after(LoadingStateSet(AppState::GameLoading)),

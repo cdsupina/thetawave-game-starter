@@ -37,3 +37,7 @@ impl TryFrom<&String> for ButtonAction {
         }
     }
 }
+
+/// Loading bar tag component
+#[derive(Component)]
+pub(super) struct LoadingBar;

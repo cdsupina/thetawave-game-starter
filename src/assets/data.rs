@@ -1,4 +1,9 @@
-use bevy::{asset::Handle, image::Image, prelude::Resource, scene::Scene};
+use bevy::{
+    asset::Handle,
+    image::Image,
+    prelude::{Event, Resource},
+    scene::Scene,
+};
 use bevy_aseprite_ultra::prelude::Aseprite;
 use bevy_asset_loader::asset_collection::AssetCollection;
 use bevy_hui::prelude::HtmlTemplate;
@@ -196,3 +201,7 @@ impl BackgroundAssets {
         self.planets[rand::thread_rng().gen_range(0..self.planets.len())].clone()
     }
 }
+
+/// Event for sending percentage of loading progress
+#[derive(Event)]
+pub(crate) struct LoadingProgressEvent(pub f32);
