@@ -35,13 +35,13 @@ fn main() {
             }),
         AsepriteUltraPlugin, // plugin for using Aseprite assets
         // custom plugins for Thetawave
-        audio::ThetawaveAudioPlugin,
         ui::ThetawaveUiPlugin,
         options::ThetawaveOptionsPlugin,
         input::ThetawaveInputPlugin,
         states::ThetawaveStatesPlugin,
         camera::ThetawaveCameraPlugin,
         backgrounds::ThetawaveBackgroundsPlugin,
+        audio::ThetawaveAudioPlugin,
     ));
 
     if cfg!(feature = "world_inspector") {

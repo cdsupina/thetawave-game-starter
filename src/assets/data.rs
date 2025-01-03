@@ -13,8 +13,10 @@ use rand::Rng;
 /// Audio assets used throughout all states of the app
 #[derive(AssetCollection, Resource)]
 pub(crate) struct AppAudioAssets {
-    #[asset(path = "media/audio/music/main_theme.mp3")]
-    pub main_theme_soundtrack: Handle<AudioSource>,
+    #[asset(path = "media/audio/music/main_menu_theme.mp3")]
+    pub main_menu_theme: Handle<AudioSource>,
+    #[asset(path = "media/audio/music/game_theme.mp3")]
+    pub game_theme: Handle<AudioSource>,
 }
 
 // Main menu assets including HTML templates for various UI components
