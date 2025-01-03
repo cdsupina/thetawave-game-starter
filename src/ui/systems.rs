@@ -340,6 +340,34 @@ pub(super) fn menu_button_action_system(
         if let NavEvent::NoChanges { from, .. } = event {
             if let Ok(button_action) = focusable_q.get(*from.first()) {
                 match button_action {
+                    ButtonAction::EnterAppState(app_state) => {
+                        next_app_state.set(*app_state);
+                    }
+                    ButtonAction::EnterMainMenuState(main_menu_state) => {
+                        next_main_menu_state.set(*main_menu_state);
+                    }
+                    ButtonAction::EnterGameState(game_state) => {
+                        next_game_state.set(*game_state);
+                    }
+                    ButtonAction::EnterPauseMenuState(pause_menu_state) => {
+                        next_pause_state.set(*pause_menu_state);
+                    }
+                    ButtonAction::Exit => {
+                        exit_events.send(AppExit::Success);
+                    }
+                    ButtonAction::ApplyOptions => {
+                        apply_options_events.send(ApplyOptionsEvent);
+                    }
+                    ButtonAction::OpenBlueskyWebsite => {
+                        open_website(BLUESKY_URL);
+                    }
+                    ButtonAction::OpenGithubWebsite => {
+                        open_website(GITHUB_URL);
+                    }
+                }
+
+                /*
+                match button_action {
                     ButtonAction::EnterMainMenuOptions => {
                         // Transition to the Options state.
                         next_main_menu_state.set(MainMenuState::Options);
@@ -389,6 +417,7 @@ pub(super) fn menu_button_action_system(
                         next_pause_state.set(PauseMenuState::Main);
                     }
                 }
+                */
             }
         }
     }

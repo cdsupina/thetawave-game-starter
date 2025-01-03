@@ -5,7 +5,11 @@ use bevy::{
 
 use super::{
     data::{AppState, GameState, MainMenuState},
-    systems::{cleanup_state_system, enter_title_menu_state_system, toggle_game_state},
+    systems::{
+        cleanup_state_system, enter_title_menu_state_system,
+        reset_states_on_app_state_transition_system, reset_states_on_game_state_transition_system,
+        toggle_game_state,
+    },
     PauseMenuState,
 };
 
@@ -21,6 +25,8 @@ impl Plugin for ThetawaveStatesPlugin {
             .add_systems(OnEnter(AppState::MainMenu), enter_title_menu_state_system)
             // Toggle whether the game is paused
             .add_systems(Update, toggle_game_state.run_if(in_state(AppState::Game)))
+            .add_systems(Update, reset_states_on_app_state_transition_system)
+            .add_systems(Update, reset_states_on_game_state_transition_system)
             .add_systems(Update, cleanup_state_system::<AppState>)
             .add_systems(Update, cleanup_state_system::<MainMenuState>)
             .add_systems(Update, cleanup_state_system::<GameState>)
