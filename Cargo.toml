@@ -20,6 +20,7 @@ rand = "0.8.5"
 webbrowser = "1.0.3"
 bevy_aseprite_ultra = "0.4.1"
 iyes_progress = "0.13.1"
+bevy_kira_audio = { version = "0.21.0", features = ["mp3", "wav"] }
 
 [profile.dev]
 opt-level = 1

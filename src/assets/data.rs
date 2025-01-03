@@ -7,7 +7,15 @@ use bevy::{
 use bevy_aseprite_ultra::prelude::Aseprite;
 use bevy_asset_loader::asset_collection::AssetCollection;
 use bevy_hui::prelude::HtmlTemplate;
+use bevy_kira_audio::AudioSource;
 use rand::Rng;
+
+/// Audio assets used throughout all states of the app
+#[derive(AssetCollection, Resource)]
+pub(crate) struct AppAudioAssets {
+    #[asset(path = "media/audio/music/main_theme.mp3")]
+    pub main_theme_soundtrack: Handle<AudioSource>,
+}
 
 // Main menu assets including HTML templates for various UI components
 #[derive(AssetCollection, Resource)]
