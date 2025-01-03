@@ -12,7 +12,7 @@ It contains all the required features of a Thetawave style game.
 - [x] 2D + 3D Backgrounds
 - [x] Exit Game
 - [x] Embedded Assets
-- [ ] Loading Screens
+- [x] Loading Screens
 - [ ] Character Selection
 - [x] Pause Menu
 - [ ] Save Games
