@@ -1,15 +1,18 @@
 use crate::{
-    assets::UiAssets,
+    assets::{LoadingProgressEvent, UiAssets},
     options::{ApplyOptionsEvent, OptionsRes},
     states::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState},
 };
 use bevy::{
     app::AppExit,
+    color::Color,
     core::Name,
     prelude::{
         Children, Commands, Entity, EventReader, EventWriter, In, NextState, Query, Res, ResMut,
         With,
     },
+    ui::{BackgroundColor, Node, Val},
+    utils::default,
     window::{MonitorSelection, WindowMode, WindowResolution},
 };
 use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
@@ -18,10 +21,38 @@ use bevy_egui::{egui, EguiContexts, EguiSettings};
 use bevy_hui::prelude::{HtmlComponents, HtmlFunctions, HtmlNode, Tags};
 use log::{info, warn};
 
-use super::data::ButtonAction;
+use super::data::{ButtonAction, LoadingBar};
 
 const GITHUB_URL: &str = "https://github.com/thetawavegame/thetawave";
 const BLUESKY_URL: &str = "https://bsky.app/profile/carlo.metalmancy.tech";
+
+/// Setup loading bar ui
+pub(super) fn setup_loading_ui_system(mut cmds: Commands) {
+    cmds.spawn((
+        Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            ..default()
+        },
+        BackgroundColor(Color::linear_rgba(0.05, 0.05, 0.05, 0.1)),
+        LoadingBar,
+        Cleanup::<AppState> {
+            states: vec![AppState::MainMenuLoading, AppState::GameLoading],
+        },
+    ));
+}
+
+/// Update the loading bars based on the loading bar progress
+pub(super) fn update_loading_bar_system(
+    mut loading_bar_q: Query<&mut Node, With<LoadingBar>>,
+    mut loading_event_reader: EventReader<LoadingProgressEvent>,
+) {
+    for event in loading_event_reader.read() {
+        for mut node in loading_bar_q.iter_mut() {
+            node.width = Val::Percent((1.0 - event.0) * 100.0);
+        }
+    }
+}
 
 /// This function sets up the main menu user interface. It spawns the main menu HTML node and registers the required functions and components.
 pub(super) fn setup_ui_system(
