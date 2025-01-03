@@ -47,32 +47,8 @@ pub(crate) enum PauseMenuState {
     Options,
 }
 
-/// Component marker for main menu cleanup
+/// Component for cleaning up after exting a vec of states
 #[derive(Component)]
-pub(crate) struct MainMenuCleanup;
-
-/// Component marker for title menu cleanup
-#[derive(Component)]
-pub(crate) struct TitleMenuCleanup;
-
-/// Component marker for options menu cleanup
-#[derive(Component)]
-pub(crate) struct OptionsMenuCleanup;
-
-/// Component marker for character selection cleanup
-#[derive(Component)]
-pub(crate) struct CharacterSelectionCleanup;
-
-/// Component marker for in-game cleanup
-#[derive(Component)]
-pub(crate) struct GameCleanup;
-
-/// Component marker for pause cleanup
-#[derive(Component)]
-pub(crate) struct PauseCleanup;
-
-#[derive(Component)]
-pub(crate) struct PauseMainCleanup;
-
-#[derive(Component)]
-pub(crate) struct PauseOptionsCleanup;
+pub(crate) struct Cleanup<S: States> {
+    pub states: Vec<S>,
+}

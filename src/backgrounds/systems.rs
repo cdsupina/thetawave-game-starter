@@ -1,7 +1,7 @@
 use super::data::PlanetRotationComponent;
 use crate::{
     assets::BackgroundAssets,
-    states::{GameCleanup, MainMenuCleanup},
+    states::{AppState, Cleanup},
 };
 use bevy::{
     asset::Assets,
@@ -76,8 +76,9 @@ pub(super) fn spawn_bg_system(
         Transform::default()
             .with_scale(Vec3::splat(BACKGROUND_SCALE))
             .with_translation(BACKGROUND_POS),
-        MainMenuCleanup,
-        GameCleanup,
+        Cleanup::<AppState> {
+            states: vec![AppState::MainMenu, AppState::Game],
+        },
         Name::new("Background Image"),
     ));
 
@@ -107,8 +108,9 @@ pub(super) fn spawn_bg_system(
             rng.gen_range(PLANET_Z_RANGE),
         )),
         PlanetRotationComponent::new(rng.gen_range(PLANET_ROTATION_SPEED_RANGE)),
-        MainMenuCleanup,
-        GameCleanup,
+        Cleanup::<AppState> {
+            states: vec![AppState::MainMenu, AppState::Game],
+        },
         Name::new("Planet"),
     ));
 
@@ -129,8 +131,9 @@ pub(super) fn spawn_bg_system(
     cmds.spawn((
         Transform::from_xyz(star_x, star_y, rng.gen_range(STAR_CLUSTER_Z_RANGE)),
         Visibility::default(),
-        MainMenuCleanup,
-        GameCleanup,
+        Cleanup::<AppState> {
+            states: vec![AppState::MainMenu, AppState::Game],
+        },
         Name::new("Star Cluster"),
     ))
     .with_children(|parent| {

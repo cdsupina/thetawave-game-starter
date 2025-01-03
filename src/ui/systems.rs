@@ -1,11 +1,7 @@
 use crate::{
     assets::UiAssets,
     options::{ApplyOptionsEvent, OptionsRes},
-    states::{
-        AppState, CharacterSelectionCleanup, GameCleanup, GameState, MainMenuState,
-        OptionsMenuCleanup, PauseCleanup, PauseMainCleanup, PauseMenuState, PauseOptionsCleanup,
-        TitleMenuCleanup,
-    },
+    states::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState},
 };
 use bevy::{
     app::AppExit,
@@ -77,7 +73,9 @@ pub(super) fn setup_character_selection_system(mut cmds: Commands, ui_assets: Re
     // Create an HTMLNode with options menu HTML and link the OptionsMenuCleanup component.
     cmds.spawn((
         HtmlNode(ui_assets.character_selection_html.clone()),
-        CharacterSelectionCleanup,
+        Cleanup::<MainMenuState> {
+            states: vec![MainMenuState::CharacterSelection],
+        },
         Name::new("Character Selection Menu"),
     ));
 }
@@ -88,7 +86,9 @@ pub(super) fn setup_options_menu_system(mut cmds: Commands, ui_assets: Res<UiAss
     // Create an HTMLNode with options menu HTML and link the OptionsMenuCleanup component.
     cmds.spawn((
         HtmlNode(ui_assets.options_main_menu_html.clone()),
-        OptionsMenuCleanup,
+        Cleanup::<MainMenuState> {
+            states: vec![MainMenuState::Options],
+        },
         Name::new("Options Menu"),
     ));
 }
@@ -99,7 +99,9 @@ pub(super) fn setup_title_menu_system(mut cmds: Commands, ui_assets: Res<UiAsset
     // Create an HTMLNode with main menu HTML and link the TitleMenuCleanup component.
     cmds.spawn((
         HtmlNode(ui_assets.title_menu_html.clone()),
-        TitleMenuCleanup,
+        Cleanup::<MainMenuState> {
+            states: vec![MainMenuState::Title],
+        },
         Name::new("Title Menu"),
     ));
 }
@@ -111,9 +113,15 @@ pub(super) fn setup_pause_menu_system(mut cmds: Commands, ui_assets: Res<UiAsset
 
     cmds.spawn((
         HtmlNode(ui_assets.pause_menu_html.clone()),
-        PauseCleanup,
-        PauseMainCleanup,
-        GameCleanup,
+        Cleanup::<GameState> {
+            states: vec![GameState::Paused],
+        },
+        Cleanup::<PauseMenuState> {
+            states: vec![PauseMenuState::Main],
+        },
+        Cleanup::<AppState> {
+            states: vec![AppState::Game],
+        },
         Name::new("Pause Menu"),
     ));
 }
@@ -124,9 +132,15 @@ pub(super) fn setup_pause_options_system(mut cmds: Commands, ui_assets: Res<UiAs
     // Create an HTMLNode with main menu HTML and link the TitleMenuCleanup component.
     cmds.spawn((
         HtmlNode(ui_assets.options_pause_menu_html.clone()),
-        PauseCleanup,
-        PauseOptionsCleanup,
-        GameCleanup,
+        Cleanup::<GameState> {
+            states: vec![GameState::Paused],
+        },
+        Cleanup::<PauseMenuState> {
+            states: vec![PauseMenuState::Options],
+        },
+        Cleanup::<AppState> {
+            states: vec![AppState::Game],
+        },
         Name::new("Pause Menu"),
     ));
 }

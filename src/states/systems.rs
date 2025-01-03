@@ -1,20 +1,26 @@
-use super::{GameState, MainMenuState, PauseMenuState};
+use super::{data::Cleanup, GameState, MainMenuState, PauseMenuState};
 use bevy::{
     input::ButtonInput,
     prelude::{
-        Commands, Component, DespawnRecursiveExt, Entity, KeyCode, NextState, Query, Res, ResMut,
-        State, With,
+        Commands, DespawnRecursiveExt, Entity, EventReader, KeyCode, NextState, Query, Res, ResMut,
+        State, StateTransitionEvent, States,
     },
 };
 
-/// A system that cleans up entities marked with a specific component type
-pub(super) fn cleanup_state_system<T: Component>(
+/// A system that cleans up entities after exiting states
+pub(super) fn cleanup_state_system<S: States>(
     mut cmds: Commands,
-    cleanup_entities_q: Query<Entity, With<T>>,
+    mut state_trans_event: EventReader<StateTransitionEvent<S>>,
+    cleanup_entities_q: Query<(Entity, &Cleanup<S>)>,
 ) {
-    // Iterate through all entities with component T and despawn them
-    for e in cleanup_entities_q.iter() {
-        cmds.entity(e).despawn_recursive();
+    for event in state_trans_event.read() {
+        if let Some(exited_state) = &event.exited {
+            for (entity, cleanup) in cleanup_entities_q.iter() {
+                if cleanup.states.contains(exited_state) {
+                    cmds.entity(entity).despawn_recursive();
+                }
+            }
+        }
     }
 }
 
