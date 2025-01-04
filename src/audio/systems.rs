@@ -6,7 +6,9 @@ use bevy_kira_audio::{AudioChannel, AudioControl, AudioTween};
 use crate::{assets::AppAudioAssets, options::OptionsRes, states::AppState};
 
 use super::{
-    data::{ChangeVolumeEvent, EffectsAudioChannel, MusicAudioChannel, UiAudioChannel},
+    data::{
+        AudioEffectEvent, ChangeVolumeEvent, EffectsAudioChannel, MusicAudioChannel, UiAudioChannel,
+    },
     MusicTransitionEvent,
 };
 
@@ -32,6 +34,36 @@ pub(super) fn start_music_system(
                     });
                 }
                 _ => {}
+            }
+        }
+    }
+}
+
+/// System for playing audio effects, listens for AudioEffectEvents
+pub(super) fn play_effect_system(
+    app_audio_assets: Res<AppAudioAssets>,
+    mut effect_events: EventReader<AudioEffectEvent>,
+    //effects_audio_channel: Res<AudioChannel<EffectsAudioChannel>>,
+    ui_audio_channel: Res<AudioChannel<UiAudioChannel>>,
+    options_res: Res<OptionsRes>,
+) {
+    if !effect_events.is_empty() {
+        // volume for effect event channel
+        let volume = options_res.master_volume * options_res.effects_volume;
+
+        // play all audio effect events in queue on correct channel
+        for event in effect_events.read() {
+            match event {
+                AudioEffectEvent::MenuButtonPressed => {
+                    ui_audio_channel
+                        .play(app_audio_assets.get_random_button_press_effect())
+                        .with_volume(volume);
+                }
+                AudioEffectEvent::MenuButtonReleased => {
+                    ui_audio_channel
+                        .play(app_audio_assets.get_random_button_release_effect())
+                        .with_volume(volume);
+                }
             }
         }
     }

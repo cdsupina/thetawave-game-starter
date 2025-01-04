@@ -1,5 +1,6 @@
 use crate::{
     assets::{LoadingProgressEvent, UiAssets},
+    audio::AudioEffectEvent,
     options::{ApplyOptionsEvent, OptionsRes},
     states::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState},
 };
@@ -310,11 +311,16 @@ pub(super) fn menu_button_focus_system(
     mut nav_events: EventReader<NavEvent>,
     focusable_q: Query<&Children, With<Focusable>>,
     mut ase_q: Query<&mut AseUiAnimation>,
+    mut audio_effect_events: EventWriter<AudioEffectEvent>,
 ) {
     for event in nav_events.read() {
         if let NavEvent::FocusChanged { to, from } = event {
-            // Handle newly focused button - set to pressed animation
+            // Handle newly focused button
             if let Ok(children) = focusable_q.get(*to.first()) {
+                // Play pressed button effect
+                audio_effect_events.send(AudioEffectEvent::MenuButtonPressed);
+
+                // Update the button animation
                 for child in children.iter() {
                     if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
                         ase_animation.animation.play_loop("pressed");
@@ -322,8 +328,12 @@ pub(super) fn menu_button_focus_system(
                 }
             }
 
-            // Handle previously focused button - set to released animation
+            // Handle previously focused button
             if let Ok(children) = focusable_q.get(*from.first()) {
+                // Play released button effect
+                audio_effect_events.send(AudioEffectEvent::MenuButtonReleased);
+
+                // Update the button animation
                 for child in children.iter() {
                     if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
                         ase_animation.animation.play_loop("released");

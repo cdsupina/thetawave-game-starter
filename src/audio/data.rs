@@ -21,10 +21,18 @@ pub(super) struct UiAudioChannel;
 pub(crate) struct MusicTransitionEvent {
     pub music: Handle<AudioSource>,
 }
+
 /// Event for changing volumes
 #[derive(Event)]
 pub(crate) struct ChangeVolumeEvent {
     pub music_volume: f64,
     pub effects_volume: f64,
     pub ui_volume: f64,
+}
+
+/// Event for playing ui and effect evens
+#[derive(Event)]
+pub(crate) enum AudioEffectEvent {
+    MenuButtonPressed,  // ui channel
+    MenuButtonReleased, // ui channel
 }
