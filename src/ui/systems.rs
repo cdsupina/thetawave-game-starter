@@ -396,59 +396,6 @@ pub(super) fn menu_button_action_system(
                         open_website(GITHUB_URL);
                     }
                 }
-
-                /*
-                match button_action {
-                    ButtonAction::EnterMainMenuOptions => {
-                        // Transition to the Options state.
-                        next_main_menu_state.set(MainMenuState::Options);
-                    }
-                    ButtonAction::EnterCharacterSelection => {
-                        // Transition to the CharacterSelection state.
-                        next_main_menu_state.set(MainMenuState::CharacterSelection);
-                    }
-                    ButtonAction::Exit => {
-                        // Trigger the AppExit event.
-                        exit_events.send(AppExit::Success);
-                    }
-                    ButtonAction::ApplyOptions => {
-                        // Trigger the ApplyOptionsEvent.
-                        apply_options_events.send(ApplyOptionsEvent);
-                    }
-                    ButtonAction::EnterTitle => {
-                        // Transition to the Title state.
-                        next_main_menu_state.set(MainMenuState::Title);
-                    }
-                    ButtonAction::OpenBlueskyWebsite => {
-                        // Open the web browser to navigate to the Bluesky website.
-                        open_website(BLUESKY_URL);
-                    }
-                    ButtonAction::OpenGithubWebsite => {
-                        // Open the web browser to navigate to the Github website.
-                        open_website(GITHUB_URL);
-                    }
-                    ButtonAction::EnterGame => {
-                        // Enter the game loading state and reset the main menu state
-                        next_app_state.set(AppState::GameLoading);
-                        next_main_menu_state.set(MainMenuState::None);
-                        next_game_state.set(GameState::Playing);
-                        next_pause_state.set(PauseMenuState::None);
-                    }
-                    ButtonAction::EnterMainMenu => {
-                        next_app_state.set(AppState::MainMenuLoading);
-                    }
-                    ButtonAction::EnterPauseMenuOptions => {
-                        next_pause_state.set(PauseMenuState::Options);
-                    }
-                    ButtonAction::EnterPlaying => {
-                        next_game_state.set(GameState::Playing);
-                        next_pause_state.set(PauseMenuState::None);
-                    }
-                    ButtonAction::EnterMainPause => {
-                        next_pause_state.set(PauseMenuState::Main);
-                    }
-                }
-                */
             }
         }
     }
