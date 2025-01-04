@@ -17,6 +17,6 @@ impl Plugin for ThetawaveAudioPlugin {
             .add_audio_channel::<EffectsAudioChannel>()
             .add_audio_channel::<UiAudioChannel>()
             .add_systems(Update, start_music_system)
-            .add_systems(Update, transition_music_system); // temporary for testing
+            .add_systems(Update, transition_music_system);
     }
 }

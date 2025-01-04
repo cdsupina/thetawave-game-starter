@@ -1,9 +1,9 @@
 use std::time::Duration;
 
 use bevy::prelude::{EventReader, EventWriter, Res, StateTransitionEvent};
-use bevy_kira_audio::{AudioChannel, AudioControl, AudioTween};
+use bevy_kira_audio::{prelude::Volume, AudioChannel, AudioControl, AudioTween};
 
-use crate::{assets::AppAudioAssets, states::AppState};
+use crate::{assets::AppAudioAssets, options::OptionsRes, states::AppState};
 
 use super::{data::MusicAudioChannel, MusicTransitionEvent};
 
@@ -38,6 +38,7 @@ pub(super) fn start_music_system(
 pub(super) fn transition_music_system(
     audio_channel: Res<AudioChannel<MusicAudioChannel>>,
     mut music_trans_events: EventReader<MusicTransitionEvent>,
+    options_res: Res<OptionsRes>,
 ) {
     for event in music_trans_events.read() {
         // Fade out of exising audio if playing
@@ -45,10 +46,14 @@ pub(super) fn transition_music_system(
             audio_channel.stop().fade_out(AUDIO_FADE);
         }
 
+        // This value should be between 0.0 and 1.0
+        let volume = options_res.master_volume * options_res.music_volume;
+
         // Fade into new audio
         audio_channel
             .play(event.music.clone())
             .looped()
+            .with_volume(volume)
             .fade_in(AUDIO_FADE);
     }
 }
