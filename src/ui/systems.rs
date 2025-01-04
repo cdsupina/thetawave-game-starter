@@ -447,6 +447,30 @@ pub(super) fn options_menu_system(mut contexts: EguiContexts, mut options_res: R
                         }
                     });
             });
+
+            // Volume sliders
+            ui.horizontal(|ui| {
+                ui.label("Master Volume");
+                ui.add(egui::Slider::new(&mut options_res.master_volume, 0.0..=1.0));
+            });
+
+            ui.horizontal(|ui| {
+                ui.label("Music Volume");
+                ui.add(egui::Slider::new(&mut options_res.music_volume, 0.0..=1.0));
+            });
+
+            ui.horizontal(|ui| {
+                ui.label("Effects Volume");
+                ui.add(egui::Slider::new(
+                    &mut options_res.effects_volume,
+                    0.0..=1.0,
+                ));
+            });
+
+            ui.horizontal(|ui| {
+                ui.label("Ui Volume");
+                ui.add(egui::Slider::new(&mut options_res.ui_volume, 0.0..=1.0));
+            });
         });
 }
 

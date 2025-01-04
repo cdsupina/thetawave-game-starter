@@ -1,11 +1,14 @@
 use std::time::Duration;
 
 use bevy::prelude::{EventReader, EventWriter, Res, StateTransitionEvent};
-use bevy_kira_audio::{prelude::Volume, AudioChannel, AudioControl, AudioTween};
+use bevy_kira_audio::{AudioChannel, AudioControl, AudioTween};
 
 use crate::{assets::AppAudioAssets, options::OptionsRes, states::AppState};
 
-use super::{data::MusicAudioChannel, MusicTransitionEvent};
+use super::{
+    data::{ChangeVolumeEvent, EffectsAudioChannel, MusicAudioChannel, UiAudioChannel},
+    MusicTransitionEvent,
+};
 
 const AUDIO_FADE: AudioTween = AudioTween::linear(Duration::from_secs(2));
 
@@ -55,5 +58,19 @@ pub(super) fn transition_music_system(
             .looped()
             .with_volume(volume)
             .fade_in(AUDIO_FADE);
+    }
+}
+
+/// Change volumes of audio channels when ChangeVolumenEvents are read
+pub(super) fn change_volume_system(
+    music_audio_channel: Res<AudioChannel<MusicAudioChannel>>,
+    effects_audio_channel: Res<AudioChannel<EffectsAudioChannel>>,
+    ui_audio_channel: Res<AudioChannel<UiAudioChannel>>,
+    mut change_volume_events: EventReader<ChangeVolumeEvent>,
+) {
+    for event in change_volume_events.read() {
+        music_audio_channel.set_volume(event.music_volume);
+        effects_audio_channel.set_volume(event.effects_volume);
+        ui_audio_channel.set_volume(event.ui_volume);
     }
 }

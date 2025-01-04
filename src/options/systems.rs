@@ -1,8 +1,10 @@
 use bevy::{
-    prelude::{EventReader, Query, ResMut, With},
+    prelude::{EventReader, EventWriter, Query, Res, ResMut, With},
     ui::UiScale,
     window::{PrimaryWindow, Window, WindowMode},
 };
+
+use crate::audio::ChangeVolumeEvent;
 
 use super::{data::ApplyOptionsEvent, OptionsRes};
 
@@ -18,10 +20,8 @@ pub(super) fn sync_options_res_system(
     }
 }
 
-/// System that applies window options when an ApplyOptionsEvent is received
-/// Takes event reader for ApplyOptionsEvent, mutable access to OptionsRes,
-/// and query for the primary window
-pub(super) fn apply_options_system(
+/// Applies window options when an ApplyOptionsEvent is received
+pub(super) fn apply_window_options_system(
     mut apply_options_events: EventReader<ApplyOptionsEvent>,
     mut options_res: ResMut<OptionsRes>,
     mut primary_window_q: Query<&mut Window, With<PrimaryWindow>>,
@@ -44,6 +44,25 @@ pub(super) fn apply_options_system(
                 .clone()
                 .with_scale_factor_override(1.0);
         }
+
+        // Clear the event channel to prevent processing same events multiple times
+        apply_options_events.clear();
+    }
+}
+
+/// Applies volume options when an ApplyOptionsEvent is received
+pub(super) fn apply_volume_options_system(
+    mut apply_options_events: EventReader<ApplyOptionsEvent>,
+    options_res: Res<OptionsRes>,
+    mut event_writer: EventWriter<ChangeVolumeEvent>,
+) {
+    // Only process if we have received events
+    if !apply_options_events.is_empty() {
+        event_writer.send(ChangeVolumeEvent {
+            music_volume: options_res.master_volume * options_res.music_volume,
+            effects_volume: options_res.master_volume * options_res.effects_volume,
+            ui_volume: options_res.master_volume * options_res.ui_volume,
+        });
 
         // Clear the event channel to prevent processing same events multiple times
         apply_options_events.clear();
