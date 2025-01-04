@@ -8,15 +8,21 @@ It contains all the required features of a Thetawave style game.
   - [ ] Graphics Settings
   - [ ] Arcade Mode
   - [ ] Control Rebinding
-  - [ ] Volume Controls
+  - [x] Volume Controls
 - [x] 2D + 3D Backgrounds
 - [x] Exit Game
 - [x] Embedded Assets
 - [x] Loading Screens
 - [ ] Character Selection
 - [x] Pause Menu
-- [ ] Save Games
-- [ ] Background Music Player
+- [ ] Persistance
+  - [ ] Save and load settings
+  - [ ] Save and resume games
+  - [ ] Save overall progress
+- [x] Audio Playing
+  - [x] Background Music Channel
+  - [x] Effects Channel
+  - [x] Ui Channel
 
 # Build and Run
 ## Download Assets

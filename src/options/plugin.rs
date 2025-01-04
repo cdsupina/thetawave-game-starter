@@ -7,7 +7,10 @@ use crate::states::{MainMenuState, PauseMenuState};
 
 use super::{
     data::OptionsRes,
-    systems::{apply_options_system, sync_options_res_system, update_ui_scale_system},
+    systems::{
+        apply_volume_options_system, apply_window_options_system, sync_options_res_system,
+        update_ui_scale_system,
+    },
     ApplyOptionsEvent,
 };
 
@@ -27,7 +30,9 @@ impl Plugin for ThetawaveOptionsPlugin {
         app.add_systems(
             Update,
             (
-                apply_options_system
+                apply_window_options_system
+                    .run_if(in_state(MainMenuState::Options).or(in_state(PauseMenuState::Options))),
+                apply_volume_options_system
                     .run_if(in_state(MainMenuState::Options).or(in_state(PauseMenuState::Options))),
                 update_ui_scale_system
                     .run_if(in_state(MainMenuState::Options).or(in_state(PauseMenuState::Options))),

@@ -1,5 +1,5 @@
 use super::{
-    data::{BackgroundAssets, LoadingProgressEvent, UiAssets},
+    data::{AppAudioAssets, BackgroundAssets, LoadingProgressEvent, UiAssets},
     systems::get_loading_progress_system,
 };
 use crate::states::AppState;
@@ -32,7 +32,8 @@ impl Plugin for ThetawaveAssetsPlugin {
         .add_loading_state(
             LoadingState::new(AppState::MainMenuLoading)
                 .load_collection::<UiAssets>()
-                .load_collection::<BackgroundAssets>(),
+                .load_collection::<BackgroundAssets>()
+                .load_collection::<AppAudioAssets>(),
         )
         .add_loading_state(
             LoadingState::new(AppState::GameLoading).continue_to_state(AppState::Game),

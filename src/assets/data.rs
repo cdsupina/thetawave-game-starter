@@ -7,7 +7,51 @@ use bevy::{
 use bevy_aseprite_ultra::prelude::Aseprite;
 use bevy_asset_loader::asset_collection::AssetCollection;
 use bevy_hui::prelude::HtmlTemplate;
+use bevy_kira_audio::AudioSource;
 use rand::Rng;
+
+/// Audio assets used throughout all states of the app
+#[derive(AssetCollection, Resource)]
+pub(crate) struct AppAudioAssets {
+    #[asset(path = "media/audio/music/main_menu_theme.mp3")]
+    pub main_menu_theme: Handle<AudioSource>,
+    #[asset(path = "media/audio/music/game_theme.mp3")]
+    pub game_theme: Handle<AudioSource>,
+    #[asset(
+        paths(
+            "media/audio/effects/button_press_1.wav",
+            "media/audio/effects/button_press_2.wav",
+            "media/audio/effects/button_press_3.wav",
+            "media/audio/effects/button_press_4.wav",
+            "media/audio/effects/button_press_5.wav",
+        ),
+        collection(typed)
+    )]
+    pub menu_button_select_effects: Vec<Handle<AudioSource>>,
+    #[asset(
+        paths(
+            "media/audio/effects/button_release_1.wav",
+            "media/audio/effects/button_release_2.wav",
+            "media/audio/effects/button_release_3.wav",
+        ),
+        collection(typed)
+    )]
+    pub menu_button_release_effects: Vec<Handle<AudioSource>>,
+}
+
+impl AppAudioAssets {
+    pub(crate) fn get_random_button_press_effect(&self) -> Handle<AudioSource> {
+        self.menu_button_select_effects
+            [rand::thread_rng().gen_range(0..self.menu_button_select_effects.len())]
+        .clone()
+    }
+
+    pub(crate) fn get_random_button_release_effect(&self) -> Handle<AudioSource> {
+        self.menu_button_release_effects
+            [rand::thread_rng().gen_range(0..self.menu_button_release_effects.len())]
+        .clone()
+    }
+}
 
 // Main menu assets including HTML templates for various UI components
 #[derive(AssetCollection, Resource)]

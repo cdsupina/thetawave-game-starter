@@ -1,5 +1,6 @@
 use crate::{
     assets::{LoadingProgressEvent, UiAssets},
+    audio::AudioEffectEvent,
     options::{ApplyOptionsEvent, OptionsRes},
     states::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState},
 };
@@ -310,11 +311,16 @@ pub(super) fn menu_button_focus_system(
     mut nav_events: EventReader<NavEvent>,
     focusable_q: Query<&Children, With<Focusable>>,
     mut ase_q: Query<&mut AseUiAnimation>,
+    mut audio_effect_events: EventWriter<AudioEffectEvent>,
 ) {
     for event in nav_events.read() {
         if let NavEvent::FocusChanged { to, from } = event {
-            // Handle newly focused button - set to pressed animation
+            // Handle newly focused button
             if let Ok(children) = focusable_q.get(*to.first()) {
+                // Play pressed button effect
+                audio_effect_events.send(AudioEffectEvent::MenuButtonPressed);
+
+                // Update the button animation
                 for child in children.iter() {
                     if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
                         ase_animation.animation.play_loop("pressed");
@@ -322,8 +328,12 @@ pub(super) fn menu_button_focus_system(
                 }
             }
 
-            // Handle previously focused button - set to released animation
+            // Handle previously focused button
             if let Ok(children) = focusable_q.get(*from.first()) {
+                // Play released button effect
+                audio_effect_events.send(AudioEffectEvent::MenuButtonReleased);
+
+                // Update the button animation
                 for child in children.iter() {
                     if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
                         ase_animation.animation.play_loop("released");
@@ -396,59 +406,6 @@ pub(super) fn menu_button_action_system(
                         open_website(GITHUB_URL);
                     }
                 }
-
-                /*
-                match button_action {
-                    ButtonAction::EnterMainMenuOptions => {
-                        // Transition to the Options state.
-                        next_main_menu_state.set(MainMenuState::Options);
-                    }
-                    ButtonAction::EnterCharacterSelection => {
-                        // Transition to the CharacterSelection state.
-                        next_main_menu_state.set(MainMenuState::CharacterSelection);
-                    }
-                    ButtonAction::Exit => {
-                        // Trigger the AppExit event.
-                        exit_events.send(AppExit::Success);
-                    }
-                    ButtonAction::ApplyOptions => {
-                        // Trigger the ApplyOptionsEvent.
-                        apply_options_events.send(ApplyOptionsEvent);
-                    }
-                    ButtonAction::EnterTitle => {
-                        // Transition to the Title state.
-                        next_main_menu_state.set(MainMenuState::Title);
-                    }
-                    ButtonAction::OpenBlueskyWebsite => {
-                        // Open the web browser to navigate to the Bluesky website.
-                        open_website(BLUESKY_URL);
-                    }
-                    ButtonAction::OpenGithubWebsite => {
-                        // Open the web browser to navigate to the Github website.
-                        open_website(GITHUB_URL);
-                    }
-                    ButtonAction::EnterGame => {
-                        // Enter the game loading state and reset the main menu state
-                        next_app_state.set(AppState::GameLoading);
-                        next_main_menu_state.set(MainMenuState::None);
-                        next_game_state.set(GameState::Playing);
-                        next_pause_state.set(PauseMenuState::None);
-                    }
-                    ButtonAction::EnterMainMenu => {
-                        next_app_state.set(AppState::MainMenuLoading);
-                    }
-                    ButtonAction::EnterPauseMenuOptions => {
-                        next_pause_state.set(PauseMenuState::Options);
-                    }
-                    ButtonAction::EnterPlaying => {
-                        next_game_state.set(GameState::Playing);
-                        next_pause_state.set(PauseMenuState::None);
-                    }
-                    ButtonAction::EnterMainPause => {
-                        next_pause_state.set(PauseMenuState::Main);
-                    }
-                }
-                */
             }
         }
     }
@@ -499,6 +456,30 @@ pub(super) fn options_menu_system(mut contexts: EguiContexts, mut options_res: R
                             );
                         }
                     });
+            });
+
+            // Volume sliders
+            ui.horizontal(|ui| {
+                ui.label("Master Volume");
+                ui.add(egui::Slider::new(&mut options_res.master_volume, 0.0..=1.0));
+            });
+
+            ui.horizontal(|ui| {
+                ui.label("Music Volume");
+                ui.add(egui::Slider::new(&mut options_res.music_volume, 0.0..=1.0));
+            });
+
+            ui.horizontal(|ui| {
+                ui.label("Effects Volume");
+                ui.add(egui::Slider::new(
+                    &mut options_res.effects_volume,
+                    0.0..=1.0,
+                ));
+            });
+
+            ui.horizontal(|ui| {
+                ui.label("Ui Volume");
+                ui.add(egui::Slider::new(&mut options_res.ui_volume, 0.0..=1.0));
             });
         });
 }

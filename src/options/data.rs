@@ -10,6 +10,12 @@ pub(crate) struct OptionsRes {
     pub window_mode: WindowMode,
     // The current window resolution
     pub window_resolution: WindowResolution,
+    // Maximum value of any audio channel
+    pub master_volume: f64,
+    // Volumes of the different audio channels, percentage of the master volume
+    pub music_volume: f64,
+    pub effects_volume: f64,
+    pub ui_volume: f64,
     // All of the available resolutions
     resolutions: Vec<WindowResolution>,
 }
@@ -33,6 +39,10 @@ impl Default for OptionsRes {
                 WindowResolution::new(1920., 1080.),
                 WindowResolution::new(1920., 1200.),
             ],
+            master_volume: 0.5,
+            music_volume: 1.0,
+            effects_volume: 1.0,
+            ui_volume: 1.0,
         }
     }
 }

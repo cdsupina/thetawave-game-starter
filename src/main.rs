@@ -8,6 +8,7 @@ use bevy_aseprite_ultra::AsepriteUltraPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 mod assets;
+mod audio;
 mod backgrounds;
 mod camera;
 mod input;
@@ -40,6 +41,7 @@ fn main() {
         states::ThetawaveStatesPlugin,
         camera::ThetawaveCameraPlugin,
         backgrounds::ThetawaveBackgroundsPlugin,
+        audio::ThetawaveAudioPlugin,
     ));
 
     if cfg!(feature = "world_inspector") {
