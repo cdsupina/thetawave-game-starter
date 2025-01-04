@@ -48,8 +48,8 @@ pub(super) fn play_effect_system(
     options_res: Res<OptionsRes>,
 ) {
     if !effect_events.is_empty() {
-        // volume for effect event channel
-        let volume = options_res.master_volume * options_res.effects_volume;
+        // volume for ui event channel
+        let ui_volume = options_res.master_volume * options_res.ui_volume;
 
         // play all audio effect events in queue on correct channel
         for event in effect_events.read() {
@@ -57,12 +57,12 @@ pub(super) fn play_effect_system(
                 AudioEffectEvent::MenuButtonPressed => {
                     ui_audio_channel
                         .play(app_audio_assets.get_random_button_press_effect())
-                        .with_volume(volume);
+                        .with_volume(ui_volume);
                 }
                 AudioEffectEvent::MenuButtonReleased => {
                     ui_audio_channel
                         .play(app_audio_assets.get_random_button_release_effect())
-                        .with_volume(volume);
+                        .with_volume(ui_volume);
                 }
             }
         }
