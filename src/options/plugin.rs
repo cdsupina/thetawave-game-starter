@@ -21,15 +21,8 @@ impl Plugin for ThetawaveOptionsPlugin {
         // Add event for applying options changes
         app.add_event::<ApplyOptionsEvent>()
             // Add system to apply options changes, but only when in Options menu state
-            .add_systems(
-                Startup,
-                (
-                    setup_options_res,
-                    setup_window_system,
-                    update_ui_scale_system,
-                )
-                    .chain(),
-            )
+            .add_systems(Startup, (setup_options_res, setup_window_system).chain())
+            .add_systems(OnEnter(MainMenuState::Title), update_ui_scale_system)
             // Init the options menu to track the current options on startup
             .add_systems(OnEnter(MainMenuState::Options), sync_options_res_system)
             .add_systems(
