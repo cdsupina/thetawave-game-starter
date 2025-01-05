@@ -20,6 +20,7 @@ use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
 use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
 use bevy_egui::{egui, EguiContexts, EguiSettings};
 use bevy_hui::prelude::{HtmlComponents, HtmlFunctions, HtmlNode, Tags};
+use bevy_persistent::Persistent;
 use log::{info, warn};
 
 use super::data::{ButtonAction, LoadingBar};
@@ -412,7 +413,10 @@ pub(super) fn menu_button_action_system(
 }
 
 /// This function is a system that handles the egui options menu
-pub(super) fn options_menu_system(mut contexts: EguiContexts, mut options_res: ResMut<OptionsRes>) {
+pub(super) fn options_menu_system(
+    mut contexts: EguiContexts,
+    mut options_res: ResMut<Persistent<OptionsRes>>,
+) {
     egui::CentralPanel::default()
         .frame(egui::Frame {
             fill: egui::Color32::TRANSPARENT,       // Set transparent background
@@ -500,4 +504,15 @@ fn window_mode_to_string(mode: &WindowMode) -> &str {
 fn window_resolution_to_string(resolution: &WindowResolution) -> String {
     let res_vec = resolution.size();
     format!("{}x{}", res_vec.x, res_vec.y)
+}
+
+/// Save options to file when options applied
+pub(super) fn persist_options_system(
+    options_res: Res<Persistent<OptionsRes>>,
+    mut apply_options_events: EventReader<ApplyOptionsEvent>,
+) {
+    for _event in apply_options_events.read() {
+        info!("Persisting options");
+        options_res.persist().expect("failed to save new options");
+    }
 }

@@ -1,17 +1,32 @@
 use bevy::{
-    prelude::{EventReader, EventWriter, Query, Res, ResMut, With},
+    prelude::{Commands, EventReader, EventWriter, Query, Res, ResMut, With},
     ui::UiScale,
     window::{PrimaryWindow, Window, WindowMode},
 };
+use bevy_persistent::{Persistent, StorageFormat};
 
 use crate::audio::ChangeVolumeEvent;
 
 use super::{data::ApplyOptionsEvent, OptionsRes};
 
+/// Setup OptionsRes as a persistent resource
+pub(super) fn setup_options_res(mut cmds: Commands) {
+    let config_dir = dirs::config_dir().unwrap().join("thetawave_game_starter");
+    cmds.insert_resource(
+        Persistent::<OptionsRes>::builder()
+            .name("options")
+            .format(StorageFormat::Toml)
+            .path(config_dir.join("options.toml"))
+            .default(OptionsRes::default())
+            .build()
+            .expect("failed to initialize options"),
+    )
+}
+
 /// Initializes the options resource with values from the primary window
 /// Updates window mode and resolution settings based on current window state
 pub(super) fn sync_options_res_system(
-    mut options_res: ResMut<OptionsRes>,
+    mut options_res: ResMut<Persistent<OptionsRes>>,
     primary_window_q: Query<&Window, With<PrimaryWindow>>,
 ) {
     if let Ok(window) = primary_window_q.get_single() {
@@ -23,7 +38,7 @@ pub(super) fn sync_options_res_system(
 /// Applies window options when an ApplyOptionsEvent is received
 pub(super) fn apply_window_options_system(
     mut apply_options_events: EventReader<ApplyOptionsEvent>,
-    mut options_res: ResMut<OptionsRes>,
+    mut options_res: ResMut<Persistent<OptionsRes>>,
     mut primary_window_q: Query<&mut Window, With<PrimaryWindow>>,
 ) {
     // Only process if we have received events
@@ -53,7 +68,7 @@ pub(super) fn apply_window_options_system(
 /// Applies volume options when an ApplyOptionsEvent is received
 pub(super) fn apply_volume_options_system(
     mut apply_options_events: EventReader<ApplyOptionsEvent>,
-    options_res: Res<OptionsRes>,
+    options_res: Res<Persistent<OptionsRes>>,
     mut event_writer: EventWriter<ChangeVolumeEvent>,
 ) {
     // Only process if we have received events
