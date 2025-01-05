@@ -6,7 +6,6 @@ It contains all the required features of a Thetawave style game.
   - [x] Display Resolutions
   - [x] Fullscreen
   - [ ] Graphics Settings
-  - [ ] Arcade Mode
   - [ ] Control Rebinding
   - [x] Volume Controls
 - [x] 2D + 3D Backgrounds
@@ -17,7 +16,6 @@ It contains all the required features of a Thetawave style game.
 - [x] Pause Menu
 - [ ] Persistence
   - [x] Save and load settings
-  - [ ] Save and resume games
   - [ ] Save overall progress
 - [x] Audio Playing
   - [x] Background Music Channel
