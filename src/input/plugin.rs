@@ -10,7 +10,7 @@ pub(crate) struct ThetawaveInputPlugin;
 impl Plugin for ThetawaveInputPlugin {
     /// Builds the plugin by adding navigation plugins and setup systems
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_plugins(DefaultNavigationPlugins)
+        app.add_plugins((DefaultNavigationPlugins,))
             .add_systems(Startup, setup_input_system);
     }
 }

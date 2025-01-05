@@ -13,6 +13,7 @@ mod backgrounds;
 mod camera;
 mod input;
 mod options;
+mod player;
 mod states;
 mod ui;
 
@@ -42,6 +43,7 @@ fn main() {
         camera::ThetawaveCameraPlugin,
         backgrounds::ThetawaveBackgroundsPlugin,
         audio::ThetawaveAudioPlugin,
+        player::ThetawavePlayerPlugin,
     ));
 
     if cfg!(feature = "world_inspector") {
