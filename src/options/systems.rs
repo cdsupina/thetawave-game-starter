@@ -1,5 +1,5 @@
 use bevy::{
-    prelude::{Commands, EventReader, EventWriter, Query, Res, ResMut, With},
+    prelude::{Commands, EventReader, EventWriter, Local, Query, Res, ResMut, With},
     ui::UiScale,
     window::{PrimaryWindow, Window, WindowMode},
 };
@@ -65,23 +65,31 @@ pub(super) fn apply_window_options_system(
     }
 }
 
-/// Applies volume options when an ApplyOptionsEvent is received
+/// Applies volume from OptionsRes to all audio channels
 pub(super) fn apply_volume_options_system(
-    mut apply_options_events: EventReader<ApplyOptionsEvent>,
     options_res: Res<Persistent<OptionsRes>>,
     mut event_writer: EventWriter<ChangeVolumeEvent>,
+    mut previous_options_res: Local<OptionsRes>,
 ) {
-    // Only process if we have received events
-    if !apply_options_events.is_empty() {
+    // Check if any of the volume options have changed since the previous frame
+    if (options_res.master_volume != previous_options_res.master_volume)
+        || (options_res.music_volume != previous_options_res.music_volume)
+        || (options_res.effects_volume != previous_options_res.effects_volume)
+        || (options_res.ui_volume != previous_options_res.ui_volume)
+    {
+        // Send event to change volumes of all audio channels
         event_writer.send(ChangeVolumeEvent {
             music_volume: options_res.master_volume * options_res.music_volume,
             effects_volume: options_res.master_volume * options_res.effects_volume,
             ui_volume: options_res.master_volume * options_res.ui_volume,
         });
 
-        // Clear the event channel to prevent processing same events multiple times
-        apply_options_events.clear();
+        // Save the OptionsRes to a file
+        options_res.persist().expect("failed to save new options");
     }
+
+    // Save OptionsRes from this frame to local variable
+    *previous_options_res = options_res.clone();
 }
 
 /// System that updates UI scale based on window height
