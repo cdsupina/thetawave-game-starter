@@ -23,6 +23,22 @@ pub(super) fn setup_options_res(mut cmds: Commands) {
     )
 }
 
+// Sets up the window with the window options in OptionsRes
+pub(super) fn setup_window_system(
+    options_res: Res<Persistent<OptionsRes>>,
+    mut primary_window_q: Query<&mut Window, With<PrimaryWindow>>,
+) {
+    // Try to get mutable reference to primary window
+    if let Ok(mut window) = primary_window_q.get_single_mut() {
+        // Apply the selected options to the window
+        window.mode = options_res.window_mode;
+        window.resolution = options_res
+            .window_resolution
+            .clone()
+            .with_scale_factor_override(1.0);
+    }
+}
+
 /// Initializes the options resource with values from the primary window
 /// Updates window mode and resolution settings based on current window state
 pub(super) fn sync_options_res_system(
