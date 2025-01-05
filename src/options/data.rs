@@ -2,9 +2,10 @@ use bevy::{
     prelude::{Event, Resource},
     window::{WindowMode, WindowResolution},
 };
+use serde::{Deserialize, Serialize};
 
 // Resource for storing window options
-#[derive(Resource)]
+#[derive(Resource, Serialize, Deserialize, Clone)]
 pub(crate) struct OptionsRes {
     // The current window mode (fullscreen, windowed, etc)
     pub window_mode: WindowMode,

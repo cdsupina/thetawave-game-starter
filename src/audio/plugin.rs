@@ -25,10 +25,13 @@ impl Plugin for ThetawaveAudioPlugin {
             .add_audio_channel::<MusicAudioChannel>()
             .add_audio_channel::<EffectsAudioChannel>()
             .add_audio_channel::<UiAudioChannel>()
-            .add_systems(Update, start_music_system)
             .add_systems(
                 Update,
-                (play_effect_system, transition_music_system)
+                (
+                    start_music_system,
+                    play_effect_system,
+                    transition_music_system,
+                )
                     .run_if(not(in_state(AppState::MainMenuLoading))),
             )
             .add_systems(

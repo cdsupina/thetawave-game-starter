@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use bevy::prelude::{EventReader, EventWriter, Res, StateTransitionEvent};
 use bevy_kira_audio::{AudioChannel, AudioControl, AudioTween};
+use bevy_persistent::Persistent;
 
 use crate::{assets::AppAudioAssets, options::OptionsRes, states::AppState};
 
@@ -45,7 +46,7 @@ pub(super) fn play_effect_system(
     mut effect_events: EventReader<AudioEffectEvent>,
     //effects_audio_channel: Res<AudioChannel<EffectsAudioChannel>>,
     ui_audio_channel: Res<AudioChannel<UiAudioChannel>>,
-    options_res: Res<OptionsRes>,
+    options_res: Res<Persistent<OptionsRes>>,
 ) {
     if !effect_events.is_empty() {
         // volume for ui event channel
@@ -73,7 +74,7 @@ pub(super) fn play_effect_system(
 pub(super) fn transition_music_system(
     audio_channel: Res<AudioChannel<MusicAudioChannel>>,
     mut music_trans_events: EventReader<MusicTransitionEvent>,
-    options_res: Res<OptionsRes>,
+    options_res: Res<Persistent<OptionsRes>>,
 ) {
     for event in music_trans_events.read() {
         // Fade out of exising audio if playing

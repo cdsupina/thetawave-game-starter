@@ -1,8 +1,9 @@
 use super::systems::{
     menu_button_action_system, menu_button_focus_system, options_menu_system,
-    setup_character_selection_system, setup_loading_ui_system, setup_options_menu_system,
-    setup_pause_menu_system, setup_pause_options_system, setup_title_menu_system, setup_ui_system,
-    update_loading_bar_system, website_footer_button_focus_system,
+    persist_options_system, setup_character_selection_system, setup_loading_ui_system,
+    setup_options_menu_system, setup_pause_menu_system, setup_pause_options_system,
+    setup_title_menu_system, setup_ui_system, update_loading_bar_system,
+    website_footer_button_focus_system,
 };
 use crate::states::{AppState, MainMenuState, PauseMenuState};
 use bevy::{
@@ -44,9 +45,6 @@ impl Plugin for ThetawaveUiPlugin {
                     menu_button_action_system.after(NavRequestSystem),
                     menu_button_focus_system.after(NavRequestSystem),
                     website_footer_button_focus_system.after(NavRequestSystem),
-                    options_menu_system.run_if(
-                        in_state(MainMenuState::Options).or(in_state(PauseMenuState::Options)),
-                    ),
                     update_loading_bar_system
                         .run_if(
                             in_state(AppState::MainMenuLoading).or(in_state(AppState::GameLoading)),
@@ -54,6 +52,11 @@ impl Plugin for ThetawaveUiPlugin {
                         .after(LoadingStateSet(AppState::MainMenuLoading))
                         .after(LoadingStateSet(AppState::GameLoading)),
                 ),
+            )
+            .add_systems(
+                Update,
+                (options_menu_system, persist_options_system)
+                    .run_if(in_state(MainMenuState::Options).or(in_state(PauseMenuState::Options))),
             );
     }
 }
