@@ -35,6 +35,7 @@ bevy = { version = "0.15", default-features = false, features = [
     "tonemapping_luts",
     "webgl2",
     "x11",
+    "serialize",
 ] }
 bevy_egui = "0.31"
 bevy-alt-ui-navigation-lite = "0.3.1"
@@ -52,6 +53,8 @@ webbrowser = "1.0.3"
 bevy_aseprite_ultra = "0.4.1"
 iyes_progress = "0.13.1"
 bevy_kira_audio = { version = "0.21.0", features = ["mp3", "wav"] }
+serde = "1.0.217"
+bevy-persistent = { version = "0.7.0", features = ["all"] }
 
 [profile.dev]
 opt-level = 1
