@@ -9,9 +9,6 @@ pub(crate) struct ThetawavePlayerPlugin;
 impl Plugin for ThetawavePlayerPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
-            .add_systems(
-                OnEnter(AppState::Game),
-                spawn_players_system, //spawn_players_system.run_if(resource_exists::<GameAssets>),
-            );
+            .add_systems(OnEnter(AppState::Game), spawn_players_system);
     }
 }
