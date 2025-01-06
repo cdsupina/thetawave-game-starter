@@ -11,6 +11,8 @@ use bevy::{
     utils::default,
 };
 
+const VIEWPORT_HEIGHT: f32 = 250.0;
+
 // Setup function that spawns a 2D camera
 pub(super) fn setup_cameras_system(mut cmd: Commands) {
     // Necessary for viewing 2d sprites
@@ -26,7 +28,7 @@ pub(super) fn setup_cameras_system(mut cmd: Commands) {
         Bloom::OLD_SCHOOL,
         OrthographicProjection {
             scaling_mode: ScalingMode::FixedVertical {
-                viewport_height: 100.0,
+                viewport_height: VIEWPORT_HEIGHT,
             },
             ..OrthographicProjection::default_2d()
         },
