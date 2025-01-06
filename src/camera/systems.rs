@@ -4,16 +4,16 @@ use bevy::{
     core_pipeline::{bloom::Bloom, tonemapping::Tonemapping},
     math::Vec3,
     prelude::{
-        Camera, Camera3d, ClearColorConfig, Commands, PerspectiveProjection, Projection, Transform,
+        Camera, Camera2d, Camera3d, ClearColorConfig, Commands, OrthographicProjection,
+        PerspectiveProjection, Projection, Transform,
     },
+    render::camera::ScalingMode,
     utils::default,
 };
 
 // Setup function that spawns a 2D camera
 pub(super) fn setup_cameras_system(mut cmd: Commands) {
     // Necessary for viewing 2d sprites
-    // Both cameras can view UI indepently
-    /*
     cmd.spawn((
         Camera2d,
         Camera {
@@ -23,15 +23,14 @@ pub(super) fn setup_cameras_system(mut cmd: Commands) {
             ..default()
         },
         Tonemapping::TonyMcMapface,
-        Bloom {
-            prefilter: BloomPrefilter {
-                threshold: 1.0,
-                threshold_softness: 0.2,
+        Bloom::OLD_SCHOOL,
+        OrthographicProjection {
+            scaling_mode: ScalingMode::FixedVertical {
+                viewport_height: 100.0,
             },
-            ..Bloom::OLD_SCHOOL
+            ..OrthographicProjection::default_2d()
         },
     ));
-    */
 
     // Necessary for viewing 3D assets
     cmd.spawn((
