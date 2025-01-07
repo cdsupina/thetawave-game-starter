@@ -5,6 +5,10 @@ pub(crate) struct ThetawavePhysicsPlugin;
 
 impl Plugin for ThetawavePhysicsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_plugins((PhysicsPlugins::default(), PhysicsDebugPlugin::default()));
+        app.add_plugins(PhysicsPlugins::default());
+
+        if cfg!(feature = "physics_debug") {
+            app.add_plugins(PhysicsDebugPlugin::default());
+        }
     }
 }
