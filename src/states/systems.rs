@@ -33,14 +33,13 @@ pub(super) fn reset_states_on_app_state_transition_system(
     for event in state_trans_event.read() {
         if let Some(exited_state) = event.exited {
             match exited_state {
-                AppState::MainMenuLoading => {}
                 AppState::MainMenu => {
                     next_main_menu_state.set(MainMenuState::default());
                 }
-                AppState::GameLoading => {}
                 AppState::Game => {
                     next_game_state.set(GameState::default());
                 }
+                _ => {}
             }
         }
     }

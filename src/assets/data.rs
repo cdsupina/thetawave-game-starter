@@ -10,6 +10,13 @@ use bevy_hui::prelude::HtmlTemplate;
 use bevy_kira_audio::AudioSource;
 use rand::Rng;
 
+#[derive(AssetCollection, Resource)]
+pub(crate) struct GameAssets {
+    // Animated github logo Aseprite
+    #[asset(path = "media/aseprite/captain_character.aseprite")]
+    pub captain_character_aseprite: Handle<Aseprite>,
+}
+
 /// Audio assets used throughout all states of the app
 #[derive(AssetCollection, Resource)]
 pub(crate) struct AppAudioAssets {
