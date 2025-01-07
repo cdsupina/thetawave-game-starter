@@ -57,6 +57,7 @@ serde = "1.0.217"
 bevy-persistent = { version = "0.7.0", features = ["all"] }
 dirs = "5.0.1"
 leafwing-input-manager = "0.16.0"
+leafwing_abilities = "0.10.0"
 avian2d = { version = "0.2.0", features = ["debug-plugin"] }
 
 [profile.dev]

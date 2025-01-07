@@ -1,11 +1,11 @@
 use bevy::{
-    prelude::{Event, KeyCode, Resource},
+    prelude::{Event, KeyCode, MouseButton, Resource},
     window::{WindowMode, WindowResolution},
 };
 use leafwing_input_manager::prelude::InputMap;
 use serde::{Deserialize, Serialize};
 
-use crate::input::PlayerAction;
+use crate::input::{PlayerAbilities, PlayerAction};
 
 // Resource for storing window options
 #[derive(Resource, Serialize, Deserialize, Clone)]
@@ -22,6 +22,8 @@ pub(crate) struct OptionsRes {
     pub ui_volume: f64,
     // Input map for the player
     pub player_input_map: InputMap<PlayerAction>,
+    // Input map for player abilities
+    pub player_abilities_input_map: InputMap<PlayerAbilities>,
     // All of the available resolutions
     resolutions: Vec<WindowResolution>,
 }
@@ -55,6 +57,15 @@ impl Default for OptionsRes {
                 (PlayerAction::Left, KeyCode::KeyA),
                 (PlayerAction::Right, KeyCode::KeyD),
             ]),
+            player_abilities_input_map: InputMap::new([
+                (PlayerAbilities::Utility, KeyCode::ControlLeft),
+                (PlayerAbilities::Ultimate, KeyCode::Space),
+            ])
+            .insert_multiple([
+                (PlayerAbilities::BasicAttack, MouseButton::Left),
+                (PlayerAbilities::SecondaryAttack, MouseButton::Right),
+            ])
+            .to_owned(),
         }
     }
 }

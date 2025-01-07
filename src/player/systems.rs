@@ -1,6 +1,6 @@
 use crate::{
     assets::GameAssets,
-    input::PlayerAction,
+    input::{PlayerAbilities, PlayerAction},
     options::OptionsRes,
     states::{AppState, Cleanup},
 };
@@ -8,13 +8,15 @@ use avian2d::prelude::{Collider, LinearVelocity, MaxLinearSpeed, RigidBody};
 use bevy::{
     core::Name,
     prelude::{Commands, Query, Res},
+    utils::default,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseSpriteAnimation};
 use bevy_egui::egui::Vec2;
 use bevy_persistent::Persistent;
+use leafwing_abilities::AbilitiesBundle;
 use leafwing_input_manager::{prelude::ActionState, InputManagerBundle};
 
-use super::data::{CharactersResource, PlayerStatsComponent};
+use super::data::{CharactersResource, PlayerStats};
 
 /// Spawn a player controlled entity
 pub(super) fn spawn_players_system(
@@ -40,7 +42,12 @@ pub(super) fn spawn_players_system(
             RigidBody::Kinematic,
             MaxLinearSpeed(character.max_speed),
             InputManagerBundle::with_map(options_res.player_input_map.clone()),
-            PlayerStatsComponent {
+            InputManagerBundle::with_map(options_res.player_abilities_input_map.clone()),
+            AbilitiesBundle::<PlayerAbilities> {
+                cooldowns: character.cooldowns,
+                ..default()
+            },
+            PlayerStats {
                 acceleration: character.acceleration,
                 deceleration_factor: character.deceleration_factor,
             },
@@ -52,7 +59,7 @@ pub(super) fn spawn_players_system(
 /// Move the player around by modifying their linear velocity
 pub(super) fn player_move_system(
     mut player_action_q: Query<(
-        &PlayerStatsComponent,
+        &PlayerStats,
         &ActionState<PlayerAction>,
         &mut LinearVelocity,
     )>,
