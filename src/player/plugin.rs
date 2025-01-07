@@ -1,4 +1,7 @@
-use super::systems::{player_move_system, spawn_players_system};
+use super::{
+    data::CharactersResource,
+    systems::{player_move_system, spawn_players_system},
+};
 use crate::states::{AppState, GameState};
 use bevy::{
     app::{Plugin, Update},
@@ -10,7 +13,8 @@ pub(crate) struct ThetawavePlayerPlugin;
 
 impl Plugin for ThetawavePlayerPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(OnEnter(AppState::Game), spawn_players_system)
+        app.init_resource::<CharactersResource>()
+            .add_systems(OnEnter(AppState::Game), spawn_players_system)
             .add_systems(
                 Update,
                 player_move_system

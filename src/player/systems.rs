@@ -14,32 +14,39 @@ use bevy_egui::egui::Vec2;
 use bevy_persistent::Persistent;
 use leafwing_input_manager::{prelude::ActionState, InputManagerBundle};
 
-use super::data::PlayerStatsComponent;
+use super::data::{CharactersResource, PlayerStatsComponent};
 
 /// Spawn a player controlled entity
 pub(super) fn spawn_players_system(
     mut cmds: Commands,
     assets: Res<GameAssets>,
     options_res: Res<Persistent<OptionsRes>>,
+    characters_res: Res<CharactersResource>,
 ) {
-    cmds.spawn((
-        AseSpriteAnimation {
-            animation: Animation::tag("idle"),
-            aseprite: assets.captain_character_aseprite.clone(),
-        },
-        Cleanup::<AppState> {
-            states: vec![AppState::Game],
-        },
-        Collider::rectangle(6.0, 12.0),
-        RigidBody::Kinematic,
-        MaxLinearSpeed(100.0),
-        InputManagerBundle::with_map(options_res.player_input_map.clone()),
-        PlayerStatsComponent {
-            acceleration: 2.0,
-            deceleration_factor: 0.972,
-        },
-        Name::new("Player"),
-    ));
+    // Get the captain character for now until character selection is added
+    if let Some(character) = characters_res.characters.get("captain") {
+        cmds.spawn((
+            AseSpriteAnimation {
+                animation: Animation::tag("idle"),
+                aseprite: assets.captain_character_aseprite.clone(),
+            },
+            Cleanup::<AppState> {
+                states: vec![AppState::Game],
+            },
+            Collider::rectangle(
+                character.collider_dimensions.x,
+                character.collider_dimensions.y,
+            ),
+            RigidBody::Kinematic,
+            MaxLinearSpeed(character.max_speed),
+            InputManagerBundle::with_map(options_res.player_input_map.clone()),
+            PlayerStatsComponent {
+                acceleration: character.acceleration,
+                deceleration_factor: character.deceleration_factor,
+            },
+            Name::new("Player"),
+        ));
+    }
 }
 
 /// Move the player around by modifying their linear velocity
