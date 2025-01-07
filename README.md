@@ -21,6 +21,7 @@ It contains all the required features of a Thetawave style game.
   - [x] Background Music Channel
   - [x] Effects Channel
   - [x] Ui Channel
+- [x] 2D Physics
 
 # Build and Run
 ## Download Assets
