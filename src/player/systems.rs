@@ -1,30 +1,27 @@
 use crate::{
     assets::GameAssets,
     input::PlayerAction,
+    options::OptionsRes,
     states::{AppState, Cleanup},
 };
 use avian2d::prelude::{Collider, LinearVelocity, MaxLinearSpeed, RigidBody};
 use bevy::{
     core::Name,
-    prelude::{Commands, KeyCode, Query, Res},
+    prelude::{Commands, Query, Res},
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseSpriteAnimation};
 use bevy_egui::egui::Vec2;
-use leafwing_input_manager::{
-    prelude::{ActionState, InputMap},
-    InputManagerBundle,
-};
+use bevy_persistent::Persistent;
+use leafwing_input_manager::{prelude::ActionState, InputManagerBundle};
 
 use super::data::PlayerStatsComponent;
 
-pub(super) fn spawn_players_system(mut cmds: Commands, assets: Res<GameAssets>) {
-    let input_map = InputMap::new([
-        (PlayerAction::Up, KeyCode::KeyW),
-        (PlayerAction::Down, KeyCode::KeyS),
-        (PlayerAction::Left, KeyCode::KeyA),
-        (PlayerAction::Right, KeyCode::KeyD),
-    ]);
-
+/// Spawn a player controlled entity
+pub(super) fn spawn_players_system(
+    mut cmds: Commands,
+    assets: Res<GameAssets>,
+    options_res: Res<Persistent<OptionsRes>>,
+) {
     cmds.spawn((
         AseSpriteAnimation {
             animation: Animation::tag("idle"),
@@ -36,7 +33,7 @@ pub(super) fn spawn_players_system(mut cmds: Commands, assets: Res<GameAssets>) 
         Collider::rectangle(6.0, 12.0),
         RigidBody::Kinematic,
         MaxLinearSpeed(100.0),
-        InputManagerBundle::with_map(input_map),
+        InputManagerBundle::with_map(options_res.player_input_map.clone()),
         PlayerStatsComponent {
             acceleration: 2.0,
             deceleration_factor: 0.972,
@@ -45,6 +42,7 @@ pub(super) fn spawn_players_system(mut cmds: Commands, assets: Res<GameAssets>) 
     ));
 }
 
+/// Move the player around by modifying their linear velocity
 pub(super) fn player_move_system(
     mut player_action_q: Query<(
         &PlayerStatsComponent,
@@ -53,6 +51,7 @@ pub(super) fn player_move_system(
     )>,
 ) {
     for (player_stats, player_action, mut lin_vel) in player_action_q.iter_mut() {
+        // Create a direction vector using the player's inputs
         let mut dir_vec = Vec2::ZERO;
 
         for action in player_action.get_pressed().iter() {
@@ -64,8 +63,10 @@ pub(super) fn player_move_system(
             }
         }
 
+        // Normalize the direction vector
         let dir_vec_norm = dir_vec.normalized();
 
+        // Add the components of the direction vector to the x and y velocity components
         lin_vel.x += dir_vec_norm.x * player_stats.acceleration;
         lin_vel.y += dir_vec_norm.y * player_stats.acceleration;
 

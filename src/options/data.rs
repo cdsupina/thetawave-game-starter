@@ -1,8 +1,11 @@
 use bevy::{
-    prelude::{Event, Resource},
+    prelude::{Event, KeyCode, Resource},
     window::{WindowMode, WindowResolution},
 };
+use leafwing_input_manager::prelude::InputMap;
 use serde::{Deserialize, Serialize};
+
+use crate::input::PlayerAction;
 
 // Resource for storing window options
 #[derive(Resource, Serialize, Deserialize, Clone)]
@@ -17,6 +20,8 @@ pub(crate) struct OptionsRes {
     pub music_volume: f64,
     pub effects_volume: f64,
     pub ui_volume: f64,
+    // Input map for the player
+    pub player_input_map: InputMap<PlayerAction>,
     // All of the available resolutions
     resolutions: Vec<WindowResolution>,
 }
@@ -44,6 +49,12 @@ impl Default for OptionsRes {
             music_volume: 1.0,
             effects_volume: 1.0,
             ui_volume: 1.0,
+            player_input_map: InputMap::new([
+                (PlayerAction::Up, KeyCode::KeyW),
+                (PlayerAction::Down, KeyCode::KeyS),
+                (PlayerAction::Left, KeyCode::KeyA),
+                (PlayerAction::Right, KeyCode::KeyD),
+            ]),
         }
     }
 }
