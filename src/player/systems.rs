@@ -1,8 +1,9 @@
 use crate::{
     assets::GameAssets,
+    input::PlayerAction,
     states::{AppState, Cleanup},
 };
-use avian2d::prelude::{Collider, LinearDamping, LinearVelocity, MaxLinearSpeed, RigidBody};
+use avian2d::prelude::{Collider, LinearVelocity, MaxLinearSpeed, RigidBody};
 use bevy::{
     core::Name,
     prelude::{Commands, KeyCode, Query, Res},
@@ -12,8 +13,6 @@ use leafwing_input_manager::{
     prelude::{ActionState, InputMap},
     InputManagerBundle,
 };
-
-use super::data::PlayerAction;
 
 pub(super) fn spawn_players_system(mut cmds: Commands, assets: Res<GameAssets>) {
     let input_map = InputMap::new([
@@ -31,7 +30,7 @@ pub(super) fn spawn_players_system(mut cmds: Commands, assets: Res<GameAssets>) 
         Cleanup::<AppState> {
             states: vec![AppState::Game],
         },
-        Collider::rectangle(8.0, 10.0),
+        Collider::rectangle(6.0, 12.0),
         RigidBody::Kinematic,
         MaxLinearSpeed(100.0),
         InputManagerBundle::with_map(input_map),
