@@ -18,7 +18,7 @@ use bevy::{
 };
 use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
 use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
-use bevy_egui::{egui, EguiContexts, EguiSettings};
+use bevy_egui::{egui, EguiContextSettings, EguiContexts};
 use bevy_hui::prelude::{HtmlComponents, HtmlFunctions, HtmlNode, Tags};
 use bevy_persistent::Persistent;
 use log::{info, warn};
@@ -61,7 +61,7 @@ pub(super) fn setup_ui_system(
     mut html_funcs: HtmlFunctions,
     mut html_comps: HtmlComponents,
     ui_assets: Res<UiAssets>,
-    mut egui_settings: Query<&mut EguiSettings>,
+    mut egui_settings: Query<&mut EguiContextSettings>,
 ) {
     // Register the footer button component which is used for website links.
     // It uses a spawn function to also establish the focus behaviour on it.

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.15", default-features = false, features = [
+bevy = { version = "0.15.1", default-features = false, features = [
     "animation",
     "bevy_asset",
     "bevy_color",
@@ -37,7 +37,7 @@ bevy = { version = "0.15", default-features = false, features = [
     "x11",
     "serialize",
 ] }
-bevy_egui = "0.31"
+bevy_egui = "0.32"
 bevy-alt-ui-navigation-lite = "0.3.1"
 bevy-inspector-egui = "0.28.0"
 bevy_asset_loader = { version = "0.22.0", features = ["progress_tracking"] }
@@ -52,7 +52,7 @@ rand = "0.8.5"
 webbrowser = "1.0.3"
 bevy_aseprite_ultra = "0.4.1"
 iyes_progress = "0.13.1"
-bevy_kira_audio = { version = "0.21.0", features = ["mp3", "wav"] }
+bevy_kira_audio = { version = "0.22.0", features = ["mp3", "wav"] }
 serde = "1.0.217"
 bevy-persistent = { version = "0.7.0", features = ["all"] }
 dirs = "5.0.1"
