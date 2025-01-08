@@ -44,7 +44,7 @@ pub(super) fn spawn_players_system(
             InputManagerBundle::with_map(options_res.player_input_map.clone()),
             InputManagerBundle::with_map(options_res.player_abilities_input_map.clone()),
             AbilitiesBundle::<PlayerAbilities> {
-                cooldowns: character.cooldowns,
+                cooldowns: character.cooldowns.clone(),
                 ..default()
             },
             PlayerStats {

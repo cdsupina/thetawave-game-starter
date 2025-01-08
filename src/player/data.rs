@@ -4,7 +4,7 @@ use bevy::{
     prelude::{Component, Resource},
     utils::hashbrown::HashMap,
 };
-use leafwing_abilities::prelude::CooldownState;
+use leafwing_abilities::prelude::{Cooldown, CooldownState};
 
 /// Resource for storing all of the data about every character
 #[derive(Resource)]
@@ -14,6 +14,13 @@ pub(super) struct CharactersResource {
 
 impl Default for CharactersResource {
     fn default() -> Self {
+        let mut captain_cooldowns = CooldownState::default();
+
+        captain_cooldowns.set(PlayerAbilities::BasicAttack, Cooldown::from_secs(0.5));
+        captain_cooldowns.set(PlayerAbilities::SecondaryAttack, Cooldown::from_secs(1.5));
+        captain_cooldowns.set(PlayerAbilities::Utility, Cooldown::from_secs(2.0));
+        captain_cooldowns.set(PlayerAbilities::Ultimate, Cooldown::from_secs(10.0));
+
         Self {
             characters: [(
                 "captain".to_string(),
@@ -22,15 +29,7 @@ impl Default for CharactersResource {
                     deceleration_factor: 0.972,
                     max_speed: 100.0,
                     collider_dimensions: Vec2::new(6.0, 12.0),
-                    cooldowns: CooldownState::<PlayerAbilities>::new(
-                        [
-                            (PlayerAbilities::BasicAttack, 0.5),
-                            (PlayerAbilities::SecondaryAttack, 1.5),
-                            (PlayerAbilities::Utility, 2.0),
-                            (PlayerAbilities::Ultimate, 10.0),
-                        ]
-                        .into(),
-                    ),
+                    cooldowns: captain_cooldowns,
                 },
             )]
             .into(),
