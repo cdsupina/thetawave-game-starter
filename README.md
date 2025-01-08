@@ -22,6 +22,10 @@ It contains all the required features of a Thetawave style game.
   - [x] Effects Channel
   - [x] Ui Channel
 - [x] 2D Physics
+- [ ] Local Multiplayer
+- [ ] Win and Loss Screens
+- [ ] Logo Splash Screens
+- [ ] WASM Deployment
 
 # Build and Run
 ## Download Assets
