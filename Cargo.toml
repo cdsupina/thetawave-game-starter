@@ -59,6 +59,7 @@ dirs = "5.0.1"
 leafwing-input-manager = "0.16.0"
 leafwing_abilities = "0.10.0"
 avian2d = { version = "0.2.0", features = ["debug-plugin"] }
+strum = "0.26.3"
 
 [profile.dev]
 opt-level = 1

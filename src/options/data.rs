@@ -58,7 +58,7 @@ impl Default for OptionsRes {
                 (PlayerAction::Right, KeyCode::KeyD),
             ]),
             player_abilities_input_map: InputMap::new([
-                (PlayerAbilities::Utility, KeyCode::ControlLeft),
+                (PlayerAbilities::Utility, KeyCode::AltLeft),
                 (PlayerAbilities::Ultimate, KeyCode::Space),
             ])
             .insert_multiple([

@@ -1,6 +1,6 @@
 use super::{
     data::CharactersResource,
-    systems::{player_move_system, spawn_players_system},
+    systems::{player_ability_system, player_move_system, spawn_players_system},
 };
 use crate::states::{AppState, GameState};
 use bevy::{
@@ -17,7 +17,7 @@ impl Plugin for ThetawavePlayerPlugin {
             .add_systems(OnEnter(AppState::Game), spawn_players_system)
             .add_systems(
                 Update,
-                player_move_system
+                (player_move_system, player_ability_system)
                     .run_if(in_state(AppState::Game).and(in_state(GameState::Playing))),
             );
     }
