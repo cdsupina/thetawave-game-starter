@@ -1,20 +1,23 @@
 use crate::{
     assets::GameAssets,
-    input::PlayerAction,
+    input::{PlayerAbilities, PlayerAction},
     options::OptionsRes,
     states::{AppState, Cleanup},
 };
 use avian2d::prelude::{Collider, LinearVelocity, MaxLinearSpeed, RigidBody};
 use bevy::{
     core::Name,
+    log::info,
     prelude::{Commands, Query, Res},
+    utils::default,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseSpriteAnimation};
 use bevy_egui::egui::Vec2;
 use bevy_persistent::Persistent;
+use leafwing_abilities::{prelude::CooldownState, AbilitiesBundle};
 use leafwing_input_manager::{prelude::ActionState, InputManagerBundle};
 
-use super::data::{CharactersResource, PlayerStatsComponent};
+use super::data::{CharactersResource, PlayerStats};
 
 /// Spawn a player controlled entity
 pub(super) fn spawn_players_system(
@@ -40,7 +43,12 @@ pub(super) fn spawn_players_system(
             RigidBody::Kinematic,
             MaxLinearSpeed(character.max_speed),
             InputManagerBundle::with_map(options_res.player_input_map.clone()),
-            PlayerStatsComponent {
+            InputManagerBundle::with_map(options_res.player_abilities_input_map.clone()),
+            AbilitiesBundle::<PlayerAbilities> {
+                cooldowns: character.cooldowns.clone(),
+                ..default()
+            },
+            PlayerStats {
                 acceleration: character.acceleration,
                 deceleration_factor: character.deceleration_factor,
             },
@@ -52,7 +60,7 @@ pub(super) fn spawn_players_system(
 /// Move the player around by modifying their linear velocity
 pub(super) fn player_move_system(
     mut player_action_q: Query<(
-        &PlayerStatsComponent,
+        &PlayerStats,
         &ActionState<PlayerAction>,
         &mut LinearVelocity,
     )>,
@@ -83,6 +91,38 @@ pub(super) fn player_move_system(
         }
         if dir_vec.y == 0.0 {
             lin_vel.y *= player_stats.deceleration_factor;
+        }
+    }
+}
+
+/// System for activating player abilities when ready
+pub(super) fn player_ability_system(
+    mut player_ability_q: Query<(
+        &mut CooldownState<PlayerAbilities>,
+        &ActionState<PlayerAbilities>,
+    )>,
+) {
+    for (mut cooldown_state, action_state) in player_ability_q.iter_mut() {
+        for ability in action_state.get_just_released() {
+            if cooldown_state.trigger(ability).is_ok() {
+                info!("Player activated {} ability.", ability.as_ref());
+            } else {
+                let cooldown_str = if let Some(ability_cooldown) = cooldown_state.get(ability) {
+                    format!(
+                        " Cooldown: {}/{}",
+                        ability_cooldown.elapsed().as_secs_f32(),
+                        ability_cooldown.max_time().as_secs_f32()
+                    )
+                } else {
+                    "".to_string()
+                };
+
+                info!(
+                    "Player attempted activation of {} ability, but it wasn't ready.{}",
+                    ability.as_ref(),
+                    cooldown_str
+                );
+            }
         }
     }
 }
