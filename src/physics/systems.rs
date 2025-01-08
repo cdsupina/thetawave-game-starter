@@ -23,3 +23,7 @@ pub(super) fn pause_physics_system(
         }
     }
 }
+
+pub(super) fn resume_physics_system(mut physics_time: ResMut<Time<Physics>>) {
+    physics_time.unpause();
+}
