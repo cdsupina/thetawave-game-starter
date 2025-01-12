@@ -1,10 +1,12 @@
+use crate::ui::data::MenuButtonState;
+
 use super::{
     ButtonAction, CarouselSlotPosition, CharacterCarousel, PlayerNum, UiAssets, VisibleCarouselSlot,
 };
 use bevy::{
     color::{Alpha, Color},
     core::Name,
-    log::warn,
+    log::{info, warn},
     prelude::{BuildChildren, ChildBuild, Commands, Entity, ImageNode, In, Query, Res},
     ui::{Node, UiRect, Val},
     utils::default,
@@ -192,24 +194,46 @@ fn setup_menu_button_sprite(
     mut cmds: Commands,
     ui_assets: Res<UiAssets>,
 ) {
+    let mut animation = Animation::tag("released");
+
     // Get tags for the entity
     if let Ok(tags) = tags.get(entity) {
         // Check if this is marked as the first button
         if let Some(first_str) = tags.get("first") {
-            // Insert animation component with pressed/released state based on first status
-            cmds.entity(entity).insert((
-                AseUiAnimation {
-                    animation: Animation::tag(if first_str == "true" {
-                        "pressed"
-                    } else {
-                        "released"
-                    }),
-                    aseprite: ui_assets.menu_button_aseprite.clone(),
-                },
-                Name::new("Menu Button Sprite"),
-            ));
+            // Change the menu button animation to "pressed"
+            if first_str == "true" {
+                animation = Animation::tag("pressed");
+            }
+        } else {
+            warn!("No tag \"first\" found for {entity}. Please insert a tag indicating whether the button should be the first button to focus.");
+        }
+
+        // Change animation if necessary given the button_state tag
+        if let Some(state_str) = tags.get("button_state") {
+            match state_str.as_ref() {
+                "disabled" => {
+                    animation = Animation::tag("disabled");
+                }
+                "ready" => {
+                    animation = Animation::tag("ready");
+                }
+                "normal" => {}
+                _ => {
+                    warn!("Given button_state str for {entity} did not match any options.")
+                }
+            }
+        } else {
+            warn!("No tag \"button_state\" found for {entity}. Please insert a tag indicating the state of the button.");
         }
     }
+
+    cmds.entity(entity).insert((
+        AseUiAnimation {
+            animation,
+            aseprite: ui_assets.menu_button_aseprite.clone(),
+        },
+        Name::new("Menu Button Sprite"),
+    ));
 }
 
 /// Sets up menu button sprite animations based on whether it's the first button
@@ -254,6 +278,7 @@ fn setup_title_logo(In(entity): In<Entity>, mut cmds: Commands, ui_assets: Res<U
 /// This function assigns actions to buttons based on their tags.
 fn setup_menu_button(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds: Commands) {
     if let Ok(tags) = tags.get(entity) {
+        // Assign button action from tag
         if let Some(button_action_str) = tags.get("button_action") {
             match ButtonAction::try_from(button_action_str) {
                 Ok(button_action) => {
@@ -268,6 +293,23 @@ fn setup_menu_button(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds: Comma
 
             cmds.entity(entity)
                 .insert(Name::new(format!("Menu Button {}", button_action_str)));
+        }
+
+        // Assign button action from tag
+        if let Some(button_state_str) = tags.get("button_state") {
+            match MenuButtonState::try_from(button_state_str) {
+                Ok(button_state) => {
+                    // If the state is valid, it gets inserted into the entity.
+                    cmds.entity(entity).insert(button_state);
+                }
+                Err(msg) => {
+                    // If the state fails to convert, it is logged as a warning.
+                    warn!("{}", msg);
+                }
+            };
+        } else {
+            info!("No button state tag found for menu button. Inserting a MenuButtonState::Normal component into {entity}.");
+            cmds.entity(entity).insert(MenuButtonState::default());
         }
     } else {
         warn!("No tags not found for menu button.");

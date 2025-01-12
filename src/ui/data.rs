@@ -71,6 +71,31 @@ impl TryFrom<&String> for ButtonAction {
     }
 }
 
+/// States representing how a button should function
+#[derive(Component, Default)]
+pub(super) enum MenuButtonState {
+    #[default]
+    Normal,
+    // "Greyed out" button that can't be selected
+    Disabled,
+    // Green menu button that indicates player has pressed
+    // Often used in multiplayer for indicating that a player is ready
+    Ready,
+}
+
+impl TryFrom<&String> for MenuButtonState {
+    type Error = String;
+
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        match value.as_ref() {
+            "normal" => Ok(Self::Normal),
+            "disabled" => Ok(Self::Disabled),
+            "ready" => Ok(Self::Ready),
+            _ => Err("Invalid state".to_string()),
+        }
+    }
+}
+
 /// Loading bar tag component
 #[derive(Component)]
 pub(super) struct LoadingBar;
