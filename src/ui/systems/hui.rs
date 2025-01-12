@@ -300,7 +300,10 @@ fn setup_menu_button(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds: Comma
             match MenuButtonState::try_from(button_state_str) {
                 Ok(button_state) => {
                     // If the state is valid, it gets inserted into the entity.
-                    cmds.entity(entity).insert(button_state);
+                    cmds.entity(entity).insert(button_state.clone());
+                    if matches!(button_state, MenuButtonState::Normal) {
+                        cmds.entity(entity).insert(Focusable::default());
+                    }
                 }
                 Err(msg) => {
                     // If the state fails to convert, it is logged as a warning.
@@ -314,8 +317,6 @@ fn setup_menu_button(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds: Comma
     } else {
         warn!("No tags not found for menu button.");
     }
-
-    cmds.entity(entity).insert(Focusable::default());
 }
 
 /// This function assigns actions to buttons based on their tags.

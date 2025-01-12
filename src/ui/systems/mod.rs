@@ -37,28 +37,30 @@ pub(super) fn menu_button_focus_system(
 ) {
     for event in nav_events.read() {
         if let NavEvent::FocusChanged { to, from } = event {
-            // Handle newly focused button
-            if let Ok(children) = focusable_q.get(*to.first()) {
-                // Play pressed button effect
-                audio_effect_events.send(AudioEffectEvent::MenuButtonPressed);
+            if to != from {
+                // Handle newly focused button
+                if let Ok(children) = focusable_q.get(*to.first()) {
+                    // Play pressed button effect
+                    audio_effect_events.send(AudioEffectEvent::MenuButtonPressed);
 
-                // Update the button animation
-                for child in children.iter() {
-                    if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
-                        ase_animation.animation.play_loop("pressed");
+                    // Update the button animation
+                    for child in children.iter() {
+                        if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
+                            ase_animation.animation.play_loop("pressed");
+                        }
                     }
                 }
-            }
 
-            // Handle previously focused button
-            if let Ok(children) = focusable_q.get(*from.first()) {
-                // Play released button effect
-                audio_effect_events.send(AudioEffectEvent::MenuButtonReleased);
+                // Handle previously focused button
+                if let Ok(children) = focusable_q.get(*from.first()) {
+                    // Play released button effect
+                    audio_effect_events.send(AudioEffectEvent::MenuButtonReleased);
 
-                // Update the button animation
-                for child in children.iter() {
-                    if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
-                        ase_animation.animation.play_loop("released");
+                    // Update the button animation
+                    for child in children.iter() {
+                        if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
+                            ase_animation.animation.play_loop("released");
+                        }
                     }
                 }
             }

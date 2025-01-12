@@ -72,7 +72,7 @@ impl TryFrom<&String> for ButtonAction {
 }
 
 /// States representing how a button should function
-#[derive(Component, Default)]
+#[derive(Component, Default, Clone)]
 pub(super) enum MenuButtonState {
     #[default]
     Normal,
