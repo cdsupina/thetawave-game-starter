@@ -7,6 +7,41 @@
         flex_direction="column"
     >
         <node
+            width="100%"
+            height="100%"
+            justify_content="flex_end"
+            flex_direction="column"
+        >
+            <node width="100%" background="#AAA3" height="50%">
+                <node
+                    height="100%"
+                    width="50%"
+                    background="#ABCD"
+                    align_items="center"
+                    justify_content="center"
+                >
+                    <arrow_button
+                        action="character_cycle_left:player_one"
+                        direction="left"
+                    ></arrow_button>
+
+                    <character_carousel
+                        player="player_one"
+                    ></character_carousel>
+
+                    <arrow_button
+                        action="character_cycle_right:player_one"
+                        direction="right"
+                    ></arrow_button>
+                </node>
+                <node height="100%" width="50%" background="#ABFD"></node>
+            </node>
+            <node width="100%" background="#8883" height="50%">
+                <node height="100%" width="50%" background="#ABFD"></node>
+                <node height="100%" width="50%" background="#ABCD"></node>
+            </node>
+        </node>
+        <node
             display="flex"
             flex_direction="column"
             justify_content="center"

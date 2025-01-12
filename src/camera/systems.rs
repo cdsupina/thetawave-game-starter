@@ -43,7 +43,7 @@ pub(super) fn setup_cameras_system(mut cmd: Commands) {
             clear_color: ClearColorConfig::Custom(Color::BLACK),
             ..default()
         },
-        Tonemapping::TonyMcMapface,
+        Tonemapping::BlenderFilmic,
         Transform::from_xyz(0.0, 0.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
         Projection::Perspective(PerspectiveProjection {
             far: 10000.0,

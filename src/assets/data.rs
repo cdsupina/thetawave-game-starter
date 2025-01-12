@@ -1,3 +1,4 @@
+use crate::player::CharacterType;
 use bevy::{
     asset::Handle,
     image::Image,
@@ -10,11 +11,24 @@ use bevy_hui::prelude::HtmlTemplate;
 use bevy_kira_audio::AudioSource;
 use rand::Rng;
 
+/// Assets used in the game state
 #[derive(AssetCollection, Resource)]
 pub(crate) struct GameAssets {
-    // Animated github logo Aseprite
+    // Animated captain characater Aseprite
     #[asset(path = "media/aseprite/captain_character.aseprite")]
     pub captain_character_aseprite: Handle<Aseprite>,
+    // Animated juggernaut character Aseprite
+    #[asset(path = "media/aseprite/juggernaut_character.aseprite")]
+    pub juggernaut_character_aseprite: Handle<Aseprite>,
+}
+
+impl GameAssets {
+    pub(crate) fn get_character_sprite(&self, character_type: &CharacterType) -> Handle<Aseprite> {
+        match character_type {
+            CharacterType::Captain => self.captain_character_aseprite.clone(),
+            CharacterType::Juggernaut => self.juggernaut_character_aseprite.clone(),
+        }
+    }
 }
 
 /// Audio assets used throughout all states of the app
@@ -102,6 +116,31 @@ pub(crate) struct UiAssets {
     // HTML template for the pause menu
     #[asset(path = "ui/menus/pause_menu.html")]
     pub pause_menu_html: Handle<HtmlTemplate>,
+    // Animated arrow button Aseprite
+    #[asset(path = "media/aseprite/arrow_button.aseprite")]
+    pub arrow_button_aseprite: Handle<Aseprite>,
+    // HTML template arrow buttons
+    #[asset(path = "ui/components/arrow_button.html")]
+    pub arrow_button_html: Handle<HtmlTemplate>,
+    // HTML template for arrow buttons
+    #[asset(path = "ui/components/arrow_button_sprite.html")]
+    pub arrow_button_sprite_html: Handle<HtmlTemplate>,
+    // HTML template for character carousel
+    #[asset(path = "ui/components/character_carousel.html")]
+    pub character_carousel_html: Handle<HtmlTemplate>,
+    #[asset(path = "media/images/ui/captain_character.png")]
+    pub captain_character_image: Handle<Image>,
+    #[asset(path = "media/images/ui/juggernaut_character.png")]
+    pub juggernaut_character_image: Handle<Image>,
+}
+
+impl UiAssets {
+    pub(crate) fn get_character_image(&self, character_type: &CharacterType) -> Handle<Image> {
+        match character_type {
+            CharacterType::Captain => self.captain_character_image.clone(),
+            CharacterType::Juggernaut => self.juggernaut_character_image.clone(),
+        }
+    }
 }
 
 // Assets for background images

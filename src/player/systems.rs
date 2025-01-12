@@ -1,3 +1,7 @@
+use super::{
+    data::{CharactersResource, ChosenCharactersResource, PlayerStats},
+    ChosenCharactersEvent,
+};
 use crate::{
     assets::GameAssets,
     input::{PlayerAbilities, PlayerAction},
@@ -8,7 +12,7 @@ use avian2d::prelude::{Collider, LinearVelocity, MaxLinearSpeed, RigidBody};
 use bevy::{
     core::Name,
     log::info,
-    prelude::{Commands, Query, Res},
+    prelude::{Commands, EventReader, Query, Res, ResMut},
     utils::default,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseSpriteAnimation};
@@ -17,43 +21,46 @@ use bevy_persistent::Persistent;
 use leafwing_abilities::{prelude::CooldownState, AbilitiesBundle};
 use leafwing_input_manager::{prelude::ActionState, InputManagerBundle};
 
-use super::data::{CharactersResource, PlayerStats};
-
 /// Spawn a player controlled entity
 pub(super) fn spawn_players_system(
     mut cmds: Commands,
     assets: Res<GameAssets>,
     options_res: Res<Persistent<OptionsRes>>,
     characters_res: Res<CharactersResource>,
+    chosen_characters_res: Res<ChosenCharactersResource>,
 ) {
-    // Get the captain character for now until character selection is added
-    if let Some(character) = characters_res.characters.get("captain") {
-        cmds.spawn((
-            AseSpriteAnimation {
-                animation: Animation::tag("idle"),
-                aseprite: assets.captain_character_aseprite.clone(),
-            },
-            Cleanup::<AppState> {
-                states: vec![AppState::Game],
-            },
-            Collider::rectangle(
-                character.collider_dimensions.x,
-                character.collider_dimensions.y,
-            ),
-            RigidBody::Kinematic,
-            MaxLinearSpeed(character.max_speed),
-            InputManagerBundle::with_map(options_res.player_input_map.clone()),
-            InputManagerBundle::with_map(options_res.player_abilities_input_map.clone()),
-            AbilitiesBundle::<PlayerAbilities> {
-                cooldowns: character.cooldowns.clone(),
-                ..default()
-            },
-            PlayerStats {
-                acceleration: character.acceleration,
-                deceleration_factor: character.deceleration_factor,
-            },
-            Name::new("Player"),
-        ));
+    // Iterate through all of the chosen characters
+    for (player_num, character_type) in chosen_characters_res.players.iter() {
+        // Spawn a player using the CharacterData from the character type
+        if let Some(character_data) = characters_res.characters.get(character_type) {
+            cmds.spawn((
+                player_num.clone(),
+                AseSpriteAnimation {
+                    animation: Animation::tag("idle"),
+                    aseprite: assets.get_character_sprite(character_type),
+                },
+                Cleanup::<AppState> {
+                    states: vec![AppState::Game],
+                },
+                Collider::rectangle(
+                    character_data.collider_dimensions.x,
+                    character_data.collider_dimensions.y,
+                ),
+                RigidBody::Kinematic,
+                MaxLinearSpeed(character_data.max_speed),
+                InputManagerBundle::with_map(options_res.player_input_map.clone()),
+                InputManagerBundle::with_map(options_res.player_abilities_input_map.clone()),
+                AbilitiesBundle::<PlayerAbilities> {
+                    cooldowns: character_data.cooldowns.clone(),
+                    ..default()
+                },
+                PlayerStats {
+                    acceleration: character_data.acceleration,
+                    deceleration_factor: character_data.deceleration_factor,
+                },
+                Name::new("Player"),
+            ));
+        }
     }
 }
 
@@ -124,5 +131,15 @@ pub(super) fn player_ability_system(
                 );
             }
         }
+    }
+}
+
+/// Sets the chosen characters resource from the event
+pub(super) fn set_characters_system(
+    mut characters: ResMut<ChosenCharactersResource>,
+    mut events: EventReader<ChosenCharactersEvent>,
+) {
+    for event in events.read() {
+        characters.players = event.players.clone();
     }
 }
