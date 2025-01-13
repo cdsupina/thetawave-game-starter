@@ -147,6 +147,9 @@ pub(crate) struct UiAssets {
     pub captain_character_image: Handle<Image>,
     #[asset(path = "media/images/ui/juggernaut_character.png")]
     pub juggernaut_character_image: Handle<Image>,
+    // HTML template for the node which holds the characater carousel and arrows
+    #[asset(path = "ui/components/character_selector.html")]
+    pub character_selector_html: Handle<HtmlTemplate>,
 }
 
 impl UiAssets {

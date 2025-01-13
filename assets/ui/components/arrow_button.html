@@ -2,8 +2,11 @@
     <node
         on_spawn="setup_arrow_button"
         tag:button_action="{action}"
+        tag:player="{player}"
         background="#FFFA"
-        margin="5px"
+        flex_direction="column"
+        align_items="center"
+        justify_content="end"
     >
         <arrow_button_sprite direction="{direction}"> </arrow_button_sprite>
     </node>

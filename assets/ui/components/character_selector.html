@@ -1,0 +1,17 @@
+<template>
+    <node height="100%" width="85%" justify_self="start">
+        <arrow_button
+            action="character_cycle_left"
+            player="{player}"
+            direction="left"
+        ></arrow_button>
+
+        <character_carousel player="{player}"></character_carousel>
+
+        <arrow_button
+            action="character_cycle_right"
+            player="{player}"
+            direction="right"
+        ></arrow_button>
+    </node>
+</template>

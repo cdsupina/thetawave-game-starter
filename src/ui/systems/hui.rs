@@ -43,6 +43,10 @@ pub(in crate::ui) fn setup_hui_system(
         "character_carousel",
         ui_assets.character_carousel_html.clone(),
     );
+    html_comps.register(
+        "character_selector",
+        ui_assets.character_selector_html.clone(),
+    );
 
     // Register bevy_hui functions
     html_funcs.register("setup_menu_button", setup_menu_button);
@@ -323,21 +327,25 @@ fn setup_menu_button(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds: Comma
 fn setup_arrow_button(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds: Commands) {
     if let Ok(tags) = tags.get(entity) {
         if let Some(button_action_str) = tags.get("button_action") {
-            match ButtonAction::try_from(button_action_str) {
-                Ok(button_action) => {
-                    // If the action is valid, it gets inserted into the entity.
-                    cmds.entity(entity).insert(button_action);
-                }
-                Err(msg) => {
-                    // If the action fails to convert, it is logged as a warning.
-                    warn!("{}", msg);
-                }
-            };
+            if let Some(player_str) = tags.get("player") {
+                match ButtonAction::try_from(&format!("{button_action_str}:{player_str}")) {
+                    Ok(button_action) => {
+                        // If the action is valid, it gets inserted into the entity.
+                        cmds.entity(entity).insert(button_action);
+                    }
+                    Err(msg) => {
+                        // If the action fails to convert, it is logged as a warning.
+                        warn!("{}", msg);
+                    }
+                };
 
-            cmds.entity(entity)
-                .insert(Name::new(format!("Arrow Button {}", button_action_str)));
+                cmds.entity(entity)
+                    .insert(Name::new(format!("Arrow Button {}", button_action_str)));
+            } else {
+                warn!("No \"player\" tag found for arrow button.")
+            }
         }
     } else {
-        warn!("No tags not found for menu button.");
+        warn!("No \"button_action\" tag found for arrow button.");
     }
 }

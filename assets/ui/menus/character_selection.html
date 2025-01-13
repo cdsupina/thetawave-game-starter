@@ -18,21 +18,19 @@
                     width="50%"
                     background="#ABCD"
                     align_items="center"
-                    justify_content="center"
+                    flex_direction="column"
+                    justify_content="end"
                 >
-                    <arrow_button
-                        action="character_cycle_left:player_one"
-                        direction="left"
-                    ></arrow_button>
-
-                    <character_carousel
+                    <character_selector
                         player="player_one"
-                    ></character_carousel>
+                    ></character_selector>
 
-                    <arrow_button
-                        action="character_cycle_right:player_one"
-                        direction="right"
-                    ></arrow_button>
+                    <menu_button
+                        text="Join"
+                        action="enter_game"
+                        is_first="true"
+                        button_state="normal"
+                    />
                 </node>
                 <node height="100%" width="50%" background="#ABFD"></node>
             </node>
@@ -58,7 +56,7 @@
             <menu_button
                 text="Back"
                 action="enter_title"
-                is_first="true"
+                is_first="false"
                 button_state="normal"
             />
         </node>
