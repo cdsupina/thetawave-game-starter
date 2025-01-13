@@ -150,6 +150,15 @@ pub(crate) struct UiAssets {
     // HTML template for the node which holds the characater carousel and arrows
     #[asset(path = "ui/components/character_selector.html")]
     pub character_selector_html: Handle<HtmlTemplate>,
+    // HTML template for the node for prompt for player to join
+    #[asset(path = "ui/components/join_prompt.html")]
+    pub join_prompt_html: Handle<HtmlTemplate>,
+    // Aseprite containing standard sized keyboard key sprites
+    #[asset(path = "media/aseprite/standard_keyboard_buttons.aseprite")]
+    pub standard_keyboard_buttons_aseprite: Handle<Aseprite>,
+    // Aseprite containing the return key sprite
+    #[asset(path = "media/aseprite/return_button.aseprite")]
+    pub return_button_aseprite: Handle<Aseprite>,
 }
 
 impl UiAssets {
