@@ -65,6 +65,11 @@ pub(super) fn play_effect_system(
                         .play(app_audio_assets.get_random_button_release_effect())
                         .with_volume(ui_volume);
                 }
+                AudioEffectEvent::MenuButtonConfirm => {
+                    ui_audio_channel
+                        .play(app_audio_assets.get_random_button_confirm_effect())
+                        .with_volume(ui_volume);
+                }
             }
         }
     }

@@ -78,10 +78,13 @@ pub(super) fn menu_button_action_system(
     mut next_pause_state: ResMut<NextState<PauseMenuState>>,
     mut exit_events: EventWriter<AppExit>,
     mut apply_options_events: EventWriter<ApplyOptionsEvent>,
+    mut effect_events: EventWriter<AudioEffectEvent>,
 ) {
     for event in nav_events.read() {
         if let NavEvent::NoChanges { from, .. } = event {
             if let Ok(button_action) = focusable_q.get(*from.first()) {
+                effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+
                 match button_action {
                     ButtonAction::EnterAppState(app_state) => {
                         next_app_state.set(*app_state);

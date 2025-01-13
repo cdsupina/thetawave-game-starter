@@ -58,6 +58,15 @@ pub(crate) struct AppAudioAssets {
         collection(typed)
     )]
     pub menu_button_release_effects: Vec<Handle<AudioSource>>,
+    #[asset(
+        paths(
+            "media/audio/effects/button_confirm_1.wav",
+            "media/audio/effects/button_confirm_2.wav",
+            "media/audio/effects/button_confirm_3.wav",
+        ),
+        collection(typed)
+    )]
+    pub menu_button_confirm_effects: Vec<Handle<AudioSource>>,
 }
 
 impl AppAudioAssets {
@@ -70,6 +79,12 @@ impl AppAudioAssets {
     pub(crate) fn get_random_button_release_effect(&self) -> Handle<AudioSource> {
         self.menu_button_release_effects
             [rand::thread_rng().gen_range(0..self.menu_button_release_effects.len())]
+        .clone()
+    }
+
+    pub(crate) fn get_random_button_confirm_effect(&self) -> Handle<AudioSource> {
+        self.menu_button_confirm_effects
+            [rand::thread_rng().gen_range(0..self.menu_button_confirm_effects.len())]
         .clone()
     }
 }
