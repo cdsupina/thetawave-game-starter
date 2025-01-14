@@ -2,7 +2,7 @@ use crate::{
     player::{CharacterType, PlayerNum},
     states::{AppState, GameState, MainMenuState, PauseMenuState},
 };
-use bevy::prelude::Component;
+use bevy::prelude::{Component, Event};
 use strum::IntoEnumIterator;
 
 /// All actions for menu buttons
@@ -18,6 +18,8 @@ pub(super) enum ButtonAction {
     OpenGithubWebsite,
     ChracterCycleLeft(PlayerNum),
     CharacterCycleRight(PlayerNum),
+    Join(PlayerNum),
+    Ready,
 }
 
 /// Used for converting strings from hui tags into button actions
@@ -66,6 +68,17 @@ impl TryFrom<&String> for ButtonAction {
                     Err("No player string found, add player number in the format \"character_cycle_right:player_num\".".to_string())
                 }
             }
+            "join" => {
+                if let Some(player_str) = maybe_player_str {
+                    match PlayerNum::try_from(&player_str.to_string()) {
+                        Ok(player_num) => Ok(ButtonAction::Join(player_num)),
+                        Err(msg) => Err(msg),
+                    }
+                } else {
+                    Err("No player string found, add player number in the format \"join:player_num\".".to_string())
+                }
+            }
+            "ready" => Ok(ButtonAction::Ready),
             _ => Err("Invalid action".to_string()),
         }
     }
@@ -157,3 +170,11 @@ impl CharacterCarousel {
         }
     }
 }
+
+/// Event for when a player presses a join button on character selection screen
+#[derive(Event, Debug)]
+pub(super) struct PlayerJoinEvent(pub PlayerNum);
+
+/// Tag for container holding the carousel and arrows for character selection
+#[derive(Component)]
+pub(super) struct CharacterSelector;

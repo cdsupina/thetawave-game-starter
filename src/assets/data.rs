@@ -134,15 +134,6 @@ pub(crate) struct UiAssets {
     // Animated arrow button Aseprite
     #[asset(path = "media/aseprite/arrow_button.aseprite")]
     pub arrow_button_aseprite: Handle<Aseprite>,
-    // HTML template arrow buttons
-    #[asset(path = "ui/components/arrow_button.html")]
-    pub arrow_button_html: Handle<HtmlTemplate>,
-    // HTML template for arrow buttons
-    #[asset(path = "ui/components/arrow_button_sprite.html")]
-    pub arrow_button_sprite_html: Handle<HtmlTemplate>,
-    // HTML template for character carousel
-    #[asset(path = "ui/components/character_carousel.html")]
-    pub character_carousel_html: Handle<HtmlTemplate>,
     #[asset(path = "media/images/ui/captain_character.png")]
     pub captain_character_image: Handle<Image>,
     #[asset(path = "media/images/ui/juggernaut_character.png")]

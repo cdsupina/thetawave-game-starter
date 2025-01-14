@@ -5,7 +5,7 @@ use bevy::{
     utils::hashbrown::HashMap,
 };
 use leafwing_abilities::prelude::{Cooldown, CooldownState};
-use strum::EnumIter;
+use strum::{AsRefStr, EnumIter};
 
 /// Resource for storing all of the data about every character
 #[derive(Resource)]
@@ -77,7 +77,7 @@ pub(super) struct PlayerStats {
 }
 
 /// Tag for indicating multiplayer association
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, PartialEq, AsRefStr)]
 pub(crate) enum PlayerNum {
     One,
     Two,

@@ -1,14 +1,17 @@
-use super::systems::{
-    character_selection::{
-        cycle_carousel_system, set_characters_system, setup_character_selection_system,
-        update_carousel_ui_system,
+use super::{
+    data::PlayerJoinEvent,
+    systems::{
+        character_selection::{
+            cycle_carousel_system, set_characters_system, setup_character_selection_system,
+            spawn_carousel_system, update_carousel_ui_system,
+        },
+        hui::setup_hui_system,
+        loading::{setup_loading_ui_system, update_loading_bar_system},
+        menu_button_action_system, menu_button_focus_system,
+        options::{options_menu_system, persist_options_system, setup_options_menu_system},
+        pause::{setup_pause_menu_system, setup_pause_options_system},
+        title::{setup_title_menu_system, website_footer_button_focus_system},
     },
-    hui::setup_hui_system,
-    loading::{setup_loading_ui_system, update_loading_bar_system},
-    menu_button_action_system, menu_button_focus_system,
-    options::{options_menu_system, persist_options_system, setup_options_menu_system},
-    pause::{setup_pause_menu_system, setup_pause_options_system},
-    title::{setup_title_menu_system, website_footer_button_focus_system},
 };
 use crate::states::{AppState, MainMenuState, PauseMenuState};
 use bevy::{
@@ -27,6 +30,7 @@ impl Plugin for ThetawaveUiPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         // Initialize required UI plugins - HuiPlugin for UI components and EguiPlugin for immediate mode GUI
         app.add_plugins((HuiPlugin, EguiPlugin))
+            .add_event::<PlayerJoinEvent>()
             .add_systems(OnEnter(AppState::MainMenuLoading), setup_loading_ui_system)
             // Setup core UI components and main menu systems when entering the MainMenu state
             .add_systems(OnEnter(AppState::MainMenu), setup_hui_system)
@@ -67,7 +71,11 @@ impl Plugin for ThetawaveUiPlugin {
             // Run carousel systems in character selection state
             .add_systems(
                 Update,
-                (cycle_carousel_system, update_carousel_ui_system)
+                (
+                    cycle_carousel_system,
+                    update_carousel_ui_system,
+                    spawn_carousel_system,
+                )
                     .run_if(in_state(MainMenuState::CharacterSelection)),
             )
             // Send the event to set the characters to the active characters in the carousel

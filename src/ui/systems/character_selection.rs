@@ -1,13 +1,21 @@
 use super::{
-    CarouselSlotPosition, CharacterCarousel, Cleanup, MainMenuState, PlayerNum, UiAssets,
-    VisibleCarouselSlot,
+    ButtonAction, CarouselSlotPosition, CharacterCarousel, Cleanup, MainMenuState, PlayerJoinEvent,
+    PlayerNum, UiAssets, VisibleCarouselSlot,
 };
-use crate::player::ChosenCharactersEvent;
+use crate::{player::ChosenCharactersEvent, ui::data::CharacterSelector};
 use bevy::{
+    color::{Alpha, Color},
     core::Name,
     input::ButtonInput,
-    prelude::{Changed, Children, Commands, EventWriter, ImageNode, KeyCode, Query, Res},
+    log::warn,
+    prelude::{
+        BuildChildren, Changed, ChildBuild, Children, Commands, DespawnRecursiveExt, Entity,
+        EventReader, EventWriter, ImageNode, KeyCode, Query, Res, With,
+    },
+    ui::{AlignItems, BackgroundColor, FlexDirection, JustifyContent, Node, UiRect, Val},
+    utils::default,
 };
+use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
 use bevy_hui::prelude::HtmlNode;
 
 /// This function sets up the character selection interface.
@@ -80,4 +88,142 @@ pub(in crate::ui) fn set_characters_system(
     }
 
     chosen_character_events.send(ChosenCharactersEvent { players });
+}
+
+/// Spawn character carousel when PlayerJoinEvent is read
+pub(in crate::ui) fn spawn_carousel_system(
+    mut player_join_events: EventReader<PlayerJoinEvent>,
+    character_selector_q: Query<(Entity, &PlayerNum), With<CharacterSelector>>,
+    mut cmds: Commands,
+    ui_assets: Res<UiAssets>,
+) {
+    for event in player_join_events.read() {
+        for (entity, player_num) in character_selector_q.iter() {
+            if *player_num == event.0 {
+                cmds.entity(entity).despawn_descendants();
+
+                let carousel = CharacterCarousel::new();
+
+                cmds.entity(entity).with_children(|parent| {
+                    // Spawn left arrow
+                    parent
+                        .spawn((
+                            Node {
+                                flex_direction: FlexDirection::Column,
+                                align_items: AlignItems::Center,
+                                justify_content: JustifyContent::End,
+                                ..default()
+                            },
+                            BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.5)),
+                            ButtonAction::ChracterCycleLeft(player_num.clone()),
+                            Name::new(format!("Left Arrow Button {}", player_num.as_ref())),
+                        ))
+                        .with_child((
+                            Node {
+                                width: Val::Px(108.0),
+                                height: Val::Px(48.0),
+                                ..default()
+                            },
+                            AseUiAnimation {
+                                animation: Animation::tag("idle"),
+                                aseprite: ui_assets.arrow_button_aseprite.clone(),
+                            },
+                            Name::new("Arrow Button Sprite"),
+                        ));
+
+                    parent
+                        .spawn((
+                            Node {
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                width: Val::Percent(100.0),
+                                ..default()
+                            },
+                            BackgroundColor(Color::srgba(0.5, 0.0, 0.0, 0.5)),
+                            player_num.clone(),
+                            carousel.clone(),
+                        ))
+                        .with_children(|parent| {
+                            // spawn child nodes containing carousel character images
+                            if let Some(left_character_type) = carousel.get_left_character() {
+                                parent.spawn((
+                                    VisibleCarouselSlot(CarouselSlotPosition::Left),
+                                    ImageNode::new(
+                                        ui_assets.get_character_image(left_character_type),
+                                    )
+                                    .with_color(Color::default().with_alpha(0.5)),
+                                    Node {
+                                        width: Val::Percent(30.0),
+                                        margin: UiRect::all(Val::Px(15.0)),
+                                        ..default()
+                                    },
+                                ));
+                            } else {
+                                warn!("No left character found in carousel.");
+                            }
+
+                            if let Some(active_character_type) = carousel.get_active_character() {
+                                parent.spawn((
+                                    VisibleCarouselSlot(CarouselSlotPosition::Center),
+                                    ImageNode::new(
+                                        ui_assets.get_character_image(active_character_type),
+                                    ),
+                                    Node {
+                                        width: Val::Percent(40.0),
+                                        margin: UiRect::all(Val::Px(15.0)),
+                                        ..default()
+                                    },
+                                ));
+                            } else {
+                                warn!("No active character found in carousel.");
+                            }
+
+                            if let Some(right_character_type) = carousel.get_right_character() {
+                                parent.spawn((
+                                    VisibleCarouselSlot(CarouselSlotPosition::Right),
+                                    ImageNode::new(
+                                        ui_assets.get_character_image(right_character_type),
+                                    )
+                                    .with_color(Color::default().with_alpha(0.5)),
+                                    Node {
+                                        width: Val::Percent(30.0),
+                                        margin: UiRect::all(Val::Px(15.0)),
+                                        ..default()
+                                    },
+                                ));
+                            } else {
+                                warn!("No right character found in carousel.");
+                            }
+                        });
+
+                    // Spawn right arrow
+                    parent
+                        .spawn((
+                            Node {
+                                flex_direction: FlexDirection::Column,
+                                align_items: AlignItems::Center,
+                                justify_content: JustifyContent::End,
+                                ..default()
+                            },
+                            BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.5)),
+                            ButtonAction::CharacterCycleRight(player_num.clone()),
+                            Name::new(format!("Right Arrow Button {}", player_num.as_ref())),
+                        ))
+                        .with_child((
+                            Node {
+                                width: Val::Px(108.0),
+                                height: Val::Px(48.0),
+                                ..default()
+                            },
+                            AseUiAnimation {
+                                animation: Animation::tag("idle"),
+                                aseprite: ui_assets.arrow_button_aseprite.clone(),
+                            },
+                            ImageNode::default().with_flip_x(),
+                            Name::new("Arrow Button Sprite"),
+                        ));
+                });
+            }
+        }
+    }
 }

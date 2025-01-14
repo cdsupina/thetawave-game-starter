@@ -1,5 +1,6 @@
 use super::data::{
-    ButtonAction, CarouselSlotPosition, CharacterCarousel, LoadingBar, VisibleCarouselSlot,
+    ButtonAction, CarouselSlotPosition, CharacterCarousel, LoadingBar, PlayerJoinEvent,
+    VisibleCarouselSlot,
 };
 use crate::{
     assets::{LoadingProgressEvent, UiAssets},
@@ -79,6 +80,7 @@ pub(super) fn menu_button_action_system(
     mut exit_events: EventWriter<AppExit>,
     mut apply_options_events: EventWriter<ApplyOptionsEvent>,
     mut effect_events: EventWriter<AudioEffectEvent>,
+    mut player_join_events: EventWriter<PlayerJoinEvent>,
 ) {
     for event in nav_events.read() {
         if let NavEvent::NoChanges { from, .. } = event {
@@ -116,6 +118,10 @@ pub(super) fn menu_button_action_system(
                     ButtonAction::CharacterCycleRight(_player_num) => {
                         todo!("Cycle the character selection carousel right for player.");
                     }
+                    ButtonAction::Join(player_num) => {
+                        player_join_events.send(PlayerJoinEvent(player_num.clone()));
+                    }
+                    ButtonAction::Ready => todo!(),
                 }
             }
         }

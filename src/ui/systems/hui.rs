@@ -1,15 +1,9 @@
-use crate::ui::data::MenuButtonState;
-
-use super::{
-    ButtonAction, CarouselSlotPosition, CharacterCarousel, PlayerNum, UiAssets, VisibleCarouselSlot,
-};
+use super::{ButtonAction, PlayerNum, UiAssets};
+use crate::ui::data::{CharacterSelector, MenuButtonState};
 use bevy::{
-    color::{Alpha, Color},
     core::Name,
     log::{info, warn},
-    prelude::{BuildChildren, ChildBuild, Commands, Entity, ImageNode, In, Query, Res},
-    ui::{Node, UiRect, Val},
-    utils::default,
+    prelude::{BuildChildren, ChildBuild, Commands, Entity, In, Query, Res},
 };
 use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
@@ -29,20 +23,11 @@ pub(in crate::ui) fn setup_hui_system(
         ui_assets.website_footer_button_html.clone(),
     );
     html_comps.register("menu_button", ui_assets.menu_button_html.clone());
-    html_comps.register("arrow_button", ui_assets.arrow_button_html.clone());
     html_comps.register(
         "menu_button_sprite",
         ui_assets.menu_button_sprite_html.clone(),
     );
-    html_comps.register(
-        "arrow_button_sprite",
-        ui_assets.arrow_button_sprite_html.clone(),
-    );
     html_comps.register("thetawave_logo", ui_assets.thetawave_logo_html.clone());
-    html_comps.register(
-        "character_carousel",
-        ui_assets.character_carousel_html.clone(),
-    );
     html_comps.register(
         "character_selector",
         ui_assets.character_selector_html.clone(),
@@ -51,13 +36,11 @@ pub(in crate::ui) fn setup_hui_system(
 
     // Register bevy_hui functions
     html_funcs.register("setup_menu_button", setup_menu_button);
-    html_funcs.register("setup_arrow_button", setup_arrow_button);
     html_funcs.register("setup_title_logo", setup_title_logo);
     html_funcs.register("setup_menu_button_sprite", setup_menu_button_sprite);
-    html_funcs.register("setup_arrow_button_sprite", setup_arrow_button_sprite);
-    html_funcs.register("setup_character_carousel", setup_character_carousel);
     html_funcs.register("setup_website_footer_button", setup_website_footer_button);
     html_funcs.register("setup_join_prompt", setup_join_prompt);
+    html_funcs.register("setup_character_selector", setup_character_selector);
 
     // Increase scale of egui options menu
     if !cfg!(feature = "world_inspector") {
@@ -65,6 +48,22 @@ pub(in crate::ui) fn setup_hui_system(
     }
 }
 
+fn setup_character_selector(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds: Commands) {
+    if let Ok(tags) = tags.get(entity) {
+        if let Some(player_str) = tags.get("player") {
+            match PlayerNum::try_from(player_str) {
+                Ok(player_num) => {
+                    cmds.entity(entity).insert((CharacterSelector, player_num));
+                }
+                Err(msg) => {
+                    warn!("{}", msg);
+                }
+            }
+        }
+    };
+}
+
+/// Add animation and name to join prompt
 fn setup_join_prompt(In(entity): In<Entity>, mut cmds: Commands, ui_assets: Res<UiAssets>) {
     cmds.entity(entity).with_children(|parent| {
         parent.spawn((
@@ -75,82 +74,6 @@ fn setup_join_prompt(In(entity): In<Entity>, mut cmds: Commands, ui_assets: Res<
             Name::new("Join Prompt Input"),
         ));
     });
-}
-
-/// Spawn child nodes for character carousel slots
-fn setup_character_carousel(
-    In(entity): In<Entity>,
-    tags: Query<&Tags>,
-    mut cmds: Commands,
-    ui_assets: Res<UiAssets>,
-) {
-    if let Ok(tags) = tags.get(entity) {
-        if let Some(player_str) = tags.get("player") {
-            match PlayerNum::try_from(player_str) {
-                Ok(player_num) => {
-                    let carousel = CharacterCarousel::new();
-
-                    cmds.entity(entity)
-                        .insert((player_num, carousel.clone()))
-                        .with_children(|parent| {
-                            // spawn child nodes containing carousel character images
-                            if let Some(left_character_type) = carousel.get_left_character() {
-                                parent.spawn((
-                                    VisibleCarouselSlot(CarouselSlotPosition::Left),
-                                    ImageNode::new(
-                                        ui_assets.get_character_image(left_character_type),
-                                    )
-                                    .with_color(Color::default().with_alpha(0.5)),
-                                    Node {
-                                        width: Val::Percent(30.0),
-                                        margin: UiRect::all(Val::Px(15.0)),
-                                        ..default()
-                                    },
-                                ));
-                            } else {
-                                warn!("No left character found in carousel.");
-                            }
-
-                            if let Some(active_character_type) = carousel.get_active_character() {
-                                parent.spawn((
-                                    VisibleCarouselSlot(CarouselSlotPosition::Center),
-                                    ImageNode::new(
-                                        ui_assets.get_character_image(active_character_type),
-                                    ),
-                                    Node {
-                                        width: Val::Percent(40.0),
-                                        margin: UiRect::all(Val::Px(15.0)),
-                                        ..default()
-                                    },
-                                ));
-                            } else {
-                                warn!("No active character found in carousel.");
-                            }
-
-                            if let Some(right_character_type) = carousel.get_right_character() {
-                                parent.spawn((
-                                    VisibleCarouselSlot(CarouselSlotPosition::Right),
-                                    ImageNode::new(
-                                        ui_assets.get_character_image(right_character_type),
-                                    )
-                                    .with_color(Color::default().with_alpha(0.5)),
-                                    Node {
-                                        width: Val::Percent(30.0),
-                                        margin: UiRect::all(Val::Px(15.0)),
-                                        ..default()
-                                    },
-                                ));
-                            } else {
-                                warn!("No right character found in carousel.");
-                            }
-                        });
-                }
-                Err(msg) => {
-                    warn!("{}", msg);
-                }
-            }
-        }
-    }
 }
 
 /// Sets up website footer buttons with appropriate animations and actions
@@ -254,34 +177,6 @@ fn setup_menu_button_sprite(
     ));
 }
 
-/// Sets up menu button sprite animations based on whether it's the first button
-/// Takes an entity, queries tags, and configures the animation state
-fn setup_arrow_button_sprite(
-    In(entity): In<Entity>,
-    tags: Query<&Tags>,
-    mut cmds: Commands,
-    ui_assets: Res<UiAssets>,
-) {
-    if let Ok(tags) = tags.get(entity) {
-        if let Some(direction_str) = tags.get("direction") {
-            // Insert animation component with pressed/released state based on first status
-            cmds.entity(entity).insert((
-                AseUiAnimation {
-                    animation: Animation::tag("idle"),
-                    aseprite: ui_assets.arrow_button_aseprite.clone(),
-                },
-                // Flip the sprite if direction was specified as right
-                if direction_str == "right" {
-                    ImageNode::default().with_flip_x()
-                } else {
-                    ImageNode::default()
-                },
-                Name::new("Arrow Button Sprite"),
-            ));
-        }
-    }
-}
-
 /// Sets up the title logo animation for the game's main menu
 fn setup_title_logo(In(entity): In<Entity>, mut cmds: Commands, ui_assets: Res<UiAssets>) {
     cmds.entity(entity).insert((
@@ -334,32 +229,5 @@ fn setup_menu_button(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds: Comma
         }
     } else {
         warn!("No tags not found for menu button.");
-    }
-}
-
-/// This function assigns actions to buttons based on their tags.
-fn setup_arrow_button(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds: Commands) {
-    if let Ok(tags) = tags.get(entity) {
-        if let Some(button_action_str) = tags.get("button_action") {
-            if let Some(player_str) = tags.get("player") {
-                match ButtonAction::try_from(&format!("{button_action_str}:{player_str}")) {
-                    Ok(button_action) => {
-                        // If the action is valid, it gets inserted into the entity.
-                        cmds.entity(entity).insert(button_action);
-                    }
-                    Err(msg) => {
-                        // If the action fails to convert, it is logged as a warning.
-                        warn!("{}", msg);
-                    }
-                };
-
-                cmds.entity(entity)
-                    .insert(Name::new(format!("Arrow Button {}", button_action_str)));
-            } else {
-                warn!("No \"player\" tag found for arrow button.")
-            }
-        }
-    } else {
-        warn!("No \"button_action\" tag found for arrow button.");
     }
 }
