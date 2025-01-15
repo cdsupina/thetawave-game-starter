@@ -1,6 +1,6 @@
 use super::{
-    ButtonAction, CarouselSlotPosition, CharacterCarousel, Cleanup, MainMenuState, PlayerJoinEvent,
-    PlayerNum, UiAssets, VisibleCarouselSlot,
+    CarouselSlotPosition, CharacterCarousel, Cleanup, MainMenuState, PlayerJoinEvent, PlayerNum,
+    UiAssets, VisibleCarouselSlot,
 };
 use crate::{player::ChosenCharactersEvent, ui::data::CharacterSelector};
 use bevy::{
@@ -115,7 +115,6 @@ pub(in crate::ui) fn spawn_carousel_system(
                                 ..default()
                             },
                             BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.5)),
-                            ButtonAction::ChracterCycleLeft(player_num.clone()),
                             Name::new(format!("Left Arrow Button {}", player_num.as_ref())),
                         ))
                         .with_child((
@@ -206,7 +205,6 @@ pub(in crate::ui) fn spawn_carousel_system(
                                 ..default()
                             },
                             BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.5)),
-                            ButtonAction::CharacterCycleRight(player_num.clone()),
                             Name::new(format!("Right Arrow Button {}", player_num.as_ref())),
                         ))
                         .with_child((

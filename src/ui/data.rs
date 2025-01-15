@@ -16,8 +16,6 @@ pub(super) enum ButtonAction {
     ApplyOptions,
     OpenBlueskyWebsite,
     OpenGithubWebsite,
-    ChracterCycleLeft(PlayerNum),
-    CharacterCycleRight(PlayerNum),
     Join(PlayerNum),
     Ready,
 }
@@ -48,26 +46,6 @@ impl TryFrom<&String> for ButtonAction {
             "enter_title" => Ok(Self::EnterMainMenuState(MainMenuState::Title)),
             "open_bluesky_website" => Ok(Self::OpenBlueskyWebsite),
             "open_github_website" => Ok(Self::OpenGithubWebsite),
-            "character_cycle_left" => {
-                if let Some(player_str) = maybe_player_str {
-                    match PlayerNum::try_from(&player_str.to_string()) {
-                        Ok(player_num) => Ok(ButtonAction::ChracterCycleLeft(player_num)),
-                        Err(msg) => Err(msg),
-                    }
-                } else {
-                    Err("No player string found, add player number in the format \"character_cycle_left:player_num\".".to_string())
-                }
-            }
-            "character_cycle_right" => {
-                if let Some(player_str) = maybe_player_str {
-                    match PlayerNum::try_from(&player_str.to_string()) {
-                        Ok(player_num) => Ok(ButtonAction::CharacterCycleRight(player_num)),
-                        Err(msg) => Err(msg),
-                    }
-                } else {
-                    Err("No player string found, add player number in the format \"character_cycle_right:player_num\".".to_string())
-                }
-            }
             "join" => {
                 if let Some(player_str) = maybe_player_str {
                     match PlayerNum::try_from(&player_str.to_string()) {

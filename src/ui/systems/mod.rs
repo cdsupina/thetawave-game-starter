@@ -112,12 +112,6 @@ pub(super) fn menu_button_action_system(
                     ButtonAction::OpenGithubWebsite => {
                         open_website(GITHUB_URL);
                     }
-                    ButtonAction::ChracterCycleLeft(_player_num) => {
-                        todo!("Cycle the character selection carousel left for player.");
-                    }
-                    ButtonAction::CharacterCycleRight(_player_num) => {
-                        todo!("Cycle the character selection carousel right for player.");
-                    }
                     ButtonAction::Join(player_num) => {
                         player_join_events.send(PlayerJoinEvent(player_num.clone()));
                     }
