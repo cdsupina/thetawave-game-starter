@@ -6,7 +6,7 @@ use bevy::prelude::{Component, Event};
 use strum::IntoEnumIterator;
 
 /// All actions for menu buttons
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Clone)]
 pub(super) enum ButtonAction {
     EnterAppState(AppState),
     EnterMainMenuState(MainMenuState),
@@ -17,7 +17,8 @@ pub(super) enum ButtonAction {
     OpenBlueskyWebsite,
     OpenGithubWebsite,
     Join(PlayerNum),
-    Ready,
+    Ready(PlayerNum),
+    UnReady(PlayerNum),
 }
 
 /// Used for converting strings from hui tags into button actions
@@ -56,7 +57,16 @@ impl TryFrom<&String> for ButtonAction {
                     Err("No player string found, add player number in the format \"join:player_num\".".to_string())
                 }
             }
-            "ready" => Ok(ButtonAction::Ready),
+            "ready" => {
+                if let Some(player_str) = maybe_player_str {
+                    match PlayerNum::try_from(&player_str.to_string()) {
+                        Ok(player_num) => Ok(ButtonAction::Ready(player_num)),
+                        Err(msg) => Err(msg),
+                    }
+                } else {
+                    Err("No player string found, add player number in the format \"ready:player_num\".".to_string())
+                }
+            }
             _ => Err("Invalid action".to_string()),
         }
     }
@@ -156,3 +166,6 @@ pub(super) struct PlayerJoinEvent(pub PlayerNum);
 /// Tag for container holding the carousel and arrows for character selection
 #[derive(Component)]
 pub(super) struct CharacterSelector;
+
+#[derive(Event)]
+pub(super) struct PlayerReadyEvent(pub PlayerNum);

@@ -1,6 +1,6 @@
 use super::{
     ButtonAction, CarouselSlotPosition, CharacterCarousel, Cleanup, MainMenuState, PlayerJoinEvent,
-    PlayerNum, UiAssets, VisibleCarouselSlot,
+    PlayerNum, PlayerReadyEvent, UiAssets, VisibleCarouselSlot,
 };
 use crate::{
     player::ChosenCharactersEvent,
@@ -19,7 +19,7 @@ use bevy::{
     ui::{AlignItems, BackgroundColor, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
-use bevy_alt_ui_navigation_lite::prelude::Focusable;
+use bevy_alt_ui_navigation_lite::prelude::{Focusable, Focused};
 use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
 use bevy_hui::prelude::HtmlNode;
 
@@ -250,7 +250,7 @@ pub(in crate::ui) fn spawn_ready_button_system(
                                     margin: UiRect::all(Val::Vh(1.0)),
                                     ..default()
                                 },
-                                ButtonAction::Ready,
+                                ButtonAction::Ready(player_num.clone()),
                                 MenuButtonState::Normal,
                                 Focusable::default(),
                                 Name::new("Menu Button Ready"),
@@ -284,12 +284,36 @@ pub(in crate::ui) fn spawn_ready_button_system(
                                                 ..default()
                                             })
                                             .with_child((
-                                                Text::new("Ready?"),
+                                                Text::new("Ready"),
                                                 TextFont::from_font_size(30.0),
                                             ));
                                     });
                             });
                     });
+                }
+            }
+        }
+    }
+}
+
+/// Change normal ready button to locked in green ready button
+pub(in crate::ui) fn lock_in_player_button_system(
+    mut button_q: Query<(&mut MenuButtonState, &mut ButtonAction, &Children)>,
+    mut button_sprite_q: Query<&mut AseUiAnimation>,
+    mut player_ready_events: EventReader<PlayerReadyEvent>,
+) {
+    for event in player_ready_events.read() {
+        for (mut button_state, mut action, children) in button_q.iter_mut() {
+            if let ButtonAction::Ready(player_num) = action.clone() {
+                if event.0 == player_num {
+                    *button_state = MenuButtonState::Ready;
+                    *action = ButtonAction::UnReady(player_num);
+
+                    for child in children.iter() {
+                        if let Ok(mut ase_animation) = button_sprite_q.get_mut(*child) {
+                            ase_animation.animation = Animation::tag("ready");
+                        }
+                    }
                 }
             }
         }
