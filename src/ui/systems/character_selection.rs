@@ -1,8 +1,11 @@
 use super::{
-    CarouselSlotPosition, CharacterCarousel, Cleanup, MainMenuState, PlayerJoinEvent, PlayerNum,
-    UiAssets, VisibleCarouselSlot,
+    ButtonAction, CarouselSlotPosition, CharacterCarousel, Cleanup, MainMenuState, PlayerJoinEvent,
+    PlayerNum, UiAssets, VisibleCarouselSlot,
 };
-use crate::{player::ChosenCharactersEvent, ui::data::CharacterSelector};
+use crate::{
+    player::ChosenCharactersEvent,
+    ui::data::{CharacterSelector, MenuButtonState},
+};
 use bevy::{
     color::{Alpha, Color},
     core::Name,
@@ -10,11 +13,13 @@ use bevy::{
     log::warn,
     prelude::{
         BuildChildren, Changed, ChildBuild, Children, Commands, DespawnRecursiveExt, Entity,
-        EventReader, EventWriter, ImageNode, KeyCode, Query, Res, With,
+        EventReader, EventWriter, ImageNode, KeyCode, Parent, Query, Res, Text, With,
     },
+    text::TextFont,
     ui::{AlignItems, BackgroundColor, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
+use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
 use bevy_hui::prelude::HtmlNode;
 
@@ -221,6 +226,71 @@ pub(in crate::ui) fn spawn_carousel_system(
                             Name::new("Arrow Button Sprite"),
                         ));
                 });
+            }
+        }
+    }
+}
+
+/// Replaces the join button with a ready button when player joins
+pub(in crate::ui) fn spawn_ready_button_system(
+    mut player_join_events: EventReader<PlayerJoinEvent>,
+    button_q: Query<(&ButtonAction, Entity, &Parent)>,
+    ui_assets: Res<UiAssets>,
+    mut cmds: Commands,
+) {
+    for event in player_join_events.read() {
+        for (action, entity, parent) in button_q.iter() {
+            if let ButtonAction::Join(player_num) = action {
+                if event.0 == *player_num {
+                    cmds.entity(entity).despawn_recursive();
+                    cmds.entity(parent.get()).with_children(|parent| {
+                        parent
+                            .spawn((
+                                Node {
+                                    margin: UiRect::all(Val::Vh(1.0)),
+                                    ..default()
+                                },
+                                ButtonAction::Ready,
+                                MenuButtonState::Normal,
+                                Focusable::default(),
+                                Name::new("Menu Button Ready"),
+                            ))
+                            .with_children(|parent| {
+                                parent
+                                    .spawn((
+                                        Node {
+                                            width: Val::Px(364.5),
+                                            height: Val::Px(87.75),
+                                            justify_content: JustifyContent::Center,
+                                            ..default()
+                                        },
+                                        AseUiAnimation {
+                                            animation: Animation::tag("released"),
+                                            aseprite: ui_assets.menu_button_aseprite.clone(),
+                                        },
+                                        Name::new("Menu Button Sprite"),
+                                    ))
+                                    .with_children(|parent| {
+                                        parent
+                                            .spawn(Node {
+                                                margin: UiRect::new(
+                                                    Val::Px(1.0),
+                                                    Val::Px(1.0),
+                                                    Val::Px(1.0),
+                                                    Val::Px(14.0),
+                                                ),
+                                                flex_direction: FlexDirection::Column,
+                                                justify_content: JustifyContent::FlexEnd,
+                                                ..default()
+                                            })
+                                            .with_child((
+                                                Text::new("Ready?"),
+                                                TextFont::from_font_size(30.0),
+                                            ));
+                                    });
+                            });
+                    });
+                }
             }
         }
     }
