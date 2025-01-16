@@ -19,7 +19,7 @@ use bevy::{
     ui::{AlignItems, BackgroundColor, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
-use bevy_alt_ui_navigation_lite::prelude::{Focusable, Focused};
+use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
 use bevy_hui::prelude::HtmlNode;
 
@@ -252,7 +252,7 @@ pub(in crate::ui) fn spawn_ready_button_system(
                                 },
                                 ButtonAction::Ready(player_num.clone()),
                                 MenuButtonState::Normal,
-                                Focusable::default(),
+                                Focusable::new().prioritized(), // Focus on this button
                                 Name::new("Menu Button Ready"),
                             ))
                             .with_children(|parent| {
@@ -265,7 +265,7 @@ pub(in crate::ui) fn spawn_ready_button_system(
                                             ..default()
                                         },
                                         AseUiAnimation {
-                                            animation: Animation::tag("released"),
+                                            animation: Animation::tag("pressed"),
                                             aseprite: ui_assets.menu_button_aseprite.clone(),
                                         },
                                         Name::new("Menu Button Sprite"),
@@ -304,17 +304,31 @@ pub(in crate::ui) fn lock_in_player_button_system(
 ) {
     for event in player_ready_events.read() {
         for (mut button_state, mut action, children) in button_q.iter_mut() {
-            if let ButtonAction::Ready(player_num) = action.clone() {
-                if event.0 == player_num {
-                    *button_state = MenuButtonState::Ready;
-                    *action = ButtonAction::UnReady(player_num);
+            match action.clone() {
+                ButtonAction::Ready(player_num) | ButtonAction::UnReady(player_num) => {
+                    if event.player_num == player_num {
+                        // Set the action and state based on the whether is_ready is set
+                        if event.is_ready {
+                            *button_state = MenuButtonState::Ready;
+                            *action = ButtonAction::UnReady(player_num);
+                        } else {
+                            *button_state = MenuButtonState::Normal;
+                            *action = ButtonAction::Ready(player_num);
+                        }
 
-                    for child in children.iter() {
-                        if let Ok(mut ase_animation) = button_sprite_q.get_mut(*child) {
-                            ase_animation.animation = Animation::tag("ready");
+                        // Set the animation tag based on whether is_ready is set
+                        for child in children.iter() {
+                            if let Ok(mut ase_animation) = button_sprite_q.get_mut(*child) {
+                                if event.is_ready {
+                                    ase_animation.animation = Animation::tag("ready_pressed");
+                                } else {
+                                    ase_animation.animation = Animation::tag("pressed");
+                                }
+                            }
                         }
                     }
                 }
+                _ => {}
             }
         }
     }

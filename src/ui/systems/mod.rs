@@ -1,6 +1,6 @@
 use super::data::{
-    ButtonAction, CarouselSlotPosition, CharacterCarousel, LoadingBar, PlayerJoinEvent,
-    PlayerReadyEvent, VisibleCarouselSlot,
+    ButtonAction, CarouselSlotPosition, CharacterCarousel, LoadingBar, MenuButtonState,
+    PlayerJoinEvent, PlayerReadyEvent, VisibleCarouselSlot,
 };
 use crate::{
     assets::{LoadingProgressEvent, UiAssets},
@@ -32,7 +32,7 @@ const BLUESKY_URL: &str = "https://bsky.app/profile/carlo.metalmancy.tech";
 /// Takes navigation events and queries for focusable entities and their animations
 pub(super) fn menu_button_focus_system(
     mut nav_events: EventReader<NavEvent>,
-    focusable_q: Query<&Children, With<Focusable>>,
+    focusable_q: Query<(&Children, &MenuButtonState), With<Focusable>>,
     mut ase_q: Query<&mut AseUiAnimation>,
     mut audio_effect_events: EventWriter<AudioEffectEvent>,
 ) {
@@ -40,27 +40,35 @@ pub(super) fn menu_button_focus_system(
         if let NavEvent::FocusChanged { to, from } = event {
             if to != from {
                 // Handle newly focused button
-                if let Ok(children) = focusable_q.get(*to.first()) {
+                if let Ok((children, button_state)) = focusable_q.get(*to.first()) {
                     // Play pressed button effect
                     audio_effect_events.send(AudioEffectEvent::MenuButtonPressed);
 
                     // Update the button animation
                     for child in children.iter() {
                         if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
-                            ase_animation.animation.play_loop("pressed");
+                            if matches!(button_state, MenuButtonState::Ready) {
+                                ase_animation.animation.play_loop("ready_pressed");
+                            } else {
+                                ase_animation.animation.play_loop("pressed");
+                            }
                         }
                     }
                 }
 
                 // Handle previously focused button
-                if let Ok(children) = focusable_q.get(*from.first()) {
+                if let Ok((children, button_state)) = focusable_q.get(*from.first()) {
                     // Play released button effect
                     audio_effect_events.send(AudioEffectEvent::MenuButtonReleased);
 
                     // Update the button animation
                     for child in children.iter() {
                         if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
-                            ase_animation.animation.play_loop("released");
+                            if matches!(button_state, MenuButtonState::Ready) {
+                                ase_animation.animation.play_loop("ready_released");
+                            } else {
+                                ase_animation.animation.play_loop("released");
+                            }
                         }
                     }
                 }
@@ -117,10 +125,16 @@ pub(super) fn menu_button_action_system(
                         player_join_events.send(PlayerJoinEvent(player_num.clone()));
                     }
                     ButtonAction::Ready(player_num) => {
-                        player_ready_events.send(PlayerReadyEvent(player_num.clone()));
+                        player_ready_events.send(PlayerReadyEvent {
+                            player_num: player_num.clone(),
+                            is_ready: true,
+                        });
                     }
                     ButtonAction::UnReady(player_num) => {
-                        todo!();
+                        player_ready_events.send(PlayerReadyEvent {
+                            player_num: player_num.clone(),
+                            is_ready: false,
+                        });
                     }
                 }
             }

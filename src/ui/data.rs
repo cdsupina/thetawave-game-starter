@@ -167,5 +167,9 @@ pub(super) struct PlayerJoinEvent(pub PlayerNum);
 #[derive(Component)]
 pub(super) struct CharacterSelector;
 
+/// Event for sending when player ready or unreadys on the character selection screen
 #[derive(Event)]
-pub(super) struct PlayerReadyEvent(pub PlayerNum);
+pub(super) struct PlayerReadyEvent {
+    pub player_num: PlayerNum,
+    pub is_ready: bool,
+}
