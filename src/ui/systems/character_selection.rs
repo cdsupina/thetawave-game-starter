@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{
     player::ChosenCharactersEvent,
-    ui::data::{CharacterSelector, MenuButtonState},
+    ui::data::{CharacterSelector, MenuButtonState, PlayerReadyButton, StartGameButton},
 };
 use bevy::{
     color::{Alpha, Color},
@@ -13,7 +13,7 @@ use bevy::{
     log::warn,
     prelude::{
         BuildChildren, Changed, ChildBuild, Children, Commands, DespawnRecursiveExt, Entity,
-        EventReader, EventWriter, ImageNode, KeyCode, Parent, Query, Res, Text, With,
+        EventReader, EventWriter, ImageNode, KeyCode, Parent, Query, Res, Text, With, Without,
     },
     text::TextFont,
     ui::{AlignItems, BackgroundColor, FlexDirection, JustifyContent, Node, UiRect, Val},
@@ -252,6 +252,7 @@ pub(in crate::ui) fn spawn_ready_button_system(
                                 },
                                 ButtonAction::Ready(player_num.clone()),
                                 MenuButtonState::Normal,
+                                PlayerReadyButton,
                                 Focusable::new().prioritized(), // Focus on this button
                                 Name::new("Menu Button Ready"),
                             ))
@@ -329,6 +330,55 @@ pub(in crate::ui) fn lock_in_player_button_system(
                     }
                 }
                 _ => {}
+            }
+        }
+    }
+}
+
+/// Enables the start game button when all players are ready, disables the button if one or more players is not ready
+pub(in crate::ui) fn enable_start_game_button_system(
+    ready_button_q: Query<&MenuButtonState, With<PlayerReadyButton>>,
+    mut disabled_button_q: Query<
+        (Entity, &mut MenuButtonState, &Children),
+        (With<StartGameButton>, Without<PlayerReadyButton>),
+    >,
+    mut button_sprite_q: Query<&mut AseUiAnimation>,
+    mut cmds: Commands,
+) {
+    // Bool for tracking if all players are ready
+    let mut players_ready = true;
+
+    if !ready_button_q.is_empty() {
+        // Query all ready buttons and update ready variable
+        for menu_button_state in ready_button_q.iter() {
+            if !matches!(menu_button_state, MenuButtonState::Ready) {
+                players_ready = false;
+                break;
+            }
+        }
+
+        // Change the state and animation of the start game button depending on player readiness
+        if let Ok((entity, mut start_game_button_state, children)) =
+            disabled_button_q.get_single_mut()
+        {
+            if players_ready {
+                if matches!(*start_game_button_state, MenuButtonState::Disabled) {
+                    *start_game_button_state = MenuButtonState::Normal;
+                    cmds.entity(entity).insert(Focusable::default());
+                    for child in children.iter() {
+                        if let Ok(mut ase_animation) = button_sprite_q.get_mut(*child) {
+                            ase_animation.animation = Animation::tag("released");
+                        }
+                    }
+                }
+            } else if matches!(*start_game_button_state, MenuButtonState::Normal) {
+                *start_game_button_state = MenuButtonState::Disabled;
+                cmds.entity(entity).remove::<Focusable>();
+                for child in children.iter() {
+                    if let Ok(mut ase_animation) = button_sprite_q.get_mut(*child) {
+                        ase_animation.animation = Animation::tag("disabled");
+                    }
+                }
             }
         }
     }

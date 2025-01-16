@@ -1,5 +1,5 @@
-use super::{ButtonAction, PlayerNum, UiAssets};
-use crate::ui::data::{CharacterSelector, MenuButtonState};
+use super::{AppState, ButtonAction, PlayerNum, UiAssets};
+use crate::ui::data::{CharacterSelector, MenuButtonState, StartGameButton};
 use bevy::{
     core::Name,
     log::{info, warn},
@@ -196,7 +196,13 @@ fn setup_menu_button(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds: Comma
             match ButtonAction::try_from(button_action_str) {
                 Ok(button_action) => {
                     // If the action is valid, it gets inserted into the entity.
-                    cmds.entity(entity).insert(button_action);
+                    cmds.entity(entity).insert(button_action.clone());
+                    if matches!(
+                        button_action,
+                        ButtonAction::EnterAppState(AppState::GameLoading)
+                    ) {
+                        cmds.entity(entity).insert(StartGameButton);
+                    }
                 }
                 Err(msg) => {
                     // If the action fails to convert, it is logged as a warning.

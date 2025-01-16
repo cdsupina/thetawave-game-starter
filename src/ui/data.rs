@@ -173,3 +173,11 @@ pub(super) struct PlayerReadyEvent {
     pub player_num: PlayerNum,
     pub is_ready: bool,
 }
+
+/// Tag for ready button entities
+#[derive(Component)]
+pub(super) struct PlayerReadyButton;
+
+/// Tag for button for entering GameLoading AppState
+#[derive(Component)]
+pub(super) struct StartGameButton;
