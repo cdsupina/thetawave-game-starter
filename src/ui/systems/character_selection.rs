@@ -398,3 +398,30 @@ pub(in crate::ui) fn enable_start_game_button_system(
         }
     }
 }
+
+/// Enables the join button for the next player after a player joins
+pub(in crate::ui) fn enable_join_button_system(
+    mut player_join_events: EventReader<PlayerJoinEvent>,
+    mut join_button_q: Query<(Entity, &ButtonAction, &mut MenuButtonState, &Children)>,
+    mut button_sprite_q: Query<&mut AseUiAnimation>,
+    mut cmds: Commands,
+) {
+    for event in player_join_events.read() {
+        if let Some(next_player_num) = event.0.next() {
+            for (entity, button_action, mut menu_button_state, children) in join_button_q.iter_mut()
+            {
+                if let ButtonAction::Join(player_num) = button_action {
+                    if next_player_num == *player_num {
+                        *menu_button_state = MenuButtonState::Normal;
+                        cmds.entity(entity).insert(Focusable::default());
+                        for child in children.iter() {
+                            if let Ok(mut ase_animation) = button_sprite_q.get_mut(*child) {
+                                ase_animation.animation = Animation::tag("released");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
