@@ -42,13 +42,28 @@ pub(in crate::ui) fn setup_character_selection_system(
 /// Cycle the characters in the carousel with player input
 pub(in crate::ui) fn cycle_carousel_system(
     keys: Res<ButtonInput<KeyCode>>,
-    mut carousel_q: Query<&mut CharacterCarousel>,
+    mut carousel_q: Query<(&mut CharacterCarousel, &PlayerNum)>,
+    ready_button_q: Query<&ButtonAction, With<PlayerReadyButton>>,
 ) {
-    if let Ok(mut carousel) = carousel_q.get_single_mut() {
-        if keys.just_pressed(KeyCode::ArrowLeft) || keys.just_pressed(KeyCode::KeyA) {
-            carousel.cycle_left();
-        } else if keys.just_pressed(KeyCode::ArrowRight) || keys.just_pressed(KeyCode::KeyD) {
-            carousel.cycle_right();
+    if let Ok((mut carousel, player_num)) = carousel_q.get_single_mut() {
+        // Determine if the carousel can cycle by checking the state of the ready button
+        let mut can_cycle = true;
+
+        for button_action in ready_button_q.iter() {
+            if let ButtonAction::UnReady(button_player_num) = button_action {
+                if player_num == button_player_num {
+                    can_cycle = false;
+                }
+            }
+        }
+
+        // Cycle the carousel with provided input
+        if can_cycle {
+            if keys.just_pressed(KeyCode::ArrowLeft) || keys.just_pressed(KeyCode::KeyA) {
+                carousel.cycle_left();
+            } else if keys.just_pressed(KeyCode::ArrowRight) || keys.just_pressed(KeyCode::KeyD) {
+                carousel.cycle_right();
+            }
         }
     }
 }
