@@ -150,6 +150,9 @@ pub(crate) struct UiAssets {
     // Aseprite containing the return key sprite
     #[asset(path = "media/aseprite/return_button.aseprite")]
     pub return_button_aseprite: Handle<Aseprite>,
+    // Aseprite containing xbox letter buttons
+    #[asset(path = "media/aseprite/xbox_letter_buttons.aseprite")]
+    pub xbox_letter_buttons_aseprite: Handle<Aseprite>,
 }
 
 impl UiAssets {

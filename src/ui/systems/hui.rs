@@ -3,7 +3,9 @@ use crate::ui::data::{CharacterSelector, MenuButtonState, StartGameButton};
 use bevy::{
     core::Name,
     log::{info, warn},
-    prelude::{BuildChildren, ChildBuild, Commands, Entity, In, Query, Res},
+    prelude::{BuildChildren, ChildBuild, Commands, DespawnRecursiveExt, Entity, In, Query, Res},
+    ui::{Node, UiRect, Val},
+    utils::default,
 };
 use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
@@ -53,7 +55,11 @@ fn setup_character_selector(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds
         if let Some(player_str) = tags.get("player") {
             match PlayerNum::try_from(player_str) {
                 Ok(player_num) => {
-                    cmds.entity(entity).insert((CharacterSelector, player_num));
+                    cmds.entity(entity)
+                        .insert((CharacterSelector, player_num.clone()));
+                    if !matches!(player_num, PlayerNum::One) {
+                        cmds.entity(entity).despawn_descendants();
+                    }
                 }
                 Err(msg) => {
                     warn!("{}", msg);
@@ -70,6 +76,21 @@ fn setup_join_prompt(In(entity): In<Entity>, mut cmds: Commands, ui_assets: Res<
             AseUiAnimation {
                 animation: Animation::tag("key_return"),
                 aseprite: ui_assets.return_button_aseprite.clone(),
+            },
+            Node {
+                margin: UiRect::all(Val::Px(10.0)),
+                ..default()
+            },
+            Name::new("Join Prompt Input"),
+        ));
+        parent.spawn((
+            AseUiAnimation {
+                animation: Animation::tag("a"),
+                aseprite: ui_assets.xbox_letter_buttons_aseprite.clone(),
+            },
+            Node {
+                margin: UiRect::all(Val::Px(10.0)),
+                ..default()
             },
             Name::new("Join Prompt Input"),
         ));

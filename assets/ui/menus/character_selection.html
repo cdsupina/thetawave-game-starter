@@ -32,11 +32,65 @@
                         button_state="normal"
                     />
                 </node>
-                <node height="100%" width="50%" background="#ABFD"></node>
+                <node
+                    height="100%"
+                    width="50%"
+                    background="#ABFD"
+                    align_items="center"
+                    flex_direction="column"
+                    justify_content="end"
+                >
+                    <character_selector
+                        player="player_two"
+                    ></character_selector>
+
+                    <menu_button
+                        text="Join"
+                        action="join:player_two"
+                        is_first="false"
+                        button_state="disabled"
+                    />
+                </node>
             </node>
             <node width="100%" background="#8883" height="50%">
-                <node height="100%" width="50%" background="#ABFD"></node>
-                <node height="100%" width="50%" background="#ABCD"></node>
+                <node
+                    height="100%"
+                    width="50%"
+                    background="#ABFD"
+                    align_items="center"
+                    flex_direction="column"
+                    justify_content="end"
+                >
+                    <character_selector
+                        player="player_three"
+                    ></character_selector>
+
+                    <menu_button
+                        text="Join"
+                        action="join:player_three"
+                        is_first="false"
+                        button_state="disabled"
+                    />
+                </node>
+                <node
+                    height="100%"
+                    width="50%"
+                    background="#ABCD"
+                    align_items="center"
+                    flex_direction="column"
+                    justify_content="end"
+                >
+                    <character_selector
+                        player="player_four"
+                    ></character_selector>
+
+                    <menu_button
+                        text="Join"
+                        action="join:player_four"
+                        is_first="false"
+                        button_state="disabled"
+                    />
+                </node>
             </node>
         </node>
         <node
