@@ -48,8 +48,10 @@ pub(super) fn spawn_players_system(
                 ),
                 RigidBody::Kinematic,
                 MaxLinearSpeed(character_data.max_speed),
-                InputManagerBundle::with_map(options_res.player_input_map.clone()),
-                InputManagerBundle::with_map(options_res.player_abilities_input_map.clone()),
+                InputManagerBundle::with_map(options_res.player_keyboard_input_map.clone()),
+                InputManagerBundle::with_map(
+                    options_res.player_keyboard_abilities_input_map.clone(),
+                ),
                 AbilitiesBundle::<PlayerAbilities> {
                     cooldowns: character_data.cooldowns.clone(),
                     ..default()

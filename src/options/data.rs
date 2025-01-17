@@ -1,5 +1,5 @@
 use bevy::{
-    prelude::{Event, KeyCode, MouseButton, Resource},
+    prelude::{Event, GamepadButton, KeyCode, MouseButton, Resource},
     window::{WindowMode, WindowResolution},
 };
 use leafwing_input_manager::prelude::InputMap;
@@ -20,10 +20,14 @@ pub(crate) struct OptionsRes {
     pub music_volume: f64,
     pub effects_volume: f64,
     pub ui_volume: f64,
-    // Input map for the player
-    pub player_input_map: InputMap<PlayerAction>,
-    // Input map for player abilities
-    pub player_abilities_input_map: InputMap<PlayerAbilities>,
+    // Keyboard input map for the player
+    pub player_keyboard_input_map: InputMap<PlayerAction>,
+    // Keyboard input map for player abilities
+    pub player_keyboard_abilities_input_map: InputMap<PlayerAbilities>,
+    // Gamepad input map for the player
+    pub player_gamepad_input_map: InputMap<PlayerAction>,
+    // Gamepad input map for player abilities
+    pub player_gamepad_abilities_input_map: InputMap<PlayerAbilities>,
     // All of the available resolutions
     resolutions: Vec<WindowResolution>,
 }
@@ -51,13 +55,13 @@ impl Default for OptionsRes {
             music_volume: 1.0,
             effects_volume: 1.0,
             ui_volume: 1.0,
-            player_input_map: InputMap::new([
+            player_keyboard_input_map: InputMap::new([
                 (PlayerAction::Up, KeyCode::KeyW),
                 (PlayerAction::Down, KeyCode::KeyS),
                 (PlayerAction::Left, KeyCode::KeyA),
                 (PlayerAction::Right, KeyCode::KeyD),
             ]),
-            player_abilities_input_map: InputMap::new([
+            player_keyboard_abilities_input_map: InputMap::new([
                 (PlayerAbilities::Utility, KeyCode::AltLeft),
                 (PlayerAbilities::Ultimate, KeyCode::Space),
             ])
@@ -66,6 +70,18 @@ impl Default for OptionsRes {
                 (PlayerAbilities::SecondaryAttack, MouseButton::Right),
             ])
             .to_owned(),
+            player_gamepad_input_map: InputMap::new([
+                (PlayerAction::Up, GamepadButton::DPadUp),
+                (PlayerAction::Down, GamepadButton::DPadDown),
+                (PlayerAction::Left, GamepadButton::DPadLeft),
+                (PlayerAction::Right, GamepadButton::DPadRight),
+            ]),
+            player_gamepad_abilities_input_map: InputMap::new([
+                (PlayerAbilities::BasicAttack, GamepadButton::South),
+                (PlayerAbilities::SecondaryAttack, GamepadButton::East),
+                (PlayerAbilities::Utility, GamepadButton::West),
+                (PlayerAbilities::Ultimate, GamepadButton::North),
+            ]),
         }
     }
 }
