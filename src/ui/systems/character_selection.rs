@@ -425,3 +425,55 @@ pub(in crate::ui) fn enable_join_button_system(
         }
     }
 }
+
+/// Spawns the input prompt for the next player after a player joins
+pub(in crate::ui) fn spawn_join_prompt_system(
+    mut player_join_events: EventReader<PlayerJoinEvent>,
+    character_selector_q: Query<(Entity, &PlayerNum), With<CharacterSelector>>,
+    ui_assets: Res<UiAssets>,
+    mut cmds: Commands,
+) {
+    for event in player_join_events.read() {
+        if let Some(next_player_num) = event.0.next() {
+            for (entity, player_num) in character_selector_q.iter() {
+                if next_player_num == *player_num {
+                    cmds.entity(entity)
+                        .insert(Node {
+                            flex_direction: FlexDirection::Row,
+                            margin: UiRect::new(
+                                Val::Px(1.0),
+                                Val::Px(1.0),
+                                Val::Px(20.0),
+                                Val::Px(1.0),
+                            ),
+                            ..default()
+                        })
+                        .with_children(|parent| {
+                            parent.spawn((
+                                AseUiAnimation {
+                                    animation: Animation::tag("key_return"),
+                                    aseprite: ui_assets.return_button_aseprite.clone(),
+                                },
+                                Node {
+                                    margin: UiRect::all(Val::Px(10.0)),
+                                    ..default()
+                                },
+                                Name::new("Join Prompt Input"),
+                            ));
+                            parent.spawn((
+                                AseUiAnimation {
+                                    animation: Animation::tag("a"),
+                                    aseprite: ui_assets.xbox_letter_buttons_aseprite.clone(),
+                                },
+                                Node {
+                                    margin: UiRect::all(Val::Px(10.0)),
+                                    ..default()
+                                },
+                                Name::new("Join Prompt Input"),
+                            ));
+                        });
+                }
+            }
+        }
+    }
+}
