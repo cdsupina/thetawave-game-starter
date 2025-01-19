@@ -9,7 +9,7 @@ use avian2d::prelude::{Collider, LinearVelocity, MaxLinearSpeed, RigidBody};
 use bevy::{
     core::Name,
     log::info,
-    prelude::{Commands, Query, Res},
+    prelude::{Commands, Query, Res, ResMut},
     utils::default,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseSpriteAnimation};
@@ -144,4 +144,11 @@ pub(super) fn player_ability_system(
             }
         }
     }
+}
+
+/// Reset the ChosenCharactersResource when entering the character selection state
+pub(super) fn reset_chosen_characters_resource_system(
+    mut chosen_characters_res: ResMut<ChosenCharactersResource>,
+) {
+    *chosen_characters_res = ChosenCharactersResource::default();
 }

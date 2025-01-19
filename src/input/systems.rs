@@ -1,11 +1,21 @@
+use super::InputType;
+use crate::{player::PlayerNum, ui::PlayerJoinEvent};
 use bevy::{
     input::keyboard::NativeKeyCode,
-    prelude::{GamepadButton, KeyCode, ResMut},
+    prelude::{
+        Commands, Component, Entity, EventReader, GamepadButton, KeyCode, Query, Res, ResMut, With,
+    },
 };
 use bevy_alt_ui_navigation_lite::systems::InputMapping;
 
+#[derive(Component)]
+pub(super) struct DummyGamepad;
+
 /// Setup function for input mapping configuration
-pub(super) fn setup_input_system(mut input_mapping: ResMut<InputMapping>) {
+pub(super) fn setup_input_system(mut input_mapping: ResMut<InputMapping>, mut cmds: Commands) {
+    // dummy gamepad for disabling all gamepads
+    cmds.spawn(DummyGamepad);
+
     // Set action keyboard binding to enter
     input_mapping.key_action = KeyCode::Enter;
     // Disable key_free binding
@@ -23,4 +33,37 @@ pub(super) fn setup_input_system(mut input_mapping: ResMut<InputMapping>) {
     // Sets focus to follow mouse movement and enables keyboard navigation
     input_mapping.focus_follows_mouse = true;
     input_mapping.keyboard_navigation = true;
+}
+
+/// Disable other inputs for menu navigation once a player joins
+pub(super) fn disable_additional_players_navigation_system(
+    mut input_mapping: ResMut<InputMapping>,
+    mut player_join_events: EventReader<PlayerJoinEvent>,
+    dummy_gamepad_q: Query<Entity, With<DummyGamepad>>,
+) {
+    for event in player_join_events.read() {
+        if matches!(event.player_num, PlayerNum::One) {
+            match event.input {
+                InputType::Keyboard => {
+                    input_mapping.focus_follows_mouse = true;
+                    input_mapping.keyboard_navigation = true;
+                    if let Ok(entity) = dummy_gamepad_q.get_single() {
+                        input_mapping.gamepads = vec![entity];
+                    }
+                }
+                InputType::Gamepad(entity) => {
+                    input_mapping.gamepads.push(entity);
+                    input_mapping.focus_follows_mouse = false;
+                    input_mapping.keyboard_navigation = false;
+                }
+            }
+        }
+    }
+}
+
+/// Enable navigation again when entering the Title state
+pub(super) fn enable_additional_players_navigation_system(mut input_mapping: ResMut<InputMapping>) {
+    input_mapping.focus_follows_mouse = true;
+    input_mapping.keyboard_navigation = true;
+    input_mapping.gamepads = vec![];
 }

@@ -164,7 +164,7 @@ impl CharacterCarousel {
 
 /// Event for when a player presses a join button on character selection screen
 #[derive(Event, Debug)]
-pub(super) struct PlayerJoinEvent {
+pub(crate) struct PlayerJoinEvent {
     pub player_num: PlayerNum,
     pub input: InputType,
 }
