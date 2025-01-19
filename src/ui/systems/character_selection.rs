@@ -1,9 +1,9 @@
 use super::{
-    ButtonAction, CarouselSlotPosition, CharacterCarousel, Cleanup, MainMenuState, PlayerJoinEvent,
-    PlayerNum, PlayerReadyEvent, UiAssets, VisibleCarouselSlot,
+    ButtonAction, CarouselSlotPosition, CharacterCarousel, Cleanup, MainMenuState, OptionsRes,
+    PlayerJoinEvent, PlayerNum, PlayerReadyEvent, UiAssets, VisibleCarouselSlot,
 };
 use crate::{
-    player::ChosenCharactersEvent,
+    player::{ChosenCharacterData, ChosenCharactersResource},
     ui::data::{CharacterSelector, MenuButtonState, PlayerReadyButton, StartGameButton},
 };
 use bevy::{
@@ -13,7 +13,7 @@ use bevy::{
     log::warn,
     prelude::{
         BuildChildren, Changed, ChildBuild, Children, Commands, DespawnRecursiveExt, Entity,
-        EventReader, EventWriter, ImageNode, KeyCode, Parent, Query, Res, Text, With, Without,
+        EventReader, ImageNode, KeyCode, Parent, Query, Res, ResMut, Text, With, Without,
     },
     text::TextFont,
     ui::{AlignItems, BackgroundColor, FlexDirection, JustifyContent, Node, UiRect, Val},
@@ -22,6 +22,8 @@ use bevy::{
 use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
 use bevy_hui::prelude::HtmlNode;
+use bevy_persistent::Persistent;
+use leafwing_input_manager::InputManagerBundle;
 
 /// This function sets up the character selection interface.
 /// It spawns the options menu HTML node and associates the cleanup component with it.
@@ -93,21 +95,22 @@ pub(in crate::ui) fn update_carousel_ui_system(
     }
 }
 
-/// Send an event containing the chosen characters for each player
-/// Should be sent once when exiting the MainMenu state
+/// Update the chosen characters resource with the characters from the carousels
 pub(in crate::ui) fn set_characters_system(
-    mut chosen_character_events: EventWriter<ChosenCharactersEvent>,
-    character_carousel_q: Query<(&CharacterCarousel, &PlayerNum)>,
+    character_carousel_q: Query<(&CharacterCarousel, &PlayerNum), Changed<CharacterCarousel>>,
+    mut chosen_characters_res: ResMut<ChosenCharactersResource>,
 ) {
-    let mut players = vec![];
-
     for (carousel, player_num) in character_carousel_q.iter() {
         if let Some(character_type) = carousel.get_active_character() {
-            players.push((player_num.clone(), character_type.clone()));
+            chosen_characters_res.players.insert(
+                player_num.clone(),
+                ChosenCharacterData {
+                    character: character_type.clone(),
+                    input: carousel.input_type.clone(),
+                },
+            );
         }
     }
-
-    chosen_character_events.send(ChosenCharactersEvent { players });
 }
 
 /// Spawn character carousel when PlayerJoinEvent is read
@@ -116,13 +119,14 @@ pub(in crate::ui) fn spawn_carousel_system(
     character_selector_q: Query<(Entity, &PlayerNum), With<CharacterSelector>>,
     mut cmds: Commands,
     ui_assets: Res<UiAssets>,
+    options_res: Res<Persistent<OptionsRes>>,
 ) {
     for event in player_join_events.read() {
         for (entity, player_num) in character_selector_q.iter() {
-            if *player_num == event.0 {
+            if *player_num == event.player_num {
                 cmds.entity(entity).despawn_descendants();
 
-                let carousel = CharacterCarousel::new();
+                let carousel = CharacterCarousel::new(event.input.clone());
 
                 cmds.entity(entity).with_children(|parent| {
                     // Spawn left arrow
@@ -159,6 +163,9 @@ pub(in crate::ui) fn spawn_carousel_system(
                                 ..default()
                             },
                             BackgroundColor(Color::srgba(0.5, 0.0, 0.0, 0.5)),
+                            InputManagerBundle::with_map(
+                                options_res.carousel_keyboard_input_map.clone(), // TODO: select based on input
+                            ),
                             player_num.clone(),
                             carousel.clone(),
                         ))
@@ -256,7 +263,7 @@ pub(in crate::ui) fn spawn_ready_button_system(
     for event in player_join_events.read() {
         for (action, entity, parent) in button_q.iter() {
             if let ButtonAction::Join(player_num) = action {
-                if event.0 == *player_num {
+                if event.player_num == *player_num {
                     cmds.entity(entity).despawn_recursive();
                     cmds.entity(parent.get()).with_children(|parent| {
                         parent
@@ -402,18 +409,15 @@ pub(in crate::ui) fn enable_start_game_button_system(
 /// Enables the join button for the next player after a player joins
 pub(in crate::ui) fn enable_join_button_system(
     mut player_join_events: EventReader<PlayerJoinEvent>,
-    mut join_button_q: Query<(Entity, &ButtonAction, &mut MenuButtonState, &Children)>,
+    mut join_button_q: Query<(&ButtonAction, &mut MenuButtonState, &Children)>,
     mut button_sprite_q: Query<&mut AseUiAnimation>,
-    mut cmds: Commands,
 ) {
     for event in player_join_events.read() {
-        if let Some(next_player_num) = event.0.next() {
-            for (entity, button_action, mut menu_button_state, children) in join_button_q.iter_mut()
-            {
+        if let Some(next_player_num) = event.player_num.next() {
+            for (button_action, mut menu_button_state, children) in join_button_q.iter_mut() {
                 if let ButtonAction::Join(player_num) = button_action {
                     if next_player_num == *player_num {
                         *menu_button_state = MenuButtonState::Normal;
-                        cmds.entity(entity).insert(Focusable::default());
                         for child in children.iter() {
                             if let Ok(mut ase_animation) = button_sprite_q.get_mut(*child) {
                                 ase_animation.animation = Animation::tag("released");
@@ -434,7 +438,7 @@ pub(in crate::ui) fn spawn_join_prompt_system(
     mut cmds: Commands,
 ) {
     for event in player_join_events.read() {
-        if let Some(next_player_num) = event.0.next() {
+        if let Some(next_player_num) = event.player_num.next() {
             for (entity, player_num) in character_selector_q.iter() {
                 if next_player_num == *player_num {
                     cmds.entity(entity)

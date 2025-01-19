@@ -1,7 +1,7 @@
-use crate::input::PlayerAbilities;
+use crate::input::{InputType, PlayerAbility};
 use bevy::{
     math::Vec2,
-    prelude::{Component, Event, Resource},
+    prelude::{Component, Resource},
     utils::hashbrown::HashMap,
 };
 use leafwing_abilities::prelude::{Cooldown, CooldownState};
@@ -24,11 +24,11 @@ impl Default for CharactersResource {
                         deceleration_factor: 0.972,
                         max_speed: 100.0,
                         collider_dimensions: Vec2::new(6.0, 12.0),
-                        cooldowns: CooldownState::<PlayerAbilities>::new([
-                            (PlayerAbilities::BasicAttack, Cooldown::from_secs(0.5)),
-                            (PlayerAbilities::SecondaryAttack, Cooldown::from_secs(1.5)),
-                            (PlayerAbilities::Utility, Cooldown::from_secs(2.0)),
-                            (PlayerAbilities::Ultimate, Cooldown::from_secs(10.0)),
+                        cooldowns: CooldownState::<PlayerAbility>::new([
+                            (PlayerAbility::BasicAttack, Cooldown::from_secs(0.5)),
+                            (PlayerAbility::SecondaryAttack, Cooldown::from_secs(1.5)),
+                            (PlayerAbility::Utility, Cooldown::from_secs(2.0)),
+                            (PlayerAbility::Ultimate, Cooldown::from_secs(10.0)),
                         ]),
                     },
                 ),
@@ -39,11 +39,11 @@ impl Default for CharactersResource {
                         deceleration_factor: 0.988,
                         max_speed: 90.0,
                         collider_dimensions: Vec2::new(12.0, 20.0),
-                        cooldowns: CooldownState::<PlayerAbilities>::new([
-                            (PlayerAbilities::BasicAttack, Cooldown::from_secs(0.8)),
-                            (PlayerAbilities::SecondaryAttack, Cooldown::from_secs(2.0)),
-                            (PlayerAbilities::Utility, Cooldown::from_secs(2.3)),
-                            (PlayerAbilities::Ultimate, Cooldown::from_secs(15.0)),
+                        cooldowns: CooldownState::<PlayerAbility>::new([
+                            (PlayerAbility::BasicAttack, Cooldown::from_secs(0.8)),
+                            (PlayerAbility::SecondaryAttack, Cooldown::from_secs(2.0)),
+                            (PlayerAbility::Utility, Cooldown::from_secs(2.3)),
+                            (PlayerAbility::Ultimate, Cooldown::from_secs(15.0)),
                         ]),
                     },
                 ),
@@ -66,7 +66,7 @@ pub(super) struct CharacterData {
     pub deceleration_factor: f32,
     pub max_speed: f32,
     pub collider_dimensions: Vec2,
-    pub cooldowns: CooldownState<PlayerAbilities>,
+    pub cooldowns: CooldownState<PlayerAbility>,
 }
 
 /// Component for storing values used in systems for player entities
@@ -77,7 +77,7 @@ pub(super) struct PlayerStats {
 }
 
 /// Tag for indicating multiplayer association
-#[derive(Component, Debug, Clone, PartialEq, AsRefStr)]
+#[derive(Component, Debug, Clone, PartialEq, Eq, AsRefStr, Hash)]
 pub(crate) enum PlayerNum {
     One,
     Two,
@@ -111,13 +111,24 @@ impl TryFrom<&String> for PlayerNum {
 }
 
 /// Resource for transferring character choices from character selection screen to game
-#[derive(Resource, Default)]
-pub(super) struct ChosenCharactersResource {
-    pub players: Vec<(PlayerNum, CharacterType)>,
+#[derive(Resource, Default, Debug)]
+pub(crate) struct ChosenCharactersResource {
+    pub players: HashMap<PlayerNum, ChosenCharacterData>,
 }
 
-/// Event for transferring character choices from ui to ChosenCharactersResource
-#[derive(Event)]
-pub(crate) struct ChosenCharactersEvent {
-    pub players: Vec<(PlayerNum, CharacterType)>,
+impl ChosenCharactersResource {
+    pub(crate) fn contains_input(&self, input_type: InputType) -> bool {
+        for (_, data) in self.players.iter() {
+            if data.input == input_type {
+                return true;
+            }
+        }
+        false
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct ChosenCharacterData {
+    pub character: CharacterType,
+    pub input: InputType,
 }

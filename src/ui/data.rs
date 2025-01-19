@@ -1,4 +1,5 @@
 use crate::{
+    input::InputType,
     player::{CharacterType, PlayerNum},
     states::{AppState, GameState, MainMenuState, PauseMenuState},
 };
@@ -116,13 +117,15 @@ pub(super) struct VisibleCarouselSlot(pub CarouselSlotPosition);
 #[derive(Component, Clone)]
 pub(super) struct CharacterCarousel {
     characters: Vec<CharacterType>,
+    pub input_type: InputType,
 }
 
 impl CharacterCarousel {
     /// Create a new carousel from all character types
-    pub(super) fn new() -> Self {
+    pub(super) fn new(input_type: InputType) -> Self {
         Self {
             characters: CharacterType::iter().collect(),
+            input_type,
         }
     }
 
@@ -161,7 +164,10 @@ impl CharacterCarousel {
 
 /// Event for when a player presses a join button on character selection screen
 #[derive(Event, Debug)]
-pub(super) struct PlayerJoinEvent(pub PlayerNum);
+pub(super) struct PlayerJoinEvent {
+    pub player_num: PlayerNum,
+    pub input: InputType,
+}
 
 /// Tag for container holding the carousel and arrows for character selection
 #[derive(Component)]

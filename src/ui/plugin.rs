@@ -18,7 +18,7 @@ use super::{
 use crate::states::{AppState, MainMenuState, PauseMenuState};
 use bevy::{
     app::{Plugin, Update},
-    prelude::{in_state, Condition, IntoSystemConfigs, OnEnter, OnExit},
+    prelude::{in_state, Condition, IntoSystemConfigs, OnEnter},
 };
 use bevy_alt_ui_navigation_lite::NavRequestSystem;
 use bevy_asset_loader::loading_state::LoadingStateSet;
@@ -75,6 +75,7 @@ impl Plugin for ThetawaveUiPlugin {
             .add_systems(
                 Update,
                 (
+                    set_characters_system,
                     cycle_carousel_system,
                     update_carousel_ui_system,
                     spawn_carousel_system,
@@ -85,8 +86,6 @@ impl Plugin for ThetawaveUiPlugin {
                     spawn_join_prompt_system,
                 )
                     .run_if(in_state(MainMenuState::CharacterSelection)),
-            )
-            // Send the event to set the characters to the active characters in the carousel
-            .add_systems(OnExit(AppState::MainMenu), set_characters_system);
+            );
     }
 }

@@ -5,13 +5,18 @@ use super::data::{
 use crate::{
     assets::{LoadingProgressEvent, UiAssets},
     audio::AudioEffectEvent,
+    input::InputType,
     options::{ApplyOptionsEvent, OptionsRes},
-    player::PlayerNum,
+    player::{ChosenCharactersResource, PlayerNum},
     states::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState},
 };
 use bevy::{
     app::AppExit,
-    prelude::{Children, EventReader, EventWriter, NextState, Query, ResMut, With},
+    input::ButtonInput,
+    prelude::{
+        Children, Entity, EventReader, EventWriter, Gamepad, GamepadButton, KeyCode, MouseButton,
+        NextState, Query, Res, ResMut, With,
+    },
 };
 use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
 use bevy_aseprite_ultra::prelude::AseUiAnimation;
@@ -90,6 +95,10 @@ pub(super) fn menu_button_action_system(
     mut effect_events: EventWriter<AudioEffectEvent>,
     mut player_join_events: EventWriter<PlayerJoinEvent>,
     mut player_ready_events: EventWriter<PlayerReadyEvent>,
+    key_code_input: Res<ButtonInput<KeyCode>>,
+    mouse_button_input: Res<ButtonInput<MouseButton>>,
+    gamepads_q: Query<(Entity, &Gamepad)>,
+    chosen_characters_res: Res<ChosenCharactersResource>,
 ) {
     for event in nav_events.read() {
         if let NavEvent::NoChanges { from, .. } = event {
@@ -122,7 +131,34 @@ pub(super) fn menu_button_action_system(
                         open_website(GITHUB_URL);
                     }
                     ButtonAction::Join(player_num) => {
-                        player_join_events.send(PlayerJoinEvent(player_num.clone()));
+                        let gamepad_input = gamepads_q.iter().find_map(|(entity, gamepad)| {
+                            if gamepad.just_pressed(GamepadButton::South) {
+                                Some(InputType::Gamepad(entity))
+                            } else {
+                                None
+                            }
+                        });
+
+                        println!("{:?}", chosen_characters_res);
+
+                        // first get the input type
+                        let maybe_input_type = if key_code_input.just_pressed(KeyCode::Enter)
+                            || mouse_button_input.just_released(MouseButton::Left)
+                        {
+                            Some(InputType::Keyboard)
+                        } else {
+                            gamepad_input
+                        };
+
+                        // if a valid input type is read, check if it has already been registered
+                        if let Some(input_type) = maybe_input_type {
+                            if !chosen_characters_res.contains_input(input_type.clone()) {
+                                player_join_events.send(PlayerJoinEvent {
+                                    player_num: player_num.clone(),
+                                    input: input_type.clone(),
+                                });
+                            }
+                        }
                     }
                     ButtonAction::Ready(player_num) => {
                         player_ready_events.send(PlayerReadyEvent {

@@ -5,7 +5,7 @@ use bevy::{
 use leafwing_input_manager::prelude::InputMap;
 use serde::{Deserialize, Serialize};
 
-use crate::input::{PlayerAbilities, PlayerAction};
+use crate::input::{CharacterCarouselAction, PlayerAbility, PlayerAction};
 
 // Resource for storing window options
 #[derive(Resource, Serialize, Deserialize, Clone)]
@@ -23,12 +23,16 @@ pub(crate) struct OptionsRes {
     // Keyboard input map for the player
     pub player_keyboard_input_map: InputMap<PlayerAction>,
     // Keyboard input map for player abilities
-    pub player_keyboard_abilities_input_map: InputMap<PlayerAbilities>,
+    pub player_keyboard_abilities_input_map: InputMap<PlayerAbility>,
     // Gamepad input map for the player
     pub player_gamepad_input_map: InputMap<PlayerAction>,
     // Gamepad input map for player abilities
-    pub player_gamepad_abilities_input_map: InputMap<PlayerAbilities>,
-    // All of the available resolutions
+    pub player_gamepad_abilities_input_map: InputMap<PlayerAbility>,
+    // Keyboard input map for the character carousel
+    pub carousel_keyboard_input_map: InputMap<CharacterCarouselAction>,
+    // Gamepad input map for the character carousel
+    pub carousel_gamepad_input_map: InputMap<CharacterCarouselAction>,
+    // All resolution options available in options
     resolutions: Vec<WindowResolution>,
 }
 
@@ -62,12 +66,12 @@ impl Default for OptionsRes {
                 (PlayerAction::Right, KeyCode::KeyD),
             ]),
             player_keyboard_abilities_input_map: InputMap::new([
-                (PlayerAbilities::Utility, KeyCode::AltLeft),
-                (PlayerAbilities::Ultimate, KeyCode::Space),
+                (PlayerAbility::Utility, KeyCode::AltLeft),
+                (PlayerAbility::Ultimate, KeyCode::Space),
             ])
             .insert_multiple([
-                (PlayerAbilities::BasicAttack, MouseButton::Left),
-                (PlayerAbilities::SecondaryAttack, MouseButton::Right),
+                (PlayerAbility::BasicAttack, MouseButton::Left),
+                (PlayerAbility::SecondaryAttack, MouseButton::Right),
             ])
             .to_owned(),
             player_gamepad_input_map: InputMap::new([
@@ -77,10 +81,23 @@ impl Default for OptionsRes {
                 (PlayerAction::Right, GamepadButton::DPadRight),
             ]),
             player_gamepad_abilities_input_map: InputMap::new([
-                (PlayerAbilities::BasicAttack, GamepadButton::South),
-                (PlayerAbilities::SecondaryAttack, GamepadButton::East),
-                (PlayerAbilities::Utility, GamepadButton::West),
-                (PlayerAbilities::Ultimate, GamepadButton::North),
+                (PlayerAbility::BasicAttack, GamepadButton::South),
+                (PlayerAbility::SecondaryAttack, GamepadButton::East),
+                (PlayerAbility::Utility, GamepadButton::West),
+                (PlayerAbility::Ultimate, GamepadButton::North),
+            ]),
+            carousel_keyboard_input_map: InputMap::new([
+                (CharacterCarouselAction::CycleLeft, KeyCode::KeyA),
+                (CharacterCarouselAction::CycleRight, KeyCode::KeyD),
+                (CharacterCarouselAction::CycleLeft, KeyCode::ArrowLeft),
+                (CharacterCarouselAction::CycleRight, KeyCode::ArrowRight),
+            ]),
+            carousel_gamepad_input_map: InputMap::new([
+                (CharacterCarouselAction::CycleLeft, GamepadButton::DPadLeft),
+                (
+                    CharacterCarouselAction::CycleRight,
+                    GamepadButton::DPadRight,
+                ),
             ]),
         }
     }

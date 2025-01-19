@@ -1,4 +1,4 @@
-use bevy::reflect::Reflect;
+use bevy::{prelude::Entity, reflect::Reflect};
 use leafwing_abilities::Abilitylike;
 use leafwing_input_manager::Actionlike;
 use serde::{Deserialize, Serialize};
@@ -28,9 +28,22 @@ pub(crate) enum PlayerAction {
     AsRefStr,
     Copy,
 )]
-pub(crate) enum PlayerAbilities {
+pub(crate) enum PlayerAbility {
     BasicAttack,
     SecondaryAttack,
     Utility,
     Ultimate,
+}
+
+/// Actions for selecting a character from a carousel
+#[derive(Actionlike, Clone, Debug, Eq, Hash, PartialEq, Reflect, Serialize, Deserialize)]
+pub(crate) enum CharacterCarouselAction {
+    CycleLeft,
+    CycleRight,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum InputType {
+    Keyboard,
+    Gamepad(Entity),
 }

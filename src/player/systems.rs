@@ -1,10 +1,7 @@
-use super::{
-    data::{CharactersResource, ChosenCharactersResource, PlayerStats},
-    ChosenCharactersEvent,
-};
+use super::data::{CharactersResource, ChosenCharactersResource, PlayerStats};
 use crate::{
     assets::GameAssets,
-    input::{PlayerAbilities, PlayerAction},
+    input::{InputType, PlayerAbility, PlayerAction},
     options::OptionsRes,
     states::{AppState, Cleanup},
 };
@@ -12,7 +9,7 @@ use avian2d::prelude::{Collider, LinearVelocity, MaxLinearSpeed, RigidBody};
 use bevy::{
     core::Name,
     log::info,
-    prelude::{Commands, EventReader, Query, Res, ResMut},
+    prelude::{Commands, Query, Res},
     utils::default,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseSpriteAnimation};
@@ -30,14 +27,17 @@ pub(super) fn spawn_players_system(
     chosen_characters_res: Res<ChosenCharactersResource>,
 ) {
     // Iterate through all of the chosen characters
-    for (player_num, character_type) in chosen_characters_res.players.iter() {
+    for (player_num, chosen_character_data) in chosen_characters_res.players.iter() {
         // Spawn a player using the CharacterData from the character type
-        if let Some(character_data) = characters_res.characters.get(character_type) {
+        if let Some(character_data) = characters_res
+            .characters
+            .get(&chosen_character_data.character)
+        {
             cmds.spawn((
                 player_num.clone(),
                 AseSpriteAnimation {
                     animation: Animation::tag("idle"),
-                    aseprite: assets.get_character_sprite(character_type),
+                    aseprite: assets.get_character_sprite(&chosen_character_data.character),
                 },
                 Cleanup::<AppState> {
                     states: vec![AppState::Game],
@@ -48,11 +48,21 @@ pub(super) fn spawn_players_system(
                 ),
                 RigidBody::Kinematic,
                 MaxLinearSpeed(character_data.max_speed),
-                InputManagerBundle::with_map(options_res.player_keyboard_input_map.clone()),
-                InputManagerBundle::with_map(
-                    options_res.player_keyboard_abilities_input_map.clone(),
-                ),
-                AbilitiesBundle::<PlayerAbilities> {
+                InputManagerBundle::with_map(match chosen_character_data.input {
+                    InputType::Keyboard => options_res.player_keyboard_input_map.clone(),
+                    InputType::Gamepad(entity) => options_res
+                        .player_gamepad_input_map
+                        .clone()
+                        .with_gamepad(entity),
+                }),
+                InputManagerBundle::with_map(match chosen_character_data.input {
+                    InputType::Keyboard => options_res.player_keyboard_abilities_input_map.clone(),
+                    InputType::Gamepad(entity) => options_res
+                        .player_gamepad_abilities_input_map
+                        .clone()
+                        .with_gamepad(entity),
+                }),
+                AbilitiesBundle::<PlayerAbility> {
                     cooldowns: character_data.cooldowns.clone(),
                     ..default()
                 },
@@ -107,8 +117,8 @@ pub(super) fn player_move_system(
 /// System for activating player abilities when ready
 pub(super) fn player_ability_system(
     mut player_ability_q: Query<(
-        &mut CooldownState<PlayerAbilities>,
-        &ActionState<PlayerAbilities>,
+        &mut CooldownState<PlayerAbility>,
+        &ActionState<PlayerAbility>,
     )>,
 ) {
     for (mut cooldown_state, action_state) in player_ability_q.iter_mut() {
@@ -133,15 +143,5 @@ pub(super) fn player_ability_system(
                 );
             }
         }
-    }
-}
-
-/// Sets the chosen characters resource from the event
-pub(super) fn set_characters_system(
-    mut characters: ResMut<ChosenCharactersResource>,
-    mut events: EventReader<ChosenCharactersEvent>,
-) {
-    for event in events.read() {
-        characters.players = event.players.clone();
     }
 }
