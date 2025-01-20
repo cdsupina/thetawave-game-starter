@@ -13,8 +13,8 @@ use bevy::{
     log::warn,
     prelude::{
         BuildChildren, Changed, ChildBuild, Children, Commands, DespawnRecursiveExt, Entity,
-        EventReader, Gamepad, GamepadButton, ImageNode, KeyCode, Parent, Query, Res, ResMut, Text,
-        With, Without,
+        EventReader, EventWriter, Gamepad, GamepadButton, ImageNode, KeyCode, Parent, Query, Res,
+        ResMut, Text, With, Without,
     },
     text::TextFont,
     ui::{AlignItems, BackgroundColor, FlexDirection, JustifyContent, Node, UiRect, Val},
@@ -507,6 +507,41 @@ pub(in crate::ui) fn spawn_join_prompt_system(
                         });
                 }
             }
+        }
+    }
+}
+
+/// Sending join events after detecting join inputs from additonal players
+pub(in crate::ui) fn additional_players_join_system(
+    keys: Res<ButtonInput<KeyCode>>,
+    gamepads_q: Query<(Entity, &Gamepad)>,
+    chosen_characters_res: Res<ChosenCharactersResource>,
+    mut player_join_events: EventWriter<PlayerJoinEvent>,
+) {
+    // Set the join input to keyboard if input pressed and input is not yet used
+    let mut join_input = if keys.just_pressed(KeyCode::Enter)
+        && !chosen_characters_res.contains_input(InputType::Keyboard)
+    {
+        Some(InputType::Keyboard)
+    } else {
+        None
+    };
+
+    // If keyboard input not used, find the first gamepad that joined
+    if join_input.is_none() {
+        for (entity, gamepad) in gamepads_q.iter() {
+            if gamepad.just_pressed(GamepadButton::South)
+                && !chosen_characters_res.contains_input(InputType::Gamepad(entity))
+            {
+                join_input = Some(InputType::Gamepad(entity));
+                break;
+            }
+        }
+    }
+
+    if let Some(input) = join_input {
+        if let Some(player_num) = chosen_characters_res.next_available_player_num() {
+            player_join_events.send(PlayerJoinEvent { player_num, input });
         }
     }
 }

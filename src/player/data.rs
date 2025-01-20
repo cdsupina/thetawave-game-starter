@@ -77,7 +77,7 @@ pub(super) struct PlayerStats {
 }
 
 /// Tag for indicating multiplayer association
-#[derive(Component, Debug, Clone, PartialEq, Eq, AsRefStr, Hash)]
+#[derive(Component, Debug, Clone, PartialEq, Eq, AsRefStr, Hash, PartialOrd, Ord)]
 pub(crate) enum PlayerNum {
     One,
     Two,
@@ -124,6 +124,17 @@ impl ChosenCharactersResource {
             }
         }
         false
+    }
+
+    /// Finds the next available PlayerNum (not yet in ChosenCharactersResource)
+    pub(crate) fn next_available_player_num(&self) -> Option<PlayerNum> {
+        let max_used_player_num = self.players.keys().max().cloned();
+
+        if let Some(player_num) = max_used_player_num {
+            player_num.next()
+        } else {
+            None
+        }
     }
 }
 
