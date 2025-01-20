@@ -40,6 +40,8 @@ pub(crate) enum PlayerAbility {
 pub(crate) enum CharacterCarouselAction {
     CycleLeft,
     CycleRight,
+    Ready,
+    Unready,
 }
 
 #[derive(Clone, Debug, PartialEq)]

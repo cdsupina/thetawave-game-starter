@@ -58,6 +58,7 @@ fn setup_character_selector(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds
                     cmds.entity(entity)
                         .insert((CharacterSelector, player_num.clone()));
                     if !matches!(player_num, PlayerNum::One) {
+                        // remove the input button prompt for players 2-4
                         cmds.entity(entity).despawn_descendants();
                     }
                 }

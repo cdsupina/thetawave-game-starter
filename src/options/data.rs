@@ -91,6 +91,8 @@ impl Default for OptionsRes {
                 (CharacterCarouselAction::CycleRight, KeyCode::KeyD),
                 (CharacterCarouselAction::CycleLeft, KeyCode::ArrowLeft),
                 (CharacterCarouselAction::CycleRight, KeyCode::ArrowRight),
+                (CharacterCarouselAction::Ready, KeyCode::Enter),
+                (CharacterCarouselAction::Unready, KeyCode::Escape),
             ]),
             carousel_gamepad_input_map: InputMap::new([
                 (CharacterCarouselAction::CycleLeft, GamepadButton::DPadLeft),
@@ -98,6 +100,8 @@ impl Default for OptionsRes {
                     CharacterCarouselAction::CycleRight,
                     GamepadButton::DPadRight,
                 ),
+                (CharacterCarouselAction::Ready, GamepadButton::South),
+                (CharacterCarouselAction::Unready, GamepadButton::East),
             ]),
         }
     }

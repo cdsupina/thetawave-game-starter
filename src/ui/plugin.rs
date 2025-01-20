@@ -2,10 +2,10 @@ use super::{
     data::{PlayerJoinEvent, PlayerReadyEvent},
     systems::{
         character_selection::{
-            cycle_carousel_system, enable_join_button_system, enable_start_game_button_system,
-            lock_in_player_button_system, set_characters_system, setup_character_selection_system,
-            spawn_carousel_system, spawn_join_prompt_system, spawn_ready_button_system,
-            update_carousel_ui_system,
+            cycle_player_one_carousel_system, enable_join_button_system,
+            enable_start_game_button_system, lock_in_player_button_system, set_characters_system,
+            setup_character_selection_system, spawn_carousel_system, spawn_join_prompt_system,
+            spawn_ready_button_system, update_carousel_ui_system,
         },
         hui::setup_hui_system,
         loading::{setup_loading_ui_system, update_loading_bar_system},
@@ -76,7 +76,7 @@ impl Plugin for ThetawaveUiPlugin {
                 Update,
                 (
                     set_characters_system,
-                    cycle_carousel_system,
+                    cycle_player_one_carousel_system,
                     update_carousel_ui_system,
                     spawn_carousel_system,
                     spawn_ready_button_system,

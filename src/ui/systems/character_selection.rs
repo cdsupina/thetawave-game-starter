@@ -1,6 +1,6 @@
 use super::{
-    ButtonAction, CarouselSlotPosition, CharacterCarousel, Cleanup, MainMenuState, OptionsRes,
-    PlayerJoinEvent, PlayerNum, PlayerReadyEvent, UiAssets, VisibleCarouselSlot,
+    ButtonAction, CarouselSlotPosition, CharacterCarousel, Cleanup, InputType, MainMenuState,
+    OptionsRes, PlayerJoinEvent, PlayerNum, PlayerReadyEvent, UiAssets, VisibleCarouselSlot,
 };
 use crate::{
     player::{ChosenCharacterData, ChosenCharactersResource},
@@ -13,7 +13,8 @@ use bevy::{
     log::warn,
     prelude::{
         BuildChildren, Changed, ChildBuild, Children, Commands, DespawnRecursiveExt, Entity,
-        EventReader, ImageNode, KeyCode, Parent, Query, Res, ResMut, Text, With, Without,
+        EventReader, Gamepad, GamepadButton, ImageNode, KeyCode, Parent, Query, Res, ResMut, Text,
+        With, Without,
     },
     text::TextFont,
     ui::{AlignItems, BackgroundColor, FlexDirection, JustifyContent, Node, UiRect, Val},
@@ -42,29 +43,54 @@ pub(in crate::ui) fn setup_character_selection_system(
 }
 
 /// Cycle the characters in the carousel with player input
-pub(in crate::ui) fn cycle_carousel_system(
+pub(in crate::ui) fn cycle_player_one_carousel_system(
     keys: Res<ButtonInput<KeyCode>>,
+    gamepads_q: Query<&Gamepad>,
     mut carousel_q: Query<(&mut CharacterCarousel, &PlayerNum)>,
     ready_button_q: Query<&ButtonAction, With<PlayerReadyButton>>,
+    chosen_characters_res: Res<ChosenCharactersResource>,
 ) {
-    if let Ok((mut carousel, player_num)) = carousel_q.get_single_mut() {
-        // Determine if the carousel can cycle by checking the state of the ready button
-        let mut can_cycle = true;
+    if let Some(character_data) = chosen_characters_res.players.get(&PlayerNum::One) {
+        for (mut carousel, player_num) in carousel_q.iter_mut() {
+            if matches!(player_num, PlayerNum::One) {
+                // Determine if the carousel can cycle by checking the state of the ready button
+                let mut can_cycle = true;
 
-        for button_action in ready_button_q.iter() {
-            if let ButtonAction::UnReady(button_player_num) = button_action {
-                if player_num == button_player_num {
-                    can_cycle = false;
+                for button_action in ready_button_q.iter() {
+                    if let ButtonAction::UnReady(button_player_num) = button_action {
+                        if player_num == button_player_num {
+                            can_cycle = false;
+                        }
+                    }
                 }
-            }
-        }
 
-        // Cycle the carousel with provided input
-        if can_cycle {
-            if keys.just_pressed(KeyCode::ArrowLeft) || keys.just_pressed(KeyCode::KeyA) {
-                carousel.cycle_left();
-            } else if keys.just_pressed(KeyCode::ArrowRight) || keys.just_pressed(KeyCode::KeyD) {
-                carousel.cycle_right();
+                // Cycle the carousel with provided input for player one
+                if can_cycle {
+                    match character_data.input {
+                        InputType::Keyboard => {
+                            if keys.just_pressed(KeyCode::ArrowLeft)
+                                || keys.just_pressed(KeyCode::KeyA)
+                            {
+                                carousel.cycle_left();
+                            } else if keys.just_pressed(KeyCode::ArrowRight)
+                                || keys.just_pressed(KeyCode::KeyD)
+                            {
+                                carousel.cycle_right();
+                            }
+                        }
+                        InputType::Gamepad(entity) => {
+                            if let Ok(gamepad) = gamepads_q.get(entity) {
+                                if gamepad.just_pressed(GamepadButton::DPadLeft) {
+                                    carousel.cycle_left();
+                                } else if gamepad.just_pressed(GamepadButton::DPadRight) {
+                                    carousel.cycle_right();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                break;
             }
         }
     }
@@ -154,73 +180,76 @@ pub(in crate::ui) fn spawn_carousel_system(
                             Name::new("Arrow Button Sprite"),
                         ));
 
-                    parent
-                        .spawn((
-                            Node {
-                                justify_content: JustifyContent::Center,
-                                align_items: AlignItems::Center,
-                                width: Val::Percent(100.0),
-                                ..default()
-                            },
-                            BackgroundColor(Color::srgba(0.5, 0.0, 0.0, 0.5)),
-                            InputManagerBundle::with_map(
-                                options_res.carousel_keyboard_input_map.clone(), // TODO: select based on input
-                            ),
-                            player_num.clone(),
-                            carousel.clone(),
-                        ))
-                        .with_children(|parent| {
-                            // spawn child nodes containing carousel character images
-                            if let Some(left_character_type) = carousel.get_left_character() {
-                                parent.spawn((
-                                    VisibleCarouselSlot(CarouselSlotPosition::Left),
-                                    ImageNode::new(
-                                        ui_assets.get_character_image(left_character_type),
-                                    )
-                                    .with_color(Color::default().with_alpha(0.5)),
-                                    Node {
-                                        width: Val::Percent(30.0),
-                                        margin: UiRect::all(Val::Px(15.0)),
-                                        ..default()
-                                    },
-                                ));
-                            } else {
-                                warn!("No left character found in carousel.");
-                            }
+                    let mut carousel_builder = parent.spawn((
+                        Node {
+                            justify_content: JustifyContent::Center,
+                            align_items: AlignItems::Center,
+                            width: Val::Percent(100.0),
+                            ..default()
+                        },
+                        BackgroundColor(Color::srgba(0.5, 0.0, 0.0, 0.5)),
+                        player_num.clone(),
+                        carousel.clone(),
+                    ));
 
-                            if let Some(active_character_type) = carousel.get_active_character() {
-                                parent.spawn((
-                                    VisibleCarouselSlot(CarouselSlotPosition::Center),
-                                    ImageNode::new(
-                                        ui_assets.get_character_image(active_character_type),
-                                    ),
-                                    Node {
-                                        width: Val::Percent(40.0),
-                                        margin: UiRect::all(Val::Px(15.0)),
-                                        ..default()
-                                    },
-                                ));
-                            } else {
-                                warn!("No active character found in carousel.");
-                            }
+                    if !matches!(player_num, PlayerNum::One) {
+                        carousel_builder.insert(InputManagerBundle::with_map(match event.input {
+                            InputType::Keyboard => options_res.carousel_keyboard_input_map.clone(),
+                            InputType::Gamepad(entity) => options_res
+                                .carousel_gamepad_input_map
+                                .clone()
+                                .with_gamepad(entity),
+                        }));
+                    }
 
-                            if let Some(right_character_type) = carousel.get_right_character() {
-                                parent.spawn((
-                                    VisibleCarouselSlot(CarouselSlotPosition::Right),
-                                    ImageNode::new(
-                                        ui_assets.get_character_image(right_character_type),
-                                    )
+                    carousel_builder.with_children(|parent| {
+                        // spawn child nodes containing carousel character images
+                        if let Some(left_character_type) = carousel.get_left_character() {
+                            parent.spawn((
+                                VisibleCarouselSlot(CarouselSlotPosition::Left),
+                                ImageNode::new(ui_assets.get_character_image(left_character_type))
                                     .with_color(Color::default().with_alpha(0.5)),
-                                    Node {
-                                        width: Val::Percent(30.0),
-                                        margin: UiRect::all(Val::Px(15.0)),
-                                        ..default()
-                                    },
-                                ));
-                            } else {
-                                warn!("No right character found in carousel.");
-                            }
-                        });
+                                Node {
+                                    width: Val::Percent(30.0),
+                                    margin: UiRect::all(Val::Px(15.0)),
+                                    ..default()
+                                },
+                            ));
+                        } else {
+                            warn!("No left character found in carousel.");
+                        }
+
+                        if let Some(active_character_type) = carousel.get_active_character() {
+                            parent.spawn((
+                                VisibleCarouselSlot(CarouselSlotPosition::Center),
+                                ImageNode::new(
+                                    ui_assets.get_character_image(active_character_type),
+                                ),
+                                Node {
+                                    width: Val::Percent(40.0),
+                                    margin: UiRect::all(Val::Px(15.0)),
+                                    ..default()
+                                },
+                            ));
+                        } else {
+                            warn!("No active character found in carousel.");
+                        }
+
+                        if let Some(right_character_type) = carousel.get_right_character() {
+                            parent.spawn((
+                                VisibleCarouselSlot(CarouselSlotPosition::Right),
+                                ImageNode::new(ui_assets.get_character_image(right_character_type))
+                                    .with_color(Color::default().with_alpha(0.5)),
+                                Node {
+                                    width: Val::Percent(30.0),
+                                    margin: UiRect::all(Val::Px(15.0)),
+                                    ..default()
+                                },
+                            ));
+                        } else {
+                            warn!("No right character found in carousel.");
+                        }
+                    });
 
                     // Spawn right arrow
                     parent
