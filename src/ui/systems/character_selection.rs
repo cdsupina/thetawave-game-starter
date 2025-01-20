@@ -3,8 +3,11 @@ use super::{
     OptionsRes, PlayerJoinEvent, PlayerNum, PlayerReadyEvent, UiAssets, VisibleCarouselSlot,
 };
 use crate::{
+    input::CharacterCarouselAction,
     player::{ChosenCharacterData, ChosenCharactersResource},
-    ui::data::{CharacterSelector, MenuButtonState, PlayerReadyButton, StartGameButton},
+    ui::data::{
+        CarouselReadyTimer, CharacterSelector, MenuButtonState, PlayerReadyButton, StartGameButton,
+    },
 };
 use bevy::{
     color::{Alpha, Color},
@@ -13,10 +16,11 @@ use bevy::{
     log::warn,
     prelude::{
         BuildChildren, Changed, ChildBuild, Children, Commands, DespawnRecursiveExt, Entity,
-        EventReader, EventWriter, Gamepad, GamepadButton, ImageNode, KeyCode, Parent, Query, Res,
-        ResMut, Text, With, Without,
+        EventReader, EventWriter, Gamepad, GamepadButton, ImageNode, KeyCode, Local, Parent, Query,
+        Res, ResMut, Text, With, Without,
     },
     text::TextFont,
+    time::Time,
     ui::{AlignItems, BackgroundColor, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
@@ -24,7 +28,7 @@ use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
 use bevy_hui::prelude::HtmlNode;
 use bevy_persistent::Persistent;
-use leafwing_input_manager::InputManagerBundle;
+use leafwing_input_manager::{prelude::ActionState, InputManagerBundle};
 
 /// This function sets up the character selection interface.
 /// It spawns the options menu HTML node and associates the cleanup component with it.
@@ -193,13 +197,18 @@ pub(in crate::ui) fn spawn_carousel_system(
                     ));
 
                     if !matches!(player_num, PlayerNum::One) {
-                        carousel_builder.insert(InputManagerBundle::with_map(match event.input {
-                            InputType::Keyboard => options_res.carousel_keyboard_input_map.clone(),
-                            InputType::Gamepad(entity) => options_res
-                                .carousel_gamepad_input_map
-                                .clone()
-                                .with_gamepad(entity),
-                        }));
+                        carousel_builder.insert((
+                            InputManagerBundle::with_map(match event.input {
+                                InputType::Keyboard => {
+                                    options_res.carousel_keyboard_input_map.clone()
+                                }
+                                InputType::Gamepad(entity) => options_res
+                                    .carousel_gamepad_input_map
+                                    .clone()
+                                    .with_gamepad(entity),
+                            }),
+                            CarouselReadyTimer::new(),
+                        ));
                     }
 
                     carousel_builder.with_children(|parent| {
@@ -553,6 +562,45 @@ pub(in crate::ui) fn additional_players_join_system(
     if let Some(input) = join_input {
         if let Some(player_num) = chosen_characters_res.next_available_player_num() {
             player_join_events.send(PlayerJoinEvent { player_num, input });
+        }
+    }
+}
+
+/// Handles inputs for character carousels (players 2-4)
+pub(in crate::ui) fn carousel_input_system(
+    mut carousel_q: Query<(
+        &mut CharacterCarousel,
+        &ActionState<CharacterCarouselAction>,
+        &PlayerNum,
+        &mut CarouselReadyTimer,
+    )>,
+    mut player_ready_events: EventWriter<PlayerReadyEvent>,
+    time: Res<Time>,
+) {
+    for (mut carousel, carousel_action, player_num, mut ready_timer) in carousel_q.iter_mut() {
+        // Advance the ready timer
+        ready_timer.0.tick(time.delta());
+
+        for action in carousel_action.get_just_pressed().iter() {
+            match action {
+                CharacterCarouselAction::CycleLeft => carousel.cycle_left(),
+                CharacterCarouselAction::CycleRight => carousel.cycle_right(),
+                CharacterCarouselAction::Ready => {
+                    // Only let player ready after a the timer is complete
+                    if ready_timer.0.finished() {
+                        player_ready_events.send(PlayerReadyEvent {
+                            player_num: player_num.clone(),
+                            is_ready: true,
+                        });
+                    }
+                }
+                CharacterCarouselAction::Unready => {
+                    player_ready_events.send(PlayerReadyEvent {
+                        player_num: player_num.clone(),
+                        is_ready: false,
+                    });
+                }
+            }
         }
     }
 }

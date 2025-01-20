@@ -3,7 +3,7 @@ use super::{
         disable_additional_players_navigation_system, enable_additional_players_navigation_system,
         setup_input_system,
     },
-    PlayerAbility, PlayerAction,
+    CharacterCarouselAction, PlayerAbility, PlayerAction,
 };
 use crate::states::MainMenuState;
 use bevy::{
@@ -24,6 +24,7 @@ impl Plugin for ThetawaveInputPlugin {
         app.add_plugins((DefaultNavigationPlugins,))
             .add_plugins(InputManagerPlugin::<PlayerAction>::default())
             .add_plugins(InputManagerPlugin::<PlayerAbility>::default())
+            .add_plugins(InputManagerPlugin::<CharacterCarouselAction>::default())
             .add_plugins(AbilityPlugin::<PlayerAbility>::default())
             .add_systems(Startup, setup_input_system)
             .add_systems(

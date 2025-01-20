@@ -3,7 +3,10 @@ use crate::{
     player::{CharacterType, PlayerNum},
     states::{AppState, GameState, MainMenuState, PauseMenuState},
 };
-use bevy::prelude::{Component, Event};
+use bevy::{
+    prelude::{Component, Event},
+    time::{Timer, TimerMode},
+};
 use strum::IntoEnumIterator;
 
 /// All actions for menu buttons
@@ -187,3 +190,13 @@ pub(super) struct PlayerReadyButton;
 /// Tag for button for entering GameLoading AppState
 #[derive(Component)]
 pub(super) struct StartGameButton;
+
+/// Timer for preventing players from instantly readying when joining
+#[derive(Component)]
+pub(super) struct CarouselReadyTimer(pub Timer);
+
+impl CarouselReadyTimer {
+    pub(super) fn new() -> Self {
+        Self(Timer::from_seconds(0.5, TimerMode::Once))
+    }
+}
