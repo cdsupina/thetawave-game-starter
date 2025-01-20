@@ -295,8 +295,10 @@ pub(in crate::ui) fn spawn_ready_button_system(
                 if event.player_num == *player_num {
                     cmds.entity(entity).despawn_recursive();
                     cmds.entity(parent.get()).with_children(|parent| {
-                        parent
-                            .spawn((
+                        let mut ready_button_builder = parent.spawn_empty();
+
+                        ready_button_builder
+                            .insert((
                                 Node {
                                     margin: UiRect::all(Val::Vh(1.0)),
                                     ..default()
@@ -304,7 +306,6 @@ pub(in crate::ui) fn spawn_ready_button_system(
                                 ButtonAction::Ready(player_num.clone()),
                                 MenuButtonState::Normal,
                                 PlayerReadyButton,
-                                Focusable::new().prioritized(), // Focus on this button
                                 Name::new("Menu Button Ready"),
                             ))
                             .with_children(|parent| {
@@ -317,7 +318,12 @@ pub(in crate::ui) fn spawn_ready_button_system(
                                             ..default()
                                         },
                                         AseUiAnimation {
-                                            animation: Animation::tag("pressed"),
+                                            animation: if matches!(event.player_num, PlayerNum::One)
+                                            {
+                                                Animation::tag("pressed")
+                                            } else {
+                                                Animation::tag("released")
+                                            },
                                             aseprite: ui_assets.menu_button_aseprite.clone(),
                                         },
                                         Name::new("Menu Button Sprite"),
@@ -341,6 +347,11 @@ pub(in crate::ui) fn spawn_ready_button_system(
                                             ));
                                     });
                             });
+                        if matches!(event.player_num, PlayerNum::One) {
+                            ready_button_builder.insert(
+                                Focusable::new().prioritized(), // Focus on this button
+                            );
+                        }
                     });
                 }
             }
