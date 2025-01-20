@@ -3,7 +3,7 @@ use crate::{player::PlayerNum, ui::PlayerJoinEvent};
 use bevy::{
     input::keyboard::NativeKeyCode,
     prelude::{
-        Commands, Component, Entity, EventReader, GamepadButton, KeyCode, Query, Res, ResMut, With,
+        Commands, Component, Entity, EventReader, GamepadButton, KeyCode, Query, ResMut, With,
     },
 };
 use bevy_alt_ui_navigation_lite::systems::InputMapping;
