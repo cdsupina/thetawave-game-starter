@@ -1,6 +1,7 @@
 use super::{
-    ButtonAction, CarouselSlotPosition, CharacterCarousel, Cleanup, InputType, MainMenuState,
-    OptionsRes, PlayerJoinEvent, PlayerNum, PlayerReadyEvent, UiAssets, VisibleCarouselSlot,
+    AudioEffectEvent, ButtonAction, CarouselSlotPosition, CharacterCarousel, Cleanup, InputType,
+    MainMenuState, OptionsRes, PlayerJoinEvent, PlayerNum, PlayerReadyEvent, UiAssets,
+    VisibleCarouselSlot,
 };
 use crate::{
     input::CharacterCarouselAction,
@@ -53,6 +54,7 @@ pub(in crate::ui) fn cycle_player_one_carousel_system(
     mut carousel_q: Query<(&mut CharacterCarousel, &PlayerNum)>,
     ready_button_q: Query<&ButtonAction, With<PlayerReadyButton>>,
     chosen_characters_res: Res<ChosenCharactersResource>,
+    mut effect_events: EventWriter<AudioEffectEvent>,
 ) {
     if let Some(character_data) = chosen_characters_res.players.get(&PlayerNum::One) {
         for (mut carousel, player_num) in carousel_q.iter_mut() {
@@ -76,18 +78,22 @@ pub(in crate::ui) fn cycle_player_one_carousel_system(
                                 || keys.just_pressed(KeyCode::KeyA)
                             {
                                 carousel.cycle_left();
+                                effect_events.send(AudioEffectEvent::MenuButtonPressed);
                             } else if keys.just_pressed(KeyCode::ArrowRight)
                                 || keys.just_pressed(KeyCode::KeyD)
                             {
                                 carousel.cycle_right();
+                                effect_events.send(AudioEffectEvent::MenuButtonPressed);
                             }
                         }
                         InputType::Gamepad(entity) => {
                             if let Ok(gamepad) = gamepads_q.get(entity) {
                                 if gamepad.just_pressed(GamepadButton::DPadLeft) {
                                     carousel.cycle_left();
+                                    effect_events.send(AudioEffectEvent::MenuButtonPressed);
                                 } else if gamepad.just_pressed(GamepadButton::DPadRight) {
                                     carousel.cycle_right();
+                                    effect_events.send(AudioEffectEvent::MenuButtonPressed);
                                 }
                             }
                         }
@@ -537,6 +543,7 @@ pub(in crate::ui) fn additional_players_join_system(
     gamepads_q: Query<(Entity, &Gamepad)>,
     chosen_characters_res: Res<ChosenCharactersResource>,
     mut player_join_events: EventWriter<PlayerJoinEvent>,
+    mut effect_events: EventWriter<AudioEffectEvent>,
 ) {
     // Set the join input to keyboard if input pressed and input is not yet used
     let mut join_input = if keys.just_pressed(KeyCode::Enter)
@@ -562,6 +569,7 @@ pub(in crate::ui) fn additional_players_join_system(
     if let Some(input) = join_input {
         if let Some(player_num) = chosen_characters_res.next_available_player_num() {
             player_join_events.send(PlayerJoinEvent { player_num, input });
+            effect_events.send(AudioEffectEvent::MenuButtonConfirm);
         }
     }
 }
@@ -576,6 +584,7 @@ pub(in crate::ui) fn carousel_input_system(
     )>,
     mut player_ready_events: EventWriter<PlayerReadyEvent>,
     time: Res<Time>,
+    mut effect_events: EventWriter<AudioEffectEvent>,
 ) {
     for (mut carousel, carousel_action, player_num, mut ready_timer) in carousel_q.iter_mut() {
         // Advance the ready timer
@@ -583,8 +592,14 @@ pub(in crate::ui) fn carousel_input_system(
 
         for action in carousel_action.get_just_pressed().iter() {
             match action {
-                CharacterCarouselAction::CycleLeft => carousel.cycle_left(),
-                CharacterCarouselAction::CycleRight => carousel.cycle_right(),
+                CharacterCarouselAction::CycleLeft => {
+                    carousel.cycle_left();
+                    effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                }
+                CharacterCarouselAction::CycleRight => {
+                    carousel.cycle_right();
+                    effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                }
                 CharacterCarouselAction::Ready => {
                     // Only let player ready after a the timer is complete
                     if ready_timer.0.finished() {
@@ -592,6 +607,7 @@ pub(in crate::ui) fn carousel_input_system(
                             player_num: player_num.clone(),
                             is_ready: true,
                         });
+                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
                     }
                 }
                 CharacterCarouselAction::Unready => {
@@ -599,6 +615,7 @@ pub(in crate::ui) fn carousel_input_system(
                         player_num: player_num.clone(),
                         is_ready: false,
                     });
+                    effect_events.send(AudioEffectEvent::MenuButtonConfirm);
                 }
             }
         }
