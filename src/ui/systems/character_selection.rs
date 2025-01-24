@@ -17,8 +17,8 @@ use bevy::{
     log::warn,
     prelude::{
         BuildChildren, Changed, ChildBuild, Children, Commands, DespawnRecursiveExt, Entity,
-        EventReader, EventWriter, Gamepad, GamepadButton, ImageNode, KeyCode, Local, Parent, Query,
-        Res, ResMut, Text, With, Without,
+        EventReader, EventWriter, Gamepad, GamepadButton, ImageNode, KeyCode, Parent, Query, Res,
+        ResMut, Text, With, Without,
     },
     text::TextFont,
     time::Time,

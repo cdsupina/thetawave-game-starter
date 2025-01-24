@@ -146,7 +146,7 @@ pub(super) fn player_ability_system(
     }
 }
 
-/// Reset the ChosenCharactersResource when entering the character selection state
+/// Reset the ChosenCharactersResource when entering the title state
 pub(super) fn reset_chosen_characters_resource_system(
     mut chosen_characters_res: ResMut<ChosenCharactersResource>,
 ) {

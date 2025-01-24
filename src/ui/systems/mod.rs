@@ -55,6 +55,7 @@ pub(super) fn menu_button_focus_system(
                             if matches!(button_state, MenuButtonState::Ready) {
                                 ase_animation.animation.play_loop("ready_pressed");
                             } else {
+                                info!("Changing menu button to pressed");
                                 ase_animation.animation.play_loop("pressed");
                             }
                         }
@@ -83,6 +84,7 @@ pub(super) fn menu_button_focus_system(
 }
 
 /// This system reads and performs navigation events from bevy_alt_ui_navigation, handling each button action accordingly.
+/// If a player one has been registered, will only activate button actions from player one
 pub(super) fn menu_button_action_system(
     mut nav_events: EventReader<NavEvent>,
     focusable_q: Query<&ButtonAction, With<Focusable>>,
@@ -121,77 +123,94 @@ pub(super) fn menu_button_action_system(
                     gamepad_input
                 };
 
-                match button_action {
-                    ButtonAction::EnterAppState(app_state) => {
-                        next_app_state.set(*app_state);
-                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
-                    }
-                    ButtonAction::EnterMainMenuState(main_menu_state) => {
-                        next_main_menu_state.set(*main_menu_state);
-                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
-                    }
-                    ButtonAction::EnterGameState(game_state) => {
-                        next_game_state.set(*game_state);
-                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
-                    }
-                    ButtonAction::EnterPauseMenuState(pause_menu_state) => {
-                        next_pause_state.set(*pause_menu_state);
-                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
-                    }
-                    ButtonAction::Exit => {
-                        exit_events.send(AppExit::Success);
-                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
-                    }
-                    ButtonAction::ApplyOptions => {
-                        apply_options_events.send(ApplyOptionsEvent);
-                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
-                    }
-                    ButtonAction::OpenBlueskyWebsite => {
-                        open_website(BLUESKY_URL);
-                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
-                    }
-                    ButtonAction::OpenGithubWebsite => {
-                        open_website(GITHUB_URL);
-                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
-                    }
-                    ButtonAction::Join(player_num) => {
-                        // if a valid input type is read, check if it has already been registered
-                        if let Some(input_type) = maybe_input_type {
-                            if !chosen_characters_res.contains_input(input_type.clone()) {
-                                player_join_events.send(PlayerJoinEvent {
-                                    player_num: player_num.clone(),
-                                    input: input_type.clone(),
-                                });
-                                effect_events.send(AudioEffectEvent::MenuButtonConfirm);
-                            }
+                // If a player one has been registered, ensure that the given input is from player one
+                let mut valid_input = true;
+
+                if let Some(player_one_data) = chosen_characters_res.players.get(&PlayerNum::One) {
+                    if let Some(input_type) = maybe_input_type.clone() {
+                        if input_type != player_one_data.input {
+                            valid_input = false;
                         }
                     }
-                    ButtonAction::Ready(player_num) => {
-                        // Check that the given input and the input of PlayerOne match
-                        // Prevents keyboard for readying for gamepad player one
-                        if let Some(input_type) = maybe_input_type {
-                            if let Some(data) = chosen_characters_res.players.get(&PlayerNum::One) {
-                                if data.input == input_type {
-                                    player_ready_events.send(PlayerReadyEvent {
+                }
+
+                if valid_input {
+                    match button_action {
+                        ButtonAction::EnterAppState(app_state) => {
+                            next_app_state.set(*app_state);
+                            effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                        }
+                        ButtonAction::EnterMainMenuState(main_menu_state) => {
+                            next_main_menu_state.set(*main_menu_state);
+                            effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                        }
+                        ButtonAction::EnterGameState(game_state) => {
+                            next_game_state.set(*game_state);
+                            effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                        }
+                        ButtonAction::EnterPauseMenuState(pause_menu_state) => {
+                            next_pause_state.set(*pause_menu_state);
+                            effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                        }
+                        ButtonAction::Exit => {
+                            exit_events.send(AppExit::Success);
+                            effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                        }
+                        ButtonAction::ApplyOptions => {
+                            apply_options_events.send(ApplyOptionsEvent);
+                            effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                        }
+                        ButtonAction::OpenBlueskyWebsite => {
+                            open_website(BLUESKY_URL);
+                            effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                        }
+                        ButtonAction::OpenGithubWebsite => {
+                            open_website(GITHUB_URL);
+                            effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                        }
+                        ButtonAction::Join(player_num) => {
+                            // if a valid input type is read, check if it has already been registered
+                            if let Some(input_type) = maybe_input_type {
+                                if !chosen_characters_res.contains_input(input_type.clone()) {
+                                    player_join_events.send(PlayerJoinEvent {
                                         player_num: player_num.clone(),
-                                        is_ready: true,
+                                        input: input_type.clone(),
                                     });
                                     effect_events.send(AudioEffectEvent::MenuButtonConfirm);
                                 }
                             }
                         }
-                    }
-                    ButtonAction::UnReady(player_num) => {
-                        // Check that the given input and the input of PlayerOne match
-                        // Prevents keyboard for readying for gamepad player one
-                        if let Some(input_type) = maybe_input_type {
-                            if let Some(data) = chosen_characters_res.players.get(&PlayerNum::One) {
-                                if data.input == input_type {
-                                    player_ready_events.send(PlayerReadyEvent {
-                                        player_num: player_num.clone(),
-                                        is_ready: false,
-                                    });
-                                    effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                        ButtonAction::Ready(player_num) => {
+                            // Check that the given input and the input of PlayerOne match
+                            // Prevents keyboard for readying for gamepad player one
+                            if let Some(input_type) = maybe_input_type {
+                                if let Some(data) =
+                                    chosen_characters_res.players.get(&PlayerNum::One)
+                                {
+                                    if data.input == input_type {
+                                        player_ready_events.send(PlayerReadyEvent {
+                                            player_num: player_num.clone(),
+                                            is_ready: true,
+                                        });
+                                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                                    }
+                                }
+                            }
+                        }
+                        ButtonAction::UnReady(player_num) => {
+                            // Check that the given input and the input of PlayerOne match
+                            // Prevents keyboard for readying for gamepad player one
+                            if let Some(input_type) = maybe_input_type {
+                                if let Some(data) =
+                                    chosen_characters_res.players.get(&PlayerNum::One)
+                                {
+                                    if data.input == input_type {
+                                        player_ready_events.send(PlayerReadyEvent {
+                                            player_num: player_num.clone(),
+                                            is_ready: false,
+                                        });
+                                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                                    }
                                 }
                             }
                         }

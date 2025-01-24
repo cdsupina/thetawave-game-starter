@@ -25,7 +25,7 @@ impl Plugin for ThetawavePlayerPlugin {
                     .run_if(in_state(AppState::Game).and(in_state(GameState::Playing))),
             )
             .add_systems(
-                OnEnter(MainMenuState::CharacterSelection),
+                OnEnter(MainMenuState::Title),
                 reset_chosen_characters_resource_system,
             );
     }

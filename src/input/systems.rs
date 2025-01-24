@@ -3,7 +3,8 @@ use crate::{player::PlayerNum, ui::PlayerJoinEvent};
 use bevy::{
     input::keyboard::NativeKeyCode,
     prelude::{
-        Commands, Component, Entity, EventReader, GamepadButton, KeyCode, Query, ResMut, With,
+        Commands, Component, Entity, EventReader, GamepadButton, KeyCode, MouseButton, Query,
+        ResMut, With,
     },
 };
 use bevy_alt_ui_navigation_lite::systems::InputMapping;
@@ -55,6 +56,7 @@ pub(super) fn disable_additional_players_navigation_system(
                     input_mapping.gamepads.push(entity);
                     input_mapping.focus_follows_mouse = false;
                     input_mapping.keyboard_navigation = false;
+                    input_mapping.mouse_action = MouseButton::Other(65535);
                 }
             }
         }
@@ -65,5 +67,6 @@ pub(super) fn disable_additional_players_navigation_system(
 pub(super) fn enable_additional_players_navigation_system(mut input_mapping: ResMut<InputMapping>) {
     input_mapping.focus_follows_mouse = true;
     input_mapping.keyboard_navigation = true;
+    input_mapping.mouse_action = MouseButton::Left;
     input_mapping.gamepads = vec![];
 }
