@@ -1,17 +1,19 @@
+use super::{data::ApplyOptionsEvent, OptionsRes};
+use crate::audio::ChangeVolumeEvent;
 use bevy::{
     prelude::{Commands, EventReader, EventWriter, Local, Query, Res, ResMut, With},
     ui::UiScale,
     window::{PrimaryWindow, Window, WindowMode},
 };
 use bevy_persistent::{Persistent, StorageFormat};
-
-use crate::audio::ChangeVolumeEvent;
-
-use super::{data::ApplyOptionsEvent, OptionsRes};
+use std::path::Path;
 
 /// Setup OptionsRes as a persistent resource
 pub(super) fn setup_options_res(mut cmds: Commands) {
-    let config_dir = dirs::config_dir().unwrap().join("thetawave_game_starter");
+    //let config_dir = dirs::config_dir().unwrap().join("thetawave_game_starter");
+    let config_dir = dirs::config_dir()
+        .map(|native_config_dir| native_config_dir.join("thetawave_game_starter"))
+        .unwrap_or(Path::new("local").join("configuration"));
     cmds.insert_resource(
         Persistent::<OptionsRes>::builder()
             .name("options")
