@@ -136,7 +136,6 @@ pub(super) fn menu_button_action_system(
                 if valid_input {
                     match button_action {
                         ButtonAction::EnterAppState(app_state) => {
-                            info!("here");
                             next_app_state.set(*app_state);
                             effect_events.send(AudioEffectEvent::MenuButtonConfirm);
                         }
