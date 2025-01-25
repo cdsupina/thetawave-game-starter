@@ -1,6 +1,7 @@
+use super::data::{CharactersResource, ChosenCharactersResource, PlayerStats};
 use crate::{
     assets::GameAssets,
-    input::{PlayerAbilities, PlayerAction},
+    input::{InputType, PlayerAbility, PlayerAction},
     options::OptionsRes,
     states::{AppState, Cleanup},
 };
@@ -8,7 +9,7 @@ use avian2d::prelude::{Collider, LinearVelocity, MaxLinearSpeed, RigidBody};
 use bevy::{
     core::Name,
     log::info,
-    prelude::{Commands, Query, Res},
+    prelude::{Commands, Query, Res, ResMut},
     utils::default,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseSpriteAnimation};
@@ -17,43 +18,61 @@ use bevy_persistent::Persistent;
 use leafwing_abilities::{prelude::CooldownState, AbilitiesBundle};
 use leafwing_input_manager::{prelude::ActionState, InputManagerBundle};
 
-use super::data::{CharactersResource, PlayerStats};
-
 /// Spawn a player controlled entity
 pub(super) fn spawn_players_system(
     mut cmds: Commands,
     assets: Res<GameAssets>,
     options_res: Res<Persistent<OptionsRes>>,
     characters_res: Res<CharactersResource>,
+    chosen_characters_res: Res<ChosenCharactersResource>,
 ) {
-    // Get the captain character for now until character selection is added
-    if let Some(character) = characters_res.characters.get("captain") {
-        cmds.spawn((
-            AseSpriteAnimation {
-                animation: Animation::tag("idle"),
-                aseprite: assets.captain_character_aseprite.clone(),
-            },
-            Cleanup::<AppState> {
-                states: vec![AppState::Game],
-            },
-            Collider::rectangle(
-                character.collider_dimensions.x,
-                character.collider_dimensions.y,
-            ),
-            RigidBody::Kinematic,
-            MaxLinearSpeed(character.max_speed),
-            InputManagerBundle::with_map(options_res.player_input_map.clone()),
-            InputManagerBundle::with_map(options_res.player_abilities_input_map.clone()),
-            AbilitiesBundle::<PlayerAbilities> {
-                cooldowns: character.cooldowns.clone(),
-                ..default()
-            },
-            PlayerStats {
-                acceleration: character.acceleration,
-                deceleration_factor: character.deceleration_factor,
-            },
-            Name::new("Player"),
-        ));
+    // Iterate through all of the chosen characters
+    for (player_num, chosen_character_data) in chosen_characters_res.players.iter() {
+        // Spawn a player using the CharacterData from the character type
+        if let Some(character_data) = characters_res
+            .characters
+            .get(&chosen_character_data.character)
+        {
+            cmds.spawn((
+                player_num.clone(),
+                AseSpriteAnimation {
+                    animation: Animation::tag("idle"),
+                    aseprite: assets.get_character_sprite(&chosen_character_data.character),
+                },
+                Cleanup::<AppState> {
+                    states: vec![AppState::Game],
+                },
+                Collider::rectangle(
+                    character_data.collider_dimensions.x,
+                    character_data.collider_dimensions.y,
+                ),
+                RigidBody::Kinematic,
+                MaxLinearSpeed(character_data.max_speed),
+                InputManagerBundle::with_map(match chosen_character_data.input {
+                    InputType::Keyboard => options_res.player_keyboard_input_map.clone(),
+                    InputType::Gamepad(entity) => options_res
+                        .player_gamepad_input_map
+                        .clone()
+                        .with_gamepad(entity),
+                }),
+                InputManagerBundle::with_map(match chosen_character_data.input {
+                    InputType::Keyboard => options_res.player_keyboard_abilities_input_map.clone(),
+                    InputType::Gamepad(entity) => options_res
+                        .player_gamepad_abilities_input_map
+                        .clone()
+                        .with_gamepad(entity),
+                }),
+                AbilitiesBundle::<PlayerAbility> {
+                    cooldowns: character_data.cooldowns.clone(),
+                    ..default()
+                },
+                PlayerStats {
+                    acceleration: character_data.acceleration,
+                    deceleration_factor: character_data.deceleration_factor,
+                },
+                Name::new("Player"),
+            ));
+        }
     }
 }
 
@@ -75,6 +94,7 @@ pub(super) fn player_move_system(
                 PlayerAction::Down => dir_vec.y -= 1.0,
                 PlayerAction::Left => dir_vec.x -= 1.0,
                 PlayerAction::Right => dir_vec.x += 1.0,
+                PlayerAction::Pause => {}
             }
         }
 
@@ -98,8 +118,8 @@ pub(super) fn player_move_system(
 /// System for activating player abilities when ready
 pub(super) fn player_ability_system(
     mut player_ability_q: Query<(
-        &mut CooldownState<PlayerAbilities>,
-        &ActionState<PlayerAbilities>,
+        &mut CooldownState<PlayerAbility>,
+        &ActionState<PlayerAbility>,
     )>,
 ) {
     for (mut cooldown_state, action_state) in player_ability_q.iter_mut() {
@@ -125,4 +145,11 @@ pub(super) fn player_ability_system(
             }
         }
     }
+}
+
+/// Reset the ChosenCharactersResource when entering the title state
+pub(super) fn reset_chosen_characters_resource_system(
+    mut chosen_characters_res: ResMut<ChosenCharactersResource>,
+) {
+    *chosen_characters_res = ChosenCharactersResource::default();
 }

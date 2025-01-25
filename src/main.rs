@@ -49,6 +49,7 @@ fn main() {
     ));
 
     if cfg!(feature = "world_inspector") {
+        println!("here");
         app.add_plugins(WorldInspectorPlugin::new());
     }
 

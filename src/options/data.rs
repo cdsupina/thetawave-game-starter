@@ -1,11 +1,11 @@
 use bevy::{
-    prelude::{Event, KeyCode, MouseButton, Resource},
+    prelude::{Event, GamepadButton, KeyCode, MouseButton, Resource},
     window::{WindowMode, WindowResolution},
 };
 use leafwing_input_manager::prelude::InputMap;
 use serde::{Deserialize, Serialize};
 
-use crate::input::{PlayerAbilities, PlayerAction};
+use crate::input::{CharacterCarouselAction, PlayerAbility, PlayerAction};
 
 // Resource for storing window options
 #[derive(Resource, Serialize, Deserialize, Clone)]
@@ -20,11 +20,19 @@ pub(crate) struct OptionsRes {
     pub music_volume: f64,
     pub effects_volume: f64,
     pub ui_volume: f64,
-    // Input map for the player
-    pub player_input_map: InputMap<PlayerAction>,
-    // Input map for player abilities
-    pub player_abilities_input_map: InputMap<PlayerAbilities>,
-    // All of the available resolutions
+    // Keyboard input map for the player
+    pub player_keyboard_input_map: InputMap<PlayerAction>,
+    // Keyboard input map for player abilities
+    pub player_keyboard_abilities_input_map: InputMap<PlayerAbility>,
+    // Gamepad input map for the player
+    pub player_gamepad_input_map: InputMap<PlayerAction>,
+    // Gamepad input map for player abilities
+    pub player_gamepad_abilities_input_map: InputMap<PlayerAbility>,
+    // Keyboard input map for the character carousel
+    pub carousel_keyboard_input_map: InputMap<CharacterCarouselAction>,
+    // Gamepad input map for the character carousel
+    pub carousel_gamepad_input_map: InputMap<CharacterCarouselAction>,
+    // All resolution options available in options
     resolutions: Vec<WindowResolution>,
 }
 
@@ -51,21 +59,52 @@ impl Default for OptionsRes {
             music_volume: 1.0,
             effects_volume: 1.0,
             ui_volume: 1.0,
-            player_input_map: InputMap::new([
+            player_keyboard_input_map: InputMap::new([
                 (PlayerAction::Up, KeyCode::KeyW),
                 (PlayerAction::Down, KeyCode::KeyS),
                 (PlayerAction::Left, KeyCode::KeyA),
                 (PlayerAction::Right, KeyCode::KeyD),
+                (PlayerAction::Pause, KeyCode::Escape),
             ]),
-            player_abilities_input_map: InputMap::new([
-                (PlayerAbilities::Utility, KeyCode::AltLeft),
-                (PlayerAbilities::Ultimate, KeyCode::Space),
+            player_keyboard_abilities_input_map: InputMap::new([
+                (PlayerAbility::Utility, KeyCode::AltLeft),
+                (PlayerAbility::Ultimate, KeyCode::Space),
             ])
             .insert_multiple([
-                (PlayerAbilities::BasicAttack, MouseButton::Left),
-                (PlayerAbilities::SecondaryAttack, MouseButton::Right),
+                (PlayerAbility::BasicAttack, MouseButton::Left),
+                (PlayerAbility::SecondaryAttack, MouseButton::Right),
             ])
             .to_owned(),
+            player_gamepad_input_map: InputMap::new([
+                (PlayerAction::Up, GamepadButton::DPadUp),
+                (PlayerAction::Down, GamepadButton::DPadDown),
+                (PlayerAction::Left, GamepadButton::DPadLeft),
+                (PlayerAction::Right, GamepadButton::DPadRight),
+                (PlayerAction::Pause, GamepadButton::Start),
+            ]),
+            player_gamepad_abilities_input_map: InputMap::new([
+                (PlayerAbility::BasicAttack, GamepadButton::South),
+                (PlayerAbility::SecondaryAttack, GamepadButton::East),
+                (PlayerAbility::Utility, GamepadButton::West),
+                (PlayerAbility::Ultimate, GamepadButton::North),
+            ]),
+            carousel_keyboard_input_map: InputMap::new([
+                (CharacterCarouselAction::CycleLeft, KeyCode::KeyA),
+                (CharacterCarouselAction::CycleRight, KeyCode::KeyD),
+                (CharacterCarouselAction::CycleLeft, KeyCode::ArrowLeft),
+                (CharacterCarouselAction::CycleRight, KeyCode::ArrowRight),
+                (CharacterCarouselAction::Ready, KeyCode::Enter),
+                (CharacterCarouselAction::Unready, KeyCode::Escape),
+            ]),
+            carousel_gamepad_input_map: InputMap::new([
+                (CharacterCarouselAction::CycleLeft, GamepadButton::DPadLeft),
+                (
+                    CharacterCarouselAction::CycleRight,
+                    GamepadButton::DPadRight,
+                ),
+                (CharacterCarouselAction::Ready, GamepadButton::South),
+                (CharacterCarouselAction::Unready, GamepadButton::East),
+            ]),
         }
     }
 }

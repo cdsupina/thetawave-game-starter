@@ -1,11 +1,11 @@
+use crate::{input::PlayerAction, player::PlayerNum};
+
 use super::{data::Cleanup, AppState, GameState, MainMenuState, PauseMenuState};
-use bevy::{
-    input::ButtonInput,
-    prelude::{
-        Commands, DespawnRecursiveExt, Entity, EventReader, KeyCode, NextState, Query, Res, ResMut,
-        State, StateTransitionEvent, States,
-    },
+use bevy::prelude::{
+    Commands, DespawnRecursiveExt, Entity, EventReader, NextState, Query, Res, ResMut, State,
+    StateTransitionEvent, States,
 };
+use leafwing_input_manager::prelude::ActionState;
 
 /// A system that cleans up entities after exiting states
 pub(super) fn cleanup_state_system<S: States>(
@@ -68,22 +68,26 @@ pub(super) fn enter_title_menu_state_system(mut next_state: ResMut<NextState<Mai
 }
 
 /// Toggle weather the game is paused or playing
+/// Only player one can pause
 pub(super) fn toggle_game_state(
     mut next_game_state: ResMut<NextState<GameState>>,
     mut next_pause_state: ResMut<NextState<PauseMenuState>>,
     current_state: Res<State<GameState>>,
-    keys: Res<ButtonInput<KeyCode>>,
+    player_action_q: Query<(&PlayerNum, &ActionState<PlayerAction>)>,
 ) {
-    if keys.just_released(KeyCode::Escape) {
-        match **current_state {
-            GameState::Playing => {
-                next_game_state.set(GameState::Paused);
-                next_pause_state.set(PauseMenuState::Main);
-            }
-            GameState::Paused => {
-                next_game_state.set(GameState::Playing);
-                next_pause_state.set(PauseMenuState::None);
-            }
-        };
+    for (player_num, player_action) in player_action_q.iter() {
+        if matches!(player_num, PlayerNum::One) && player_action.just_released(&PlayerAction::Pause)
+        {
+            match **current_state {
+                GameState::Playing => {
+                    next_game_state.set(GameState::Paused);
+                    next_pause_state.set(PauseMenuState::Main);
+                }
+                GameState::Paused => {
+                    next_game_state.set(GameState::Playing);
+                    next_pause_state.set(PauseMenuState::None);
+                }
+            };
+        }
     }
 }
