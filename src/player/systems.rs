@@ -94,6 +94,7 @@ pub(super) fn player_move_system(
                 PlayerAction::Down => dir_vec.y -= 1.0,
                 PlayerAction::Left => dir_vec.x -= 1.0,
                 PlayerAction::Right => dir_vec.x += 1.0,
+                PlayerAction::Pause => {}
             }
         }
 

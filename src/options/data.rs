@@ -64,6 +64,7 @@ impl Default for OptionsRes {
                 (PlayerAction::Down, KeyCode::KeyS),
                 (PlayerAction::Left, KeyCode::KeyA),
                 (PlayerAction::Right, KeyCode::KeyD),
+                (PlayerAction::Pause, KeyCode::Escape),
             ]),
             player_keyboard_abilities_input_map: InputMap::new([
                 (PlayerAbility::Utility, KeyCode::AltLeft),
@@ -79,6 +80,7 @@ impl Default for OptionsRes {
                 (PlayerAction::Down, GamepadButton::DPadDown),
                 (PlayerAction::Left, GamepadButton::DPadLeft),
                 (PlayerAction::Right, GamepadButton::DPadRight),
+                (PlayerAction::Pause, GamepadButton::Start),
             ]),
             player_gamepad_abilities_input_map: InputMap::new([
                 (PlayerAbility::BasicAttack, GamepadButton::South),

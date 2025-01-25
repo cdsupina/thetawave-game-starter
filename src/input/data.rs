@@ -11,6 +11,7 @@ pub(crate) enum PlayerAction {
     Down,
     Left,
     Right,
+    Pause,
 }
 
 /// Abilities for player entities
