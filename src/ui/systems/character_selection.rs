@@ -499,12 +499,6 @@ pub(in crate::ui) fn spawn_join_prompt_system(
                     cmds.entity(entity)
                         .insert(Node {
                             flex_direction: FlexDirection::Row,
-                            margin: UiRect::new(
-                                Val::Px(1.0),
-                                Val::Px(1.0),
-                                Val::Px(20.0),
-                                Val::Px(1.0),
-                            ),
                             ..default()
                         })
                         .with_children(|parent| {
