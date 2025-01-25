@@ -585,20 +585,36 @@ pub(in crate::ui) fn carousel_input_system(
     mut player_ready_events: EventWriter<PlayerReadyEvent>,
     time: Res<Time>,
     mut effect_events: EventWriter<AudioEffectEvent>,
+    ready_button_q: Query<&ButtonAction, With<PlayerReadyButton>>,
 ) {
     for (mut carousel, carousel_action, player_num, mut ready_timer) in carousel_q.iter_mut() {
         // Advance the ready timer
         ready_timer.0.tick(time.delta());
 
+        // Determine if the carousel can cycle by checking the state of the ready button
+        let mut can_cycle = true;
+
+        for button_action in ready_button_q.iter() {
+            if let ButtonAction::UnReady(button_player_num) = button_action {
+                if player_num == button_player_num {
+                    can_cycle = false;
+                }
+            }
+        }
+
         for action in carousel_action.get_just_pressed().iter() {
             match action {
                 CharacterCarouselAction::CycleLeft => {
-                    carousel.cycle_left();
-                    effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                    if can_cycle {
+                        carousel.cycle_left();
+                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                    }
                 }
                 CharacterCarouselAction::CycleRight => {
-                    carousel.cycle_right();
-                    effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                    if can_cycle {
+                        carousel.cycle_right();
+                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                    }
                 }
                 CharacterCarouselAction::Ready => {
                     // Only let player ready after a the timer is complete
