@@ -12,3 +12,6 @@ rustflags = [
     # (Nightly) Make the current crate share its generic instantiations
     "-Zshare-generics=y",
 ]
+
+[target.wasm32-unknown-unknown]
+runner = "wasm-server-runner"
