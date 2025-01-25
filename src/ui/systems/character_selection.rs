@@ -170,17 +170,14 @@ pub(in crate::ui) fn spawn_carousel_system(
                         .spawn((
                             Node {
                                 flex_direction: FlexDirection::Column,
-                                align_items: AlignItems::Center,
-                                justify_content: JustifyContent::End,
+                                justify_content: JustifyContent::Center,
                                 ..default()
                             },
-                            BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.5)),
                             Name::new(format!("Left Arrow Button {}", player_num.as_ref())),
                         ))
                         .with_child((
                             Node {
-                                width: Val::Px(108.0),
-                                height: Val::Px(48.0),
+                                height: Val::Px(40.0),
                                 ..default()
                             },
                             AseUiAnimation {
@@ -194,14 +191,14 @@ pub(in crate::ui) fn spawn_carousel_system(
                         Node {
                             justify_content: JustifyContent::Center,
                             align_items: AlignItems::Center,
-                            width: Val::Percent(100.0),
+                            width: Val::Percent(45.0),
                             ..default()
                         },
-                        BackgroundColor(Color::srgba(0.5, 0.0, 0.0, 0.5)),
                         player_num.clone(),
                         carousel.clone(),
                     ));
 
+                    // Add input manager for non-player one carousels
                     if !matches!(player_num, PlayerNum::One) {
                         carousel_builder.insert((
                             InputManagerBundle::with_map(match event.input {
@@ -226,7 +223,7 @@ pub(in crate::ui) fn spawn_carousel_system(
                                     .with_color(Color::default().with_alpha(0.5)),
                                 Node {
                                     width: Val::Percent(30.0),
-                                    margin: UiRect::all(Val::Px(15.0)),
+                                    margin: UiRect::all(Val::Percent(3.0)),
                                     ..default()
                                 },
                             ));
@@ -242,7 +239,7 @@ pub(in crate::ui) fn spawn_carousel_system(
                                 ),
                                 Node {
                                     width: Val::Percent(40.0),
-                                    margin: UiRect::all(Val::Px(15.0)),
+                                    margin: UiRect::all(Val::Percent(3.0)),
                                     ..default()
                                 },
                             ));
@@ -257,7 +254,7 @@ pub(in crate::ui) fn spawn_carousel_system(
                                     .with_color(Color::default().with_alpha(0.5)),
                                 Node {
                                     width: Val::Percent(30.0),
-                                    margin: UiRect::all(Val::Px(15.0)),
+                                    margin: UiRect::all(Val::Percent(3.0)),
                                     ..default()
                                 },
                             ));
@@ -271,17 +268,14 @@ pub(in crate::ui) fn spawn_carousel_system(
                         .spawn((
                             Node {
                                 flex_direction: FlexDirection::Column,
-                                align_items: AlignItems::Center,
-                                justify_content: JustifyContent::End,
+                                justify_content: JustifyContent::Center,
                                 ..default()
                             },
-                            BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.5)),
                             Name::new(format!("Right Arrow Button {}", player_num.as_ref())),
                         ))
                         .with_child((
                             Node {
-                                width: Val::Px(108.0),
-                                height: Val::Px(48.0),
+                                height: Val::Px(40.0),
                                 ..default()
                             },
                             AseUiAnimation {
