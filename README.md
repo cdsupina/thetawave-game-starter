@@ -25,7 +25,7 @@ It contains all the required features of a Thetawave style game.
 - [x] Local Multiplayer
 - [ ] Win and Loss Screens
 - [ ] Logo Splash Screens
-- [ ] WASM Deployment
+- [x] WASM Deployment
 
 # Build and Run
 ## Download Assets
