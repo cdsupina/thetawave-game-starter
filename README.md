@@ -12,7 +12,7 @@ It contains all the required features of a Thetawave style game.
 - [x] Exit Game
 - [x] Embedded Assets
 - [x] Loading Screens
-- [ ] Character Selection
+- [x] Character Selection
 - [x] Pause Menu
 - [ ] Persistence
   - [x] Save and load settings
@@ -22,7 +22,7 @@ It contains all the required features of a Thetawave style game.
   - [x] Effects Channel
   - [x] Ui Channel
 - [x] 2D Physics
-- [ ] Local Multiplayer
+- [x] Local Multiplayer
 - [ ] Win and Loss Screens
 - [ ] Logo Splash Screens
 - [ ] WASM Deployment
