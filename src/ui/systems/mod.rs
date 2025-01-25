@@ -55,7 +55,6 @@ pub(super) fn menu_button_focus_system(
                             if matches!(button_state, MenuButtonState::Ready) {
                                 ase_animation.animation.play_loop("ready_pressed");
                             } else {
-                                info!("Changing menu button to pressed");
                                 ase_animation.animation.play_loop("pressed");
                             }
                         }
@@ -137,6 +136,7 @@ pub(super) fn menu_button_action_system(
                 if valid_input {
                     match button_action {
                         ButtonAction::EnterAppState(app_state) => {
+                            info!("here");
                             next_app_state.set(*app_state);
                             effect_events.send(AudioEffectEvent::MenuButtonConfirm);
                         }
