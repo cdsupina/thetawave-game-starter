@@ -50,3 +50,8 @@ Do not use default features for release build so that dynamic linking is disable
 ```bash
 cargo build --release --no-default-features
 ```
+
+## WASM
+```bash
+cargo run --release --no-default-features --target wasm32-unknown-unknown
+```
