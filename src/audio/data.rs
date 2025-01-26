@@ -33,7 +33,7 @@ pub(crate) struct ChangeVolumeEvent {
 /// Event for playing ui and effect evens
 #[derive(Event)]
 pub(crate) enum AudioEffectEvent {
-    MenuButtonPressed,  // ui channel
+    MenuButtonSelected, // ui channel
     MenuButtonReleased, // ui channel
     MenuButtonConfirm,  // ui channel
 }

@@ -55,7 +55,7 @@ pub(super) fn play_effect_system(
         // play all audio effect events in queue on correct channel
         for event in effect_events.read() {
             match event {
-                AudioEffectEvent::MenuButtonPressed => {
+                AudioEffectEvent::MenuButtonSelected => {
                     ui_audio_channel
                         .play(app_audio_assets.get_random_button_press_effect())
                         .with_volume(ui_volume);

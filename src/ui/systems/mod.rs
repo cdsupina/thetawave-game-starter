@@ -47,15 +47,15 @@ pub(super) fn menu_button_focus_system(
                 // Handle newly focused button
                 if let Ok((children, button_state)) = focusable_q.get(*to.first()) {
                     // Play pressed button effect
-                    audio_effect_events.send(AudioEffectEvent::MenuButtonPressed);
+                    audio_effect_events.send(AudioEffectEvent::MenuButtonSelected);
 
                     // Update the button animation
                     for child in children.iter() {
                         if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
                             if matches!(button_state, MenuButtonState::Ready) {
-                                ase_animation.animation.play_loop("ready_pressed");
+                                ase_animation.animation.play_loop("ready_selected");
                             } else {
-                                ase_animation.animation.play_loop("pressed");
+                                ase_animation.animation.play_loop("selected");
                             }
                         }
                     }

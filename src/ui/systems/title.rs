@@ -29,9 +29,9 @@ pub(in crate::ui) fn website_footer_button_focus_system(
 ) {
     for event in nav_events.read() {
         if let NavEvent::FocusChanged { to, from } = event {
-            // Set newly focused button to pressed animation
+            // Set newly focused button to selected animation
             if let Ok(mut ase_animation) = focusable_q.get_mut(*to.first()) {
-                ase_animation.animation.play_loop("pressed");
+                ase_animation.animation.play_loop("selected");
             }
 
             // Set previously focused button to released animation

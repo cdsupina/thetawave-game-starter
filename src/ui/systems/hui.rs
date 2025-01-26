@@ -163,9 +163,9 @@ fn setup_menu_button_sprite(
     if let Ok(tags) = tags.get(entity) {
         // Check if this is marked as the first button
         if let Some(first_str) = tags.get("first") {
-            // Change the menu button animation to "pressed"
+            // Change the menu button animation to "selected"
             if first_str == "true" {
-                animation = Animation::tag("pressed");
+                animation = Animation::tag("selected");
             }
         } else {
             warn!("No tag \"first\" found for {entity}. Please insert a tag indicating whether the button should be the first button to focus.");
