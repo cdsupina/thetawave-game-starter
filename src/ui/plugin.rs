@@ -1,5 +1,5 @@
 use super::{
-    data::{PlayerJoinEvent, PlayerReadyEvent},
+    data::{DelayedButtonPressEvent, PlayerJoinEvent, PlayerReadyEvent},
     systems::{
         character_selection::{
             additional_players_join_system, carousel_input_system,
@@ -10,7 +10,7 @@ use super::{
         },
         hui::setup_hui_system,
         loading::{setup_loading_ui_system, update_loading_bar_system},
-        menu_button_action_system, menu_button_focus_system,
+        menu_button_action_system, menu_button_delayed_action_system, menu_button_focus_system,
         options::{options_menu_system, persist_options_system, setup_options_menu_system},
         pause::{setup_pause_menu_system, setup_pause_options_system},
         title::{setup_title_menu_system, website_footer_button_focus_system},
@@ -35,6 +35,7 @@ impl Plugin for ThetawaveUiPlugin {
         app.add_plugins((HuiPlugin, EguiPlugin))
             .add_event::<PlayerJoinEvent>()
             .add_event::<PlayerReadyEvent>()
+            .add_event::<DelayedButtonPressEvent>()
             .add_systems(OnEnter(AppState::MainMenuLoading), setup_loading_ui_system)
             // Setup core UI components and main menu systems when entering the MainMenu state
             .add_systems(OnEnter(AppState::MainMenu), setup_hui_system)
@@ -58,6 +59,7 @@ impl Plugin for ThetawaveUiPlugin {
                     menu_button_action_system.after(NavRequestSystem),
                     menu_button_focus_system.after(NavRequestSystem),
                     website_footer_button_focus_system.after(NavRequestSystem),
+                    menu_button_delayed_action_system,
                     update_loading_bar_system
                         .run_if(
                             in_state(AppState::MainMenuLoading).or(in_state(AppState::GameLoading)),

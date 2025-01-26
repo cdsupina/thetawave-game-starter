@@ -200,3 +200,16 @@ impl CarouselReadyTimer {
         Self(Timer::from_seconds(0.5, TimerMode::Once))
     }
 }
+
+/// Event for passing ButtonActions to an event for a delayed action
+#[derive(Event)]
+pub(super) struct DelayedButtonPressEvent(pub ButtonAction);
+
+/// Timer for delaying button actions for button press animation
+pub(super) struct ButtonActionTimer(pub Timer);
+
+impl Default for ButtonActionTimer {
+    fn default() -> Self {
+        Self(Timer::from_seconds(0.5, TimerMode::Repeating))
+    }
+}
