@@ -1,5 +1,5 @@
 use super::data::{
-    ButtonAction, ButtonActionTimer, CarouselSlotPosition, CharacterCarousel,
+    ButtonAction, ButtonActionDelayTimer, CarouselSlotPosition, CharacterCarousel,
     DelayedButtonPressEvent, LoadingBar, MenuButtonState, PlayerJoinEvent, PlayerReadyEvent,
     VisibleCarouselSlot,
 };
@@ -88,7 +88,7 @@ pub(super) fn menu_button_focus_system(
 /// If a player one has been registered, will only activate button actions from player one
 pub(super) fn menu_button_action_system(
     mut nav_events: EventReader<NavEvent>,
-    focusable_q: Query<&ButtonAction, With<Focusable>>,
+    focusable_q: Query<(Entity, &ButtonAction), With<Focusable>>,
     mut effect_events: EventWriter<AudioEffectEvent>,
     key_code_input: Res<ButtonInput<KeyCode>>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
@@ -100,7 +100,7 @@ pub(super) fn menu_button_action_system(
 ) {
     for event in nav_events.read() {
         if let NavEvent::NoChanges { from, .. } = event {
-            if let Ok(button_action) = focusable_q.get(*from.first()) {
+            if let Ok((button_entity, button_action)) = focusable_q.get(*from.first()) {
                 // Try to get the input from gamepad
                 let gamepad_input = gamepads_q.iter().find_map(|(entity, gamepad)| {
                     if gamepad.just_pressed(GamepadButton::South) {
@@ -153,8 +153,10 @@ pub(super) fn menu_button_action_system(
                                 });
                             }
                             _ => {
-                                button_action_events
-                                    .send(DelayedButtonPressEvent(button_action.clone()));
+                                button_action_events.send(DelayedButtonPressEvent {
+                                    button_action: button_action.clone(),
+                                    button_entity,
+                                });
                             }
                         }
 
@@ -169,7 +171,7 @@ pub(super) fn menu_button_action_system(
 
 pub(super) fn menu_button_delayed_action_system(
     mut button_press_events: EventReader<DelayedButtonPressEvent>,
-    mut button_action_timer: Local<ButtonActionTimer>,
+    mut button_action_timer: Local<ButtonActionDelayTimer>,
     mut queued_button_action: Local<Option<ButtonAction>>,
     time: Res<Time>,
     mut next_main_menu_state: ResMut<NextState<MainMenuState>>,
@@ -178,6 +180,8 @@ pub(super) fn menu_button_delayed_action_system(
     mut next_pause_state: ResMut<NextState<PauseMenuState>>,
     mut exit_events: EventWriter<AppExit>,
     mut apply_options_events: EventWriter<ApplyOptionsEvent>,
+    focusable_q: Query<&Children, With<Focusable>>,
+    mut ase_q: Query<&mut AseUiAnimation>,
 ) {
     // Check if there is a queued button action
     if let Some(button_action) = queued_button_action.clone() {
@@ -217,7 +221,16 @@ pub(super) fn menu_button_delayed_action_system(
         }
     } else if let Some(event) = button_press_events.read().next() {
         // Queue a button action if an event was sent while the queue is empty
-        *queued_button_action = Some(event.0.clone());
+        *queued_button_action = Some(event.button_action.clone());
+
+        // Change the sprite of the button
+        if let Ok(children) = focusable_q.get(event.button_entity) {
+            for child in children.iter() {
+                if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
+                    ase_animation.animation.play_loop("pressed");
+                }
+            }
+        }
     }
 }
 
