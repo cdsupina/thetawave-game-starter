@@ -1,6 +1,7 @@
 use super::{
     systems::{
-        disable_additional_players_navigation_system, enable_additional_players_navigation_system,
+        disable_additional_players_navigation_system, disable_horizontal_navigation_system,
+        enable_additional_players_navigation_system, enable_horizontal_navigation_system,
         setup_input_system,
     },
     CharacterCarouselAction, PlayerAbility, PlayerAction,
@@ -8,7 +9,7 @@ use super::{
 use crate::states::MainMenuState;
 use bevy::{
     app::{Plugin, Startup, Update},
-    prelude::{in_state, IntoSystemConfigs, OnEnter},
+    prelude::{in_state, IntoSystemConfigs, OnEnter, OnExit},
 };
 use bevy_alt_ui_navigation_lite::DefaultNavigationPlugins;
 use leafwing_abilities::plugin::AbilityPlugin;
@@ -35,6 +36,14 @@ impl Plugin for ThetawaveInputPlugin {
             .add_systems(
                 OnEnter(MainMenuState::Title),
                 enable_additional_players_navigation_system,
+            )
+            .add_systems(
+                OnEnter(MainMenuState::CharacterSelection),
+                disable_horizontal_navigation_system,
+            )
+            .add_systems(
+                OnExit(MainMenuState::CharacterSelection),
+                enable_horizontal_navigation_system,
             );
     }
 }

@@ -67,6 +67,28 @@ pub(super) fn disable_additional_players_navigation_system(
 pub(super) fn enable_additional_players_navigation_system(mut input_mapping: ResMut<InputMapping>) {
     input_mapping.focus_follows_mouse = true;
     input_mapping.keyboard_navigation = true;
-    input_mapping.mouse_action = MouseButton::Left;
+    input_mapping.mouse_action = InputMapping::default().mouse_action;
     input_mapping.gamepads = vec![];
+}
+
+/// Disable horizontal focusable navigation by setting inputs unidentified or large extreme
+pub(super) fn disable_horizontal_navigation_system(mut input_mapping: ResMut<InputMapping>) {
+    input_mapping.key_left = KeyCode::Unidentified(NativeKeyCode::Unidentified);
+    input_mapping.key_left_alt = KeyCode::Unidentified(NativeKeyCode::Unidentified);
+    input_mapping.key_right = KeyCode::Unidentified(NativeKeyCode::Unidentified);
+    input_mapping.key_right_alt = KeyCode::Unidentified(NativeKeyCode::Unidentified);
+    input_mapping.left_button = GamepadButton::Other(255);
+    input_mapping.right_button = GamepadButton::Other(255);
+}
+
+/// Reset horizontal navigation inputs to default
+pub(super) fn enable_horizontal_navigation_system(mut input_mapping: ResMut<InputMapping>) {
+    let default_input = InputMapping::default();
+
+    input_mapping.key_left = default_input.key_left;
+    input_mapping.key_left_alt = default_input.key_left_alt;
+    input_mapping.key_right = default_input.key_right;
+    input_mapping.key_right_alt = default_input.key_right_alt;
+    input_mapping.left_button = default_input.left_button;
+    input_mapping.right_button = default_input.right_button;
 }
