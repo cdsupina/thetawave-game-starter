@@ -22,7 +22,7 @@ use bevy::{
     },
     text::TextFont,
     time::Time,
-    ui::{AlignItems, BackgroundColor, FlexDirection, JustifyContent, Node, UiRect, Val},
+    ui::{AlignItems, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
 use bevy_alt_ui_navigation_lite::prelude::Focusable;
@@ -78,22 +78,22 @@ pub(in crate::ui) fn cycle_player_one_carousel_system(
                                 || keys.just_pressed(KeyCode::KeyA)
                             {
                                 carousel.cycle_left();
-                                effect_events.send(AudioEffectEvent::MenuButtonPressed);
+                                effect_events.send(AudioEffectEvent::MenuButtonSelected);
                             } else if keys.just_pressed(KeyCode::ArrowRight)
                                 || keys.just_pressed(KeyCode::KeyD)
                             {
                                 carousel.cycle_right();
-                                effect_events.send(AudioEffectEvent::MenuButtonPressed);
+                                effect_events.send(AudioEffectEvent::MenuButtonSelected);
                             }
                         }
                         InputType::Gamepad(entity) => {
                             if let Ok(gamepad) = gamepads_q.get(entity) {
                                 if gamepad.just_pressed(GamepadButton::DPadLeft) {
                                     carousel.cycle_left();
-                                    effect_events.send(AudioEffectEvent::MenuButtonPressed);
+                                    effect_events.send(AudioEffectEvent::MenuButtonSelected);
                                 } else if gamepad.just_pressed(GamepadButton::DPadRight) {
                                     carousel.cycle_right();
-                                    effect_events.send(AudioEffectEvent::MenuButtonPressed);
+                                    effect_events.send(AudioEffectEvent::MenuButtonSelected);
                                 }
                             }
                         }
@@ -329,7 +329,7 @@ pub(in crate::ui) fn spawn_ready_button_system(
                                         AseUiAnimation {
                                             animation: if matches!(event.player_num, PlayerNum::One)
                                             {
-                                                Animation::tag("pressed")
+                                                Animation::tag("selected")
                                             } else {
                                                 Animation::tag("released")
                                             },
@@ -392,9 +392,9 @@ pub(in crate::ui) fn lock_in_player_button_system(
                         for child in children.iter() {
                             if let Ok(mut ase_animation) = button_sprite_q.get_mut(*child) {
                                 if event.is_ready {
-                                    ase_animation.animation = Animation::tag("ready_pressed");
+                                    ase_animation.animation = Animation::tag("ready_selected");
                                 } else {
-                                    ase_animation.animation = Animation::tag("pressed");
+                                    ase_animation.animation = Animation::tag("selected");
                                 }
                             }
                         }

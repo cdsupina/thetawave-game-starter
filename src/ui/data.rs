@@ -4,7 +4,7 @@ use crate::{
     states::{AppState, GameState, MainMenuState, PauseMenuState},
 };
 use bevy::{
-    prelude::{Component, Event},
+    prelude::{Component, Entity, Event},
     time::{Timer, TimerMode},
 };
 use strum::IntoEnumIterator;
@@ -24,6 +24,9 @@ pub(super) enum ButtonAction {
     Ready(PlayerNum),
     UnReady(PlayerNum),
 }
+
+const BUTTON_ACTION_DELAY_TIME: f32 = 0.3;
+const CAROUSEL_READY_TIME: f32 = 0.5;
 
 /// Used for converting strings from hui tags into button actions
 impl TryFrom<&String> for ButtonAction {
@@ -197,6 +200,25 @@ pub(super) struct CarouselReadyTimer(pub Timer);
 
 impl CarouselReadyTimer {
     pub(super) fn new() -> Self {
-        Self(Timer::from_seconds(0.5, TimerMode::Once))
+        Self(Timer::from_seconds(CAROUSEL_READY_TIME, TimerMode::Once))
+    }
+}
+
+/// Event for passing ButtonActions to an event for a delayed action
+#[derive(Event, Clone)]
+pub(super) struct DelayedButtonPressEvent {
+    pub button_action: ButtonAction,
+    pub button_entity: Entity,
+}
+
+/// Timer for delaying button actions for button press animation
+pub(super) struct ButtonActionDelayTimer(pub Timer);
+
+impl Default for ButtonActionDelayTimer {
+    fn default() -> Self {
+        Self(Timer::from_seconds(
+            BUTTON_ACTION_DELAY_TIME,
+            TimerMode::Repeating,
+        ))
     }
 }
