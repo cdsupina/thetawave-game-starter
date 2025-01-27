@@ -18,6 +18,9 @@ mod player;
 mod states;
 mod ui;
 
+const PRIMARY_WINDOW_TITLE: &str = "Thetawave Starter Template";
+const STARTING_WINDOW_RESOLUTION: (f32, f32) = (1280.0, 720.0);
+
 fn main() {
     let mut app = App::new();
 
@@ -28,9 +31,10 @@ fn main() {
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     mode: WindowMode::Windowed,
-                    resolution: WindowResolution::new(1280.0, 720.0)
+                    resolution: WindowResolution::from(STARTING_WINDOW_RESOLUTION)
                         .with_scale_factor_override(1.0),
                     resizable: false,
+                    title: PRIMARY_WINDOW_TITLE.to_string(),
                     ..default()
                 }),
                 ..default()
