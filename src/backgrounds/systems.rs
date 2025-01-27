@@ -189,7 +189,7 @@ fn spawn_star(
             meshes.add(
                 Sphere::new(rng.gen_range(STAR_RADIUS_RANGE))
                     .mesh()
-                    .uv(32, 18),
+                    .uv(14, 9),
             ),
         ),
         Transform::from_translation(pos),

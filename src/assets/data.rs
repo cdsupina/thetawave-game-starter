@@ -296,6 +296,7 @@ pub(crate) struct BackgroundAssets {
             "media/models/planets/Planet_98.glb#Scene0",
             "media/models/planets/Planet_99.glb#Scene0",
             "media/models/planets/Planet_100.glb#Scene0",
+            "media/models/planets/Planet_101.glb#Scene0",
         ),
         collection(typed)
     )]
