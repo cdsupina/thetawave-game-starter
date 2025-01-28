@@ -13,7 +13,7 @@ use super::{
         menu_button_action_system, menu_button_delayed_action_system, menu_button_focus_system,
         options::{options_menu_system, persist_options_system, setup_options_menu_system},
         pause::{setup_pause_menu_system, setup_pause_options_system},
-        title::{setup_title_menu_system, website_footer_button_focus_system},
+        title::{spawn_title_menu_system, website_footer_button_focus_system},
     },
 };
 use crate::states::{AppState, MainMenuState, PauseMenuState};
@@ -40,7 +40,7 @@ impl Plugin for ThetawaveUiPlugin {
             // Setup core UI components and main menu systems when entering the MainMenu state
             .add_systems(OnEnter(AppState::MainMenu), setup_hui_system)
             // Initialize and setup the title menu UI components when entering Title state
-            .add_systems(OnEnter(MainMenuState::Title), setup_title_menu_system)
+            .add_systems(OnEnter(MainMenuState::Title), spawn_title_menu_system)
             // Initialize and setup the options menu UI components when entering Options state
             .add_systems(OnEnter(MainMenuState::Options), setup_options_menu_system)
             // Initialize and setup the character selection UI components when entering Character Selection state

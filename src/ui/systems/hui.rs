@@ -29,7 +29,6 @@ pub(in crate::ui) fn setup_hui_system(
         "menu_button_sprite",
         ui_assets.menu_button_sprite_html.clone(),
     );
-    html_comps.register("thetawave_logo", ui_assets.thetawave_logo_html.clone());
     html_comps.register(
         "character_selector",
         ui_assets.character_selector_html.clone(),
@@ -38,7 +37,6 @@ pub(in crate::ui) fn setup_hui_system(
 
     // Register bevy_hui functions
     html_funcs.register("setup_menu_button", setup_menu_button);
-    html_funcs.register("setup_title_logo", setup_title_logo);
     html_funcs.register("setup_menu_button_sprite", setup_menu_button_sprite);
     html_funcs.register("setup_website_footer_button", setup_website_footer_button);
     html_funcs.register("setup_join_prompt", setup_join_prompt);
@@ -196,17 +194,6 @@ fn setup_menu_button_sprite(
             aseprite: ui_assets.menu_button_aseprite.clone(),
         },
         Name::new("Menu Button Sprite"),
-    ));
-}
-
-/// Sets up the title logo animation for the game's main menu
-fn setup_title_logo(In(entity): In<Entity>, mut cmds: Commands, ui_assets: Res<UiAssets>) {
-    cmds.entity(entity).insert((
-        AseUiAnimation {
-            animation: Animation::tag("title").with_speed(1.25),
-            aseprite: ui_assets.thetawave_logo_aseprite.clone(),
-        },
-        Name::new("Title Logo"),
     ));
 }
 
