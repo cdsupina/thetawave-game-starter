@@ -1,7 +1,7 @@
 use bevy::{prelude::NonSend, winit::WinitWindows};
 use winit::window::Icon;
 
-/// Ser the image for the window icon
+/// Set the image for the window icon
 pub(super) fn set_window_icon_system(
     // we have to use `NonSend` here
     windows: NonSend<WinitWindows>,
