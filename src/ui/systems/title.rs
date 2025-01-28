@@ -67,17 +67,24 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
             .with_children(|parent| {
                 // Menu buttons
                 // Play Button
-                parent.spawn((
-                    Node {
-                        margin: UiRect::all(Val::Vh(1.0)),
-                        ..default()
-                    },
-                    ButtonAction::EnterMainMenuState(MainMenuState::CharacterSelection),
-                    MenuButtonState::Normal,
-                    Focusable::default(),
-                ));
+                parent
+                    .spawn((
+                        Name::new("Play Menu Button"),
+                        Node {
+                            margin: UiRect::all(Val::Vh(1.0)),
+                            ..default()
+                        },
+                        ButtonAction::EnterMainMenuState(MainMenuState::CharacterSelection),
+                        MenuButtonState::Normal,
+                        Focusable::default(),
+                    ))
+                    .with_children(|parent| {
+                        // Button Sprite
+                        parent.spawn();
+                    });
                 // Options Button
                 parent.spawn((
+                    Name::new("Options Menu Button"),
                     Node {
                         margin: UiRect::all(Val::Vh(1.0)),
                         ..default()
@@ -88,6 +95,7 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
                 ));
                 // Exit Button
                 parent.spawn((
+                    Name::new("Exit Menu Button"),
                     Node {
                         margin: UiRect::all(Val::Vh(1.0)),
                         ..default()
