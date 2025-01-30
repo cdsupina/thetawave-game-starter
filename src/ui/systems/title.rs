@@ -1,10 +1,10 @@
-use crate::ui::data::{ButtonAction, MenuButtonState};
+use crate::ui::data::ButtonAction;
 
-use super::{Cleanup, MainMenuState, UiAssets};
+use super::{ChildBuilderExt, Cleanup, MainMenuState, UiAssets};
 use bevy::{
     core::Name,
     prelude::{BuildChildren, ChildBuild, Commands, EventReader, Query, Res, With},
-    ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
+    ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, Val},
     utils::default,
 };
 use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
@@ -65,45 +65,22 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
                 ..default()
             })
             .with_children(|parent| {
-                // Menu buttons
                 // Play Button
-                parent
-                    .spawn((
-                        Name::new("Play Menu Button"),
-                        Node {
-                            margin: UiRect::all(Val::Vh(1.0)),
-                            ..default()
-                        },
-                        ButtonAction::EnterMainMenuState(MainMenuState::CharacterSelection),
-                        MenuButtonState::Normal,
-                        Focusable::default(),
-                    ))
-                    .with_children(|parent| {
-                        // Button Sprite
-                        parent.spawn();
-                    });
+                parent.spawn_menu_button(
+                    &ui_assets,
+                    ButtonAction::EnterMainMenuState(MainMenuState::CharacterSelection),
+                    300.0,
+                    true,
+                );
                 // Options Button
-                parent.spawn((
-                    Name::new("Options Menu Button"),
-                    Node {
-                        margin: UiRect::all(Val::Vh(1.0)),
-                        ..default()
-                    },
+                parent.spawn_menu_button(
+                    &ui_assets,
                     ButtonAction::EnterMainMenuState(MainMenuState::Options),
-                    MenuButtonState::Normal,
-                    Focusable::default(),
-                ));
+                    300.0,
+                    false,
+                );
                 // Exit Button
-                parent.spawn((
-                    Name::new("Exit Menu Button"),
-                    Node {
-                        margin: UiRect::all(Val::Vh(1.0)),
-                        ..default()
-                    },
-                    ButtonAction::Exit,
-                    MenuButtonState::Normal,
-                    Focusable::default(),
-                ));
+                parent.spawn_menu_button(&ui_assets, ButtonAction::Exit, 300.0, false);
             });
     });
 }

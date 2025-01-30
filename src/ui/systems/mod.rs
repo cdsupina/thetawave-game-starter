@@ -13,15 +13,20 @@ use crate::{
 };
 use bevy::{
     app::AppExit,
+    core::Name,
+    hierarchy::{BuildChildren, ChildBuild, ChildBuilder},
     input::ButtonInput,
     prelude::{
         Children, Entity, EventReader, EventWriter, Gamepad, GamepadButton, KeyCode, Local,
         MouseButton, NextState, Query, Res, ResMut, With,
     },
+    text::TextFont,
     time::Time,
+    ui::{widget::Text, FlexDirection, JustifyContent, Node, UiRect, Val},
+    utils::default,
 };
 use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
-use bevy_aseprite_ultra::prelude::AseUiAnimation;
+use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
 use log::{info, warn};
 
 pub(super) mod character_selection;
@@ -243,5 +248,70 @@ fn open_website(url: &str) {
     } else {
         // If opening the URL has failed, it is logged as a warning.
         warn!("Failed to open website: {url}");
+    }
+}
+
+trait ChildBuilderExt {
+    fn spawn_menu_button(
+        &mut self,
+        ui_assets: &UiAssets,
+        button_action: ButtonAction,
+        width: f32,
+        is_first: bool,
+    );
+}
+
+impl ChildBuilderExt for ChildBuilder<'_> {
+    /// Spawns a rectangular stylized menu button
+    fn spawn_menu_button(
+        &mut self,
+        ui_assets: &UiAssets,
+        button_action: ButtonAction,
+        width: f32,
+        is_first: bool,
+    ) {
+        self.spawn((
+            Name::new("Menu Button"),
+            Node {
+                margin: UiRect::all(Val::Vh(1.0)),
+                ..default()
+            },
+            button_action.clone(),
+            MenuButtonState::Normal,
+            Focusable::default(),
+        ))
+        .with_children(|parent| {
+            parent
+                .spawn((
+                    Name::new("Menu Button Sprite"),
+                    Node {
+                        width: Val::Px(width),
+                        aspect_ratio: Some(162.0 / 39.0),
+                        justify_content: JustifyContent::Center,
+                        ..default()
+                    },
+                    AseUiAnimation {
+                        animation: Animation::tag(if is_first { "selected" } else { "released" }),
+                        aseprite: ui_assets.menu_button_aseprite.clone(),
+                    },
+                ))
+                .with_children(|parent| {
+                    parent
+                        .spawn(Node {
+                            margin: UiRect::bottom(Val::Px(14.0)),
+                            flex_direction: FlexDirection::Column,
+                            justify_content: JustifyContent::FlexEnd,
+                            ..default()
+                        })
+                        .with_children(|parent| {
+                            if let Some(button_text) = button_action.to_string() {
+                                parent.spawn((
+                                    Text::new(button_text),
+                                    TextFont::from_font_size(25.0),
+                                ));
+                            }
+                        });
+                });
+        });
     }
 }

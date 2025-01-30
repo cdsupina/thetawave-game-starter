@@ -9,6 +9,9 @@ use bevy::{
 };
 use strum::IntoEnumIterator;
 
+const BUTTON_ACTION_DELAY_TIME: f32 = 0.3;
+const CAROUSEL_READY_TIME: f32 = 0.5;
+
 /// All actions for menu buttons
 #[derive(Component, Debug, Clone)]
 pub(super) enum ButtonAction {
@@ -25,8 +28,33 @@ pub(super) enum ButtonAction {
     UnReady(PlayerNum),
 }
 
-const BUTTON_ACTION_DELAY_TIME: f32 = 0.3;
-const CAROUSEL_READY_TIME: f32 = 0.5;
+impl ButtonAction {
+    pub fn to_string(&self) -> Option<String> {
+        match self {
+            ButtonAction::EnterAppState(app_state) => match app_state {
+                AppState::MainMenuLoading => None,
+                AppState::MainMenu => None,
+                AppState::GameLoading => None,
+                AppState::Game => None,
+            },
+            ButtonAction::EnterMainMenuState(main_menu_state) => match main_menu_state {
+                MainMenuState::None => None,
+                MainMenuState::Title => None,
+                MainMenuState::Options => Some("Options".to_string()),
+                MainMenuState::CharacterSelection => Some("Play".to_string()),
+            },
+            ButtonAction::EnterGameState(_) => None,
+            ButtonAction::EnterPauseMenuState(_) => None,
+            ButtonAction::Exit => Some("Exit".to_string()),
+            ButtonAction::ApplyOptions => Some("Apply".to_string()),
+            ButtonAction::OpenBlueskyWebsite => None,
+            ButtonAction::OpenGithubWebsite => None,
+            ButtonAction::Join(_) => Some("Join".to_string()),
+            ButtonAction::Ready(_) => Some("Ready".to_string()),
+            ButtonAction::UnReady(_) => Some("Unready".to_string()),
+        }
+    }
+}
 
 /// Used for converting strings from hui tags into button actions
 impl TryFrom<&String> for ButtonAction {
