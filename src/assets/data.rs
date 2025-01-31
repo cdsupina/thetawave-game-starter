@@ -98,9 +98,6 @@ pub(crate) struct UiAssets {
     // HTML template for menu button sprites
     #[asset(path = "ui/components/menu_button_sprite.html")]
     pub menu_button_sprite_html: Handle<HtmlTemplate>,
-    // HTML template for options menu layout
-    #[asset(path = "ui/menus/options_main_menu.html")]
-    pub options_main_menu_html: Handle<HtmlTemplate>,
     // HTML template for options pause menu layout
     #[asset(path = "ui/menus/options_pause_menu.html")]
     pub options_pause_menu_html: Handle<HtmlTemplate>,

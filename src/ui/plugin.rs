@@ -11,7 +11,7 @@ use super::{
         hui::setup_hui_system,
         loading::{setup_loading_ui_system, update_loading_bar_system},
         menu_button_action_system, menu_button_delayed_action_system, menu_button_focus_system,
-        options::{options_menu_system, persist_options_system, setup_options_menu_system},
+        options::{options_menu_system, persist_options_system, spawn_options_menu_system},
         pause::{setup_pause_menu_system, setup_pause_options_system},
         title::{spawn_title_menu_system, website_footer_button_focus_system},
     },
@@ -42,7 +42,7 @@ impl Plugin for ThetawaveUiPlugin {
             // Initialize and setup the title menu UI components when entering Title state
             .add_systems(OnEnter(MainMenuState::Title), spawn_title_menu_system)
             // Initialize and setup the options menu UI components when entering Options state
-            .add_systems(OnEnter(MainMenuState::Options), setup_options_menu_system)
+            .add_systems(OnEnter(MainMenuState::Options), spawn_options_menu_system)
             // Initialize and setup the character selection UI components when entering Character Selection state
             .add_systems(
                 OnEnter(MainMenuState::CharacterSelection),

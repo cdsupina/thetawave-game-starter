@@ -1,25 +1,58 @@
-use super::{ApplyOptionsEvent, Cleanup, MainMenuState, OptionsRes, UiAssets};
+use crate::ui::data::ButtonAction;
+
+use super::{ApplyOptionsEvent, ChildBuilderExt, Cleanup, MainMenuState, OptionsRes, UiAssets};
 use bevy::{
     core::Name,
+    hierarchy::{BuildChildren, ChildBuild},
     log::info,
     prelude::{Commands, EventReader, Res, ResMut},
+    ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
+    utils::default,
     window::{MonitorSelection, WindowMode, WindowResolution},
 };
 use bevy_egui::{egui, EguiContexts};
-use bevy_hui::prelude::HtmlNode;
 use bevy_persistent::Persistent;
 
 /// This function sets up the options menu interface.
 /// It spawns the options menu HTML node and associates the cleanup component with it.
-pub(in crate::ui) fn setup_options_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
+pub(in crate::ui) fn spawn_options_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
     // Create an HTMLNode with options menu HTML and link the OptionsMenuCleanup component.
     cmds.spawn((
-        HtmlNode(ui_assets.options_main_menu_html.clone()),
         Cleanup::<MainMenuState> {
             states: vec![MainMenuState::Options],
         },
         Name::new("Options Menu"),
-    ));
+        // Top level parent node
+        Node {
+            height: Val::Percent(100.0),
+            width: Val::Percent(100.0),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::FlexEnd,
+            flex_direction: FlexDirection::Column,
+            ..default()
+        },
+    ))
+    .with_children(|parent| {
+        parent
+            .spawn(Node {
+                display: Display::Flex,
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                width: Val::Percent(100.0),
+                margin: UiRect::all(Val::Px(10.0)),
+                ..default()
+            })
+            .with_children(|parent| {
+                parent.spawn_menu_button(&ui_assets, ButtonAction::ApplyOptions, 300.0, true);
+                parent.spawn_menu_button(
+                    &ui_assets,
+                    ButtonAction::EnterMainMenuState(MainMenuState::Title),
+                    300.0,
+                    false,
+                );
+            });
+    });
 }
 
 /// This function is a system that handles the egui options menu

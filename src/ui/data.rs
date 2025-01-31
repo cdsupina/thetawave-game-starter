@@ -39,7 +39,7 @@ impl ButtonAction {
             },
             ButtonAction::EnterMainMenuState(main_menu_state) => match main_menu_state {
                 MainMenuState::None => None,
-                MainMenuState::Title => None,
+                MainMenuState::Title => Some("Back".to_string()),
                 MainMenuState::Options => Some("Options".to_string()),
                 MainMenuState::CharacterSelection => Some("Play".to_string()),
             },
