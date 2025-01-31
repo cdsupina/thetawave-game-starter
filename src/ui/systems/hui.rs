@@ -20,10 +20,6 @@ pub(in crate::ui) fn setup_hui_system(
     mut egui_settings: Query<&mut EguiContextSettings>,
 ) {
     // Register bevy_hui components
-    html_comps.register(
-        "website_footer_button",
-        ui_assets.website_footer_button_html.clone(),
-    );
     html_comps.register("menu_button", ui_assets.menu_button_html.clone());
     html_comps.register(
         "menu_button_sprite",
@@ -38,7 +34,6 @@ pub(in crate::ui) fn setup_hui_system(
     // Register bevy_hui functions
     html_funcs.register("setup_menu_button", setup_menu_button);
     html_funcs.register("setup_menu_button_sprite", setup_menu_button_sprite);
-    html_funcs.register("setup_website_footer_button", setup_website_footer_button);
     html_funcs.register("setup_join_prompt", setup_join_prompt);
     html_funcs.register("setup_character_selector", setup_character_selector);
 
@@ -94,57 +89,6 @@ fn setup_join_prompt(In(entity): In<Entity>, mut cmds: Commands, ui_assets: Res<
             Name::new("Join Prompt Input"),
         ));
     });
-}
-
-/// Sets up website footer buttons with appropriate animations and actions
-/// Takes an entity, queries for tags, and sets up the button based on its action type
-fn setup_website_footer_button(
-    In(entity): In<Entity>,
-    tags: Query<&Tags>,
-    mut cmds: Commands,
-    ui_assets: Res<UiAssets>,
-) {
-    if let Ok(tags) = tags.get(entity) {
-        if let Some(button_action_str) = tags.get("button_action") {
-            match ButtonAction::try_from(button_action_str) {
-                Ok(button_action) => match button_action {
-                    // Handle Bluesky website button - add animation and action
-                    ButtonAction::OpenBlueskyWebsite => {
-                        cmds.entity(entity).insert((
-                            AseUiAnimation {
-                                animation: Animation::tag("released"),
-                                aseprite: ui_assets.bluesky_logo_aseprite.clone(),
-                            },
-                            ButtonAction::OpenBlueskyWebsite,
-                            Name::new("Bluesky Website Button"),
-                        ));
-                    }
-                    // Handle Github website button - add animation and action
-                    ButtonAction::OpenGithubWebsite => {
-                        cmds.entity(entity).insert((
-                            AseUiAnimation {
-                                animation: Animation::tag("released"),
-                                aseprite: ui_assets.github_logo_aseprite.clone(),
-                            },
-                            ButtonAction::OpenGithubWebsite,
-                            Name::new("Github Website Button"),
-                        ));
-                    }
-                    _ => {
-                        warn!("Button action was not able to be mapped to a website action.")
-                    }
-                },
-                Err(msg) => {
-                    // If the action fails to convert, it is logged as a warning.
-                    warn!("{}", msg);
-                }
-            };
-        }
-    } else {
-        warn!("No tags found for website footer button.")
-    }
-
-    cmds.entity(entity).insert(Focusable::default());
 }
 
 /// Sets up menu button sprite animations based on whether it's the first button
