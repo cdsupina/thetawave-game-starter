@@ -4,7 +4,7 @@ use super::{ChildBuilderExt, Cleanup, MainMenuState, UiAssets};
 use bevy::{
     core::Name,
     prelude::{BuildChildren, ChildBuild, Commands, EventReader, Query, Res, With},
-    ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, Val},
+    ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
 use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
@@ -81,6 +81,50 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
                 );
                 // Exit Button
                 parent.spawn_menu_button(&ui_assets, ButtonAction::Exit, 300.0, false);
+            });
+
+        parent
+            .spawn(Node {
+                width: Val::Percent(100.0),
+                height: Val::Vh(10.0),
+                align_items: AlignItems::End,
+                justify_content: JustifyContent::End,
+                ..default()
+            })
+            .with_children(|parent| {
+                // bluesky link
+                parent.spawn((
+                    Node {
+                        height: Val::Vh(4.0),
+                        width: Val::Vh(4.0),
+                        margin: UiRect::all(Val::Vh(1.0)),
+                        ..default()
+                    },
+                    AseUiAnimation {
+                        animation: Animation::tag("released"),
+                        aseprite: ui_assets.bluesky_logo_aseprite.clone(),
+                    },
+                    ButtonAction::OpenBlueskyWebsite,
+                    Name::new("Bluesky Website Button"),
+                    Focusable::default(),
+                ));
+
+                // github link
+                parent.spawn((
+                    Node {
+                        height: Val::Vh(4.0),
+                        width: Val::Vh(4.0),
+                        margin: UiRect::all(Val::Vh(1.0)),
+                        ..default()
+                    },
+                    AseUiAnimation {
+                        animation: Animation::tag("released"),
+                        aseprite: ui_assets.github_logo_aseprite.clone(),
+                    },
+                    ButtonAction::OpenGithubWebsite,
+                    Name::new("Github Website Button"),
+                    Focusable::default(),
+                ));
             });
     });
 }
