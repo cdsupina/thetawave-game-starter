@@ -113,9 +113,6 @@ pub(crate) struct UiAssets {
     // Animated github logo Aseprite
     #[asset(path = "media/aseprite/github_logo.aseprite")]
     pub github_logo_aseprite: Handle<Aseprite>,
-    // HTML template for character selection layout
-    #[asset(path = "ui/menus/character_selection.html")]
-    pub character_selection_html: Handle<HtmlTemplate>,
     // HTML template for the pause menu
     #[asset(path = "ui/menus/pause_menu.html")]
     pub pause_menu_html: Handle<HtmlTemplate>,
@@ -126,12 +123,6 @@ pub(crate) struct UiAssets {
     pub captain_character_image: Handle<Image>,
     #[asset(path = "media/images/ui/juggernaut_character.png")]
     pub juggernaut_character_image: Handle<Image>,
-    // HTML template for the node which holds the characater carousel and arrows
-    #[asset(path = "ui/components/character_selector.html")]
-    pub character_selector_html: Handle<HtmlTemplate>,
-    // HTML template for the node for prompt for player to join
-    #[asset(path = "ui/components/join_prompt.html")]
-    pub join_prompt_html: Handle<HtmlTemplate>,
     // Aseprite containing standard sized keyboard key sprites
     #[asset(path = "media/aseprite/standard_keyboard_buttons.aseprite")]
     pub standard_keyboard_buttons_aseprite: Handle<Aseprite>,

@@ -5,7 +5,7 @@ use super::{
             additional_players_join_system, carousel_input_system,
             cycle_player_one_carousel_system, enable_join_button_system,
             enable_start_game_button_system, lock_in_player_button_system, set_characters_system,
-            setup_character_selection_system, spawn_carousel_system, spawn_join_prompt_system,
+            spawn_carousel_system, spawn_character_selection_system, spawn_join_prompt_system,
             spawn_ready_button_system, update_carousel_ui_system,
         },
         hui::setup_hui_system,
@@ -46,7 +46,7 @@ impl Plugin for ThetawaveUiPlugin {
             // Initialize and setup the character selection UI components when entering Character Selection state
             .add_systems(
                 OnEnter(MainMenuState::CharacterSelection),
-                setup_character_selection_system,
+                spawn_character_selection_system,
             )
             // Initialize and setup the pause menu ui components when entering the paused state
             .add_systems(OnEnter(PauseMenuState::Main), setup_pause_menu_system)

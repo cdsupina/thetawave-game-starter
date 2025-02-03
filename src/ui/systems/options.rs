@@ -1,6 +1,6 @@
-use crate::ui::data::ButtonAction;
+use crate::ui::data::{ButtonAction, UiChildBuilderExt};
 
-use super::{ApplyOptionsEvent, ChildBuilderExt, Cleanup, MainMenuState, OptionsRes, UiAssets};
+use super::{ApplyOptionsEvent, Cleanup, MainMenuState, OptionsRes, UiAssets};
 use bevy::{
     core::Name,
     hierarchy::{BuildChildren, ChildBuild},
@@ -44,11 +44,18 @@ pub(in crate::ui) fn spawn_options_menu_system(mut cmds: Commands, ui_assets: Re
                 ..default()
             })
             .with_children(|parent| {
-                parent.spawn_menu_button(&ui_assets, ButtonAction::ApplyOptions, 300.0, true);
+                parent.spawn_menu_button(
+                    &ui_assets,
+                    ButtonAction::ApplyOptions,
+                    300.0,
+                    true,
+                    false,
+                );
                 parent.spawn_menu_button(
                     &ui_assets,
                     ButtonAction::EnterMainMenuState(MainMenuState::Title),
                     300.0,
+                    false,
                     false,
                 );
             });

@@ -1,12 +1,20 @@
 use crate::{
+    assets::UiAssets,
     input::InputType,
     player::{CharacterType, PlayerNum},
     states::{AppState, GameState, MainMenuState, PauseMenuState},
 };
 use bevy::{
+    core::Name,
+    hierarchy::{BuildChildren, ChildBuild, ChildBuilder},
     prelude::{Component, Entity, Event},
+    text::TextFont,
     time::{Timer, TimerMode},
+    ui::{widget::Text, AlignItems, FlexDirection, JustifyContent, JustifySelf, Node, UiRect, Val},
+    utils::default,
 };
+use bevy_alt_ui_navigation_lite::prelude::Focusable;
+use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
 use strum::IntoEnumIterator;
 
 const BUTTON_ACTION_DELAY_TIME: f32 = 0.3;
@@ -34,7 +42,7 @@ impl ButtonAction {
             ButtonAction::EnterAppState(app_state) => match app_state {
                 AppState::MainMenuLoading => None,
                 AppState::MainMenu => None,
-                AppState::GameLoading => None,
+                AppState::GameLoading => Some("Start Game".to_string()),
                 AppState::Game => None,
             },
             ButtonAction::EnterMainMenuState(main_menu_state) => match main_menu_state {
@@ -248,5 +256,171 @@ impl Default for ButtonActionDelayTimer {
             BUTTON_ACTION_DELAY_TIME,
             TimerMode::Repeating,
         ))
+    }
+}
+
+pub(super) trait UiChildBuilderExt {
+    fn spawn_character_selection(&mut self, ui_assets: &UiAssets, player_num: PlayerNum);
+
+    fn spawn_menu_button(
+        &mut self,
+        ui_assets: &UiAssets,
+        button_action: ButtonAction,
+        width: f32,
+        is_first: bool,
+        is_disabled: bool,
+    );
+}
+
+impl UiChildBuilderExt for ChildBuilder<'_> {
+    /// Spawn a character selection ui for the provided character
+    fn spawn_character_selection(&mut self, ui_assets: &UiAssets, player_num: PlayerNum) {
+        self.spawn(Node {
+            height: Val::Percent(100.0),
+            width: Val::Percent(50.0),
+            align_items: AlignItems::Center,
+            flex_direction: FlexDirection::Column,
+            justify_content: JustifyContent::End,
+            ..default()
+        })
+        .with_children(|parent| {
+            // Spawn character selector
+            let mut entity_cmds = parent.spawn((
+                Node {
+                    width: Val::Percent(85.0),
+                    height: Val::Percent(80.0),
+                    justify_self: JustifySelf::Start,
+                    justify_content: JustifyContent::Center,
+                    ..default()
+                },
+                CharacterSelector,
+                player_num.clone(),
+            ));
+
+            // Spawn input prompt for player 1
+            if matches!(player_num, PlayerNum::One) {
+                entity_cmds.with_children(|parent| {
+                    parent
+                        .spawn(Node {
+                            flex_direction: FlexDirection::Row,
+                            ..default()
+                        })
+                        .with_children(|parent| {
+                            parent.spawn((
+                                AseUiAnimation {
+                                    animation: Animation::tag("key_return"),
+                                    aseprite: ui_assets.return_button_aseprite.clone(),
+                                },
+                                Node {
+                                    margin: UiRect::all(Val::Px(10.0)),
+                                    ..default()
+                                },
+                                Name::new("Join Prompt Input"),
+                            ));
+
+                            parent.spawn((
+                                AseUiAnimation {
+                                    animation: Animation::tag("a"),
+                                    aseprite: ui_assets.xbox_letter_buttons_aseprite.clone(),
+                                },
+                                Node {
+                                    margin: UiRect::all(Val::Px(10.0)),
+                                    ..default()
+                                },
+                                Name::new("Join Prompt Input"),
+                            ));
+                        });
+                });
+            }
+
+            // Spawn join button
+            // Player 1 button is not disabled and is first
+            parent.spawn_menu_button(
+                ui_assets,
+                ButtonAction::Join(player_num.clone()),
+                300.0,
+                matches!(player_num, PlayerNum::One),
+                !matches!(player_num, PlayerNum::One),
+            );
+        });
+    }
+
+    /// Spawns a rectangular stylized menu button
+    fn spawn_menu_button(
+        &mut self,
+        ui_assets: &UiAssets,
+        button_action: ButtonAction,
+        width: f32,
+        is_first: bool,
+        is_disabled: bool,
+    ) {
+        let mut entity_cmds = self.spawn_empty();
+
+        // if a button is disabled do not spawn it in focusable
+        if !is_disabled {
+            entity_cmds.insert(if is_first {
+                Focusable::default().prioritized() // prioritize the first button so that it is selected
+            } else {
+                Focusable::default()
+            });
+        }
+
+        if let ButtonAction::EnterAppState(AppState::GameLoading) = button_action.clone() {
+            entity_cmds.insert(StartGameButton);
+        }
+
+        entity_cmds
+            .insert((
+                Name::new("Menu Button"),
+                Node {
+                    margin: UiRect::all(Val::Vh(1.0)),
+                    ..default()
+                },
+                button_action.clone(),
+                if is_disabled {
+                    MenuButtonState::Disabled
+                } else {
+                    MenuButtonState::Normal
+                },
+            ))
+            .with_children(|parent| {
+                parent
+                    .spawn((
+                        Name::new("Menu Button Sprite"),
+                        Node {
+                            width: Val::Px(width),
+                            aspect_ratio: Some(162.0 / 39.0),
+                            justify_content: JustifyContent::Center,
+                            ..default()
+                        },
+                        AseUiAnimation {
+                            animation: Animation::tag(if is_disabled {
+                                "disabled"
+                            } else if is_first {
+                                "selected"
+                            } else {
+                                "released"
+                            }),
+                            aseprite: ui_assets.menu_button_aseprite.clone(),
+                        },
+                    ))
+                    .with_children(|parent| {
+                        parent
+                            .spawn(Node {
+                                margin: UiRect::bottom(Val::Px(14.0)),
+                                flex_direction: FlexDirection::Column,
+                                justify_content: JustifyContent::FlexEnd,
+                                ..default()
+                            })
+                            .with_children(|parent| {
+                                if let Some(button_text) = button_action.to_string() {
+                                    parent.spawn((
+                                        Text::new(button_text),
+                                        TextFont::from_font_size(25.0),
+                                    ));
+                                }
+                            });
+                    });
+            });
     }
 }

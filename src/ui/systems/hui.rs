@@ -1,11 +1,9 @@
-use super::{AppState, ButtonAction, PlayerNum, UiAssets};
-use crate::ui::data::{CharacterSelector, MenuButtonState, StartGameButton};
+use super::{AppState, ButtonAction, UiAssets};
+use crate::ui::data::{MenuButtonState, StartGameButton};
 use bevy::{
     core::Name,
     log::{info, warn},
-    prelude::{BuildChildren, ChildBuild, Commands, DespawnRecursiveExt, Entity, In, Query, Res},
-    ui::{Node, UiRect, Val},
-    utils::default,
+    prelude::{Commands, Entity, In, Query, Res},
 };
 use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
@@ -25,70 +23,15 @@ pub(in crate::ui) fn setup_hui_system(
         "menu_button_sprite",
         ui_assets.menu_button_sprite_html.clone(),
     );
-    html_comps.register(
-        "character_selector",
-        ui_assets.character_selector_html.clone(),
-    );
-    html_comps.register("join_prompt", ui_assets.join_prompt_html.clone());
 
     // Register bevy_hui functions
     html_funcs.register("setup_menu_button", setup_menu_button);
     html_funcs.register("setup_menu_button_sprite", setup_menu_button_sprite);
-    html_funcs.register("setup_join_prompt", setup_join_prompt);
-    html_funcs.register("setup_character_selector", setup_character_selector);
 
     // Increase scale of egui options menu
     if !cfg!(feature = "world_inspector") {
         egui_settings.single_mut().scale_factor = 2.0;
     }
-}
-
-fn setup_character_selector(In(entity): In<Entity>, tags: Query<&Tags>, mut cmds: Commands) {
-    if let Ok(tags) = tags.get(entity) {
-        if let Some(player_str) = tags.get("player") {
-            match PlayerNum::try_from(player_str) {
-                Ok(player_num) => {
-                    cmds.entity(entity)
-                        .insert((CharacterSelector, player_num.clone()));
-                    if !matches!(player_num, PlayerNum::One) {
-                        // remove the input button prompt for players 2-4
-                        cmds.entity(entity).despawn_descendants();
-                    }
-                }
-                Err(msg) => {
-                    warn!("{}", msg);
-                }
-            }
-        }
-    };
-}
-
-/// Add animation and name to join prompt
-fn setup_join_prompt(In(entity): In<Entity>, mut cmds: Commands, ui_assets: Res<UiAssets>) {
-    cmds.entity(entity).with_children(|parent| {
-        parent.spawn((
-            AseUiAnimation {
-                animation: Animation::tag("key_return"),
-                aseprite: ui_assets.return_button_aseprite.clone(),
-            },
-            Node {
-                margin: UiRect::all(Val::Px(10.0)),
-                ..default()
-            },
-            Name::new("Join Prompt Input"),
-        ));
-        parent.spawn((
-            AseUiAnimation {
-                animation: Animation::tag("a"),
-                aseprite: ui_assets.xbox_letter_buttons_aseprite.clone(),
-            },
-            Node {
-                margin: UiRect::all(Val::Px(10.0)),
-                ..default()
-            },
-            Name::new("Join Prompt Input"),
-        ));
-    });
 }
 
 /// Sets up menu button sprite animations based on whether it's the first button

@@ -1,6 +1,6 @@
-use crate::ui::data::ButtonAction;
+use crate::ui::data::{ButtonAction, UiChildBuilderExt};
 
-use super::{ChildBuilderExt, Cleanup, MainMenuState, UiAssets};
+use super::{Cleanup, MainMenuState, UiAssets};
 use bevy::{
     core::Name,
     prelude::{BuildChildren, ChildBuild, Commands, EventReader, Query, Res, With},
@@ -71,6 +71,7 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
                     ButtonAction::EnterMainMenuState(MainMenuState::CharacterSelection),
                     300.0,
                     true,
+                    false,
                 );
                 // Options Button
                 parent.spawn_menu_button(
@@ -78,9 +79,10 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
                     ButtonAction::EnterMainMenuState(MainMenuState::Options),
                     300.0,
                     false,
+                    false,
                 );
                 // Exit Button
-                parent.spawn_menu_button(&ui_assets, ButtonAction::Exit, 300.0, false);
+                parent.spawn_menu_button(&ui_assets, ButtonAction::Exit, 300.0, false, false);
             });
 
         parent

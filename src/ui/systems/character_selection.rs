@@ -1,13 +1,15 @@
 use super::{
-    AudioEffectEvent, ButtonAction, CarouselSlotPosition, CharacterCarousel, Cleanup, InputType,
-    MainMenuState, OptionsRes, PlayerJoinEvent, PlayerNum, PlayerReadyEvent, UiAssets,
-    VisibleCarouselSlot,
+    AudioEffectEvent, ButtonAction, Cleanup, InputType, MainMenuState, OptionsRes, PlayerJoinEvent,
+    PlayerNum, PlayerReadyEvent, UiAssets,
 };
 use crate::{
     input::CharacterCarouselAction,
     player::{ChosenCharacterData, ChosenCharactersResource},
+    states::AppState,
     ui::data::{
-        CarouselReadyTimer, CharacterSelector, MenuButtonState, PlayerReadyButton, StartGameButton,
+        CarouselReadyTimer, CarouselSlotPosition, CharacterCarousel, CharacterSelector,
+        MenuButtonState, PlayerReadyButton, StartGameButton, UiChildBuilderExt,
+        VisibleCarouselSlot,
     },
 };
 use bevy::{
@@ -22,29 +24,105 @@ use bevy::{
     },
     text::TextFont,
     time::Time,
-    ui::{AlignItems, FlexDirection, JustifyContent, Node, UiRect, Val},
+    ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
 use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
-use bevy_hui::prelude::HtmlNode;
 use bevy_persistent::Persistent;
 use leafwing_input_manager::{prelude::ActionState, InputManagerBundle};
 
 /// This function sets up the character selection interface.
 /// It spawns the options menu HTML node and associates the cleanup component with it.
-pub(in crate::ui) fn setup_character_selection_system(
+pub(in crate::ui) fn spawn_character_selection_system(
     mut cmds: Commands,
     ui_assets: Res<UiAssets>,
 ) {
     // Create an HTMLNode with options menu HTML and link the OptionsMenuCleanup component.
     cmds.spawn((
-        HtmlNode(ui_assets.character_selection_html.clone()),
         Cleanup::<MainMenuState> {
             states: vec![MainMenuState::CharacterSelection],
         },
         Name::new("Character Selection Menu"),
-    ));
+        Node {
+            height: Val::Percent(100.0),
+            width: Val::Percent(100.0),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::FlexEnd,
+            flex_direction: FlexDirection::Column,
+            ..default()
+        },
+    ))
+    .with_children(|parent| {
+        parent
+            .spawn((Node {
+                height: Val::Percent(100.0),
+                width: Val::Percent(100.0),
+                justify_content: JustifyContent::FlexEnd,
+                flex_direction: FlexDirection::Column,
+                ..default()
+            },))
+            .with_children(|parent| {
+                // First row of character selection
+                parent
+                    .spawn((Node {
+                        height: Val::Percent(50.0),
+                        width: Val::Percent(100.0),
+                        ..default()
+                    },))
+                    .with_children(|parent| {
+                        // Player 1 character selection
+                        parent.spawn_character_selection(&ui_assets, PlayerNum::One);
+
+                        // Player 2 character selection
+                        parent.spawn_character_selection(&ui_assets, PlayerNum::Two);
+                    });
+
+                // Second row
+                parent
+                    .spawn((Node {
+                        height: Val::Percent(50.0),
+                        width: Val::Percent(100.0),
+                        ..default()
+                    },))
+                    .with_children(|parent| {
+                        // Player 3 character selection
+                        parent.spawn_character_selection(&ui_assets, PlayerNum::Three);
+
+                        // Player 4 character selection
+                        parent.spawn_character_selection(&ui_assets, PlayerNum::Four);
+                    });
+            });
+
+        // Menu buttons
+        parent
+            .spawn(Node {
+                display: Display::Flex,
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                width: Val::Percent(100.0),
+                margin: UiRect::all(Val::Px(10.0)),
+                ..default()
+            })
+            .with_children(|parent| {
+                parent.spawn_menu_button(
+                    &ui_assets,
+                    ButtonAction::EnterAppState(AppState::GameLoading),
+                    300.0,
+                    false,
+                    true,
+                );
+
+                parent.spawn_menu_button(
+                    &ui_assets,
+                    ButtonAction::EnterMainMenuState(MainMenuState::Title),
+                    300.0,
+                    false,
+                    false,
+                );
+            });
+    });
 }
 
 /// Cycle the characters in the carousel with player input
@@ -490,35 +568,37 @@ pub(in crate::ui) fn spawn_join_prompt_system(
         if let Some(next_player_num) = event.player_num.next() {
             for (entity, player_num) in character_selector_q.iter() {
                 if next_player_num == *player_num {
-                    cmds.entity(entity)
-                        .insert(Node {
-                            flex_direction: FlexDirection::Row,
-                            ..default()
-                        })
-                        .with_children(|parent| {
-                            parent.spawn((
-                                AseUiAnimation {
-                                    animation: Animation::tag("key_return"),
-                                    aseprite: ui_assets.return_button_aseprite.clone(),
-                                },
-                                Node {
-                                    margin: UiRect::all(Val::Px(10.0)),
-                                    ..default()
-                                },
-                                Name::new("Join Prompt Input"),
-                            ));
-                            parent.spawn((
-                                AseUiAnimation {
-                                    animation: Animation::tag("a"),
-                                    aseprite: ui_assets.xbox_letter_buttons_aseprite.clone(),
-                                },
-                                Node {
-                                    margin: UiRect::all(Val::Px(10.0)),
-                                    ..default()
-                                },
-                                Name::new("Join Prompt Input"),
-                            ));
-                        });
+                    cmds.entity(entity).with_children(|parent| {
+                        parent
+                            .spawn(Node {
+                                flex_direction: FlexDirection::Row,
+                                ..default()
+                            })
+                            .with_children(|parent| {
+                                parent.spawn((
+                                    AseUiAnimation {
+                                        animation: Animation::tag("key_return"),
+                                        aseprite: ui_assets.return_button_aseprite.clone(),
+                                    },
+                                    Node {
+                                        margin: UiRect::all(Val::Px(10.0)),
+                                        ..default()
+                                    },
+                                    Name::new("Join Prompt Input"),
+                                ));
+                                parent.spawn((
+                                    AseUiAnimation {
+                                        animation: Animation::tag("a"),
+                                        aseprite: ui_assets.xbox_letter_buttons_aseprite.clone(),
+                                    },
+                                    Node {
+                                        margin: UiRect::all(Val::Px(10.0)),
+                                        ..default()
+                                    },
+                                    Name::new("Join Prompt Input"),
+                                ));
+                            });
+                    });
                 }
             }
         }
