@@ -113,9 +113,6 @@ pub(crate) struct UiAssets {
     // Animated github logo Aseprite
     #[asset(path = "media/aseprite/github_logo.aseprite")]
     pub github_logo_aseprite: Handle<Aseprite>,
-    // HTML template for the pause menu
-    #[asset(path = "ui/menus/pause_menu.html")]
-    pub pause_menu_html: Handle<HtmlTemplate>,
     // Animated arrow button Aseprite
     #[asset(path = "media/aseprite/arrow_button.aseprite")]
     pub arrow_button_aseprite: Handle<Aseprite>,

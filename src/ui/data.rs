@@ -40,7 +40,7 @@ impl ButtonAction {
     pub fn to_string(&self) -> Option<String> {
         match self {
             ButtonAction::EnterAppState(app_state) => match app_state {
-                AppState::MainMenuLoading => None,
+                AppState::MainMenuLoading => Some("Main Menu".to_string()),
                 AppState::MainMenu => None,
                 AppState::GameLoading => Some("Start Game".to_string()),
                 AppState::Game => None,
@@ -51,8 +51,15 @@ impl ButtonAction {
                 MainMenuState::Options => Some("Options".to_string()),
                 MainMenuState::CharacterSelection => Some("Play".to_string()),
             },
-            ButtonAction::EnterGameState(_) => None,
-            ButtonAction::EnterPauseMenuState(_) => None,
+            ButtonAction::EnterGameState(game_state) => match game_state {
+                GameState::Playing => Some("Resume".to_string()),
+                GameState::Paused => None,
+            },
+            ButtonAction::EnterPauseMenuState(pause_menu_state) => match pause_menu_state {
+                PauseMenuState::None => None,
+                PauseMenuState::Main => None,
+                PauseMenuState::Options => Some("Options".to_string()),
+            },
             ButtonAction::Exit => Some("Exit".to_string()),
             ButtonAction::ApplyOptions => Some("Apply".to_string()),
             ButtonAction::OpenBlueskyWebsite => None,

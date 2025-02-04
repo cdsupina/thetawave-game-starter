@@ -12,7 +12,7 @@ use super::{
         loading::{setup_loading_ui_system, update_loading_bar_system},
         menu_button_action_system, menu_button_delayed_action_system, menu_button_focus_system,
         options::{options_menu_system, persist_options_system, spawn_options_menu_system},
-        pause::{setup_pause_menu_system, setup_pause_options_system},
+        pause::{setup_pause_options_system, spawn_pause_menu_system},
         title::{spawn_title_menu_system, website_footer_button_focus_system},
     },
 };
@@ -49,7 +49,7 @@ impl Plugin for ThetawaveUiPlugin {
                 spawn_character_selection_system,
             )
             // Initialize and setup the pause menu ui components when entering the paused state
-            .add_systems(OnEnter(PauseMenuState::Main), setup_pause_menu_system)
+            .add_systems(OnEnter(PauseMenuState::Main), spawn_pause_menu_system)
             // Initialize and setup the options pause menu when inetering the paused options state
             .add_systems(OnEnter(PauseMenuState::Options), setup_pause_options_system)
             // Add update systems that run every frame:
