@@ -47,6 +47,21 @@ impl Default for CharactersResource {
                         ]),
                     },
                 ),
+                (
+                    CharacterType::Doomwing,
+                    CharacterData {
+                        acceleration: 2.5,
+                        deceleration_factor: 0.955,
+                        max_speed: 165.0,
+                        collider_dimensions: Vec2::new(12.0, 20.0),
+                        cooldowns: CooldownState::<PlayerAbility>::new([
+                            (PlayerAbility::BasicAttack, Cooldown::from_secs(1.0)),
+                            (PlayerAbility::SecondaryAttack, Cooldown::from_secs(3.0)),
+                            (PlayerAbility::Utility, Cooldown::from_secs(1.9)),
+                            (PlayerAbility::Ultimate, Cooldown::from_secs(18.5)),
+                        ]),
+                    },
+                ),
             ]
             .into(),
         }
@@ -58,6 +73,7 @@ impl Default for CharactersResource {
 pub(crate) enum CharacterType {
     Captain,
     Juggernaut,
+    Doomwing,
 }
 
 /// All data used to construct a player entity

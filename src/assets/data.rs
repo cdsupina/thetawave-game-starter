@@ -19,6 +19,9 @@ pub(crate) struct GameAssets {
     // Animated juggernaut character Aseprite
     #[asset(path = "media/aseprite/juggernaut_character.aseprite")]
     pub juggernaut_character_aseprite: Handle<Aseprite>,
+    // Animated doomwing character Aseprite
+    #[asset(path = "media/aseprite/doomwing_character.aseprite")]
+    pub doomwing_character_aseprite: Handle<Aseprite>,
 }
 
 impl GameAssets {
@@ -26,6 +29,7 @@ impl GameAssets {
         match character_type {
             CharacterType::Captain => self.captain_character_aseprite.clone(),
             CharacterType::Juggernaut => self.juggernaut_character_aseprite.clone(),
+            CharacterType::Doomwing => self.doomwing_character_aseprite.clone(),
         }
     }
 }
@@ -110,6 +114,8 @@ pub(crate) struct UiAssets {
     pub captain_character_image: Handle<Image>,
     #[asset(path = "media/images/ui/juggernaut_character.png")]
     pub juggernaut_character_image: Handle<Image>,
+    #[asset(path = "media/images/ui/doomwing_character.png")]
+    pub doomwing_character_image: Handle<Image>,
     // Aseprite containing standard sized keyboard key sprites
     #[asset(path = "media/aseprite/standard_keyboard_buttons.aseprite")]
     pub standard_keyboard_buttons_aseprite: Handle<Aseprite>,
@@ -126,6 +132,7 @@ impl UiAssets {
         match character_type {
             CharacterType::Captain => self.captain_character_image.clone(),
             CharacterType::Juggernaut => self.juggernaut_character_image.clone(),
+            CharacterType::Doomwing => self.doomwing_character_image.clone(),
         }
     }
 }
