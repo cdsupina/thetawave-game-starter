@@ -88,7 +88,7 @@ impl AppAudioAssets {
     }
 }
 
-// Main menu assets including HTML templates for various UI components
+// Assets for Bevy ui
 #[derive(AssetCollection, Resource)]
 pub(crate) struct UiAssets {
     // Animated title logo Aseprite
