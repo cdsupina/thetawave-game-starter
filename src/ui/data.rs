@@ -6,6 +6,7 @@ use crate::{
 };
 use bevy::{
     core::Name,
+    ecs::system::EntityCommands,
     hierarchy::{BuildChildren, ChildBuild, ChildBuilder},
     prelude::{Component, Entity, Event},
     text::TextFont,
@@ -276,7 +277,7 @@ pub(super) trait UiChildBuilderExt {
         width: f32,
         is_first: bool,
         is_disabled: bool,
-    );
+    ) -> EntityCommands;
 }
 
 impl UiChildBuilderExt for ChildBuilder<'_> {
@@ -360,7 +361,7 @@ impl UiChildBuilderExt for ChildBuilder<'_> {
         width: f32,
         is_first: bool,
         is_disabled: bool,
-    ) {
+    ) -> EntityCommands {
         let mut entity_cmds = self.spawn_empty();
 
         // if a button is disabled do not spawn it in focusable
@@ -429,5 +430,7 @@ impl UiChildBuilderExt for ChildBuilder<'_> {
                             });
                     });
             });
+
+        entity_cmds
     }
 }

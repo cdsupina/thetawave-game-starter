@@ -20,9 +20,8 @@ use bevy::{
     prelude::{
         BuildChildren, Changed, ChildBuild, Children, Commands, DespawnRecursiveExt, Entity,
         EventReader, EventWriter, Gamepad, GamepadButton, ImageNode, KeyCode, Parent, Query, Res,
-        ResMut, Text, With, Without,
+        ResMut, With, Without,
     },
-    text::TextFont,
     time::Time,
     ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
@@ -380,62 +379,19 @@ pub(in crate::ui) fn spawn_ready_button_system(
                 if event.player_num == *player_num {
                     cmds.entity(entity).despawn_recursive();
                     cmds.entity(parent.get()).with_children(|parent| {
-                        let mut ready_button_builder = parent.spawn_empty();
+                        let mut entity_cmds = parent.spawn_menu_button(
+                            &ui_assets,
+                            ButtonAction::Ready(player_num.clone()),
+                            300.0,
+                            true,
+                            false,
+                        );
 
-                        ready_button_builder
-                            .insert((
-                                Node {
-                                    margin: UiRect::all(Val::Vh(1.0)),
-                                    ..default()
-                                },
-                                ButtonAction::Ready(player_num.clone()),
-                                MenuButtonState::Normal,
-                                PlayerReadyButton,
-                                Name::new("Menu Button Ready"),
-                            ))
-                            .with_children(|parent| {
-                                parent
-                                    .spawn((
-                                        Node {
-                                            width: Val::Px(364.5),
-                                            height: Val::Px(87.75),
-                                            justify_content: JustifyContent::Center,
-                                            ..default()
-                                        },
-                                        AseUiAnimation {
-                                            animation: if matches!(event.player_num, PlayerNum::One)
-                                            {
-                                                Animation::tag("selected")
-                                            } else {
-                                                Animation::tag("released")
-                                            },
-                                            aseprite: ui_assets.menu_button_aseprite.clone(),
-                                        },
-                                        Name::new("Menu Button Sprite"),
-                                    ))
-                                    .with_children(|parent| {
-                                        parent
-                                            .spawn(Node {
-                                                margin: UiRect::new(
-                                                    Val::Px(1.0),
-                                                    Val::Px(1.0),
-                                                    Val::Px(1.0),
-                                                    Val::Px(14.0),
-                                                ),
-                                                flex_direction: FlexDirection::Column,
-                                                justify_content: JustifyContent::FlexEnd,
-                                                ..default()
-                                            })
-                                            .with_child((
-                                                Text::new("Ready"),
-                                                TextFont::from_font_size(30.0),
-                                            ));
-                                    });
-                            });
-                        if matches!(event.player_num, PlayerNum::One) {
-                            ready_button_builder.insert(
-                                Focusable::new().prioritized(), // Focus on this button
-                            );
+                        entity_cmds.insert(PlayerReadyButton);
+
+                        // Remove focusable component for non-player one
+                        if !matches!(player_num, PlayerNum::One) {
+                            entity_cmds.remove::<Focusable>();
                         }
                     });
                 }
