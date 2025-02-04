@@ -268,6 +268,8 @@ impl Default for ButtonActionDelayTimer {
 }
 
 pub(super) trait UiChildBuilderExt {
+    fn spawn_join_prompt(&mut self, ui_assets: &UiAssets);
+
     fn spawn_character_selection(&mut self, ui_assets: &UiAssets, player_num: PlayerNum);
 
     fn spawn_menu_button(
@@ -281,6 +283,38 @@ pub(super) trait UiChildBuilderExt {
 }
 
 impl UiChildBuilderExt for ChildBuilder<'_> {
+    /// Spawn a join prompt
+    fn spawn_join_prompt(&mut self, ui_assets: &UiAssets) {
+        self.spawn(Node {
+            flex_direction: FlexDirection::Row,
+            ..default()
+        })
+        .with_children(|parent| {
+            parent.spawn((
+                AseUiAnimation {
+                    animation: Animation::tag("key_return"),
+                    aseprite: ui_assets.return_button_aseprite.clone(),
+                },
+                Node {
+                    margin: UiRect::all(Val::Px(10.0)),
+                    ..default()
+                },
+                Name::new("Join Prompt Input"),
+            ));
+            parent.spawn((
+                AseUiAnimation {
+                    animation: Animation::tag("a"),
+                    aseprite: ui_assets.xbox_letter_buttons_aseprite.clone(),
+                },
+                Node {
+                    margin: UiRect::all(Val::Px(10.0)),
+                    ..default()
+                },
+                Name::new("Join Prompt Input"),
+            ));
+        });
+    }
+
     /// Spawn a character selection ui for the provided character
     fn spawn_character_selection(&mut self, ui_assets: &UiAssets, player_num: PlayerNum) {
         self.spawn(Node {
@@ -308,36 +342,7 @@ impl UiChildBuilderExt for ChildBuilder<'_> {
             // Spawn input prompt for player 1
             if matches!(player_num, PlayerNum::One) {
                 entity_cmds.with_children(|parent| {
-                    parent
-                        .spawn(Node {
-                            flex_direction: FlexDirection::Row,
-                            ..default()
-                        })
-                        .with_children(|parent| {
-                            parent.spawn((
-                                AseUiAnimation {
-                                    animation: Animation::tag("key_return"),
-                                    aseprite: ui_assets.return_button_aseprite.clone(),
-                                },
-                                Node {
-                                    margin: UiRect::all(Val::Px(10.0)),
-                                    ..default()
-                                },
-                                Name::new("Join Prompt Input"),
-                            ));
-
-                            parent.spawn((
-                                AseUiAnimation {
-                                    animation: Animation::tag("a"),
-                                    aseprite: ui_assets.xbox_letter_buttons_aseprite.clone(),
-                                },
-                                Node {
-                                    margin: UiRect::all(Val::Px(10.0)),
-                                    ..default()
-                                },
-                                Name::new("Join Prompt Input"),
-                            ));
-                        });
+                    parent.spawn_join_prompt(ui_assets);
                 });
             }
 

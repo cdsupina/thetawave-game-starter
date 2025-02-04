@@ -523,35 +523,7 @@ pub(in crate::ui) fn spawn_join_prompt_system(
             for (entity, player_num) in character_selector_q.iter() {
                 if next_player_num == *player_num {
                     cmds.entity(entity).with_children(|parent| {
-                        parent
-                            .spawn(Node {
-                                flex_direction: FlexDirection::Row,
-                                ..default()
-                            })
-                            .with_children(|parent| {
-                                parent.spawn((
-                                    AseUiAnimation {
-                                        animation: Animation::tag("key_return"),
-                                        aseprite: ui_assets.return_button_aseprite.clone(),
-                                    },
-                                    Node {
-                                        margin: UiRect::all(Val::Px(10.0)),
-                                        ..default()
-                                    },
-                                    Name::new("Join Prompt Input"),
-                                ));
-                                parent.spawn((
-                                    AseUiAnimation {
-                                        animation: Animation::tag("a"),
-                                        aseprite: ui_assets.xbox_letter_buttons_aseprite.clone(),
-                                    },
-                                    Node {
-                                        margin: UiRect::all(Val::Px(10.0)),
-                                        ..default()
-                                    },
-                                    Name::new("Join Prompt Input"),
-                                ));
-                            });
+                        parent.spawn_join_prompt(&ui_assets);
                     });
                 }
             }
