@@ -1,7 +1,6 @@
 use super::data::{
-    ButtonAction, ButtonActionDelayTimer, CarouselSlotPosition, CharacterCarousel,
-    DelayedButtonPressEvent, LoadingBar, MenuButtonState, PlayerJoinEvent, PlayerReadyEvent,
-    VisibleCarouselSlot,
+    ButtonAction, ButtonActionDelayTimer, DelayedButtonPressEvent, MenuButtonState,
+    PlayerJoinEvent, PlayerReadyEvent,
 };
 use crate::{
     assets::{LoadingProgressEvent, UiAssets},
@@ -25,7 +24,7 @@ use bevy_aseprite_ultra::prelude::AseUiAnimation;
 use log::{info, warn};
 
 pub(super) mod character_selection;
-pub(super) mod hui;
+pub(super) mod egui;
 pub(super) mod loading;
 pub(super) mod options;
 pub(super) mod pause;

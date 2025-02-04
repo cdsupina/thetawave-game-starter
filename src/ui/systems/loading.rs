@@ -5,7 +5,9 @@ use bevy::{
     utils::default,
 };
 
-use super::{AppState, Cleanup, LoadingBar, LoadingProgressEvent};
+use crate::ui::data::LoadingBar;
+
+use super::{AppState, Cleanup, LoadingProgressEvent};
 
 /// Setup loading bar ui
 pub(in crate::ui) fn setup_loading_ui_system(mut cmds: Commands) {

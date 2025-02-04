@@ -7,7 +7,6 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::Aseprite;
 use bevy_asset_loader::asset_collection::AssetCollection;
-use bevy_hui::prelude::HtmlTemplate;
 use bevy_kira_audio::AudioSource;
 use rand::Rng;
 
@@ -93,30 +92,9 @@ impl AppAudioAssets {
     }
 }
 
-// Main menu assets including HTML templates for various UI components
+// Assets for Bevy ui
 #[derive(AssetCollection, Resource)]
 pub(crate) struct UiAssets {
-    // HTML template for main menu layout
-    #[asset(path = "ui/menus/title_menu.html")]
-    pub title_menu_html: Handle<HtmlTemplate>,
-    // HTML template for menu buttons
-    #[asset(path = "ui/components/menu_button.html")]
-    pub menu_button_html: Handle<HtmlTemplate>,
-    // HTML template for menu button sprites
-    #[asset(path = "ui/components/menu_button_sprite.html")]
-    pub menu_button_sprite_html: Handle<HtmlTemplate>,
-    // HTML template for website footer button
-    #[asset(path = "ui/components/website_footer_button.html")]
-    pub website_footer_button_html: Handle<HtmlTemplate>,
-    // HTML template for options menu layout
-    #[asset(path = "ui/menus/options_main_menu.html")]
-    pub options_main_menu_html: Handle<HtmlTemplate>,
-    // HTML template for options pause menu layout
-    #[asset(path = "ui/menus/options_pause_menu.html")]
-    pub options_pause_menu_html: Handle<HtmlTemplate>,
-    // HTML template for thetawave logo
-    #[asset(path = "ui/components/thetawave_logo.html")]
-    pub thetawave_logo_html: Handle<HtmlTemplate>,
     // Animated title logo Aseprite
     #[asset(path = "media/aseprite/thetawave_logo.aseprite")]
     pub thetawave_logo_aseprite: Handle<Aseprite>,
@@ -129,12 +107,6 @@ pub(crate) struct UiAssets {
     // Animated github logo Aseprite
     #[asset(path = "media/aseprite/github_logo.aseprite")]
     pub github_logo_aseprite: Handle<Aseprite>,
-    // HTML template for character selection layout
-    #[asset(path = "ui/menus/character_selection.html")]
-    pub character_selection_html: Handle<HtmlTemplate>,
-    // HTML template for the pause menu
-    #[asset(path = "ui/menus/pause_menu.html")]
-    pub pause_menu_html: Handle<HtmlTemplate>,
     // Animated arrow button Aseprite
     #[asset(path = "media/aseprite/arrow_button.aseprite")]
     pub arrow_button_aseprite: Handle<Aseprite>,
@@ -144,12 +116,6 @@ pub(crate) struct UiAssets {
     pub juggernaut_character_image: Handle<Image>,
     #[asset(path = "media/images/ui/doomwing_character.png")]
     pub doomwing_character_image: Handle<Image>,
-    // HTML template for the node which holds the characater carousel and arrows
-    #[asset(path = "ui/components/character_selector.html")]
-    pub character_selector_html: Handle<HtmlTemplate>,
-    // HTML template for the node for prompt for player to join
-    #[asset(path = "ui/components/join_prompt.html")]
-    pub join_prompt_html: Handle<HtmlTemplate>,
     // Aseprite containing standard sized keyboard key sprites
     #[asset(path = "media/aseprite/standard_keyboard_buttons.aseprite")]
     pub standard_keyboard_buttons_aseprite: Handle<Aseprite>,

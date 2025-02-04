@@ -5,15 +5,15 @@ use super::{
             additional_players_join_system, carousel_input_system,
             cycle_player_one_carousel_system, enable_join_button_system,
             enable_start_game_button_system, lock_in_player_button_system, set_characters_system,
-            setup_character_selection_system, spawn_carousel_system, spawn_join_prompt_system,
+            spawn_carousel_system, spawn_character_selection_system, spawn_join_prompt_system,
             spawn_ready_button_system, update_carousel_ui_system,
         },
-        hui::setup_hui_system,
+        egui::setup_egui_system,
         loading::{setup_loading_ui_system, update_loading_bar_system},
         menu_button_action_system, menu_button_delayed_action_system, menu_button_focus_system,
-        options::{options_menu_system, persist_options_system, setup_options_menu_system},
-        pause::{setup_pause_menu_system, setup_pause_options_system},
-        title::{setup_title_menu_system, website_footer_button_focus_system},
+        options::{options_menu_system, persist_options_system, spawn_options_menu_system},
+        pause::{spawn_pause_menu_system, spawn_pause_options_system},
+        title::{spawn_title_menu_system, website_footer_button_focus_system},
     },
 };
 use crate::states::{AppState, MainMenuState, PauseMenuState};
@@ -24,7 +24,6 @@ use bevy::{
 use bevy_alt_ui_navigation_lite::NavRequestSystem;
 use bevy_asset_loader::loading_state::LoadingStateSet;
 use bevy_egui::EguiPlugin;
-use bevy_hui::HuiPlugin;
 
 // Plugin responsible for managing the Thetawave user interface components and systems
 pub(crate) struct ThetawaveUiPlugin;
@@ -32,26 +31,26 @@ pub(crate) struct ThetawaveUiPlugin;
 impl Plugin for ThetawaveUiPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         // Initialize required UI plugins - HuiPlugin for UI components and EguiPlugin for immediate mode GUI
-        app.add_plugins((HuiPlugin, EguiPlugin))
+        app.add_plugins(EguiPlugin)
             .add_event::<PlayerJoinEvent>()
             .add_event::<PlayerReadyEvent>()
             .add_event::<DelayedButtonPressEvent>()
             .add_systems(OnEnter(AppState::MainMenuLoading), setup_loading_ui_system)
             // Setup core UI components and main menu systems when entering the MainMenu state
-            .add_systems(OnEnter(AppState::MainMenu), setup_hui_system)
+            .add_systems(OnEnter(AppState::MainMenu), setup_egui_system)
             // Initialize and setup the title menu UI components when entering Title state
-            .add_systems(OnEnter(MainMenuState::Title), setup_title_menu_system)
+            .add_systems(OnEnter(MainMenuState::Title), spawn_title_menu_system)
             // Initialize and setup the options menu UI components when entering Options state
-            .add_systems(OnEnter(MainMenuState::Options), setup_options_menu_system)
+            .add_systems(OnEnter(MainMenuState::Options), spawn_options_menu_system)
             // Initialize and setup the character selection UI components when entering Character Selection state
             .add_systems(
                 OnEnter(MainMenuState::CharacterSelection),
-                setup_character_selection_system,
+                spawn_character_selection_system,
             )
             // Initialize and setup the pause menu ui components when entering the paused state
-            .add_systems(OnEnter(PauseMenuState::Main), setup_pause_menu_system)
+            .add_systems(OnEnter(PauseMenuState::Main), spawn_pause_menu_system)
             // Initialize and setup the options pause menu when inetering the paused options state
-            .add_systems(OnEnter(PauseMenuState::Options), setup_pause_options_system)
+            .add_systems(OnEnter(PauseMenuState::Options), spawn_pause_options_system)
             // Add update systems that run every frame:
             .add_systems(
                 Update,
