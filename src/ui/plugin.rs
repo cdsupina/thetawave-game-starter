@@ -8,7 +8,7 @@ use super::{
             spawn_carousel_system, spawn_character_selection_system, spawn_join_prompt_system,
             spawn_ready_button_system, update_carousel_ui_system,
         },
-        hui::setup_hui_system,
+        egui::setup_egui_system,
         loading::{setup_loading_ui_system, update_loading_bar_system},
         menu_button_action_system, menu_button_delayed_action_system, menu_button_focus_system,
         options::{options_menu_system, persist_options_system, spawn_options_menu_system},
@@ -24,7 +24,6 @@ use bevy::{
 use bevy_alt_ui_navigation_lite::NavRequestSystem;
 use bevy_asset_loader::loading_state::LoadingStateSet;
 use bevy_egui::EguiPlugin;
-use bevy_hui::HuiPlugin;
 
 // Plugin responsible for managing the Thetawave user interface components and systems
 pub(crate) struct ThetawaveUiPlugin;
@@ -32,13 +31,13 @@ pub(crate) struct ThetawaveUiPlugin;
 impl Plugin for ThetawaveUiPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         // Initialize required UI plugins - HuiPlugin for UI components and EguiPlugin for immediate mode GUI
-        app.add_plugins((HuiPlugin, EguiPlugin))
+        app.add_plugins(EguiPlugin)
             .add_event::<PlayerJoinEvent>()
             .add_event::<PlayerReadyEvent>()
             .add_event::<DelayedButtonPressEvent>()
             .add_systems(OnEnter(AppState::MainMenuLoading), setup_loading_ui_system)
             // Setup core UI components and main menu systems when entering the MainMenu state
-            .add_systems(OnEnter(AppState::MainMenu), setup_hui_system)
+            .add_systems(OnEnter(AppState::MainMenu), setup_egui_system)
             // Initialize and setup the title menu UI components when entering Title state
             .add_systems(OnEnter(MainMenuState::Title), spawn_title_menu_system)
             // Initialize and setup the options menu UI components when entering Options state

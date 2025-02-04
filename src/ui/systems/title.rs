@@ -10,12 +10,9 @@ use bevy::{
 use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
 use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
 
-/// This system sets up the title menu interface.
-/// It spawns the main menu HTML node and associates the cleanup component with it.
+/// Spawn ui for title menu
 pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
-    // Create an HTMLNode with main menu HTML and link the TitleMenuCleanup component.
     cmds.spawn((
-        //HtmlNode(ui_assets.title_menu_html.clone()),
         Cleanup::<MainMenuState> {
             states: vec![MainMenuState::Title],
         },

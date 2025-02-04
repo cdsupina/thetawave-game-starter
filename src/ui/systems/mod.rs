@@ -24,7 +24,7 @@ use bevy_aseprite_ultra::prelude::AseUiAnimation;
 use log::{info, warn};
 
 pub(super) mod character_selection;
-pub(super) mod hui;
+pub(super) mod egui;
 pub(super) mod loading;
 pub(super) mod options;
 pub(super) mod pause;

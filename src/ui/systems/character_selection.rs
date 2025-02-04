@@ -32,13 +32,11 @@ use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
 use bevy_persistent::Persistent;
 use leafwing_input_manager::{prelude::ActionState, InputManagerBundle};
 
-/// This function sets up the character selection interface.
-/// It spawns the options menu HTML node and associates the cleanup component with it.
+/// Spawn ui for character selection
 pub(in crate::ui) fn spawn_character_selection_system(
     mut cmds: Commands,
     ui_assets: Res<UiAssets>,
 ) {
-    // Create an HTMLNode with options menu HTML and link the OptionsMenuCleanup component.
     cmds.spawn((
         Cleanup::<MainMenuState> {
             states: vec![MainMenuState::CharacterSelection],
