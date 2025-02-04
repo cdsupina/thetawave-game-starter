@@ -4,12 +4,11 @@ use super::{AppState, Cleanup, GameState, PauseMenuState, UiAssets};
 use bevy::{
     color::Color,
     core::Name,
-    hierarchy::BuildChildren,
+    hierarchy::{BuildChildren, ChildBuild},
     prelude::{Commands, Res},
-    ui::{AlignItems, BackgroundColor, FlexDirection, JustifyContent, Node, Val},
+    ui::{AlignItems, BackgroundColor, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
-use bevy_hui::prelude::HtmlNode;
 
 /// Spawns the pause menu ui
 pub(in crate::ui) fn spawn_pause_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
@@ -61,12 +60,9 @@ pub(in crate::ui) fn spawn_pause_menu_system(mut cmds: Commands, ui_assets: Res<
     });
 }
 
-/// This system sets up the title menu interface.
-/// It spawns the main menu HTML node and associates the cleanup component with it.
-pub(in crate::ui) fn setup_pause_options_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
-    // Create an HTMLNode with main menu HTML and link the TitleMenuCleanup component.
+/// Spawns ui for options pause menu
+pub(in crate::ui) fn spawn_pause_options_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
     cmds.spawn((
-        HtmlNode(ui_assets.options_pause_menu_html.clone()),
         Cleanup::<GameState> {
             states: vec![GameState::Paused],
         },
@@ -77,5 +73,43 @@ pub(in crate::ui) fn setup_pause_options_system(mut cmds: Commands, ui_assets: R
             states: vec![AppState::Game],
         },
         Name::new("Pause Menu"),
-    ));
+        Node {
+            height: Val::Percent(100.0),
+            width: Val::Percent(100.0),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::FlexEnd,
+            flex_direction: FlexDirection::Column,
+            ..default()
+        },
+        BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.8)),
+    ))
+    .with_children(|parent| {
+        parent
+            .spawn(Node {
+                display: Display::Flex,
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                width: Val::Percent(100.0),
+                margin: UiRect::all(Val::Px(10.0)),
+                ..default()
+            })
+            .with_children(|parent| {
+                parent.spawn_menu_button(
+                    &ui_assets,
+                    ButtonAction::ApplyOptions,
+                    300.0,
+                    true,
+                    false,
+                );
+
+                parent.spawn_menu_button(
+                    &ui_assets,
+                    ButtonAction::EnterPauseMenuState(PauseMenuState::Main),
+                    300.0,
+                    true,
+                    false,
+                );
+            });
+    });
 }

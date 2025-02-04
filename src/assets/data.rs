@@ -7,7 +7,6 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::Aseprite;
 use bevy_asset_loader::asset_collection::AssetCollection;
-use bevy_hui::prelude::HtmlTemplate;
 use bevy_kira_audio::AudioSource;
 use rand::Rng;
 
@@ -92,15 +91,6 @@ impl AppAudioAssets {
 // Main menu assets including HTML templates for various UI components
 #[derive(AssetCollection, Resource)]
 pub(crate) struct UiAssets {
-    // HTML template for menu buttons
-    #[asset(path = "ui/components/menu_button.html")]
-    pub menu_button_html: Handle<HtmlTemplate>,
-    // HTML template for menu button sprites
-    #[asset(path = "ui/components/menu_button_sprite.html")]
-    pub menu_button_sprite_html: Handle<HtmlTemplate>,
-    // HTML template for options pause menu layout
-    #[asset(path = "ui/menus/options_pause_menu.html")]
-    pub options_pause_menu_html: Handle<HtmlTemplate>,
     // Animated title logo Aseprite
     #[asset(path = "media/aseprite/thetawave_logo.aseprite")]
     pub thetawave_logo_aseprite: Handle<Aseprite>,

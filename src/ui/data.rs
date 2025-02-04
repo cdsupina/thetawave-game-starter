@@ -57,7 +57,7 @@ impl ButtonAction {
             },
             ButtonAction::EnterPauseMenuState(pause_menu_state) => match pause_menu_state {
                 PauseMenuState::None => None,
-                PauseMenuState::Main => None,
+                PauseMenuState::Main => Some("Back".to_string()),
                 PauseMenuState::Options => Some("Options".to_string()),
             },
             ButtonAction::Exit => Some("Exit".to_string()),

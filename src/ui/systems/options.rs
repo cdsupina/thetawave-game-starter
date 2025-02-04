@@ -13,10 +13,8 @@ use bevy::{
 use bevy_egui::{egui, EguiContexts};
 use bevy_persistent::Persistent;
 
-/// This function sets up the options menu interface.
-/// It spawns the options menu HTML node and associates the cleanup component with it.
+/// Spawns options menu ui for the main menu
 pub(in crate::ui) fn spawn_options_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
-    // Create an HTMLNode with options menu HTML and link the OptionsMenuCleanup component.
     cmds.spawn((
         Cleanup::<MainMenuState> {
             states: vec![MainMenuState::Options],
