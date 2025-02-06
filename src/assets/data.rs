@@ -4,6 +4,7 @@ use bevy::{
     image::Image,
     prelude::{Event, Resource},
     scene::Scene,
+    text::Font,
 };
 use bevy_aseprite_ultra::prelude::Aseprite;
 use bevy_asset_loader::asset_collection::AssetCollection;
@@ -125,6 +126,8 @@ pub(crate) struct UiAssets {
     // Aseprite containing xbox letter buttons
     #[asset(path = "media/aseprite/xbox_letter_buttons.aseprite")]
     pub xbox_letter_buttons_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/fonts/Dank-Depths.ttf")]
+    pub dank_depths_font: Handle<Font>,
 }
 
 impl UiAssets {

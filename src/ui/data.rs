@@ -41,33 +41,33 @@ impl ButtonAction {
     pub fn to_string(&self) -> Option<String> {
         match self {
             ButtonAction::EnterAppState(app_state) => match app_state {
-                AppState::MainMenuLoading => Some("Main Menu".to_string()),
+                AppState::MainMenuLoading => Some("MAIN MENU".to_string()),
                 AppState::MainMenu => None,
-                AppState::GameLoading => Some("Start Game".to_string()),
+                AppState::GameLoading => Some("START GAME".to_string()),
                 AppState::Game => None,
             },
             ButtonAction::EnterMainMenuState(main_menu_state) => match main_menu_state {
                 MainMenuState::None => None,
-                MainMenuState::Title => Some("Back".to_string()),
-                MainMenuState::Options => Some("Options".to_string()),
-                MainMenuState::CharacterSelection => Some("Play".to_string()),
+                MainMenuState::Title => Some("BACK".to_string()),
+                MainMenuState::Options => Some("OPTIONS".to_string()),
+                MainMenuState::CharacterSelection => Some("PLAY".to_string()),
             },
             ButtonAction::EnterGameState(game_state) => match game_state {
-                GameState::Playing => Some("Resume".to_string()),
+                GameState::Playing => Some("RESUME".to_string()),
                 GameState::Paused => None,
             },
             ButtonAction::EnterPauseMenuState(pause_menu_state) => match pause_menu_state {
                 PauseMenuState::None => None,
-                PauseMenuState::Main => Some("Back".to_string()),
-                PauseMenuState::Options => Some("Options".to_string()),
+                PauseMenuState::Main => Some("BACK".to_string()),
+                PauseMenuState::Options => Some("OPTIONS".to_string()),
             },
-            ButtonAction::Exit => Some("Exit".to_string()),
-            ButtonAction::ApplyOptions => Some("Apply".to_string()),
+            ButtonAction::Exit => Some("EXIT".to_string()),
+            ButtonAction::ApplyOptions => Some("APPLY".to_string()),
             ButtonAction::OpenBlueskyWebsite => None,
             ButtonAction::OpenGithubWebsite => None,
-            ButtonAction::Join(_) => Some("Join".to_string()),
-            ButtonAction::Ready(_) => Some("Ready".to_string()),
-            ButtonAction::UnReady(_) => Some("Unready".to_string()),
+            ButtonAction::Join(_) => Some("JOIN".to_string()),
+            ButtonAction::Ready(_) => Some("READY".to_string()),
+            ButtonAction::UnReady(_) => Some("UNREADY".to_string()),
         }
     }
 }
@@ -241,6 +241,10 @@ pub(super) struct StartGameButton;
 /// Timer for preventing players from instantly readying when joining
 #[derive(Component)]
 pub(super) struct CarouselReadyTimer(pub Timer);
+
+/// Tag for container node entity for text
+#[derive(Component)]
+pub(super) struct MenuButtonTextContainer;
 
 impl CarouselReadyTimer {
     pub(super) fn new() -> Self {
@@ -419,17 +423,21 @@ impl UiChildBuilderExt for ChildBuilder<'_> {
                     ))
                     .with_children(|parent| {
                         parent
-                            .spawn(Node {
-                                margin: UiRect::bottom(Val::Px(14.0)),
-                                flex_direction: FlexDirection::Column,
-                                justify_content: JustifyContent::FlexEnd,
-                                ..default()
-                            })
+                            .spawn((
+                                Node {
+                                    margin: UiRect::bottom(Val::Px(18.0)),
+                                    flex_direction: FlexDirection::Column,
+                                    justify_content: JustifyContent::FlexEnd,
+                                    ..default()
+                                },
+                                MenuButtonTextContainer,
+                            ))
                             .with_children(|parent| {
                                 if let Some(button_text) = button_action.to_string() {
                                     parent.spawn((
                                         Text::new(button_text),
-                                        TextFont::from_font_size(25.0),
+                                        TextFont::from_font_size(20.0)
+                                            .with_font(ui_assets.dank_depths_font.clone()),
                                     ));
                                 }
                             });
