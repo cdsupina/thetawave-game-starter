@@ -1,6 +1,6 @@
 use super::data::{
     ButtonAction, ButtonActionDelayTimer, DelayedButtonPressEvent, MenuButtonState,
-    PlayerJoinEvent, PlayerReadyEvent,
+    MenuButtonTextContainer, PlayerJoinEvent, PlayerReadyEvent,
 };
 use crate::{
     assets::{LoadingProgressEvent, UiAssets},
@@ -18,6 +18,7 @@ use bevy::{
         MouseButton, NextState, Query, Res, ResMut, With,
     },
     time::Time,
+    ui::{Node, UiRect, Val},
 };
 use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
 use bevy_aseprite_ultra::prelude::AseUiAnimation;
@@ -39,20 +40,21 @@ const BLUESKY_URL: &str = "https://bsky.app/profile/carlo.metalmancy.tech";
 pub(super) fn menu_button_focus_system(
     mut nav_events: EventReader<NavEvent>,
     focusable_q: Query<(&Children, &MenuButtonState), With<Focusable>>,
-    mut ase_q: Query<&mut AseUiAnimation>,
+    mut ase_q: Query<(&Children, &mut AseUiAnimation)>,
+    mut text_container_q: Query<&mut Node, With<MenuButtonTextContainer>>,
     mut audio_effect_events: EventWriter<AudioEffectEvent>,
 ) {
     for event in nav_events.read() {
         if let NavEvent::FocusChanged { to, from } = event {
             if to != from {
                 // Handle newly focused button
-                if let Ok((children, button_state)) = focusable_q.get(*to.first()) {
+                if let Ok((focusable_children, button_state)) = focusable_q.get(*to.first()) {
                     // Play pressed button effect
                     audio_effect_events.send(AudioEffectEvent::MenuButtonSelected);
 
                     // Update the button animation
-                    for child in children.iter() {
-                        if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
+                    for focusable_child in focusable_children.iter() {
+                        if let Ok((_, mut ase_animation)) = ase_q.get_mut(*focusable_child) {
                             if matches!(button_state, MenuButtonState::Ready) {
                                 ase_animation.animation.play_loop("ready_selected");
                             } else {
@@ -63,17 +65,28 @@ pub(super) fn menu_button_focus_system(
                 }
 
                 // Handle previously focused button
-                if let Ok((children, button_state)) = focusable_q.get(*from.first()) {
+                if let Ok((focusable_children, button_state)) = focusable_q.get(*from.first()) {
                     // Play released button effect
                     audio_effect_events.send(AudioEffectEvent::MenuButtonReleased);
 
                     // Update the button animation
-                    for child in children.iter() {
-                        if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
+                    for focusable_child in focusable_children.iter() {
+                        if let Ok((ase_ani_children, mut ase_animation)) =
+                            ase_q.get_mut(*focusable_child)
+                        {
                             if matches!(button_state, MenuButtonState::Ready) {
                                 ase_animation.animation.play_loop("ready_released");
                             } else {
                                 ase_animation.animation.play_loop("released");
+                            }
+
+                            // Reset the text position to the original position
+                            for ase_ani_child in ase_ani_children.iter() {
+                                if let Ok(mut text_container_node) =
+                                    text_container_q.get_mut(*ase_ani_child)
+                                {
+                                    text_container_node.margin = UiRect::bottom(Val::Px(18.0));
+                                }
                             }
                         }
                     }
@@ -180,7 +193,8 @@ pub(super) fn menu_button_delayed_action_system(
     mut exit_events: EventWriter<AppExit>,
     mut apply_options_events: EventWriter<ApplyOptionsEvent>,
     focusable_q: Query<&Children, With<Focusable>>,
-    mut ase_q: Query<&mut AseUiAnimation>,
+    mut ase_q: Query<(&Children, &mut AseUiAnimation)>,
+    mut text_container_q: Query<&mut Node, With<MenuButtonTextContainer>>,
 ) {
     // Check if there is a queued button action
     if let Some(button_action) = queued_button_action.clone() {
@@ -225,8 +239,17 @@ pub(super) fn menu_button_delayed_action_system(
         // Change the sprite of the button
         if let Ok(children) = focusable_q.get(event.button_entity) {
             for child in children.iter() {
-                if let Ok(mut ase_animation) = ase_q.get_mut(*child) {
+                if let Ok((ase_ani_children, mut ase_animation)) = ase_q.get_mut(*child) {
                     ase_animation.animation.play_loop("pressed");
+
+                    // Shift the text down to match the sprite
+                    for ase_ani_child in ase_ani_children.iter() {
+                        if let Ok(mut text_container_node) =
+                            text_container_q.get_mut(*ase_ani_child)
+                        {
+                            text_container_node.margin = UiRect::bottom(Val::Px(12.0));
+                        }
+                    }
                 }
             }
         }
