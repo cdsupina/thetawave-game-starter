@@ -42,32 +42,30 @@ impl ButtonAction {
         match self {
             ButtonAction::EnterAppState(app_state) => match app_state {
                 AppState::MainMenuLoading => Some("MAIN MENU".to_string()),
-                AppState::MainMenu => None,
                 AppState::GameLoading => Some("START GAME".to_string()),
-                AppState::Game => None,
+                _ => None,
             },
             ButtonAction::EnterMainMenuState(main_menu_state) => match main_menu_state {
-                MainMenuState::None => None,
                 MainMenuState::Title => Some("BACK".to_string()),
                 MainMenuState::Options => Some("OPTIONS".to_string()),
                 MainMenuState::CharacterSelection => Some("PLAY".to_string()),
+                _ => None,
             },
             ButtonAction::EnterGameState(game_state) => match game_state {
                 GameState::Playing => Some("RESUME".to_string()),
-                GameState::Paused => None,
+                _ => None,
             },
             ButtonAction::EnterPauseMenuState(pause_menu_state) => match pause_menu_state {
-                PauseMenuState::None => None,
                 PauseMenuState::Main => Some("BACK".to_string()),
                 PauseMenuState::Options => Some("OPTIONS".to_string()),
+                _ => None,
             },
             ButtonAction::Exit => Some("EXIT".to_string()),
             ButtonAction::ApplyOptions => Some("APPLY".to_string()),
-            ButtonAction::OpenBlueskyWebsite => None,
-            ButtonAction::OpenGithubWebsite => None,
             ButtonAction::Join(_) => Some("JOIN".to_string()),
             ButtonAction::Ready(_) => Some("READY".to_string()),
             ButtonAction::UnReady(_) => Some("UNREADY".to_string()),
+            _ => None,
         }
     }
 }

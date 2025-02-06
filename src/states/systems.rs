@@ -54,6 +54,7 @@ pub(super) fn reset_states_on_game_state_transition_system(
         if let Some(exited_state) = event.exited {
             match exited_state {
                 GameState::Playing => {}
+                GameState::End => {}
                 GameState::Paused => {
                     next_pause_menu_state.set(PauseMenuState::default());
                 }
@@ -87,6 +88,7 @@ pub(super) fn toggle_game_state(
                     next_game_state.set(GameState::Playing);
                     next_pause_state.set(PauseMenuState::None);
                 }
+                GameState::End => {}
             };
         }
     }
