@@ -9,6 +9,7 @@ use super::{
             spawn_ready_button_system, update_carousel_ui_system,
         },
         egui::setup_egui_system,
+        game_end::spawn_game_end_system,
         loading::{setup_loading_ui_system, update_loading_bar_system},
         menu_button_action_system, menu_button_delayed_action_system, menu_button_focus_system,
         options::{options_menu_system, persist_options_system, spawn_options_menu_system},
@@ -16,7 +17,7 @@ use super::{
         title::{spawn_title_menu_system, website_footer_button_focus_system},
     },
 };
-use crate::states::{AppState, MainMenuState, PauseMenuState};
+use crate::states::{AppState, GameState, MainMenuState, PauseMenuState};
 use bevy::{
     app::{Plugin, Update},
     prelude::{in_state, Condition, IntoSystemConfigs, OnEnter},
@@ -90,6 +91,7 @@ impl Plugin for ThetawaveUiPlugin {
                     carousel_input_system,
                 )
                     .run_if(in_state(MainMenuState::CharacterSelection)),
-            );
+            )
+            .add_systems(OnEnter(GameState::End), spawn_game_end_system);
     }
 }

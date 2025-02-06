@@ -1,9 +1,12 @@
 use crate::{input::PlayerAction, player::PlayerNum};
 
 use super::{data::Cleanup, AppState, GameState, MainMenuState, PauseMenuState};
-use bevy::prelude::{
-    Commands, DespawnRecursiveExt, Entity, EventReader, NextState, Query, Res, ResMut, State,
-    StateTransitionEvent, States,
+use bevy::{
+    input::{keyboard::KeyCode, ButtonInput},
+    prelude::{
+        Commands, DespawnRecursiveExt, Entity, EventReader, NextState, Query, Res, ResMut, State,
+        StateTransitionEvent, States,
+    },
 };
 use leafwing_input_manager::prelude::ActionState;
 
@@ -70,7 +73,7 @@ pub(super) fn enter_title_menu_state_system(mut next_state: ResMut<NextState<Mai
 
 /// Toggle weather the game is paused or playing
 /// Only player one can pause
-pub(super) fn toggle_game_state(
+pub(super) fn toggle_game_state_system(
     mut next_game_state: ResMut<NextState<GameState>>,
     mut next_pause_state: ResMut<NextState<PauseMenuState>>,
     current_state: Res<State<GameState>>,
@@ -91,5 +94,15 @@ pub(super) fn toggle_game_state(
                 GameState::End => {}
             };
         }
+    }
+}
+
+/// Press the V key to end the game and enter the game end state
+pub(super) fn enter_game_end_system(
+    keys: Res<ButtonInput<KeyCode>>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+) {
+    if keys.just_pressed(KeyCode::KeyV) {
+        next_game_state.set(GameState::End);
     }
 }
