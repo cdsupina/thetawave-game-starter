@@ -1,12 +1,13 @@
 use super::{
     data::{AppAudioAssets, BackgroundAssets, GameAssets, LoadingProgressEvent, UiAssets},
-    systems::get_loading_progress_system,
+    systems::{get_loading_progress_system, unload_game_assets_system},
 };
 use crate::states::AppState;
 use bevy::{
     app::{Plugin, Update},
     diagnostic::FrameTimeDiagnosticsPlugin,
     prelude::{in_state, Condition, IntoSystemConfigs},
+    state::state::OnExit,
 };
 use bevy_asset_loader::loading_state::{
     config::ConfigureLoadingState, LoadingState, LoadingStateAppExt, LoadingStateSet,
@@ -42,6 +43,7 @@ impl Plugin for ThetawaveAssetsPlugin {
                 .run_if(in_state(AppState::MainMenuLoading).or(in_state(AppState::GameLoading)))
                 .after(LoadingStateSet(AppState::MainMenuLoading))
                 .after(LoadingStateSet(AppState::GameLoading)),
-        );
+        )
+        .add_systems(OnExit(AppState::Game), unload_game_assets_system);
     }
 }
