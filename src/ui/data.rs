@@ -6,7 +6,7 @@ use crate::{
 };
 use bevy::{
     core::Name,
-    ecs::system::EntityCommands,
+    ecs::system::{EntityCommands, Resource},
     hierarchy::{BuildChildren, ChildBuild, ChildBuilder},
     prelude::{Component, Entity, Event},
     text::TextFont,
@@ -444,4 +444,27 @@ impl UiChildBuilderExt for ChildBuilder<'_> {
 
         entity_cmds
     }
+}
+
+/// Enum for all types of run results
+#[derive(Default, Debug, Clone)]
+pub(crate) enum GameEndResultType {
+    #[default]
+    Loss,
+    Win,
+}
+
+impl From<GameEndResultType> for String {
+    fn from(val: GameEndResultType) -> Self {
+        match val {
+            GameEndResultType::Loss => "GAME OVER".to_string(),
+            GameEndResultType::Win => "VICTORY!".to_string(),
+        }
+    }
+}
+
+/// Resource for carrying the game result to the end screen and stats
+#[derive(Resource, Default, Debug)]
+pub(crate) struct GameEndResultResource {
+    pub result: GameEndResultType,
 }

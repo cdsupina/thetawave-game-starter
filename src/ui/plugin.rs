@@ -9,13 +9,14 @@ use super::{
             spawn_ready_button_system, update_carousel_ui_system,
         },
         egui::setup_egui_system,
-        game_end::spawn_game_end_system,
+        game_end::{reset_game_end_result_resource_system, spawn_game_end_system},
         loading::{setup_loading_ui_system, update_loading_bar_system},
         menu_button_action_system, menu_button_delayed_action_system, menu_button_focus_system,
         options::{options_menu_system, persist_options_system, spawn_options_menu_system},
         pause::{spawn_pause_menu_system, spawn_pause_options_system},
         title::{spawn_title_menu_system, website_footer_button_focus_system},
     },
+    GameEndResultResource,
 };
 use crate::states::{AppState, GameState, MainMenuState, PauseMenuState};
 use bevy::{
@@ -33,6 +34,7 @@ impl Plugin for ThetawaveUiPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         // Initialize required UI plugins - HuiPlugin for UI components and EguiPlugin for immediate mode GUI
         app.add_plugins(EguiPlugin)
+            .init_resource::<GameEndResultResource>()
             .add_event::<PlayerJoinEvent>()
             .add_event::<PlayerReadyEvent>()
             .add_event::<DelayedButtonPressEvent>()
@@ -92,6 +94,10 @@ impl Plugin for ThetawaveUiPlugin {
                 )
                     .run_if(in_state(MainMenuState::CharacterSelection)),
             )
-            .add_systems(OnEnter(GameState::End), spawn_game_end_system);
+            .add_systems(OnEnter(GameState::End), spawn_game_end_system)
+            .add_systems(
+                OnEnter(AppState::GameLoading),
+                reset_game_end_result_resource_system,
+            );
     }
 }

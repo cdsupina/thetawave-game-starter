@@ -1,4 +1,8 @@
-use crate::{input::PlayerAction, player::PlayerNum};
+use crate::{
+    input::PlayerAction,
+    player::PlayerNum,
+    ui::{GameEndResultResource, GameEndResultType},
+};
 
 use super::{data::Cleanup, AppState, GameState, MainMenuState, PauseMenuState};
 use bevy::{
@@ -101,8 +105,12 @@ pub(super) fn toggle_game_state_system(
 pub(super) fn enter_game_end_system(
     keys: Res<ButtonInput<KeyCode>>,
     mut next_game_state: ResMut<NextState<GameState>>,
+    mut game_end_result_res: ResMut<GameEndResultResource>,
 ) {
     if keys.just_pressed(KeyCode::KeyV) {
+        game_end_result_res.result = GameEndResultType::Win;
+        next_game_state.set(GameState::End);
+    } else if keys.just_pressed(KeyCode::KeyG) {
         next_game_state.set(GameState::End);
     }
 }

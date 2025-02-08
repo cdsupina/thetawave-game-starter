@@ -1,7 +1,7 @@
 use bevy::{
     color::Color,
     core::Name,
-    ecs::system::{Commands, Res},
+    ecs::system::{Commands, Res, ResMut, Resource},
     hierarchy::{BuildChildren, ChildBuild},
     text::TextFont,
     ui::{
@@ -14,11 +14,18 @@ use bevy::{
 use crate::{
     assets::UiAssets,
     states::{AppState, Cleanup, GameState},
-    ui::data::{ButtonAction, UiChildBuilderExt},
+    ui::{
+        data::{ButtonAction, UiChildBuilderExt},
+        GameEndResultResource,
+    },
 };
 
 /// Spawns the game over/victory ui
-pub(in crate::ui) fn spawn_game_end_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
+pub(in crate::ui) fn spawn_game_end_system(
+    mut cmds: Commands,
+    ui_assets: Res<UiAssets>,
+    game_end_result_res: Res<GameEndResultResource>,
+) {
     cmds.spawn((
         Cleanup::<GameState> {
             states: vec![GameState::End],
@@ -58,7 +65,7 @@ pub(in crate::ui) fn spawn_game_end_system(mut cmds: Commands, ui_assets: Res<Ui
                     })
                     .with_children(|parent| {
                         parent.spawn((
-                            Text::new("GAME OVER"),
+                            Text::new(String::from(game_end_result_res.result.clone())),
                             TextFont::from_font_size(150.0)
                                 .with_font(ui_assets.dank_depths_font.clone()),
                         ));
@@ -93,4 +100,12 @@ pub(in crate::ui) fn spawn_game_end_system(mut cmds: Commands, ui_assets: Res<Ui
                 );
             });
     });
+}
+
+/// Reset the game end result resource
+/// Should be called once before restarting the run
+pub(in crate::ui) fn reset_game_end_result_resource_system(
+    mut game_end_result_res: ResMut<GameEndResultResource>,
+) {
+    *game_end_result_res = GameEndResultResource::default();
 }
