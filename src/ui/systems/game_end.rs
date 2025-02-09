@@ -1,7 +1,7 @@
 use bevy::{
     color::Color,
     core::Name,
-    ecs::system::{Commands, Res, ResMut, Resource},
+    ecs::system::{Commands, Res, ResMut},
     hierarchy::{BuildChildren, ChildBuild},
     text::TextFont,
     ui::{
