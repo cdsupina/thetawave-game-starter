@@ -15,6 +15,7 @@ mod input;
 mod options;
 mod physics;
 mod player;
+mod save;
 mod states;
 mod ui;
 mod window;
@@ -51,8 +52,13 @@ fn main() {
         audio::ThetawaveAudioPlugin,
         player::ThetawavePlayerPlugin,
         physics::ThetawavePhysicsPlugin,
-        window::ThetawaveWindowPlugin,
+        save::ThetawaveSavePlugin,
     ));
+
+    // plugins not used for wasm32 builds
+    if !cfg!(target_arch = "wasm32") {
+        app.add_plugins(window::ThetawaveWindowPlugin);
+    }
 
     if cfg!(feature = "world_inspector") {
         println!("here");
