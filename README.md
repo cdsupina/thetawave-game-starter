@@ -23,7 +23,7 @@ It contains all the required features of a Thetawave style game.
   - [x] Ui Channel
 - [x] 2D Physics
 - [x] Local Multiplayer
-- [ ] Win and Loss Screens
+- [x] Win and Loss Screens
 - [ ] Logo Splash Screens
 - [x] WASM Deployment
 
