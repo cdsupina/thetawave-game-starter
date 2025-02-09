@@ -36,6 +36,8 @@ pub(crate) enum GameState {
     Playing,
     /// Paused gameplay state
     Paused,
+    /// End game state
+    End,
 }
 
 /// States enum for managing pause menu states

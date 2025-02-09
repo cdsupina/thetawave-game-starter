@@ -2,6 +2,7 @@ use super::systems::{rotate_planet_system, spawn_bg_system};
 use crate::states::{AppState, GameState};
 use bevy::{
     app::{Plugin, Update},
+    ecs::schedule::common_conditions::not,
     prelude::{in_state, Condition, IntoSystemConfigs, OnEnter},
 };
 
@@ -16,7 +17,7 @@ impl Plugin for ThetawaveBackgroundsPlugin {
                 Update,
                 rotate_planet_system
                     // rotate the planets if the game is not paused or the app is in the main menu state
-                    .run_if(in_state(GameState::Playing).or(in_state(AppState::MainMenu))),
+                    .run_if(not(in_state(GameState::Paused)).or(in_state(AppState::MainMenu))),
             );
     }
 }

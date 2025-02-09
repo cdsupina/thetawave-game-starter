@@ -19,6 +19,7 @@ pub(super) fn pause_physics_system(
                 GameState::Paused => {
                     physics_time.pause();
                 }
+                GameState::End => {}
             }
         }
     }

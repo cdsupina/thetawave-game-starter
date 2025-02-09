@@ -1,9 +1,16 @@
-use crate::{input::PlayerAction, player::PlayerNum};
+use crate::{
+    input::PlayerAction,
+    player::PlayerNum,
+    ui::{GameEndResultResource, GameEndResultType},
+};
 
 use super::{data::Cleanup, AppState, GameState, MainMenuState, PauseMenuState};
-use bevy::prelude::{
-    Commands, DespawnRecursiveExt, Entity, EventReader, NextState, Query, Res, ResMut, State,
-    StateTransitionEvent, States,
+use bevy::{
+    input::{keyboard::KeyCode, ButtonInput},
+    prelude::{
+        Commands, DespawnRecursiveExt, Entity, EventReader, NextState, Query, Res, ResMut, State,
+        StateTransitionEvent, States,
+    },
 };
 use leafwing_input_manager::prelude::ActionState;
 
@@ -54,6 +61,7 @@ pub(super) fn reset_states_on_game_state_transition_system(
         if let Some(exited_state) = event.exited {
             match exited_state {
                 GameState::Playing => {}
+                GameState::End => {}
                 GameState::Paused => {
                     next_pause_menu_state.set(PauseMenuState::default());
                 }
@@ -69,7 +77,7 @@ pub(super) fn enter_title_menu_state_system(mut next_state: ResMut<NextState<Mai
 
 /// Toggle weather the game is paused or playing
 /// Only player one can pause
-pub(super) fn toggle_game_state(
+pub(super) fn toggle_game_state_system(
     mut next_game_state: ResMut<NextState<GameState>>,
     mut next_pause_state: ResMut<NextState<PauseMenuState>>,
     current_state: Res<State<GameState>>,
@@ -87,7 +95,22 @@ pub(super) fn toggle_game_state(
                     next_game_state.set(GameState::Playing);
                     next_pause_state.set(PauseMenuState::None);
                 }
+                GameState::End => {}
             };
         }
+    }
+}
+
+/// Press the V key to end the game and enter the game end state
+pub(super) fn enter_game_end_system(
+    keys: Res<ButtonInput<KeyCode>>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+    mut game_end_result_res: ResMut<GameEndResultResource>,
+) {
+    if keys.just_pressed(KeyCode::KeyV) {
+        game_end_result_res.result = GameEndResultType::Win;
+        next_game_state.set(GameState::End);
+    } else if keys.just_pressed(KeyCode::KeyG) {
+        next_game_state.set(GameState::End);
     }
 }
