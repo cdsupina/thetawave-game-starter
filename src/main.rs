@@ -15,6 +15,7 @@ mod input;
 mod options;
 mod physics;
 mod player;
+mod save;
 mod states;
 mod ui;
 mod window;
@@ -52,6 +53,7 @@ fn main() {
         player::ThetawavePlayerPlugin,
         physics::ThetawavePhysicsPlugin,
         window::ThetawaveWindowPlugin,
+        save::ThetawaveSavePlugin,
     ));
 
     if cfg!(feature = "world_inspector") {
