@@ -5,7 +5,6 @@ use bevy::{
     window::{Window, WindowMode, WindowPlugin, WindowResolution},
 };
 use bevy_aseprite_ultra::AsepriteUltraPlugin;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 mod assets;
 mod audio;
@@ -58,11 +57,6 @@ fn main() {
     // plugins not used for wasm32 builds
     if !cfg!(target_arch = "wasm32") {
         app.add_plugins(window::ThetawaveWindowPlugin);
-    }
-
-    if cfg!(feature = "world_inspector") {
-        println!("here");
-        app.add_plugins(WorldInspectorPlugin::new());
     }
 
     app.run();
