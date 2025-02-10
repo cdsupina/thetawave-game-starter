@@ -14,9 +14,9 @@ It contains all the required features of a Thetawave style game.
 - [x] Loading Screens
 - [x] Character Selection
 - [x] Pause Menu
-- [ ] Persistence
+- [x] Persistence
   - [x] Save and load settings
-  - [ ] Save overall progress
+  - [x] Save overall progress
 - [x] Audio Playing
   - [x] Background Music Channel
   - [x] Effects Channel
