@@ -1,4 +1,8 @@
-use bevy::prelude::Query;
+use bevy::{
+    ecs::query::With,
+    prelude::Query,
+    window::{PrimaryWindow, Window},
+};
 use bevy_egui::{
     egui::{
         style::{HandleShape, Selection, WidgetVisuals, Widgets},
@@ -16,6 +20,11 @@ const INACTIVE_BG_COLOR: Color32 = Color32::from_rgb(178, 82, 102);
 const INACTIVE_STROKE: Stroke = Stroke {
     width: 2.0,
     color: Color32::from_rgb(226, 114, 133),
+};
+const ACTIVE_BG_COLOR: Color32 = Color32::from_rgb(139, 68, 89);
+const ACTIVE_STROKE: Stroke = Stroke {
+    width: 2.0,
+    color: Color32::from_rgb(178, 82, 102),
 };
 const SELECTION_BG_COLOR: Color32 = Color32::from_rgb(139, 68, 89);
 
@@ -51,6 +60,14 @@ pub(in crate::ui) fn setup_egui_system(
                         fg_stroke: INACTIVE_STROKE,
                         expansion: 1.0,
                     },
+                    active: WidgetVisuals {
+                        bg_fill: ACTIVE_BG_COLOR,
+                        weak_bg_fill: ACTIVE_BG_COLOR,
+                        bg_stroke: ACTIVE_STROKE,
+                        rounding: Rounding::same(2.0),
+                        fg_stroke: ACTIVE_STROKE,
+                        expansion: 1.0,
+                    },
                     ..Default::default()
                 },
                 override_text_color: Some(Color32::WHITE),
@@ -68,5 +85,18 @@ pub(in crate::ui) fn setup_egui_system(
             },
             ..Default::default()
         });
+    }
+}
+
+/// System that updates egui scale based on window height
+pub(in crate::ui) fn update_egui_scale_system(
+    mut egui_settings: Query<&mut EguiContextSettings>,
+    primary_window_q: Query<&Window, With<PrimaryWindow>>,
+) {
+    if let Ok(window) = primary_window_q.get_single() {
+        // Calculate egui scale based on physical window height relative to 720p baseline
+        if let Ok(mut egui_settings) = egui_settings.get_single_mut() {
+            egui_settings.scale_factor = (2. / 720.) * (window.resolution.physical_height() as f32);
+        }
     }
 }

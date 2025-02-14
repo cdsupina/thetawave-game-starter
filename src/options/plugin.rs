@@ -1,16 +1,14 @@
-use bevy::{
-    app::{Plugin, Startup, Update},
-    prelude::{in_state, Condition, IntoSystemConfigs, OnEnter},
-};
-
-use crate::states::{MainMenuState, PauseMenuState};
-
 use super::{
     systems::{
         apply_volume_options_system, apply_window_options_system, setup_options_res,
         setup_window_system, sync_options_res_system, update_ui_scale_system,
     },
     ApplyOptionsEvent,
+};
+use crate::states::{MainMenuState, PauseMenuState};
+use bevy::{
+    app::{Plugin, Startup, Update},
+    prelude::{in_state, Condition, IntoSystemConfigs, OnEnter},
 };
 
 // Plugin struct for handling Thetawave game options
