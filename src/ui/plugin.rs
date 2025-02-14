@@ -8,7 +8,7 @@ use super::{
             spawn_carousel_system, spawn_character_selection_system, spawn_join_prompt_system,
             spawn_ready_button_system, update_carousel_ui_system,
         },
-        egui::setup_egui_system,
+        egui::{setup_egui_system, update_egui_scale_system},
         game_end::{reset_game_end_result_resource_system, spawn_game_end_system},
         loading::{setup_loading_ui_system, update_loading_bar_system},
         menu_button_action_system, menu_button_delayed_action_system, menu_button_focus_system,
@@ -42,7 +42,10 @@ impl Plugin for ThetawaveUiPlugin {
             // Setup core UI components and main menu systems when entering the MainMenu state
             .add_systems(OnEnter(AppState::MainMenu), setup_egui_system)
             // Initialize and setup the title menu UI components when entering Title state
-            .add_systems(OnEnter(MainMenuState::Title), spawn_title_menu_system)
+            .add_systems(
+                OnEnter(MainMenuState::Title),
+                (spawn_title_menu_system, update_egui_scale_system),
+            )
             // Initialize and setup the options menu UI components when entering Options state
             .add_systems(OnEnter(MainMenuState::Options), spawn_options_menu_system)
             // Initialize and setup the character selection UI components when entering Character Selection state
@@ -73,7 +76,11 @@ impl Plugin for ThetawaveUiPlugin {
             // Run options systems in main menu and pause menu options states
             .add_systems(
                 Update,
-                (options_menu_system, persist_options_system)
+                (
+                    options_menu_system,
+                    persist_options_system,
+                    update_egui_scale_system,
+                )
                     .run_if(in_state(MainMenuState::Options).or(in_state(PauseMenuState::Options))),
             )
             // Run carousel systems in character selection state

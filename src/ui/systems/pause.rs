@@ -107,7 +107,7 @@ pub(in crate::ui) fn spawn_pause_options_system(mut cmds: Commands, ui_assets: R
                     &ui_assets,
                     ButtonAction::EnterPauseMenuState(PauseMenuState::Main),
                     300.0,
-                    true,
+                    false,
                     false,
                 );
             });

@@ -10,7 +10,10 @@ use bevy::{
     utils::default,
     window::{MonitorSelection, WindowMode, WindowResolution},
 };
-use bevy_egui::{egui, EguiContexts};
+use bevy_egui::{
+    egui::{CentralPanel, Color32, ComboBox, Frame, Grid, Margin, Slider},
+    EguiContexts,
+};
 use bevy_persistent::Persistent;
 
 /// Spawns options menu ui for the main menu
@@ -65,17 +68,18 @@ pub(in crate::ui) fn options_menu_system(
     mut contexts: EguiContexts,
     mut options_res: ResMut<Persistent<OptionsRes>>,
 ) {
-    egui::CentralPanel::default()
-        .frame(egui::Frame {
-            fill: egui::Color32::TRANSPARENT,       // Set transparent background
-            inner_margin: egui::Margin::same(10.0), // Establish inner margin for UI layout
+    CentralPanel::default()
+        .frame(Frame {
+            fill: Color32::TRANSPARENT,
+            inner_margin: Margin::same(10.0),
             ..Default::default()
         })
         .show(contexts.ctx_mut(), |ui| {
-            // Combo box for selecting Window Mode.
-            ui.horizontal(|ui| {
+            // Create a grid with two columns: one for labels and one for widgets
+            Grid::new("options_grid").num_columns(2).show(ui, |ui| {
+                // Dropdown for Window Mode
                 ui.label("Window Mode");
-                egui::ComboBox::from_id_salt("window_mode_combobox")
+                ComboBox::from_id_salt("window_mode_combobox")
                     .selected_text(window_mode_to_string(&options_res.window_mode).to_string())
                     .show_ui(ui, |ui| {
                         ui.selectable_value(
@@ -89,17 +93,15 @@ pub(in crate::ui) fn options_menu_system(
                             "Fullscreen",
                         );
                     });
-            });
+                ui.end_row();
 
-            // Combo box for selecting screen resolution.
-            ui.horizontal(|ui| {
+                // Dropdown for Resolution
                 ui.label("Resolution");
-                egui::ComboBox::from_id_salt("resolution_combobox")
+                ComboBox::from_id_salt("resolution_combobox")
                     .selected_text(
                         window_resolution_to_string(&options_res.window_resolution).to_string(),
                     )
                     .show_ui(ui, |ui| {
-                        // Iterate through every available resolution and create a selectable value
                         for resolution in options_res.get_resolutions() {
                             ui.selectable_value(
                                 &mut options_res.window_resolution,
@@ -108,30 +110,24 @@ pub(in crate::ui) fn options_menu_system(
                             );
                         }
                     });
-            });
+                ui.end_row();
 
-            // Volume sliders
-            ui.horizontal(|ui| {
+                // Sliders
                 ui.label("Master Volume");
-                ui.add(egui::Slider::new(&mut options_res.master_volume, 0.0..=1.0));
-            });
+                ui.add(Slider::new(&mut options_res.master_volume, 0.0..=1.0).show_value(false));
+                ui.end_row();
 
-            ui.horizontal(|ui| {
                 ui.label("Music Volume");
-                ui.add(egui::Slider::new(&mut options_res.music_volume, 0.0..=1.0));
-            });
+                ui.add(Slider::new(&mut options_res.music_volume, 0.0..=1.0).show_value(false));
+                ui.end_row();
 
-            ui.horizontal(|ui| {
                 ui.label("Effects Volume");
-                ui.add(egui::Slider::new(
-                    &mut options_res.effects_volume,
-                    0.0..=1.0,
-                ));
-            });
+                ui.add(Slider::new(&mut options_res.effects_volume, 0.0..=1.0).show_value(false));
+                ui.end_row();
 
-            ui.horizontal(|ui| {
                 ui.label("Ui Volume");
-                ui.add(egui::Slider::new(&mut options_res.ui_volume, 0.0..=1.0));
+                ui.add(Slider::new(&mut options_res.ui_volume, 0.0..=1.0).show_value(false));
+                ui.end_row();
             });
         });
 }
