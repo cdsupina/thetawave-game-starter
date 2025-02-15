@@ -20,6 +20,8 @@ pub(crate) struct OptionsRes {
     pub music_volume: f64,
     pub effects_volume: f64,
     pub ui_volume: f64,
+    // Bloom effects enabled
+    pub bloom_enabled: bool,
     // Keyboard input map for the player
     pub player_keyboard_input_map: InputMap<PlayerAction>,
     // Keyboard input map for player abilities
@@ -59,6 +61,7 @@ impl Default for OptionsRes {
             music_volume: 1.0,
             effects_volume: 1.0,
             ui_volume: 1.0,
+            bloom_enabled: true,
             player_keyboard_input_map: InputMap::new([
                 (PlayerAction::Up, KeyCode::KeyW),
                 (PlayerAction::Down, KeyCode::KeyS),
