@@ -5,7 +5,7 @@ It contains all the required features of a Thetawave style game.
 - [ ] Options Menu
   - [x] Display Resolutions
   - [x] Fullscreen
-  - [ ] Graphics Settings
+  - [x] Graphics Settings
   - [ ] Control Rebinding
   - [x] Volume Controls
 - [x] 2D + 3D Backgrounds
