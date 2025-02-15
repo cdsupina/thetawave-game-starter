@@ -1,13 +1,13 @@
 use super::{
     systems::{
-        apply_volume_options_system, apply_window_options_system, setup_options_res,
-        setup_window_system, sync_options_res_system, update_ui_scale_system,
+        apply_options_system, apply_volume_options_system, setup_options_res, setup_window_system,
+        sync_options_res_system, update_ui_scale_system,
     },
     ApplyOptionsEvent,
 };
 use crate::states::{MainMenuState, PauseMenuState};
 use bevy::{
-    app::{Plugin, Startup, Update},
+    app::{Plugin, PostStartup, Startup, Update},
     prelude::{in_state, Condition, IntoSystemConfigs, OnEnter},
 };
 
@@ -19,14 +19,15 @@ impl Plugin for ThetawaveOptionsPlugin {
         // Add event for applying options changes
         app.add_event::<ApplyOptionsEvent>()
             // Add system to apply options changes, but only when in Options menu state
-            .add_systems(Startup, (setup_options_res, setup_window_system).chain())
+            .add_systems(Startup, setup_options_res)
+            .add_systems(PostStartup, setup_window_system)
             .add_systems(OnEnter(MainMenuState::Title), update_ui_scale_system)
             // Init the options menu to track the current options on startup
             .add_systems(OnEnter(MainMenuState::Options), sync_options_res_system)
             .add_systems(
                 Update,
                 (
-                    apply_window_options_system,
+                    apply_options_system,
                     apply_volume_options_system,
                     update_ui_scale_system,
                 )

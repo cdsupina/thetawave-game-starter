@@ -1,6 +1,8 @@
 use super::{data::ApplyOptionsEvent, OptionsRes};
 use crate::audio::ChangeVolumeEvent;
 use bevy::{
+    core_pipeline::{bloom::Bloom, core_2d::Camera2d, core_3d::Camera3d},
+    ecs::query::Without,
     prelude::{Commands, EventReader, EventWriter, Local, Query, Res, ResMut, With},
     ui::UiScale,
     window::{PrimaryWindow, Window, WindowMode},
@@ -54,9 +56,11 @@ pub(super) fn sync_options_res_system(
 }
 
 /// Applies window options when an ApplyOptionsEvent is received
-pub(super) fn apply_window_options_system(
+pub(super) fn apply_options_system(
     mut apply_options_events: EventReader<ApplyOptionsEvent>,
     mut options_res: ResMut<Persistent<OptionsRes>>,
+    mut camera_2d_q: Query<&mut Bloom, (With<Camera2d>, Without<Camera3d>)>,
+    mut camera_3d_q: Query<&mut Bloom, (With<Camera3d>, Without<Camera2d>)>,
     mut primary_window_q: Query<&mut Window, With<PrimaryWindow>>,
 ) {
     // Only process if we have received events
@@ -76,6 +80,23 @@ pub(super) fn apply_window_options_system(
                 .window_resolution
                 .clone()
                 .with_scale_factor_override(1.0);
+        }
+
+        // Enable or disable bloom
+        if options_res.bloom_enabled {
+            if let Ok(mut bloom) = camera_2d_q.get_single_mut() {
+                bloom.intensity = Bloom::OLD_SCHOOL.intensity;
+            }
+            if let Ok(mut bloom) = camera_3d_q.get_single_mut() {
+                bloom.intensity = Bloom::OLD_SCHOOL.intensity;
+            }
+        } else {
+            if let Ok(mut bloom) = camera_2d_q.get_single_mut() {
+                bloom.intensity = 0.0;
+            }
+            if let Ok(mut bloom) = camera_3d_q.get_single_mut() {
+                bloom.intensity = 0.0
+            }
         }
 
         // Clear the event channel to prevent processing same events multiple times
