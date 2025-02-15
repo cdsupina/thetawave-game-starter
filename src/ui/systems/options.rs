@@ -11,10 +11,13 @@ use bevy::{
     window::{MonitorSelection, WindowMode, WindowResolution},
 };
 use bevy_egui::{
-    egui::{CentralPanel, Checkbox, Color32, ComboBox, Frame, Grid, Margin, Slider},
+    egui::{CentralPanel, Checkbox, Color32, ComboBox, Frame, Grid, Margin, RichText, Slider},
     EguiContexts,
 };
 use bevy_persistent::Persistent;
+
+const LABEL_TEXT_SIZE: f32 = 12.0;
+const TITLE_LABEL_TEXT_SIZE: f32 = 14.0;
 
 /// Spawns options menu ui for the main menu
 pub(in crate::ui) fn spawn_options_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
@@ -75,10 +78,20 @@ pub(in crate::ui) fn options_menu_system(
             ..Default::default()
         })
         .show(contexts.ctx_mut(), |ui| {
-            // Create a grid with two columns: one for labels and one for widgets
-            Grid::new("options_grid").num_columns(4).show(ui, |ui| {
-                // Dropdown for Window Mode
-                ui.label("Window Mode");
+            Grid::new("options_grid").num_columns(6).show(ui, |ui| {
+                // Title row
+                ui.label(RichText::new("Volume").size(TITLE_LABEL_TEXT_SIZE));
+                ui.label("");
+                ui.label(RichText::new("Graphics").size(TITLE_LABEL_TEXT_SIZE));
+                ui.label("");
+                ui.end_row();
+
+                // First row
+                // Master volume
+                ui.label(RichText::new("Master").size(LABEL_TEXT_SIZE));
+                ui.add(Slider::new(&mut options_res.master_volume, 0.0..=1.0).show_value(false));
+                // Window mode
+                ui.label(RichText::new("Window Mode").size(LABEL_TEXT_SIZE));
                 ComboBox::from_id_salt("window_mode_combobox")
                     .selected_text(window_mode_to_string(&options_res.window_mode).to_string())
                     .show_ui(ui, |ui| {
@@ -93,12 +106,17 @@ pub(in crate::ui) fn options_menu_system(
                             "Fullscreen",
                         );
                     });
-                ui.label("Bloom");
+                // Bloom effect
+                ui.label(RichText::new("Bloom").size(LABEL_TEXT_SIZE));
                 ui.add(Checkbox::without_text(&mut options_res.bloom_enabled));
                 ui.end_row();
 
-                // Dropdown for Resolution
-                ui.label("Resolution");
+                // Second row
+                // Music volume
+                ui.label(RichText::new("Music").size(LABEL_TEXT_SIZE));
+                ui.add(Slider::new(&mut options_res.music_volume, 0.0..=1.0).show_value(false));
+                // Window resolution
+                ui.label(RichText::new("Resolution").size(LABEL_TEXT_SIZE));
                 ComboBox::from_id_salt("resolution_combobox")
                     .selected_text(
                         window_resolution_to_string(&options_res.window_resolution).to_string(),
@@ -114,20 +132,15 @@ pub(in crate::ui) fn options_menu_system(
                     });
                 ui.end_row();
 
-                // Sliders
-                ui.label("Master Volume");
-                ui.add(Slider::new(&mut options_res.master_volume, 0.0..=1.0).show_value(false));
-                ui.end_row();
-
-                ui.label("Music Volume");
-                ui.add(Slider::new(&mut options_res.music_volume, 0.0..=1.0).show_value(false));
-                ui.end_row();
-
-                ui.label("Effects Volume");
+                // Third row
+                // Effects volume
+                ui.label(RichText::new("Effects").size(LABEL_TEXT_SIZE));
                 ui.add(Slider::new(&mut options_res.effects_volume, 0.0..=1.0).show_value(false));
                 ui.end_row();
 
-                ui.label("Ui Volume");
+                // Fourth row
+                // Ui volume
+                ui.label(RichText::new("UI").size(LABEL_TEXT_SIZE));
                 ui.add(Slider::new(&mut options_res.ui_volume, 0.0..=1.0).show_value(false));
                 ui.end_row();
             });
