@@ -11,7 +11,7 @@ use bevy::{
     window::{MonitorSelection, WindowMode, WindowResolution},
 };
 use bevy_egui::{
-    egui::{CentralPanel, Color32, ComboBox, Frame, Grid, Margin, Slider},
+    egui::{CentralPanel, Checkbox, Color32, ComboBox, Frame, Grid, Margin, Slider},
     EguiContexts,
 };
 use bevy_persistent::Persistent;
@@ -76,7 +76,7 @@ pub(in crate::ui) fn options_menu_system(
         })
         .show(contexts.ctx_mut(), |ui| {
             // Create a grid with two columns: one for labels and one for widgets
-            Grid::new("options_grid").num_columns(2).show(ui, |ui| {
+            Grid::new("options_grid").num_columns(4).show(ui, |ui| {
                 // Dropdown for Window Mode
                 ui.label("Window Mode");
                 ComboBox::from_id_salt("window_mode_combobox")
@@ -93,6 +93,8 @@ pub(in crate::ui) fn options_menu_system(
                             "Fullscreen",
                         );
                     });
+                ui.label("Bloom");
+                ui.add(Checkbox::without_text(&mut options_res.bloom_enabled));
                 ui.end_row();
 
                 // Dropdown for Resolution
