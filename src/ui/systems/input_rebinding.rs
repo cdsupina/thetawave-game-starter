@@ -10,7 +10,7 @@ use bevy::{
     ecs::{
         entity::Entity,
         query::With,
-        system::{Commands, Query, Res, ResMut},
+        system::{Commands, Local, Query, Res, ResMut},
     },
     hierarchy::{BuildChildren, ChildBuild},
     ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
@@ -79,6 +79,7 @@ pub(in crate::ui) fn input_rebinding_menu_system(
     mut contexts: EguiContexts,
     mut options_res: ResMut<Persistent<OptionsRes>>,
     dummy_gamepad_q: Query<Entity, With<DummyGamepad>>,
+    mut active_input_method: Local<InputType>,
 ) {
     CentralPanel::default()
         .frame(Frame {
@@ -91,19 +92,19 @@ pub(in crate::ui) fn input_rebinding_menu_system(
                 // Top row for selecting input method to be edited
                 ui.label(RichText::new("Input Method").size(LABEL_TEXT_SIZE));
                 ComboBox::from_id_salt("input_method_combobox")
-                    .selected_text(match options_res.menu_active_input {
+                    .selected_text(match *active_input_method {
                         InputType::Keyboard => "Keyboard",
                         InputType::Gamepad(_) => "Gamepad",
                     })
                     .show_ui(ui, |ui| {
                         ui.selectable_value(
-                            &mut options_res.menu_active_input,
+                            &mut *active_input_method,
                             InputType::Keyboard,
                             "Keyboard",
                         );
                         if let Ok(entity) = dummy_gamepad_q.get_single() {
                             ui.selectable_value(
-                                &mut options_res.menu_active_input,
+                                &mut *active_input_method,
                                 InputType::Gamepad(entity),
                                 "Gamepad",
                             );

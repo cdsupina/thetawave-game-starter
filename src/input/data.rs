@@ -45,8 +45,9 @@ pub(crate) enum CharacterCarouselAction {
     Unready,
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, Default)]
 pub(crate) enum InputType {
+    #[default]
     Keyboard,
     Gamepad(Entity),
 }

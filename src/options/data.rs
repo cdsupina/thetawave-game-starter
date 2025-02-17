@@ -5,7 +5,7 @@ use bevy::{
 use leafwing_input_manager::prelude::InputMap;
 use serde::{Deserialize, Serialize};
 
-use crate::input::{CharacterCarouselAction, InputType, PlayerAbility, PlayerAction};
+use crate::input::{CharacterCarouselAction, PlayerAbility, PlayerAction};
 
 // Resource for storing window options
 #[derive(Resource, Serialize, Deserialize, Clone)]
@@ -22,8 +22,6 @@ pub(crate) struct OptionsRes {
     pub ui_volume: f64,
     // Bloom effects enabled
     pub bloom_enabled: bool,
-    // Input method that is selected to be edited in the input mapping menu
-    pub menu_active_input: InputType,
     // Keyboard input map for the player
     pub player_keyboard_input_map: InputMap<PlayerAction>,
     // Keyboard input map for player abilities
@@ -64,7 +62,6 @@ impl Default for OptionsRes {
             effects_volume: 1.0,
             ui_volume: 1.0,
             bloom_enabled: true,
-            menu_active_input: InputType::Keyboard,
             player_keyboard_input_map: InputMap::new([
                 (PlayerAction::Up, KeyCode::KeyW),
                 (PlayerAction::Down, KeyCode::KeyS),
