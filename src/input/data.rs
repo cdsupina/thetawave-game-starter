@@ -1,4 +1,4 @@
-use bevy::{prelude::Entity, reflect::Reflect};
+use bevy::{ecs::component::Component, prelude::Entity, reflect::Reflect};
 use leafwing_abilities::Abilitylike;
 use leafwing_input_manager::Actionlike;
 use serde::{Deserialize, Serialize};
@@ -45,8 +45,11 @@ pub(crate) enum CharacterCarouselAction {
     Unready,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub(crate) enum InputType {
     Keyboard,
     Gamepad(Entity),
 }
+
+#[derive(Component)]
+pub(crate) struct DummyGamepad;

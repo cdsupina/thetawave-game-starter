@@ -1,16 +1,28 @@
+use crate::{
+    assets::UiAssets,
+    input::{DummyGamepad, InputType},
+    options::OptionsRes,
+    states::{Cleanup, MainMenuState},
+    ui::data::{ButtonAction, UiChildBuilderExt},
+};
 use bevy::{
     core::Name,
-    ecs::system::{Commands, Res},
+    ecs::{
+        entity::Entity,
+        query::With,
+        system::{Commands, Query, Res, ResMut},
+    },
     hierarchy::{BuildChildren, ChildBuild},
     ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
-
-use crate::{
-    assets::UiAssets,
-    states::{Cleanup, MainMenuState},
-    ui::data::{ButtonAction, UiChildBuilderExt},
+use bevy_egui::{
+    egui::{CentralPanel, Color32, ComboBox, Frame, Grid, Margin, RichText},
+    EguiContexts,
 };
+use bevy_persistent::Persistent;
+
+const LABEL_TEXT_SIZE: f32 = 12.0;
 
 /// Spawns options menu ui for the main menu
 pub(in crate::ui) fn spawn_input_rebinding_menu_system(
@@ -60,4 +72,44 @@ pub(in crate::ui) fn spawn_input_rebinding_menu_system(
                 );
             });
     });
+}
+
+/// This function is a system that handles the egui input rebinding menu
+pub(in crate::ui) fn input_rebinding_menu_system(
+    mut contexts: EguiContexts,
+    mut options_res: ResMut<Persistent<OptionsRes>>,
+    dummy_gamepad_q: Query<Entity, With<DummyGamepad>>,
+) {
+    CentralPanel::default()
+        .frame(Frame {
+            fill: Color32::TRANSPARENT,
+            inner_margin: Margin::same(10.0),
+            ..Default::default()
+        })
+        .show(contexts.ctx_mut(), |ui| {
+            Grid::new("input_grid").num_columns(3).show(ui, |ui| {
+                // Top row for selecting input method to be edited
+                ui.label(RichText::new("Input Method").size(LABEL_TEXT_SIZE));
+                ComboBox::from_id_salt("input_method_combobox")
+                    .selected_text(match options_res.menu_active_input {
+                        InputType::Keyboard => "Keyboard",
+                        InputType::Gamepad(_) => "Gamepad",
+                    })
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(
+                            &mut options_res.menu_active_input,
+                            InputType::Keyboard,
+                            "Keyboard",
+                        );
+                        if let Ok(entity) = dummy_gamepad_q.get_single() {
+                            ui.selectable_value(
+                                &mut options_res.menu_active_input,
+                                InputType::Gamepad(entity),
+                                "Gamepad",
+                            );
+                        }
+                    });
+                ui.end_row();
+            });
+        });
 }

@@ -1,16 +1,12 @@
-use super::InputType;
+use super::{data::DummyGamepad, InputType};
 use crate::{player::PlayerNum, ui::PlayerJoinEvent};
 use bevy::{
     input::keyboard::NativeKeyCode,
     prelude::{
-        Commands, Component, Entity, EventReader, GamepadButton, KeyCode, MouseButton, Query,
-        ResMut, With,
+        Commands, Entity, EventReader, GamepadButton, KeyCode, MouseButton, Query, ResMut, With,
     },
 };
 use bevy_alt_ui_navigation_lite::systems::InputMapping;
-
-#[derive(Component)]
-pub(super) struct DummyGamepad;
 
 /// Setup function for input mapping configuration
 pub(super) fn setup_input_system(mut input_mapping: ResMut<InputMapping>, mut cmds: Commands) {
