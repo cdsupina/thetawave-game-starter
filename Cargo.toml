@@ -64,6 +64,7 @@ avian2d = { version = "0.2.0", features = ["debug-plugin"] }
 strum = "0.26.3"
 winit = "0.30.8"
 image = "0.25.5"
+itertools = "0.14.0"
 
 [profile.dev]
 opt-level = 1

@@ -1,6 +1,6 @@
 use crate::{
     assets::UiAssets,
-    input::{DummyGamepad, InputType},
+    input::{DummyGamepad, InputType, PlayerAbility, PlayerAction},
     options::OptionsRes,
     states::{Cleanup, MainMenuState},
     ui::data::{ButtonAction, UiChildBuilderExt},
@@ -21,6 +21,8 @@ use bevy_egui::{
     EguiContexts,
 };
 use bevy_persistent::Persistent;
+use itertools::{EitherOrBoth, Itertools};
+use strum::IntoEnumIterator;
 
 const LABEL_TEXT_SIZE: f32 = 12.0;
 
@@ -111,6 +113,26 @@ pub(in crate::ui) fn input_rebinding_menu_system(
                         }
                     });
                 ui.end_row();
+
+                // Add labels and buttons for all player inputs and abilities
+                for pair in PlayerAction::iter().zip_longest(PlayerAbility::iter()) {
+                    match pair {
+                        EitherOrBoth::Both(player_action, player_ability) => {
+                            ui.label(RichText::new(player_action.as_ref()).size(LABEL_TEXT_SIZE));
+                            ui.label(RichText::new(player_ability.as_ref()).size(LABEL_TEXT_SIZE));
+                        }
+                        EitherOrBoth::Left(player_action) => {
+                            ui.label(RichText::new(player_action.as_ref()).size(LABEL_TEXT_SIZE));
+                            ui.label("");
+                        }
+                        EitherOrBoth::Right(player_ability) => {
+                            ui.label("");
+                            ui.label(RichText::new(player_ability.as_ref()).size(LABEL_TEXT_SIZE));
+                        }
+                    }
+
+                    ui.end_row();
+                }
             });
         });
 }

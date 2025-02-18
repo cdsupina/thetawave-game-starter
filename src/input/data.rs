@@ -2,10 +2,22 @@ use bevy::{ecs::component::Component, prelude::Entity, reflect::Reflect};
 use leafwing_abilities::Abilitylike;
 use leafwing_input_manager::Actionlike;
 use serde::{Deserialize, Serialize};
-use strum::AsRefStr;
+use strum::{AsRefStr, EnumIter};
 
 /// Actions for player entities in the game state
-#[derive(Actionlike, Clone, Debug, Eq, Hash, PartialEq, Reflect, Serialize, Deserialize)]
+#[derive(
+    Actionlike,
+    Clone,
+    Debug,
+    Eq,
+    Hash,
+    PartialEq,
+    Reflect,
+    Serialize,
+    Deserialize,
+    EnumIter,
+    AsRefStr,
+)]
 pub(crate) enum PlayerAction {
     Up,
     Down,
@@ -28,6 +40,7 @@ pub(crate) enum PlayerAction {
     Deserialize,
     AsRefStr,
     Copy,
+    EnumIter,
 )]
 pub(crate) enum PlayerAbility {
     BasicAttack,
