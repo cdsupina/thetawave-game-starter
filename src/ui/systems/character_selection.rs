@@ -29,7 +29,10 @@ use bevy::{
 use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
 use bevy_persistent::Persistent;
-use leafwing_input_manager::{prelude::ActionState, InputManagerBundle};
+use leafwing_input_manager::{
+    prelude::{ActionState, InputMap},
+    InputManagerBundle,
+};
 
 /// Spawn ui for character selection
 pub(in crate::ui) fn spawn_character_selection_system(
@@ -277,13 +280,13 @@ pub(in crate::ui) fn spawn_carousel_system(
                     if !matches!(player_num, PlayerNum::One) {
                         carousel_builder.insert((
                             InputManagerBundle::with_map(match event.input {
-                                InputType::Keyboard => {
-                                    options_res.carousel_keyboard_input_map.clone()
-                                }
-                                InputType::Gamepad(entity) => options_res
-                                    .carousel_gamepad_input_map
-                                    .clone()
-                                    .with_gamepad(entity),
+                                InputType::Keyboard => InputMap::new(
+                                    options_res.carousel_keyboard_input_mappings.clone(),
+                                ),
+                                InputType::Gamepad(entity) => InputMap::new(
+                                    options_res.carousel_gamepad_input_mappings.clone(),
+                                )
+                                .with_gamepad(entity),
                             }),
                             CarouselReadyTimer::new(),
                         ));

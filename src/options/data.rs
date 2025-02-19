@@ -23,17 +23,19 @@ pub(crate) struct OptionsRes {
     // Bloom effects enabled
     pub bloom_enabled: bool,
     // Keyboard input map for the player
-    pub player_keyboard_input_map: InputMap<PlayerAction>,
+    pub player_keyboard_action_input_mappings: Vec<(PlayerAction, KeyCode)>,
+    pub player_mouse_action_input_mappings: Vec<(PlayerAction, MouseButton)>,
     // Keyboard input map for player abilities
-    pub player_keyboard_abilities_input_map: InputMap<PlayerAbility>,
+    pub player_keyboard_abilities_input_mappings: Vec<(PlayerAbility, KeyCode)>,
+    pub player_mouse_abilities_input_mappings: Vec<(PlayerAbility, MouseButton)>,
     // Gamepad input map for the player
-    pub player_gamepad_input_map: InputMap<PlayerAction>,
+    pub player_gamepad_action_input_mappings: Vec<(PlayerAction, GamepadButton)>,
     // Gamepad input map for player abilities
-    pub player_gamepad_abilities_input_map: InputMap<PlayerAbility>,
+    pub player_gamepad_abilities_input_mappings: Vec<(PlayerAbility, GamepadButton)>,
     // Keyboard input map for the character carousel
-    pub carousel_keyboard_input_map: InputMap<CharacterCarouselAction>,
+    pub carousel_keyboard_input_mappings: Vec<(CharacterCarouselAction, KeyCode)>,
     // Gamepad input map for the character carousel
-    pub carousel_gamepad_input_map: InputMap<CharacterCarouselAction>,
+    pub carousel_gamepad_input_mappings: Vec<(CharacterCarouselAction, GamepadButton)>,
     // All resolution options available in options
     resolutions: Vec<WindowResolution>,
 }
@@ -62,44 +64,44 @@ impl Default for OptionsRes {
             effects_volume: 1.0,
             ui_volume: 1.0,
             bloom_enabled: true,
-            player_keyboard_input_map: InputMap::new([
+            player_keyboard_action_input_mappings: vec![
                 (PlayerAction::Up, KeyCode::KeyW),
                 (PlayerAction::Down, KeyCode::KeyS),
                 (PlayerAction::Left, KeyCode::KeyA),
                 (PlayerAction::Right, KeyCode::KeyD),
                 (PlayerAction::Pause, KeyCode::Escape),
-            ]),
-            player_keyboard_abilities_input_map: InputMap::new([
+            ],
+            player_mouse_action_input_mappings: vec![],
+            player_keyboard_abilities_input_mappings: vec![
                 (PlayerAbility::Utility, KeyCode::AltLeft),
                 (PlayerAbility::Ultimate, KeyCode::Space),
-            ])
-            .insert_multiple([
+            ],
+            player_mouse_abilities_input_mappings: vec![
                 (PlayerAbility::BasicAttack, MouseButton::Left),
                 (PlayerAbility::SecondaryAttack, MouseButton::Right),
-            ])
-            .to_owned(),
-            player_gamepad_input_map: InputMap::new([
+            ],
+            player_gamepad_action_input_mappings: vec![
                 (PlayerAction::Up, GamepadButton::DPadUp),
                 (PlayerAction::Down, GamepadButton::DPadDown),
                 (PlayerAction::Left, GamepadButton::DPadLeft),
                 (PlayerAction::Right, GamepadButton::DPadRight),
                 (PlayerAction::Pause, GamepadButton::Start),
-            ]),
-            player_gamepad_abilities_input_map: InputMap::new([
+            ],
+            player_gamepad_abilities_input_mappings: vec![
                 (PlayerAbility::BasicAttack, GamepadButton::South),
                 (PlayerAbility::SecondaryAttack, GamepadButton::East),
                 (PlayerAbility::Utility, GamepadButton::West),
                 (PlayerAbility::Ultimate, GamepadButton::North),
-            ]),
-            carousel_keyboard_input_map: InputMap::new([
+            ],
+            carousel_keyboard_input_mappings: vec![
                 (CharacterCarouselAction::CycleLeft, KeyCode::KeyA),
                 (CharacterCarouselAction::CycleRight, KeyCode::KeyD),
                 (CharacterCarouselAction::CycleLeft, KeyCode::ArrowLeft),
                 (CharacterCarouselAction::CycleRight, KeyCode::ArrowRight),
                 (CharacterCarouselAction::Ready, KeyCode::Enter),
                 (CharacterCarouselAction::Unready, KeyCode::Escape),
-            ]),
-            carousel_gamepad_input_map: InputMap::new([
+            ],
+            carousel_gamepad_input_mappings: vec![
                 (CharacterCarouselAction::CycleLeft, GamepadButton::DPadLeft),
                 (
                     CharacterCarouselAction::CycleRight,
@@ -107,7 +109,7 @@ impl Default for OptionsRes {
                 ),
                 (CharacterCarouselAction::Ready, GamepadButton::South),
                 (CharacterCarouselAction::Unready, GamepadButton::East),
-            ]),
+            ],
         }
     }
 }

@@ -16,7 +16,10 @@ use bevy_aseprite_ultra::prelude::{Animation, AseSpriteAnimation};
 use bevy_egui::egui::Vec2;
 use bevy_persistent::Persistent;
 use leafwing_abilities::{prelude::CooldownState, AbilitiesBundle};
-use leafwing_input_manager::{prelude::ActionState, InputManagerBundle};
+use leafwing_input_manager::{
+    prelude::{ActionState, InputMap},
+    InputManagerBundle,
+};
 
 /// Spawn a player controlled entity
 pub(super) fn spawn_players_system(
@@ -49,18 +52,28 @@ pub(super) fn spawn_players_system(
                 RigidBody::Kinematic,
                 MaxLinearSpeed(character_data.max_speed),
                 InputManagerBundle::with_map(match chosen_character_data.input {
-                    InputType::Keyboard => options_res.player_keyboard_input_map.clone(),
-                    InputType::Gamepad(entity) => options_res
-                        .player_gamepad_input_map
-                        .clone()
-                        .with_gamepad(entity),
+                    InputType::Keyboard => {
+                        InputMap::new(options_res.player_keyboard_action_input_mappings.clone())
+                            .insert_multiple(options_res.player_mouse_action_input_mappings.clone())
+                            .to_owned()
+                    }
+                    InputType::Gamepad(entity) => {
+                        InputMap::new(options_res.player_gamepad_action_input_mappings.clone())
+                            .with_gamepad(entity)
+                    }
                 }),
                 InputManagerBundle::with_map(match chosen_character_data.input {
-                    InputType::Keyboard => options_res.player_keyboard_abilities_input_map.clone(),
-                    InputType::Gamepad(entity) => options_res
-                        .player_gamepad_abilities_input_map
-                        .clone()
-                        .with_gamepad(entity),
+                    InputType::Keyboard => {
+                        InputMap::new(options_res.player_keyboard_abilities_input_mappings.clone())
+                            .insert_multiple(
+                                options_res.player_mouse_abilities_input_mappings.clone(),
+                            )
+                            .to_owned()
+                    }
+                    InputType::Gamepad(entity) => {
+                        InputMap::new(options_res.player_gamepad_abilities_input_mappings.clone())
+                            .with_gamepad(entity)
+                    }
                 }),
                 AbilitiesBundle::<PlayerAbility> {
                     cooldowns: character_data.cooldowns.clone(),
