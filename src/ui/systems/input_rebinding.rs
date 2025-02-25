@@ -13,6 +13,7 @@ use bevy::{
         system::{Commands, Local, Query, Res, ResMut},
     },
     hierarchy::{BuildChildren, ChildBuild},
+    input::{gamepad::GamepadButton, keyboard::KeyCode, mouse::MouseButton},
     ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
@@ -76,6 +77,28 @@ pub(in crate::ui) fn spawn_input_rebinding_menu_system(
     });
 }
 
+trait InputCodeToStringExt {
+    fn to_string(&self) -> String;
+}
+
+impl InputCodeToStringExt for KeyCode {
+    fn to_string(&self) -> String {
+        format!("{:?}", self)
+    }
+}
+
+impl InputCodeToStringExt for MouseButton {
+    fn to_string(&self) -> String {
+        format!("{:?}", self)
+    }
+}
+
+impl InputCodeToStringExt for GamepadButton {
+    fn to_string(&self) -> String {
+        format!("{:?}", self)
+    }
+}
+
 /// This function is a system that handles the egui input rebinding menu
 pub(in crate::ui) fn input_rebinding_menu_system(
     mut contexts: EguiContexts,
@@ -90,7 +113,7 @@ pub(in crate::ui) fn input_rebinding_menu_system(
             ..Default::default()
         })
         .show(contexts.ctx_mut(), |ui| {
-            Grid::new("input_grid").num_columns(3).show(ui, |ui| {
+            Grid::new("input_grid").num_columns(6).show(ui, |ui| {
                 // Top row for selecting input method to be edited
                 ui.label(RichText::new("Input Method").size(LABEL_TEXT_SIZE));
                 ComboBox::from_id_salt("input_method_combobox")
@@ -114,20 +137,66 @@ pub(in crate::ui) fn input_rebinding_menu_system(
                     });
                 ui.end_row();
 
+                /*
+                let player_action_input_map = match *active_input_method {
+                    InputType::Keyboard => options_res.player_keyboard_action_input_map.clone(),
+                    InputType::Gamepad(entity) => {
+                        options_res.player_gamepad_action_input_map.clone()
+                    }
+                };
+
+                let player_abilities_input_map = match *active_input_method {
+                    InputType::Keyboard => options_res.player_keyboard_abilities_input_map.clone(),
+                    InputType::Gamepad(entity) => {
+                        options_res.player_gamepad_abilities_input_map.clone()
+                    }
+                };
+                */
+
                 // Add labels and buttons for all player inputs and abilities
                 for pair in PlayerAction::iter().zip_longest(PlayerAbility::iter()) {
                     match pair {
                         EitherOrBoth::Both(player_action, player_ability) => {
                             ui.label(RichText::new(player_action.as_ref()).size(LABEL_TEXT_SIZE));
+                            let _ = ui.button(match *active_input_method {
+                                InputType::Keyboard => {
+                                    if let Some(key_code) = options_res
+                                        .player_keyboard_action_input_mappings
+                                        .get(&player_action)
+                                    {
+                                        key_code.to_string()
+                                    } else if let Some(key_code) = options_res
+                                        .player_mouse_action_input_mappings
+                                        .get(&player_action)
+                                    {
+                                        key_code.to_string()
+                                    } else {
+                                        "".to_string()
+                                    }
+                                }
+                                InputType::Gamepad(_) => {
+                                    if let Some(gamepad_button) = options_res
+                                        .player_gamepad_action_input_mappings
+                                        .get(&player_action)
+                                    {
+                                        gamepad_button.to_string()
+                                    } else {
+                                        "".to_string()
+                                    }
+                                }
+                            });
                             ui.label(RichText::new(player_ability.as_ref()).size(LABEL_TEXT_SIZE));
+                            ui.button("Key");
                         }
                         EitherOrBoth::Left(player_action) => {
                             ui.label(RichText::new(player_action.as_ref()).size(LABEL_TEXT_SIZE));
+                            ui.button("Key");
                             ui.label("");
                         }
                         EitherOrBoth::Right(player_ability) => {
                             ui.label("");
                             ui.label(RichText::new(player_ability.as_ref()).size(LABEL_TEXT_SIZE));
+                            ui.button("Key");
                         }
                     }
 

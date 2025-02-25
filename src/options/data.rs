@@ -1,8 +1,8 @@
 use bevy::{
     prelude::{Event, GamepadButton, KeyCode, MouseButton, Resource},
+    utils::HashMap,
     window::{WindowMode, WindowResolution},
 };
-use leafwing_input_manager::prelude::InputMap;
 use serde::{Deserialize, Serialize};
 
 use crate::input::{CharacterCarouselAction, PlayerAbility, PlayerAction};
@@ -23,19 +23,19 @@ pub(crate) struct OptionsRes {
     // Bloom effects enabled
     pub bloom_enabled: bool,
     // Keyboard input map for the player
-    pub player_keyboard_action_input_mappings: Vec<(PlayerAction, KeyCode)>,
-    pub player_mouse_action_input_mappings: Vec<(PlayerAction, MouseButton)>,
+    pub player_keyboard_action_input_mappings: HashMap<PlayerAction, KeyCode>,
+    pub player_mouse_action_input_mappings: HashMap<PlayerAction, MouseButton>,
     // Keyboard input map for player abilities
-    pub player_keyboard_abilities_input_mappings: Vec<(PlayerAbility, KeyCode)>,
-    pub player_mouse_abilities_input_mappings: Vec<(PlayerAbility, MouseButton)>,
+    pub player_keyboard_abilities_input_mappings: HashMap<PlayerAbility, KeyCode>,
+    pub player_mouse_abilities_input_mappings: HashMap<PlayerAbility, MouseButton>,
     // Gamepad input map for the player
-    pub player_gamepad_action_input_mappings: Vec<(PlayerAction, GamepadButton)>,
+    pub player_gamepad_action_input_mappings: HashMap<PlayerAction, GamepadButton>,
     // Gamepad input map for player abilities
-    pub player_gamepad_abilities_input_mappings: Vec<(PlayerAbility, GamepadButton)>,
+    pub player_gamepad_abilities_input_mappings: HashMap<PlayerAbility, GamepadButton>,
     // Keyboard input map for the character carousel
-    pub carousel_keyboard_input_mappings: Vec<(CharacterCarouselAction, KeyCode)>,
+    pub carousel_keyboard_input_mappings: HashMap<CharacterCarouselAction, KeyCode>,
     // Gamepad input map for the character carousel
-    pub carousel_gamepad_input_mappings: Vec<(CharacterCarouselAction, GamepadButton)>,
+    pub carousel_gamepad_input_mappings: HashMap<CharacterCarouselAction, GamepadButton>,
     // All resolution options available in options
     resolutions: Vec<WindowResolution>,
 }
@@ -64,44 +64,44 @@ impl Default for OptionsRes {
             effects_volume: 1.0,
             ui_volume: 1.0,
             bloom_enabled: true,
-            player_keyboard_action_input_mappings: vec![
+            player_keyboard_action_input_mappings: HashMap::from([
                 (PlayerAction::Up, KeyCode::KeyW),
                 (PlayerAction::Down, KeyCode::KeyS),
                 (PlayerAction::Left, KeyCode::KeyA),
                 (PlayerAction::Right, KeyCode::KeyD),
                 (PlayerAction::Pause, KeyCode::Escape),
-            ],
-            player_mouse_action_input_mappings: vec![],
-            player_keyboard_abilities_input_mappings: vec![
+            ]),
+            player_mouse_action_input_mappings: HashMap::from([]),
+            player_keyboard_abilities_input_mappings: HashMap::from([
                 (PlayerAbility::Utility, KeyCode::AltLeft),
                 (PlayerAbility::Ultimate, KeyCode::Space),
-            ],
-            player_mouse_abilities_input_mappings: vec![
+            ]),
+            player_mouse_abilities_input_mappings: HashMap::from([
                 (PlayerAbility::BasicAttack, MouseButton::Left),
                 (PlayerAbility::SecondaryAttack, MouseButton::Right),
-            ],
-            player_gamepad_action_input_mappings: vec![
+            ]),
+            player_gamepad_action_input_mappings: HashMap::from([
                 (PlayerAction::Up, GamepadButton::DPadUp),
                 (PlayerAction::Down, GamepadButton::DPadDown),
                 (PlayerAction::Left, GamepadButton::DPadLeft),
                 (PlayerAction::Right, GamepadButton::DPadRight),
                 (PlayerAction::Pause, GamepadButton::Start),
-            ],
-            player_gamepad_abilities_input_mappings: vec![
+            ]),
+            player_gamepad_abilities_input_mappings: HashMap::from([
                 (PlayerAbility::BasicAttack, GamepadButton::South),
                 (PlayerAbility::SecondaryAttack, GamepadButton::East),
                 (PlayerAbility::Utility, GamepadButton::West),
                 (PlayerAbility::Ultimate, GamepadButton::North),
-            ],
-            carousel_keyboard_input_mappings: vec![
+            ]),
+            carousel_keyboard_input_mappings: HashMap::from([
                 (CharacterCarouselAction::CycleLeft, KeyCode::KeyA),
                 (CharacterCarouselAction::CycleRight, KeyCode::KeyD),
                 (CharacterCarouselAction::CycleLeft, KeyCode::ArrowLeft),
                 (CharacterCarouselAction::CycleRight, KeyCode::ArrowRight),
                 (CharacterCarouselAction::Ready, KeyCode::Enter),
                 (CharacterCarouselAction::Unready, KeyCode::Escape),
-            ],
-            carousel_gamepad_input_mappings: vec![
+            ]),
+            carousel_gamepad_input_mappings: HashMap::from([
                 (CharacterCarouselAction::CycleLeft, GamepadButton::DPadLeft),
                 (
                     CharacterCarouselAction::CycleRight,
@@ -109,7 +109,7 @@ impl Default for OptionsRes {
                 ),
                 (CharacterCarouselAction::Ready, GamepadButton::South),
                 (CharacterCarouselAction::Unready, GamepadButton::East),
-            ],
+            ]),
         }
     }
 }
