@@ -13,7 +13,12 @@ use bevy::{
         system::{Commands, Local, Query, Res, ResMut},
     },
     hierarchy::{BuildChildren, ChildBuild},
-    input::{gamepad::GamepadButton, keyboard::KeyCode, mouse::MouseButton},
+    input::{
+        gamepad::{Gamepad, GamepadButton},
+        keyboard::KeyCode,
+        mouse::MouseButton,
+        ButtonInput,
+    },
     ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
@@ -228,7 +233,90 @@ pub(in crate::ui) fn input_rebinding_menu_system(
     dummy_gamepad_q: Query<Entity, With<DummyGamepad>>,
     mut active_input_method: Local<InputType>,
     mut rebinding_flag: Local<Option<RebindingTarget>>,
+    keys: Res<ButtonInput<KeyCode>>,
+    mouse_buttons: Res<ButtonInput<MouseButton>>,
+    gamepads_q: Query<&Gamepad>,
 ) {
+    if let Some(rebinding_target) = rebinding_flag.clone() {
+        match active_input_method.clone() {
+            InputType::Keyboard => {
+                // First check if any keyboard keys released, the check for mouse buttons
+                if let Some(key_code) = keys.get_just_released().next() {
+                    match rebinding_target {
+                        RebindingTarget::PlayerAction(player_action) => {
+                            // Set action to new key
+                            options_res
+                                .player_keyboard_action_input_mappings
+                                .insert(player_action.clone(), *key_code);
+                            // Remove mouse binding for action
+                            options_res
+                                .player_mouse_action_input_mappings
+                                .remove(&player_action);
+                            *rebinding_flag = None;
+                        }
+                        RebindingTarget::PlayerAbility(player_ability) => {
+                            // Set ability to new key
+                            options_res
+                                .player_keyboard_abilities_input_mappings
+                                .insert(player_ability.clone(), *key_code);
+                            // Remove mouse binding for ability
+                            options_res
+                                .player_mouse_abilities_input_mappings
+                                .remove(&player_ability);
+                            *rebinding_flag = None;
+                        }
+                    }
+                } else if let Some(mouse_button) = mouse_buttons.get_just_released().next() {
+                    match rebinding_target {
+                        RebindingTarget::PlayerAction(player_action) => {
+                            // Set action to new mouse button
+                            options_res
+                                .player_mouse_action_input_mappings
+                                .insert(player_action.clone(), *mouse_button);
+                            // Remove keyboard binding for action
+                            options_res
+                                .player_keyboard_action_input_mappings
+                                .remove(&player_action);
+                            *rebinding_flag = None;
+                        }
+                        RebindingTarget::PlayerAbility(player_ability) => {
+                            // Set ability to new mouse button
+                            options_res
+                                .player_mouse_abilities_input_mappings
+                                .insert(player_ability.clone(), *mouse_button);
+                            // Remove keyboard binding for ability
+                            options_res
+                                .player_keyboard_abilities_input_mappings
+                                .remove(&player_ability);
+                            *rebinding_flag = None;
+                        }
+                    }
+                }
+            }
+            InputType::Gamepad(_) => {
+                for gamepad in gamepads_q.iter() {
+                    if let Some(gamepad_button) = gamepad.get_just_released().next() {
+                        match rebinding_target {
+                            RebindingTarget::PlayerAction(player_action) => {
+                                options_res
+                                    .player_gamepad_action_input_mappings
+                                    .insert(player_action, *gamepad_button);
+                                *rebinding_flag = None;
+                            }
+                            RebindingTarget::PlayerAbility(player_ability) => {
+                                options_res
+                                    .player_gamepad_abilities_input_mappings
+                                    .insert(player_ability, *gamepad_button);
+                                *rebinding_flag = None;
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     CentralPanel::default()
         .frame(Frame {
             fill: Color32::TRANSPARENT,
@@ -259,22 +347,6 @@ pub(in crate::ui) fn input_rebinding_menu_system(
                         }
                     });
                 ui.end_row();
-
-                /*
-                let player_action_input_map = match *active_input_method {
-                    InputType::Keyboard => options_res.player_keyboard_action_input_map.clone(),
-                    InputType::Gamepad(entity) => {
-                        options_res.player_gamepad_action_input_map.clone()
-                    }
-                };
-
-                let player_abilities_input_map = match *active_input_method {
-                    InputType::Keyboard => options_res.player_keyboard_abilities_input_map.clone(),
-                    InputType::Gamepad(entity) => {
-                        options_res.player_gamepad_abilities_input_map.clone()
-                    }
-                };
-                */
 
                 // Add labels and buttons for all player inputs and abilities
                 for pair in PlayerAction::iter().zip_longest(PlayerAbility::iter()) {
