@@ -137,18 +137,19 @@ pub(super) fn player_ability_system(
 ) {
     for (mut cooldown_state, action_state) in player_ability_q.iter_mut() {
         for ability in action_state.get_just_released() {
-            if cooldown_state.trigger(ability).is_ok() {
+            if cooldown_state.trigger(ability.clone()).is_ok() {
                 info!("Player activated {} ability.", ability.as_ref());
             } else {
-                let cooldown_str = if let Some(ability_cooldown) = cooldown_state.get(ability) {
-                    format!(
-                        " Cooldown: {}/{}",
-                        ability_cooldown.elapsed().as_secs_f32(),
-                        ability_cooldown.max_time().as_secs_f32()
-                    )
-                } else {
-                    "".to_string()
-                };
+                let cooldown_str =
+                    if let Some(ability_cooldown) = cooldown_state.get(ability.clone()) {
+                        format!(
+                            " Cooldown: {}/{}",
+                            ability_cooldown.elapsed().as_secs_f32(),
+                            ability_cooldown.max_time().as_secs_f32()
+                        )
+                    } else {
+                        "".to_string()
+                    };
 
                 info!(
                     "Player attempted activation of {} ability, but it wasn't ready.{}",

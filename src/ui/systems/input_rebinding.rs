@@ -104,34 +104,57 @@ fn create_player_action_rebind_button(
     active_input_method: &InputType,
     options_res: &OptionsRes,
     player_action: &PlayerAction,
-) -> Response {
-    ui.button(match active_input_method {
-        InputType::Keyboard => {
-            if let Some(key_code) = options_res
-                .player_keyboard_action_input_mappings
-                .get(player_action)
-            {
-                key_code.to_string()
-            } else if let Some(key_code) = options_res
-                .player_mouse_action_input_mappings
-                .get(player_action)
-            {
-                key_code.to_string()
-            } else {
-                "".to_string()
+    rebinding_flag: &Option<RebindingTarget>,
+) -> Option<RebindingTarget> {
+    if ui
+        .button(match active_input_method {
+            InputType::Keyboard => {
+                let mut button_string = "".to_string();
+
+                if let Some(key_code) = options_res
+                    .player_keyboard_action_input_mappings
+                    .get(player_action)
+                {
+                    button_string = key_code.to_string();
+                } else if let Some(key_code) = options_res
+                    .player_mouse_action_input_mappings
+                    .get(player_action)
+                {
+                    button_string = key_code.to_string();
+                }
+
+                if let Some(RebindingTarget::PlayerAction(rebinding_target)) = rebinding_flag {
+                    if *rebinding_target == *player_action {
+                        button_string = "Press Input".to_string();
+                    }
+                }
+
+                button_string
             }
-        }
-        InputType::Gamepad(_) => {
-            if let Some(gamepad_button) = options_res
-                .player_gamepad_action_input_mappings
-                .get(player_action)
-            {
-                gamepad_button.to_string()
-            } else {
-                "".to_string()
+            InputType::Gamepad(_) => {
+                let mut button_string = "".to_string();
+
+                if let Some(gamepad_button) = options_res
+                    .player_gamepad_action_input_mappings
+                    .get(player_action)
+                {
+                    button_string = gamepad_button.to_string();
+                }
+
+                if let Some(RebindingTarget::PlayerAction(rebinding_target)) = rebinding_flag {
+                    if *rebinding_target == *player_action {
+                        button_string = "Press Input".to_string();
+                    }
+                }
+
+                button_string
             }
-        }
-    })
+        })
+        .clicked()
+    {
+        return Some(RebindingTarget::PlayerAction(player_action.clone()));
+    }
+    rebinding_flag.clone()
 }
 
 fn create_player_ability_rebind_button(
@@ -139,34 +162,63 @@ fn create_player_ability_rebind_button(
     active_input_method: &InputType,
     options_res: &OptionsRes,
     player_ability: &PlayerAbility,
-) -> Response {
-    ui.button(match active_input_method {
-        InputType::Keyboard => {
-            if let Some(key_code) = options_res
-                .player_keyboard_abilities_input_mappings
-                .get(player_ability)
-            {
-                key_code.to_string()
-            } else if let Some(key_code) = options_res
-                .player_mouse_abilities_input_mappings
-                .get(player_ability)
-            {
-                key_code.to_string()
-            } else {
-                "".to_string()
+    rebinding_flag: &Option<RebindingTarget>,
+) -> Option<RebindingTarget> {
+    if ui
+        .button(match active_input_method {
+            InputType::Keyboard => {
+                let mut button_string = "".to_string();
+
+                if let Some(key_code) = options_res
+                    .player_keyboard_abilities_input_mappings
+                    .get(player_ability)
+                {
+                    button_string = key_code.to_string();
+                } else if let Some(key_code) = options_res
+                    .player_mouse_abilities_input_mappings
+                    .get(player_ability)
+                {
+                    button_string = key_code.to_string();
+                }
+
+                if let Some(RebindingTarget::PlayerAbility(rebinding_target)) = rebinding_flag {
+                    if *rebinding_target == *player_ability {
+                        button_string = "Press Input".to_string();
+                    }
+                }
+
+                button_string
             }
-        }
-        InputType::Gamepad(_) => {
-            if let Some(gamepad_button) = options_res
-                .player_gamepad_abilities_input_mappings
-                .get(player_ability)
-            {
-                gamepad_button.to_string()
-            } else {
-                "".to_string()
+            InputType::Gamepad(_) => {
+                let mut button_string = "".to_string();
+
+                if let Some(gamepad_button) = options_res
+                    .player_gamepad_abilities_input_mappings
+                    .get(player_ability)
+                {
+                    button_string = gamepad_button.to_string();
+                }
+
+                if let Some(RebindingTarget::PlayerAbility(rebinding_target)) = rebinding_flag {
+                    if *rebinding_target == *player_ability {
+                        button_string = "Press Input".to_string();
+                    }
+                }
+
+                button_string
             }
-        }
-    })
+        })
+        .clicked()
+    {
+        return Some(RebindingTarget::PlayerAbility(player_ability.clone()));
+    }
+    rebinding_flag.clone()
+}
+
+#[derive(Debug, Clone)]
+pub(in crate::ui) enum RebindingTarget {
+    PlayerAction(PlayerAction),
+    PlayerAbility(PlayerAbility),
 }
 
 /// This function is a system that handles the egui input rebinding menu
@@ -175,6 +227,7 @@ pub(in crate::ui) fn input_rebinding_menu_system(
     mut options_res: ResMut<Persistent<OptionsRes>>,
     dummy_gamepad_q: Query<Entity, With<DummyGamepad>>,
     mut active_input_method: Local<InputType>,
+    mut rebinding_flag: Local<Option<RebindingTarget>>,
 ) {
     CentralPanel::default()
         .frame(Frame {
@@ -228,27 +281,30 @@ pub(in crate::ui) fn input_rebinding_menu_system(
                     match pair {
                         EitherOrBoth::Both(player_action, player_ability) => {
                             ui.label(RichText::new(player_action.as_ref()).size(LABEL_TEXT_SIZE));
-                            let _ = create_player_action_rebind_button(
+                            *rebinding_flag = create_player_action_rebind_button(
                                 ui,
                                 &active_input_method,
                                 &options_res,
                                 &player_action,
+                                &rebinding_flag,
                             );
                             ui.label(RichText::new(player_ability.as_ref()).size(LABEL_TEXT_SIZE));
-                            let _ = create_player_ability_rebind_button(
+                            *rebinding_flag = create_player_ability_rebind_button(
                                 ui,
                                 &active_input_method,
                                 &options_res,
                                 &player_ability,
+                                &rebinding_flag,
                             );
                         }
                         EitherOrBoth::Left(player_action) => {
                             ui.label(RichText::new(player_action.as_ref()).size(LABEL_TEXT_SIZE));
-                            let _ = create_player_action_rebind_button(
+                            *rebinding_flag = create_player_action_rebind_button(
                                 ui,
                                 &active_input_method,
                                 &options_res,
                                 &player_action,
+                                &rebinding_flag,
                             );
                             ui.label("");
                             ui.label("");
@@ -257,11 +313,12 @@ pub(in crate::ui) fn input_rebinding_menu_system(
                             ui.label("");
                             ui.label("");
                             ui.label(RichText::new(player_ability.as_ref()).size(LABEL_TEXT_SIZE));
-                            let _ = create_player_ability_rebind_button(
+                            *rebinding_flag = create_player_ability_rebind_button(
                                 ui,
                                 &active_input_method,
                                 &options_res,
                                 &player_ability,
+                                &rebinding_flag,
                             );
                         }
                     }

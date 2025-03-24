@@ -39,7 +39,6 @@ pub(crate) enum PlayerAction {
     Serialize,
     Deserialize,
     AsRefStr,
-    Copy,
     EnumIter,
 )]
 pub(crate) enum PlayerAbility {
