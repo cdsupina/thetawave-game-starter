@@ -49,6 +49,7 @@ impl ButtonAction {
                 MainMenuState::Title => Some("BACK".to_string()),
                 MainMenuState::Options => Some("OPTIONS".to_string()),
                 MainMenuState::CharacterSelection => Some("PLAY".to_string()),
+                MainMenuState::InputRebinding => Some("INPUT".to_string()),
                 _ => None,
             },
             ButtonAction::EnterGameState(game_state) => match game_state {

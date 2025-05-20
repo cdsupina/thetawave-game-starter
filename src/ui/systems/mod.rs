@@ -27,6 +27,7 @@ use log::{info, warn};
 pub(super) mod character_selection;
 pub(super) mod egui;
 pub(super) mod game_end;
+pub(super) mod input_rebinding;
 pub(super) mod loading;
 pub(super) mod options;
 pub(super) mod pause;

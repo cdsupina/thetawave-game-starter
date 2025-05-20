@@ -10,6 +10,7 @@ use super::{
         },
         egui::{setup_egui_system, update_egui_scale_system},
         game_end::{reset_game_end_result_resource_system, spawn_game_end_system},
+        input_rebinding::{input_rebinding_menu_system, spawn_input_rebinding_menu_system},
         loading::{setup_loading_ui_system, update_loading_bar_system},
         menu_button_action_system, menu_button_delayed_action_system, menu_button_focus_system,
         options::{options_menu_system, persist_options_system, spawn_options_menu_system},
@@ -48,6 +49,11 @@ impl Plugin for ThetawaveUiPlugin {
             )
             // Initialize and setup the options menu UI components when entering Options state
             .add_systems(OnEnter(MainMenuState::Options), spawn_options_menu_system)
+            // Initialize and setup the input rebinding menu Main Menu state
+            .add_systems(
+                OnEnter(MainMenuState::InputRebinding),
+                spawn_input_rebinding_menu_system,
+            )
             // Initialize and setup the character selection UI components when entering Character Selection state
             .add_systems(
                 OnEnter(MainMenuState::CharacterSelection),
@@ -82,6 +88,11 @@ impl Plugin for ThetawaveUiPlugin {
                     update_egui_scale_system,
                 )
                     .run_if(in_state(MainMenuState::Options).or(in_state(PauseMenuState::Options))),
+            )
+            // Run input rebinding menu system in the input rebinding menu
+            .add_systems(
+                Update,
+                input_rebinding_menu_system.run_if(in_state(MainMenuState::InputRebinding)),
             )
             // Run carousel systems in character selection state
             .add_systems(

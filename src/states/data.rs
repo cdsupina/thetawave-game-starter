@@ -24,6 +24,8 @@ pub(crate) enum MainMenuState {
     Title,
     /// Options menu state
     Options,
+    /// State for rebinding input controls
+    InputRebinding,
     /// Chracter selection state
     CharacterSelection,
 }

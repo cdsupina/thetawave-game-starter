@@ -57,6 +57,13 @@ pub(in crate::ui) fn spawn_options_menu_system(mut cmds: Commands, ui_assets: Re
                 );
                 parent.spawn_menu_button(
                     &ui_assets,
+                    ButtonAction::EnterMainMenuState(MainMenuState::InputRebinding),
+                    300.0,
+                    false,
+                    false,
+                );
+                parent.spawn_menu_button(
+                    &ui_assets,
                     ButtonAction::EnterMainMenuState(MainMenuState::Title),
                     300.0,
                     false,
