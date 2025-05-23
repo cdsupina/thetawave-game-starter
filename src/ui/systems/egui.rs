@@ -6,7 +6,7 @@ use bevy::{
 use bevy_egui::{
     egui::{
         style::{HandleShape, Selection, WidgetVisuals, Widgets},
-        Color32, Rounding, Spacing, Stroke, Style, Vec2, Visuals,
+        Color32, CornerRadius, Spacing, Stroke, Style, Vec2, Visuals,
     },
     EguiContextSettings, EguiContexts,
 };
@@ -33,7 +33,7 @@ pub(in crate::ui) fn setup_egui_system(
     mut egui_settings: Query<&mut EguiContextSettings>,
     mut contexts: EguiContexts,
 ) {
-    if let Ok(mut egui_settings) = egui_settings.get_single_mut() {
+    if let Ok(mut egui_settings) = egui_settings.single_mut() {
         // Increase scale of egui options menu
         egui_settings.scale_factor = 2.0;
 
@@ -48,7 +48,7 @@ pub(in crate::ui) fn setup_egui_system(
                         bg_fill: HOVERED_BG_COLOR,
                         weak_bg_fill: HOVERED_BG_COLOR,
                         bg_stroke: HOVERED_STROKE,
-                        rounding: Rounding::same(2.0),
+                        corner_radius: CornerRadius::same(2),
                         fg_stroke: HOVERED_STROKE,
                         expansion: 1.2,
                     },
@@ -56,7 +56,7 @@ pub(in crate::ui) fn setup_egui_system(
                         bg_fill: INACTIVE_BG_COLOR,
                         weak_bg_fill: INACTIVE_BG_COLOR,
                         bg_stroke: INACTIVE_STROKE,
-                        rounding: Rounding::same(2.0),
+                        corner_radius: CornerRadius::same(2),
                         fg_stroke: INACTIVE_STROKE,
                         expansion: 1.0,
                     },
@@ -64,7 +64,7 @@ pub(in crate::ui) fn setup_egui_system(
                         bg_fill: ACTIVE_BG_COLOR,
                         weak_bg_fill: ACTIVE_BG_COLOR,
                         bg_stroke: ACTIVE_STROKE,
-                        rounding: Rounding::same(2.0),
+                        corner_radius: CornerRadius::same(2),
                         fg_stroke: ACTIVE_STROKE,
                         expansion: 1.0,
                     },
@@ -93,9 +93,9 @@ pub(in crate::ui) fn update_egui_scale_system(
     mut egui_settings: Query<&mut EguiContextSettings>,
     primary_window_q: Query<&Window, With<PrimaryWindow>>,
 ) {
-    if let Ok(window) = primary_window_q.get_single() {
+    if let Ok(window) = primary_window_q.single() {
         // Calculate egui scale based on physical window height relative to 720p baseline
-        if let Ok(mut egui_settings) = egui_settings.get_single_mut() {
+        if let Ok(mut egui_settings) = egui_settings.single_mut() {
             egui_settings.scale_factor = (2. / 720.) * (window.resolution.physical_height() as f32);
         }
     }

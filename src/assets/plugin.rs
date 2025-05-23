@@ -6,7 +6,7 @@ use crate::states::AppState;
 use bevy::{
     app::{Plugin, Update},
     diagnostic::FrameTimeDiagnosticsPlugin,
-    prelude::{in_state, Condition, IntoSystemConfigs},
+    prelude::{in_state, Condition, IntoScheduleConfigs},
     state::state::OnExit,
 };
 use bevy_asset_loader::loading_state::{
@@ -27,7 +27,7 @@ impl Plugin for ThetawaveAssetsPlugin {
             ProgressPlugin::<AppState>::new()
                 .with_state_transition(AppState::MainMenuLoading, AppState::MainMenu)
                 .with_state_transition(AppState::GameLoading, AppState::Game),
-            FrameTimeDiagnosticsPlugin,
+            FrameTimeDiagnosticsPlugin::default(),
         ))
         .add_event::<LoadingProgressEvent>()
         .add_loading_state(

@@ -1,4 +1,4 @@
-use bevy::ecs::system::Resource;
+use bevy::ecs::resource::Resource;
 use serde::{Deserialize, Serialize};
 
 /// Save file for persisting player game progress

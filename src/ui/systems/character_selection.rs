@@ -14,25 +14,21 @@ use crate::{
 };
 use bevy::{
     color::{Alpha, Color},
-    core::Name,
+    ecs::hierarchy::ChildOf,
     input::ButtonInput,
     log::warn,
     prelude::{
-        BuildChildren, Changed, ChildBuild, Children, Commands, DespawnRecursiveExt, Entity,
-        EventReader, EventWriter, Gamepad, GamepadButton, ImageNode, KeyCode, Parent, Query, Res,
-        ResMut, With, Without,
+        Changed, Children, Commands, Entity, EventReader, EventWriter, Gamepad, GamepadButton,
+        ImageNode, KeyCode, Name, Query, Res, ResMut, With, Without,
     },
     time::Time,
     ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
 use bevy_alt_ui_navigation_lite::prelude::Focusable;
-use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
+use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use bevy_persistent::Persistent;
-use leafwing_input_manager::{
-    prelude::{ActionState, InputMap},
-    InputManagerBundle,
-};
+use leafwing_input_manager::prelude::{ActionState, InputMap};
 
 /// Spawn ui for character selection
 pub(in crate::ui) fn spawn_character_selection_system(
@@ -156,22 +152,22 @@ pub(in crate::ui) fn cycle_player_one_carousel_system(
                                 || keys.just_pressed(KeyCode::KeyA)
                             {
                                 carousel.cycle_left();
-                                effect_events.send(AudioEffectEvent::MenuButtonSelected);
+                                effect_events.write(AudioEffectEvent::MenuButtonSelected);
                             } else if keys.just_pressed(KeyCode::ArrowRight)
                                 || keys.just_pressed(KeyCode::KeyD)
                             {
                                 carousel.cycle_right();
-                                effect_events.send(AudioEffectEvent::MenuButtonSelected);
+                                effect_events.write(AudioEffectEvent::MenuButtonSelected);
                             }
                         }
                         InputType::Gamepad(entity) => {
                             if let Ok(gamepad) = gamepads_q.get(entity) {
                                 if gamepad.just_pressed(GamepadButton::DPadLeft) {
                                     carousel.cycle_left();
-                                    effect_events.send(AudioEffectEvent::MenuButtonSelected);
+                                    effect_events.write(AudioEffectEvent::MenuButtonSelected);
                                 } else if gamepad.just_pressed(GamepadButton::DPadRight) {
                                     carousel.cycle_right();
-                                    effect_events.send(AudioEffectEvent::MenuButtonSelected);
+                                    effect_events.write(AudioEffectEvent::MenuButtonSelected);
                                 }
                             }
                         }
@@ -238,7 +234,7 @@ pub(in crate::ui) fn spawn_carousel_system(
     for event in player_join_events.read() {
         for (entity, player_num) in character_selector_q.iter() {
             if *player_num == event.player_num {
-                cmds.entity(entity).despawn_descendants();
+                cmds.entity(entity).despawn_related::<Children>();
 
                 let carousel = CharacterCarousel::new(event.input.clone());
 
@@ -258,7 +254,8 @@ pub(in crate::ui) fn spawn_carousel_system(
                                 height: Val::Px(40.0),
                                 ..default()
                             },
-                            AseUiAnimation {
+                            ImageNode::default(),
+                            AseAnimation {
                                 animation: Animation::tag("idle"),
                                 aseprite: ui_assets.arrow_button_aseprite.clone(),
                             },
@@ -279,7 +276,7 @@ pub(in crate::ui) fn spawn_carousel_system(
                     // Add input manager for non-player one carousels
                     if !matches!(player_num, PlayerNum::One) {
                         carousel_builder.insert((
-                            InputManagerBundle::with_map(match event.input {
+                            match event.input {
                                 InputType::Keyboard => InputMap::new(
                                     options_res.carousel_keyboard_input_mappings.clone(),
                                 ),
@@ -287,7 +284,7 @@ pub(in crate::ui) fn spawn_carousel_system(
                                     options_res.carousel_gamepad_input_mappings.clone(),
                                 )
                                 .with_gamepad(entity),
-                            }),
+                            },
                             CarouselReadyTimer::new(),
                         ));
                     }
@@ -356,7 +353,7 @@ pub(in crate::ui) fn spawn_carousel_system(
                                 height: Val::Px(40.0),
                                 ..default()
                             },
-                            AseUiAnimation {
+                            AseAnimation {
                                 animation: Animation::tag("idle"),
                                 aseprite: ui_assets.arrow_button_aseprite.clone(),
                             },
@@ -372,16 +369,16 @@ pub(in crate::ui) fn spawn_carousel_system(
 /// Replaces the join button with a ready button when player joins
 pub(in crate::ui) fn spawn_ready_button_system(
     mut player_join_events: EventReader<PlayerJoinEvent>,
-    button_q: Query<(&ButtonAction, Entity, &Parent)>,
+    button_q: Query<(&ButtonAction, Entity, &ChildOf)>,
     ui_assets: Res<UiAssets>,
     mut cmds: Commands,
 ) {
     for event in player_join_events.read() {
-        for (action, entity, parent) in button_q.iter() {
+        for (action, entity, childof) in button_q.iter() {
             if let ButtonAction::Join(player_num) = action {
                 if event.player_num == *player_num {
-                    cmds.entity(entity).despawn_recursive();
-                    cmds.entity(parent.get()).with_children(|parent| {
+                    cmds.entity(entity).despawn();
+                    cmds.entity(childof.parent()).with_children(|parent| {
                         let mut entity_cmds = parent.spawn_menu_button(
                             &ui_assets,
                             ButtonAction::Ready(player_num.clone()),
@@ -406,7 +403,7 @@ pub(in crate::ui) fn spawn_ready_button_system(
 /// Change normal ready button to locked in green ready button
 pub(in crate::ui) fn lock_in_player_button_system(
     mut button_q: Query<(&mut MenuButtonState, &mut ButtonAction, &Children)>,
-    mut button_sprite_q: Query<&mut AseUiAnimation>,
+    mut button_sprite_q: Query<&mut AseAnimation>,
     mut player_ready_events: EventReader<PlayerReadyEvent>,
 ) {
     for event in player_ready_events.read() {
@@ -448,7 +445,7 @@ pub(in crate::ui) fn enable_start_game_button_system(
         (Entity, &mut MenuButtonState, &Children),
         (With<StartGameButton>, Without<PlayerReadyButton>),
     >,
-    mut button_sprite_q: Query<&mut AseUiAnimation>,
+    mut button_sprite_q: Query<&mut AseAnimation>,
     mut cmds: Commands,
 ) {
     // Bool for tracking if all players are ready
@@ -464,8 +461,7 @@ pub(in crate::ui) fn enable_start_game_button_system(
         }
 
         // Change the state and animation of the start game button depending on player readiness
-        if let Ok((entity, mut start_game_button_state, children)) =
-            disabled_button_q.get_single_mut()
+        if let Ok((entity, mut start_game_button_state, children)) = disabled_button_q.single_mut()
         {
             if players_ready {
                 if matches!(*start_game_button_state, MenuButtonState::Disabled) {
@@ -494,7 +490,7 @@ pub(in crate::ui) fn enable_start_game_button_system(
 pub(in crate::ui) fn enable_join_button_system(
     mut player_join_events: EventReader<PlayerJoinEvent>,
     mut join_button_q: Query<(&ButtonAction, &mut MenuButtonState, &Children)>,
-    mut button_sprite_q: Query<&mut AseUiAnimation>,
+    mut button_sprite_q: Query<&mut AseAnimation>,
 ) {
     for event in player_join_events.read() {
         if let Some(next_player_num) = event.player_num.next() {
@@ -565,8 +561,8 @@ pub(in crate::ui) fn additional_players_join_system(
 
     if let Some(input) = join_input {
         if let Some(player_num) = chosen_characters_res.next_available_player_num() {
-            player_join_events.send(PlayerJoinEvent { player_num, input });
-            effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+            player_join_events.write(PlayerJoinEvent { player_num, input });
+            effect_events.write(AudioEffectEvent::MenuButtonConfirm);
         }
     }
 }
@@ -604,31 +600,31 @@ pub(in crate::ui) fn carousel_input_system(
                 CharacterCarouselAction::CycleLeft => {
                     if can_cycle {
                         carousel.cycle_left();
-                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                        effect_events.write(AudioEffectEvent::MenuButtonConfirm);
                     }
                 }
                 CharacterCarouselAction::CycleRight => {
                     if can_cycle {
                         carousel.cycle_right();
-                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                        effect_events.write(AudioEffectEvent::MenuButtonConfirm);
                     }
                 }
                 CharacterCarouselAction::Ready => {
                     // Only let player ready after a the timer is complete
                     if ready_timer.0.finished() {
-                        player_ready_events.send(PlayerReadyEvent {
+                        player_ready_events.write(PlayerReadyEvent {
                             player_num: player_num.clone(),
                             is_ready: true,
                         });
-                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                        effect_events.write(AudioEffectEvent::MenuButtonConfirm);
                     }
                 }
                 CharacterCarouselAction::Unready => {
-                    player_ready_events.send(PlayerReadyEvent {
+                    player_ready_events.write(PlayerReadyEvent {
                         player_num: player_num.clone(),
                         is_ready: false,
                     });
-                    effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                    effect_events.write(AudioEffectEvent::MenuButtonConfirm);
                 }
             }
         }

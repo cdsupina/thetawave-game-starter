@@ -6,13 +6,12 @@ use crate::{
     ui::data::{ButtonAction, UiChildBuilderExt},
 };
 use bevy::{
-    core::Name,
     ecs::{
         entity::Entity,
+        prelude::Name,
         query::With,
         system::{Commands, Local, Query, Res, ResMut},
     },
-    hierarchy::{BuildChildren, ChildBuild},
     input::{
         gamepad::{Gamepad, GamepadButton},
         keyboard::KeyCode,
@@ -23,7 +22,7 @@ use bevy::{
     utils::default,
 };
 use bevy_egui::{
-    egui::{CentralPanel, Color32, ComboBox, Frame, Grid, Margin, Response, RichText, Ui},
+    egui::{CentralPanel, Color32, ComboBox, Frame, Grid, Margin, RichText, Ui},
     EguiContexts,
 };
 use bevy_persistent::Persistent;
@@ -320,7 +319,7 @@ pub(in crate::ui) fn input_rebinding_menu_system(
     CentralPanel::default()
         .frame(Frame {
             fill: Color32::TRANSPARENT,
-            inner_margin: Margin::same(10.0),
+            inner_margin: Margin::same(10),
             ..Default::default()
         })
         .show(contexts.ctx_mut(), |ui| {
@@ -338,7 +337,7 @@ pub(in crate::ui) fn input_rebinding_menu_system(
                             InputType::Keyboard,
                             "Keyboard",
                         );
-                        if let Ok(entity) = dummy_gamepad_q.get_single() {
+                        if let Ok(entity) = dummy_gamepad_q.single() {
                             ui.selectable_value(
                                 &mut *active_input_method,
                                 InputType::Gamepad(entity),

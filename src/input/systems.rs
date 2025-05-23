@@ -44,7 +44,7 @@ pub(super) fn disable_additional_players_navigation_system(
                 InputType::Keyboard => {
                     input_mapping.focus_follows_mouse = true;
                     input_mapping.keyboard_navigation = true;
-                    if let Ok(entity) = dummy_gamepad_q.get_single() {
+                    if let Ok(entity) = dummy_gamepad_q.single() {
                         input_mapping.gamepads = vec![entity];
                     }
                 }

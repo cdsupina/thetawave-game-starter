@@ -3,8 +3,7 @@ use crate::ui::data::{ButtonAction, UiChildBuilderExt};
 use super::{AppState, Cleanup, GameState, PauseMenuState, UiAssets};
 use bevy::{
     color::Color,
-    core::Name,
-    hierarchy::{BuildChildren, ChildBuild},
+    prelude::Name,
     prelude::{Commands, Res},
     ui::{AlignItems, BackgroundColor, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,

@@ -1,8 +1,8 @@
 use bevy::{
     prelude::{Event, GamepadButton, KeyCode, MouseButton, Resource},
-    utils::HashMap,
     window::{WindowMode, WindowResolution},
 };
+use bevy_platform::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 use crate::input::{CharacterCarouselAction, PlayerAbility, PlayerAction};

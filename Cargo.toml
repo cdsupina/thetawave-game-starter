@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.15.1", default-features = false, features = [
+bevy = { version = "0.16.0", default-features = false, features = [
     "animation",
     "bevy_asset",
     "bevy_color",
@@ -37,33 +37,35 @@ bevy = { version = "0.15.1", default-features = false, features = [
     "x11",
     "serialize",
 ] }
-bevy_egui = { version = "0.32", default-features = false, features = [
+bevy_platform = "0.16.0"
+bevy_egui = { version = "0.34.1", default-features = false, features = [
     "open_url",
     "default_fonts",
     "render",
 ] }
-bevy-alt-ui-navigation-lite = "0.3.1"
-bevy_asset_loader = { version = "0.22.0", features = ["progress_tracking"] }
-bevy_embedded_assets = "0.12.0"
-bevy_state_macros = "=0.1.0"
+bevy-alt-ui-navigation-lite = "0.4.0"
+bevy_asset_loader = { version = "0.23.0", features = ["progress_tracking"] }
+bevy_embedded_assets = "0.13.0"
+bevy_state_macros = "=0.16.0"
 log = { version = "*", features = [
     "max_level_debug",
     "release_max_level_warn",
 ] }
-rand = "0.8.5"
-webbrowser = "1.0.3"
-bevy_aseprite_ultra = "0.4.1"
-iyes_progress = "0.13.1"
-bevy_kira_audio = { version = "0.22.0", features = ["mp3", "wav"] }
-serde = "1.0.217"
-bevy-persistent = { version = "0.7.0", features = ["all"] }
-dirs = "5.0.1"
-leafwing-input-manager = "0.16.0"
-leafwing_abilities = "0.10.0"
-avian2d = { version = "0.2.0", features = ["debug-plugin"] }
-strum = "0.26.3"
-winit = "0.30.8"
-image = "0.25.5"
+rand = "0.9.1"
+webbrowser = "1.0.4"
+bevy_aseprite_ultra = "0.6.1"
+iyes_progress = "0.14.0"
+bevy_kira_audio = { version = "0.23.0", features = ["mp3", "wav"] }
+serde = "1.0.219"
+bevy-persistent = { version = "0.8.0", features = ["all"] }
+dirs = "6.0.0"
+leafwing-input-manager = "0.17.0"
+leafwing_abilities = "0.11.0"
+avian2d = { version = "0.3.0", features = ["debug-plugin"] }
+strum = "0.27.1"
+strum_macros = "0.27.1"
+winit = "0.30.10"
+image = "0.25.6"
 itertools = "0.14.0"
 
 [profile.dev]

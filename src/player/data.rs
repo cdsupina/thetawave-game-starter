@@ -2,10 +2,10 @@ use crate::input::{InputType, PlayerAbility};
 use bevy::{
     math::Vec2,
     prelude::{Component, Resource},
-    utils::hashbrown::HashMap,
 };
+use bevy_platform::collections::HashMap;
 use leafwing_abilities::prelude::{Cooldown, CooldownState};
-use strum::{AsRefStr, EnumIter};
+use strum_macros::{AsRefStr, EnumIter};
 
 /// Resource for storing all of the data about every character
 #[derive(Resource)]

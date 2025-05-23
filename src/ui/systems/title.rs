@@ -2,13 +2,12 @@ use crate::ui::data::{ButtonAction, UiChildBuilderExt};
 
 use super::{Cleanup, MainMenuState, UiAssets};
 use bevy::{
-    core::Name,
-    prelude::{BuildChildren, ChildBuild, Commands, EventReader, Query, Res, With},
+    prelude::{Commands, EventReader, ImageNode, Name, Query, Res, With},
     ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
 use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
-use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
+use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 
 /// Spawn ui for title menu
 pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
@@ -39,11 +38,12 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
             .with_children(|parent| {
                 parent.spawn((
                     Name::new("Title Logo"),
+                    ImageNode::default(),
                     Node {
                         height: Val::Vh(50.0),
                         ..default()
                     },
-                    AseUiAnimation {
+                    AseAnimation {
                         animation: Animation::tag("title").with_speed(1.25),
                         aseprite: ui_assets.thetawave_logo_aseprite.clone(),
                     },
@@ -99,7 +99,8 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
                         margin: UiRect::all(Val::Vh(1.0)),
                         ..default()
                     },
-                    AseUiAnimation {
+                    ImageNode::default(),
+                    AseAnimation {
                         animation: Animation::tag("released"),
                         aseprite: ui_assets.bluesky_logo_aseprite.clone(),
                     },
@@ -116,7 +117,8 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
                         margin: UiRect::all(Val::Vh(1.0)),
                         ..default()
                     },
-                    AseUiAnimation {
+                    ImageNode::default(),
+                    AseAnimation {
                         animation: Animation::tag("released"),
                         aseprite: ui_assets.github_logo_aseprite.clone(),
                     },
@@ -133,7 +135,7 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
 /// Takes navigation events and queries for focusable animations
 pub(in crate::ui) fn website_footer_button_focus_system(
     mut nav_events: EventReader<NavEvent>,
-    mut focusable_q: Query<&mut AseUiAnimation, With<Focusable>>,
+    mut focusable_q: Query<&mut AseAnimation, With<Focusable>>,
 ) {
     for event in nav_events.read() {
         if let NavEvent::FocusChanged { to, from } = event {

@@ -5,17 +5,18 @@ use crate::{
     states::{AppState, GameState, MainMenuState, PauseMenuState},
 };
 use bevy::{
-    core::Name,
-    ecs::system::{EntityCommands, Resource},
-    hierarchy::{BuildChildren, ChildBuild, ChildBuilder},
-    prelude::{Component, Entity, Event},
+    ecs::{resource::Resource, system::EntityCommands},
+    prelude::{ChildSpawnerCommands, Component, Entity, Event, Name},
     text::TextFont,
     time::{Timer, TimerMode},
-    ui::{widget::Text, AlignItems, FlexDirection, JustifyContent, JustifySelf, Node, UiRect, Val},
+    ui::{
+        widget::{ImageNode, Text},
+        AlignItems, FlexDirection, JustifyContent, JustifySelf, Node, UiRect, Val,
+    },
     utils::default,
 };
 use bevy_alt_ui_navigation_lite::prelude::Focusable;
-use bevy_aseprite_ultra::prelude::{Animation, AseUiAnimation};
+use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use strum::IntoEnumIterator;
 
 const BUTTON_ACTION_DELAY_TIME: f32 = 0.3;
@@ -285,7 +286,7 @@ pub(super) trait UiChildBuilderExt {
     ) -> EntityCommands;
 }
 
-impl UiChildBuilderExt for ChildBuilder<'_> {
+impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
     /// Spawn a join prompt
     fn spawn_join_prompt(&mut self, ui_assets: &UiAssets) {
         self.spawn(Node {
@@ -294,7 +295,7 @@ impl UiChildBuilderExt for ChildBuilder<'_> {
         })
         .with_children(|parent| {
             parent.spawn((
-                AseUiAnimation {
+                AseAnimation {
                     animation: Animation::tag("key_return"),
                     aseprite: ui_assets.return_button_aseprite.clone(),
                 },
@@ -305,7 +306,7 @@ impl UiChildBuilderExt for ChildBuilder<'_> {
                 Name::new("Join Prompt Input"),
             ));
             parent.spawn((
-                AseUiAnimation {
+                AseAnimation {
                     animation: Animation::tag("a"),
                     aseprite: ui_assets.xbox_letter_buttons_aseprite.clone(),
                 },
@@ -403,13 +404,14 @@ impl UiChildBuilderExt for ChildBuilder<'_> {
                 parent
                     .spawn((
                         Name::new("Menu Button Sprite"),
+                        ImageNode::default(),
                         Node {
                             width: Val::Px(width),
                             aspect_ratio: Some(162.0 / 39.0),
                             justify_content: JustifyContent::Center,
                             ..default()
                         },
-                        AseUiAnimation {
+                        AseAnimation {
                             animation: Animation::tag(if is_disabled {
                                 "disabled"
                             } else if is_first {

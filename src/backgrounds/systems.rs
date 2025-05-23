@@ -6,12 +6,11 @@ use crate::{
 use bevy::{
     asset::Assets,
     color::{Alpha, Color},
-    core::Name,
     math::Vec3,
     pbr::{MeshMaterial3d, PointLight, StandardMaterial},
     prelude::{
-        AlphaMode, BuildChildren, ChildBuild, ChildBuilder, Commands, Mesh, Mesh3d, Meshable,
-        Query, Rectangle, Res, ResMut, Sphere, Transform, Visibility,
+        AlphaMode, ChildSpawnerCommands, Commands, Mesh, Mesh3d, Meshable, Name, Query, Rectangle,
+        Res, ResMut, Sphere, Transform, Visibility,
     },
     scene::SceneRoot,
     time::Time,
@@ -83,20 +82,20 @@ pub(super) fn spawn_bg_system(
     ));
 
     // Initialize random number generator for positioning elements
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Calculate random X position for planet, ensuring it's not in the center
-    let planet_x = if rng.gen_bool(0.5) {
-        rng.gen_range(PLANET_LOWER_X_RANGE)
+    let planet_x = if rng.random_bool(0.5) {
+        rng.random_range(PLANET_LOWER_X_RANGE)
     } else {
-        rng.gen_range(PLANET_UPPER_X_RANGE)
+        rng.random_range(PLANET_UPPER_X_RANGE)
     };
 
     // Calculate random Y position for planet, ensuring it's not in the center
-    let planet_y = if rng.gen_bool(0.5) {
-        rng.gen_range(PLANET_LOWER_Y_RANGE)
+    let planet_y = if rng.random_bool(0.5) {
+        rng.random_range(PLANET_LOWER_Y_RANGE)
     } else {
-        rng.gen_range(PLANET_UPPER_Y_RANGE)
+        rng.random_range(PLANET_UPPER_Y_RANGE)
     };
 
     // Spawn a random planet model with rotation behavior
@@ -105,9 +104,9 @@ pub(super) fn spawn_bg_system(
         Transform::default().with_translation(Vec3::new(
             planet_x,
             planet_y,
-            rng.gen_range(PLANET_Z_RANGE),
+            rng.random_range(PLANET_Z_RANGE),
         )),
-        PlanetRotationComponent::new(rng.gen_range(PLANET_ROTATION_SPEED_RANGE)),
+        PlanetRotationComponent::new(rng.random_range(PLANET_ROTATION_SPEED_RANGE)),
         Cleanup::<AppState> {
             states: vec![AppState::MainMenu, AppState::Game],
         },
@@ -116,20 +115,20 @@ pub(super) fn spawn_bg_system(
 
     // Calculate star position on opposite side of screen from planet
     let star_x = if planet_x > 0.0 {
-        rng.gen_range(STAR_CLUSTER_LOWER_X_RANGE)
+        rng.random_range(STAR_CLUSTER_LOWER_X_RANGE)
     } else {
-        rng.gen_range(STAR_CLUSTER_UPPER_X_RANGE)
+        rng.random_range(STAR_CLUSTER_UPPER_X_RANGE)
     };
 
     let star_y = if planet_y > 0.0 {
-        rng.gen_range(STAR_CLUSTER_LOWER_Y_RANGE)
+        rng.random_range(STAR_CLUSTER_LOWER_Y_RANGE)
     } else {
-        rng.gen_range(STAR_CLUSTER_UPPER_Y_RANGE)
+        rng.random_range(STAR_CLUSTER_UPPER_Y_RANGE)
     };
 
     // Spawn star cluster with potential additional stars
     cmds.spawn((
-        Transform::from_xyz(star_x, star_y, rng.gen_range(STAR_CLUSTER_Z_RANGE)),
+        Transform::from_xyz(star_x, star_y, rng.random_range(STAR_CLUSTER_Z_RANGE)),
         Visibility::default(),
         Cleanup::<AppState> {
             states: vec![AppState::MainMenu, AppState::Game],
@@ -141,13 +140,13 @@ pub(super) fn spawn_bg_system(
         spawn_star(parent, Vec3::ZERO, &mut materials, &mut meshes, &mut rng);
 
         // 15% chance to spawn additional star to the upper right
-        if rng.gen_bool(ADDITIONAL_STAR_CHANCE) {
+        if rng.random_bool(ADDITIONAL_STAR_CHANCE) {
             spawn_star(
                 parent,
                 Vec3::new(
-                    rng.gen_range(STAR_UPPER_RIGHT_X_RANGE),
-                    rng.gen_range(STAR_UPPER_RIGHT_Y_RANGE),
-                    rng.gen_range(STAR_Z_RANGE),
+                    rng.random_range(STAR_UPPER_RIGHT_X_RANGE),
+                    rng.random_range(STAR_UPPER_RIGHT_Y_RANGE),
+                    rng.random_range(STAR_Z_RANGE),
                 ),
                 &mut materials,
                 &mut meshes,
@@ -156,13 +155,13 @@ pub(super) fn spawn_bg_system(
         }
 
         // 15% chance to spawn additional star to the lower left
-        if rng.gen_bool(ADDITIONAL_STAR_CHANCE) {
+        if rng.random_bool(ADDITIONAL_STAR_CHANCE) {
             spawn_star(
                 parent,
                 Vec3::new(
-                    rng.gen_range(STAR_LOWER_LEFT_X_RANGE),
-                    rng.gen_range(STAR_LOWER_LEFT_Y_RANGE),
-                    rng.gen_range(STAR_Z_RANGE),
+                    rng.random_range(STAR_LOWER_LEFT_X_RANGE),
+                    rng.random_range(STAR_LOWER_LEFT_Y_RANGE),
+                    rng.random_range(STAR_Z_RANGE),
                 ),
                 &mut materials,
                 &mut meshes,
@@ -174,20 +173,24 @@ pub(super) fn spawn_bg_system(
 
 /// Helper function to spawn an individual star with random properties
 fn spawn_star(
-    cb: &mut ChildBuilder,
+    csc: &mut ChildSpawnerCommands,
     pos: Vec3,
     materials: &mut Assets<StandardMaterial>,
     meshes: &mut Assets<Mesh>,
     rng: &mut ThreadRng,
 ) {
     // Generate random bright color for the star
-    let star_color = Color::srgb(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>());
+    let star_color = Color::srgb(
+        rng.random::<f32>(),
+        rng.random::<f32>(),
+        rng.random::<f32>(),
+    );
 
     // Spawn star mesh with emissive material
-    cb.spawn((
+    csc.spawn((
         Mesh3d(
             meshes.add(
-                Sphere::new(rng.gen_range(STAR_RADIUS_RANGE))
+                Sphere::new(rng.random_range(STAR_RADIUS_RANGE))
                     .mesh()
                     .uv(14, 9),
             ),
@@ -205,7 +208,7 @@ fn spawn_star(
     .with_child((
         PointLight {
             color: star_color,
-            intensity: rng.gen_range(STAR_POINT_LIGHT_INTENSITY_RANGE),
+            intensity: rng.random_range(STAR_POINT_LIGHT_INTENSITY_RANGE),
             range: STAR_POINT_LIGHT_RANGE,
             ..default()
         },

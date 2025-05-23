@@ -12,7 +12,7 @@ pub(super) fn get_loading_progress_system(
     mut loading_event_writer: EventWriter<LoadingProgressEvent>,
 ) {
     let progress = progress.get_global_progress();
-    loading_event_writer.send(LoadingProgressEvent(
+    loading_event_writer.write(LoadingProgressEvent(
         progress.done as f32 / progress.total as f32,
     ));
 }
