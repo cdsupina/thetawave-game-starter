@@ -25,12 +25,12 @@ pub(super) fn start_music_system(
         if let Some(entered_state) = event.entered {
             match entered_state {
                 AppState::MainMenu => {
-                    music_trans_events.send(MusicTransitionEvent {
+                    music_trans_events.write(MusicTransitionEvent {
                         music: app_audio_assets.main_menu_theme.clone(),
                     });
                 }
                 AppState::Game => {
-                    music_trans_events.send(MusicTransitionEvent {
+                    music_trans_events.write(MusicTransitionEvent {
                         music: app_audio_assets.game_theme.clone(),
                     });
                 }

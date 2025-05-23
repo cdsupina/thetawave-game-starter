@@ -3,7 +3,7 @@ use crate::states::{AppState, GameState};
 use bevy::{
     app::{Plugin, Update},
     ecs::schedule::common_conditions::not,
-    prelude::{in_state, Condition, IntoSystemConfigs, OnEnter},
+    prelude::{in_state, Condition, IntoScheduleConfigs, OnEnter},
 };
 
 /// Plugin for managing background elements in Thetawave

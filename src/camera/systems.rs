@@ -1,12 +1,11 @@
 use crate::options::OptionsRes;
 use bevy::{
     color::Color,
-    core::Name,
     core_pipeline::{bloom::Bloom, tonemapping::Tonemapping},
     ecs::system::Res,
     math::Vec3,
     prelude::{
-        Camera, Camera2d, Camera3d, ClearColorConfig, Commands, OrthographicProjection,
+        Camera, Camera2d, Camera3d, ClearColorConfig, Commands, Name, OrthographicProjection,
         PerspectiveProjection, Projection, Transform,
     },
     render::camera::ScalingMode,
@@ -36,12 +35,13 @@ pub(super) fn setup_cameras_system(mut cmd: Commands, options_res: Res<Persisten
             },
             ..Bloom::OLD_SCHOOL
         },
-        OrthographicProjection {
+        // Change OrthographicProjection component to Projection component
+        Projection::Orthographic(OrthographicProjection {
             scaling_mode: ScalingMode::FixedVertical {
                 viewport_height: VIEWPORT_HEIGHT,
             },
             ..OrthographicProjection::default_2d()
-        },
+        }),
     ));
 
     // Necessary for viewing 3D assets

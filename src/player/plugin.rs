@@ -8,7 +8,7 @@ use super::{
 use crate::states::{AppState, GameState, MainMenuState};
 use bevy::{
     app::{Plugin, Update},
-    prelude::{in_state, Condition, IntoSystemConfigs, OnEnter},
+    prelude::{in_state, Condition, IntoScheduleConfigs, OnEnter},
 };
 
 /// Plugin for managing player entities

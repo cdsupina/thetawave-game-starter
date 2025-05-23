@@ -7,19 +7,16 @@ use crate::{
 };
 use avian2d::prelude::{Collider, LinearVelocity, MaxLinearSpeed, RigidBody};
 use bevy::{
-    core::Name,
     log::info,
-    prelude::{Commands, Query, Res, ResMut},
+    prelude::{Commands, Name, Query, Res, ResMut},
+    sprite::Sprite,
     utils::default,
 };
-use bevy_aseprite_ultra::prelude::{Animation, AseSpriteAnimation};
+use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use bevy_egui::egui::Vec2;
 use bevy_persistent::Persistent;
 use leafwing_abilities::{prelude::CooldownState, AbilitiesBundle};
-use leafwing_input_manager::{
-    prelude::{ActionState, InputMap},
-    InputManagerBundle,
-};
+use leafwing_input_manager::prelude::{ActionState, InputMap};
 
 /// Spawn a player controlled entity
 pub(super) fn spawn_players_system(
@@ -38,10 +35,11 @@ pub(super) fn spawn_players_system(
         {
             cmds.spawn((
                 player_num.clone(),
-                AseSpriteAnimation {
+                AseAnimation {
                     animation: Animation::tag("idle"),
                     aseprite: assets.get_character_sprite(&chosen_character_data.character),
                 },
+                Sprite::default(),
                 Cleanup::<AppState> {
                     states: vec![AppState::Game],
                 },
@@ -51,7 +49,7 @@ pub(super) fn spawn_players_system(
                 ),
                 RigidBody::Kinematic,
                 MaxLinearSpeed(character_data.max_speed),
-                InputManagerBundle::with_map(match chosen_character_data.input {
+                match chosen_character_data.input {
                     InputType::Keyboard => {
                         InputMap::new(options_res.player_keyboard_action_input_mappings.clone())
                             .insert_multiple(options_res.player_mouse_action_input_mappings.clone())
@@ -61,8 +59,8 @@ pub(super) fn spawn_players_system(
                         InputMap::new(options_res.player_gamepad_action_input_mappings.clone())
                             .with_gamepad(entity)
                     }
-                }),
-                InputManagerBundle::with_map(match chosen_character_data.input {
+                },
+                match chosen_character_data.input {
                     InputType::Keyboard => {
                         InputMap::new(options_res.player_keyboard_abilities_input_mappings.clone())
                             .insert_multiple(
@@ -74,7 +72,7 @@ pub(super) fn spawn_players_system(
                         InputMap::new(options_res.player_gamepad_abilities_input_mappings.clone())
                             .with_gamepad(entity)
                     }
-                }),
+                },
                 AbilitiesBundle::<PlayerAbility> {
                     cooldowns: character_data.cooldowns.clone(),
                     ..default()
@@ -137,19 +135,18 @@ pub(super) fn player_ability_system(
 ) {
     for (mut cooldown_state, action_state) in player_ability_q.iter_mut() {
         for ability in action_state.get_just_released() {
-            if cooldown_state.trigger(ability.clone()).is_ok() {
+            if cooldown_state.trigger(&ability).is_ok() {
                 info!("Player activated {} ability.", ability.as_ref());
             } else {
-                let cooldown_str =
-                    if let Some(ability_cooldown) = cooldown_state.get(ability.clone()) {
-                        format!(
-                            " Cooldown: {}/{}",
-                            ability_cooldown.elapsed().as_secs_f32(),
-                            ability_cooldown.max_time().as_secs_f32()
-                        )
-                    } else {
-                        "".to_string()
-                    };
+                let cooldown_str = if let Some(ability_cooldown) = cooldown_state.get(&ability) {
+                    format!(
+                        " Cooldown: {}/{}",
+                        ability_cooldown.elapsed().as_secs_f32(),
+                        ability_cooldown.max_time().as_secs_f32()
+                    )
+                } else {
+                    "".to_string()
+                };
 
                 info!(
                     "Player attempted activation of {} ability, but it wasn't ready.{}",

@@ -3,7 +3,7 @@ use crate::states::AppState;
 use avian2d::{prelude::PhysicsDebugPlugin, PhysicsPlugins};
 use bevy::{
     app::{Plugin, Update},
-    prelude::{in_state, IntoSystemConfigs, OnEnter},
+    prelude::{in_state, IntoScheduleConfigs, OnEnter},
 };
 
 pub(crate) struct ThetawavePhysicsPlugin;

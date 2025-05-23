@@ -1,6 +1,6 @@
 use bevy::{
     app::{Plugin, Update},
-    prelude::{in_state, not, Condition, IntoSystemConfigs},
+    prelude::{in_state, not, Condition, IntoScheduleConfigs},
 };
 use bevy_kira_audio::{AudioApp, AudioPlugin};
 

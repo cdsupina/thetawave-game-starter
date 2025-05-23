@@ -21,7 +21,7 @@ use bevy::{
     ui::{Node, UiRect, Val},
 };
 use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
-use bevy_aseprite_ultra::prelude::AseUiAnimation;
+use bevy_aseprite_ultra::prelude::AseAnimation;
 use log::{info, warn};
 
 pub(super) mod character_selection;
@@ -42,7 +42,7 @@ const BLUESKY_URL: &str = "https://bsky.app/profile/carlo.metalmancy.tech";
 pub(super) fn menu_button_focus_system(
     mut nav_events: EventReader<NavEvent>,
     focusable_q: Query<(&Children, &MenuButtonState), With<Focusable>>,
-    mut ase_q: Query<(&Children, &mut AseUiAnimation)>,
+    mut ase_q: Query<(&Children, &mut AseAnimation)>,
     mut text_container_q: Query<&mut Node, With<MenuButtonTextContainer>>,
     mut audio_effect_events: EventWriter<AudioEffectEvent>,
 ) {
@@ -52,7 +52,7 @@ pub(super) fn menu_button_focus_system(
                 // Handle newly focused button
                 if let Ok((focusable_children, button_state)) = focusable_q.get(*to.first()) {
                     // Play pressed button effect
-                    audio_effect_events.send(AudioEffectEvent::MenuButtonSelected);
+                    audio_effect_events.write(AudioEffectEvent::MenuButtonSelected);
 
                     // Update the button animation
                     for focusable_child in focusable_children.iter() {
@@ -69,7 +69,7 @@ pub(super) fn menu_button_focus_system(
                 // Handle previously focused button
                 if let Ok((focusable_children, button_state)) = focusable_q.get(*from.first()) {
                     // Play released button effect
-                    audio_effect_events.send(AudioEffectEvent::MenuButtonReleased);
+                    audio_effect_events.write(AudioEffectEvent::MenuButtonReleased);
 
                     // Update the button animation
                     for focusable_child in focusable_children.iter() {
@@ -149,25 +149,25 @@ pub(super) fn menu_button_action_system(
                         // Activate join and ready actions instantly, delay other actions by sending DelayedButtonPressEvent
                         match button_action {
                             ButtonAction::Join(player_num) => {
-                                player_join_events.send(PlayerJoinEvent {
+                                player_join_events.write(PlayerJoinEvent {
                                     player_num: player_num.clone(),
                                     input: input_type,
                                 });
                             }
                             ButtonAction::Ready(player_num) => {
-                                player_ready_events.send(PlayerReadyEvent {
+                                player_ready_events.write(PlayerReadyEvent {
                                     player_num: player_num.clone(),
                                     is_ready: true,
                                 });
                             }
                             ButtonAction::UnReady(player_num) => {
-                                player_ready_events.send(PlayerReadyEvent {
+                                player_ready_events.write(PlayerReadyEvent {
                                     player_num: player_num.clone(),
                                     is_ready: false,
                                 });
                             }
                             _ => {
-                                button_action_events.send(DelayedButtonPressEvent {
+                                button_action_events.write(DelayedButtonPressEvent {
                                     button_action: button_action.clone(),
                                     button_entity,
                                 });
@@ -175,7 +175,7 @@ pub(super) fn menu_button_action_system(
                         }
 
                         // Play the button confirm sound
-                        effect_events.send(AudioEffectEvent::MenuButtonConfirm);
+                        effect_events.write(AudioEffectEvent::MenuButtonConfirm);
                     }
                 }
             }
@@ -195,7 +195,7 @@ pub(super) fn menu_button_delayed_action_system(
     mut exit_events: EventWriter<AppExit>,
     mut apply_options_events: EventWriter<ApplyOptionsEvent>,
     focusable_q: Query<&Children, With<Focusable>>,
-    mut ase_q: Query<(&Children, &mut AseUiAnimation)>,
+    mut ase_q: Query<(&Children, &mut AseAnimation)>,
     mut text_container_q: Query<&mut Node, With<MenuButtonTextContainer>>,
 ) {
     // Check if there is a queued button action
@@ -220,10 +220,10 @@ pub(super) fn menu_button_delayed_action_system(
                     next_pause_state.set(pause_menu_state);
                 }
                 ButtonAction::Exit => {
-                    exit_events.send(AppExit::Success);
+                    exit_events.write(AppExit::Success);
                 }
                 ButtonAction::ApplyOptions => {
-                    apply_options_events.send(ApplyOptionsEvent);
+                    apply_options_events.write(ApplyOptionsEvent);
                 }
                 ButtonAction::OpenBlueskyWebsite => {
                     open_website(BLUESKY_URL);

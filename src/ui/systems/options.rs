@@ -2,13 +2,11 @@ use crate::ui::data::{ButtonAction, UiChildBuilderExt};
 
 use super::{ApplyOptionsEvent, Cleanup, MainMenuState, OptionsRes, UiAssets};
 use bevy::{
-    core::Name,
-    hierarchy::{BuildChildren, ChildBuild},
     log::info,
-    prelude::{Commands, EventReader, Res, ResMut},
+    prelude::{Commands, EventReader, Name, Res, ResMut},
     ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
-    window::{MonitorSelection, WindowMode, WindowResolution},
+    window::{MonitorSelection, VideoModeSelection, WindowMode, WindowResolution},
 };
 use bevy_egui::{
     egui::{CentralPanel, Checkbox, Color32, ComboBox, Frame, Grid, Margin, RichText, Slider},
@@ -81,7 +79,7 @@ pub(in crate::ui) fn options_menu_system(
     CentralPanel::default()
         .frame(Frame {
             fill: Color32::TRANSPARENT,
-            inner_margin: Margin::same(10.0),
+            inner_margin: Margin::same(10),
             ..Default::default()
         })
         .show(contexts.ctx_mut(), |ui| {
@@ -109,7 +107,10 @@ pub(in crate::ui) fn options_menu_system(
                         );
                         ui.selectable_value(
                             &mut options_res.window_mode,
-                            WindowMode::Fullscreen(MonitorSelection::Current),
+                            WindowMode::Fullscreen(
+                                MonitorSelection::Current,
+                                VideoModeSelection::Current,
+                            ),
                             "Fullscreen",
                         );
                     });
@@ -160,8 +161,7 @@ fn window_mode_to_string(mode: &WindowMode) -> &str {
     match mode {
         WindowMode::Windowed => "Windowed",
         WindowMode::BorderlessFullscreen(_) => "Borderless Fullscreen",
-        WindowMode::Fullscreen(_) => "Fullscreen",
-        WindowMode::SizedFullscreen(_) => "Sized Fullscreen",
+        WindowMode::Fullscreen(_, _) => "Fullscreen",
     }
 }
 

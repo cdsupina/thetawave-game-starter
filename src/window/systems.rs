@@ -42,7 +42,7 @@ pub(super) fn setup_window_system(
     mut primary_window_q: Query<&mut Window, With<PrimaryWindow>>,
 ) {
     // Try to get mutable reference to primary window
-    if let Ok(mut window) = primary_window_q.get_single_mut() {
+    if let Ok(mut window) = primary_window_q.single_mut() {
         // Apply the selected options to the window
         window.mode = options_res.window_mode;
         window.resolution = options_res
@@ -57,7 +57,7 @@ pub(super) fn update_ui_scale_system(
     mut ui_scale: ResMut<UiScale>,
     primary_window_q: Query<&Window, With<PrimaryWindow>>,
 ) {
-    if let Ok(window) = primary_window_q.get_single() {
+    if let Ok(window) = primary_window_q.single() {
         // Calculate UI scale based on physical window height relative to 720p baseline
         ui_scale.0 = (1. / 720.) * (window.resolution.physical_height() as f32);
     }

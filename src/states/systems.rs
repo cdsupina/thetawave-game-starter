@@ -8,8 +8,8 @@ use super::{data::Cleanup, AppState, GameState, MainMenuState, PauseMenuState};
 use bevy::{
     input::{keyboard::KeyCode, ButtonInput},
     prelude::{
-        Commands, DespawnRecursiveExt, Entity, EventReader, NextState, Query, Res, ResMut, State,
-        StateTransitionEvent, States,
+        Commands, Entity, EventReader, NextState, Query, Res, ResMut, State, StateTransitionEvent,
+        States,
     },
 };
 use leafwing_input_manager::prelude::ActionState;
@@ -24,7 +24,7 @@ pub(super) fn cleanup_state_system<S: States>(
         if let Some(exited_state) = &event.exited {
             for (entity, cleanup) in cleanup_entities_q.iter() {
                 if cleanup.states.contains(exited_state) {
-                    cmds.entity(entity).despawn_recursive();
+                    cmds.entity(entity).despawn();
                 }
             }
         }

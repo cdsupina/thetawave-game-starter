@@ -1,6 +1,6 @@
 use bevy::{
     app::{Plugin, Update},
-    prelude::{in_state, AppExtStates, IntoSystemConfigs, OnEnter},
+    prelude::{in_state, AppExtStates, IntoScheduleConfigs, OnEnter},
 };
 
 use super::{

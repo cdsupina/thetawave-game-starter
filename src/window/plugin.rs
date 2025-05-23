@@ -2,7 +2,7 @@ use super::systems::{set_window_icon_system, setup_window_system, update_ui_scal
 use crate::states::{MainMenuState, PauseMenuState};
 use bevy::{
     app::{Plugin, PostStartup, Startup, Update},
-    ecs::schedule::{Condition, IntoSystemConfigs},
+    ecs::schedule::{Condition, IntoScheduleConfigs},
     state::condition::in_state,
 };
 

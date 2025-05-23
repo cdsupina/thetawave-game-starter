@@ -76,19 +76,19 @@ pub(crate) struct AppAudioAssets {
 impl AppAudioAssets {
     pub(crate) fn get_random_button_press_effect(&self) -> Handle<AudioSource> {
         self.menu_button_select_effects
-            [rand::thread_rng().gen_range(0..self.menu_button_select_effects.len())]
+            [rand::rng().random_range(0..self.menu_button_select_effects.len())]
         .clone()
     }
 
     pub(crate) fn get_random_button_release_effect(&self) -> Handle<AudioSource> {
         self.menu_button_release_effects
-            [rand::thread_rng().gen_range(0..self.menu_button_release_effects.len())]
+            [rand::rng().random_range(0..self.menu_button_release_effects.len())]
         .clone()
     }
 
     pub(crate) fn get_random_button_confirm_effect(&self) -> Handle<AudioSource> {
         self.menu_button_confirm_effects
-            [rand::thread_rng().gen_range(0..self.menu_button_confirm_effects.len())]
+            [rand::rng().random_range(0..self.menu_button_confirm_effects.len())]
         .clone()
     }
 }
@@ -281,12 +281,11 @@ pub(crate) struct BackgroundAssets {
 
 impl BackgroundAssets {
     pub(crate) fn get_random_space_bg(&self) -> Handle<Image> {
-        self.space_backgrounds[rand::thread_rng().gen_range(0..self.space_backgrounds.len())]
-            .clone()
+        self.space_backgrounds[rand::rng().random_range(0..self.space_backgrounds.len())].clone()
     }
 
     pub(crate) fn get_random_planet(&self) -> Handle<Scene> {
-        self.planets[rand::thread_rng().gen_range(0..self.planets.len())].clone()
+        self.planets[rand::rng().random_range(0..self.planets.len())].clone()
     }
 }
 

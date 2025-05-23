@@ -1,8 +1,7 @@
 use bevy::{
     color::Color,
-    core::Name,
     ecs::system::{Commands, Res, ResMut},
-    hierarchy::{BuildChildren, ChildBuild},
+    prelude::Name,
     text::TextFont,
     ui::{
         widget::Text, AlignItems, BackgroundColor, Display, FlexDirection, JustifyContent, Node,

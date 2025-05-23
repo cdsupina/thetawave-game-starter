@@ -8,7 +8,7 @@ use super::{
 use crate::states::{MainMenuState, PauseMenuState};
 use bevy::{
     app::{Plugin, Startup, Update},
-    prelude::{in_state, Condition, IntoSystemConfigs, OnEnter},
+    prelude::{in_state, Condition, IntoScheduleConfigs, OnEnter},
 };
 
 // Plugin struct for handling Thetawave game options

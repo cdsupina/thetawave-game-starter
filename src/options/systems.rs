@@ -32,7 +32,7 @@ pub(super) fn sync_options_res_system(
     mut options_res: ResMut<Persistent<OptionsRes>>,
     primary_window_q: Query<&Window, With<PrimaryWindow>>,
 ) {
-    if let Ok(window) = primary_window_q.get_single() {
+    if let Ok(window) = primary_window_q.single() {
         options_res.window_mode = window.mode;
         options_res.window_resolution = window.resolution.clone();
     }
@@ -49,10 +49,10 @@ pub(super) fn apply_options_system(
     // Only process if we have received events
     if !apply_options_events.is_empty() {
         // Try to get mutable reference to primary window
-        if let Ok(mut window) = primary_window_q.get_single_mut() {
+        if let Ok(mut window) = primary_window_q.single_mut() {
             // If fullscreen is selected, preserve the current resolution
-            if matches!(options_res.window_mode, WindowMode::Fullscreen(_))
-                && matches!(window.mode, WindowMode::Fullscreen(_))
+            if matches!(options_res.window_mode, WindowMode::Fullscreen(_, _))
+                && matches!(window.mode, WindowMode::Fullscreen(_, _))
             {
                 options_res.window_resolution = window.resolution.clone();
             }
@@ -67,17 +67,17 @@ pub(super) fn apply_options_system(
 
         // Enable or disable bloom
         if options_res.bloom_enabled {
-            if let Ok(mut bloom) = camera_2d_q.get_single_mut() {
+            if let Ok(mut bloom) = camera_2d_q.single_mut() {
                 bloom.intensity = Bloom::OLD_SCHOOL.intensity;
             }
-            if let Ok(mut bloom) = camera_3d_q.get_single_mut() {
+            if let Ok(mut bloom) = camera_3d_q.single_mut() {
                 bloom.intensity = Bloom::OLD_SCHOOL.intensity;
             }
         } else {
-            if let Ok(mut bloom) = camera_2d_q.get_single_mut() {
+            if let Ok(mut bloom) = camera_2d_q.single_mut() {
                 bloom.intensity = 0.0;
             }
-            if let Ok(mut bloom) = camera_3d_q.get_single_mut() {
+            if let Ok(mut bloom) = camera_3d_q.single_mut() {
                 bloom.intensity = 0.0
             }
         }
@@ -101,7 +101,7 @@ pub(super) fn apply_volume_options_system(
         || (options_res.ui_volume != previous_options_res.ui_volume)
     {
         // Send event to change volumes of all audio channels
-        event_writer.send(ChangeVolumeEvent {
+        event_writer.write(ChangeVolumeEvent {
             music_volume: options_res.master_volume * options_res.music_volume,
             effects_volume: options_res.master_volume * options_res.effects_volume,
             ui_volume: options_res.master_volume * options_res.ui_volume,

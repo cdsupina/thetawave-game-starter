@@ -9,7 +9,7 @@ use super::{
 use crate::states::MainMenuState;
 use bevy::{
     app::{Plugin, Startup, Update},
-    prelude::{in_state, IntoSystemConfigs, OnEnter, OnExit},
+    prelude::{in_state, IntoScheduleConfigs, OnEnter, OnExit},
 };
 use bevy_alt_ui_navigation_lite::DefaultNavigationPlugins;
 use leafwing_abilities::plugin::AbilityPlugin;
