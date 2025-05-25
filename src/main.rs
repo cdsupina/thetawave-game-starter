@@ -10,6 +10,7 @@ mod assets;
 mod audio;
 mod backgrounds;
 mod camera;
+mod core;
 mod input;
 mod options;
 mod physics;
@@ -52,6 +53,7 @@ fn main() {
         player::ThetawavePlayerPlugin,
         physics::ThetawavePhysicsPlugin,
         save::ThetawaveSavePlugin,
+        core::ThetawaveCorePlugin,
     ));
 
     // plugins not used for wasm32 builds
