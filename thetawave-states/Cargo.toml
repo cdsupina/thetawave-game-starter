@@ -1,0 +1,12 @@
+[package]
+name = "thetawave-states"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+bevy = { workspace = true, default-features = false }
+
+[features]
+default = ["dynamic_linking"]
+dynamic_linking = ["bevy/dynamic_linking"]
+physics_debug = []

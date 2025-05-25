@@ -1,0 +1,36 @@
+[package]
+name = "thetawave-starter"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+thetawave-states = { path = "../thetawave-states" }
+bevy.workspace = true
+bevy_platform.workspace = true
+bevy_egui.workspace = true
+bevy-alt-ui-navigation-lite.workspace = true
+bevy_asset_loader.workspace = true
+bevy_embedded_assets.workspace = true
+bevy_state_macros.workspace = true
+log.workspace = true
+rand.workspace = true
+webbrowser.workspace = true
+bevy_aseprite_ultra.workspace = true
+iyes_progress.workspace = true
+bevy_kira_audio.workspace = true
+serde.workspace = true
+bevy-persistent.workspace = true
+dirs.workspace = true
+leafwing-input-manager.workspace = true
+leafwing_abilities.workspace = true
+avian2d.workspace = true
+strum.workspace = true
+strum_macros.workspace = true
+winit.workspace = true
+image.workspace = true
+itertools.workspace = true
+
+[features]
+default = ["dynamic_linking"]
+dynamic_linking = ["bevy/dynamic_linking"]
+physics_debug = []
