@@ -1,4 +1,7 @@
-use bevy::prelude::{Component, States};
+use bevy::{
+    ecs::event::Event,
+    prelude::{Component, States},
+};
 
 /// States enum for managing the high-level application flow
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
@@ -56,3 +59,7 @@ pub(crate) enum PauseMenuState {
 pub(crate) struct Cleanup<S: States> {
     pub states: Vec<S>,
 }
+
+/// Event for pausing and unpausing the game
+#[derive(Event)]
+pub(crate) struct ToggleGameStateEvent;

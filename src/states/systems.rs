@@ -1,10 +1,4 @@
-use crate::{
-    input::PlayerAction,
-    player::PlayerNum,
-    ui::{GameEndResultResource, GameEndResultType},
-};
-
-use super::{data::Cleanup, AppState, GameState, MainMenuState, PauseMenuState};
+use super::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState, ToggleGameStateEvent};
 use bevy::{
     input::{keyboard::KeyCode, ButtonInput},
     prelude::{
@@ -12,7 +6,6 @@ use bevy::{
         States,
     },
 };
-use leafwing_input_manager::prelude::ActionState;
 
 /// A system that cleans up entities after exiting states
 pub(super) fn cleanup_state_system<S: States>(
@@ -81,23 +74,20 @@ pub(super) fn toggle_game_state_system(
     mut next_game_state: ResMut<NextState<GameState>>,
     mut next_pause_state: ResMut<NextState<PauseMenuState>>,
     current_state: Res<State<GameState>>,
-    player_action_q: Query<(&PlayerNum, &ActionState<PlayerAction>)>,
+    mut toggle_game_state_event: EventReader<ToggleGameStateEvent>,
 ) {
-    for (player_num, player_action) in player_action_q.iter() {
-        if matches!(player_num, PlayerNum::One) && player_action.just_released(&PlayerAction::Pause)
-        {
-            match **current_state {
-                GameState::Playing => {
-                    next_game_state.set(GameState::Paused);
-                    next_pause_state.set(PauseMenuState::Main);
-                }
-                GameState::Paused => {
-                    next_game_state.set(GameState::Playing);
-                    next_pause_state.set(PauseMenuState::None);
-                }
-                GameState::End => {}
-            };
-        }
+    if toggle_game_state_event.read().next().is_some() {
+        match **current_state {
+            GameState::Playing => {
+                next_game_state.set(GameState::Paused);
+                next_pause_state.set(PauseMenuState::Main);
+            }
+            GameState::Paused => {
+                next_game_state.set(GameState::Playing);
+                next_pause_state.set(PauseMenuState::None);
+            }
+            GameState::End => {}
+        };
     }
 }
 
@@ -105,12 +95,8 @@ pub(super) fn toggle_game_state_system(
 pub(super) fn enter_game_end_system(
     keys: Res<ButtonInput<KeyCode>>,
     mut next_game_state: ResMut<NextState<GameState>>,
-    mut game_end_result_res: ResMut<GameEndResultResource>,
 ) {
     if keys.just_pressed(KeyCode::KeyV) {
-        game_end_result_res.result = GameEndResultType::Win;
-        next_game_state.set(GameState::End);
-    } else if keys.just_pressed(KeyCode::KeyG) {
         next_game_state.set(GameState::End);
     }
 }
