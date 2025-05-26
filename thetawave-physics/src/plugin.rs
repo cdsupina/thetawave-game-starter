@@ -6,7 +6,7 @@ use bevy::{
 };
 use thetawave_states::AppState;
 
-pub(crate) struct ThetawavePhysicsPlugin;
+pub struct ThetawavePhysicsPlugin;
 
 impl Plugin for ThetawavePhysicsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {

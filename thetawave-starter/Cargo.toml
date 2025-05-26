@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 thetawave-states = { path = "../thetawave-states" }
+thetawave-physics = { path = "../thetawave-physics" }
 bevy.workspace = true
 bevy_platform.workspace = true
 bevy_egui.workspace = true

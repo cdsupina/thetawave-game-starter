@@ -1,0 +1,15 @@
+[package]
+name = "thetawave-physics"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+bevy = { workspace = true, default-features = false }
+thetawave-states = { path = "../thetawave-states" }
+avian2d = { workspace = true }
+
+
+[features]
+default = ["dynamic_linking"]
+dynamic_linking = ["bevy/dynamic_linking"]
+physics_debug = []

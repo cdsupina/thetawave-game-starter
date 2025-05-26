@@ -7,6 +7,7 @@ use bevy::{
     DefaultPlugins,
 };
 use bevy_aseprite_ultra::AsepriteUltraPlugin;
+use thetawave_physics::ThetawavePhysicsPlugin;
 use thetawave_states::ThetawaveStatesPlugin;
 
 mod assets;
@@ -16,7 +17,6 @@ mod camera;
 mod core;
 mod input;
 mod options;
-mod physics;
 mod player;
 mod save;
 mod ui;
@@ -54,7 +54,7 @@ impl Plugin for ThetawaveStarterPlugin {
             backgrounds::ThetawaveBackgroundsPlugin,
             audio::ThetawaveAudioPlugin,
             player::ThetawavePlayerPlugin,
-            physics::ThetawavePhysicsPlugin,
+            ThetawavePhysicsPlugin,
             save::ThetawaveSavePlugin,
             core::ThetawaveCorePlugin,
         ));
