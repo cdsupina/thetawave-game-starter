@@ -7,10 +7,10 @@ use bevy::{
     DefaultPlugins,
 };
 use bevy_aseprite_ultra::AsepriteUltraPlugin;
+use thetawave_assets::ThetawaveAssetsPlugin;
 use thetawave_physics::ThetawavePhysicsPlugin;
 use thetawave_states::ThetawaveStatesPlugin;
 
-mod assets;
 mod audio;
 mod backgrounds;
 mod camera;
@@ -30,7 +30,7 @@ pub struct ThetawaveStarterPlugin {
 impl Plugin for ThetawaveStarterPlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_plugins((
-            assets::ThetawaveAssetsPlugin, // must be registered before AssetPlugin due to EmbeddedAssetPlugin
+            ThetawaveAssetsPlugin, // must be registered before AssetPlugin due to EmbeddedAssetPlugin
             DefaultPlugins
                 .set(ImagePlugin::default_nearest()) // necessary for crisp pixel art
                 .set(WindowPlugin {

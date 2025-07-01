@@ -3,12 +3,12 @@ use super::data::{
     MenuButtonTextContainer, PlayerJoinEvent, PlayerReadyEvent,
 };
 use crate::{
-    assets::{LoadingProgressEvent, UiAssets},
     audio::AudioEffectEvent,
     input::InputType,
     options::{ApplyOptionsEvent, OptionsRes},
     player::{ChosenCharactersResource, PlayerNum},
 };
+use thetawave_assets::{LoadingProgressEvent, UiAssets};
 use thetawave_states::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState};
 
 use bevy::{

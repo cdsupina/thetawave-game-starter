@@ -1,6 +1,5 @@
 use super::data::{CharactersResource, ChosenCharactersResource, PlayerStats};
 use crate::{
-    assets::GameAssets,
     input::{InputType, PlayerAbility, PlayerAction},
     options::OptionsRes,
 };
@@ -16,6 +15,7 @@ use bevy_egui::egui::Vec2;
 use bevy_persistent::Persistent;
 use leafwing_abilities::{prelude::CooldownState, AbilitiesBundle};
 use leafwing_input_manager::prelude::{ActionState, InputMap};
+use thetawave_assets::GameAssets;
 use thetawave_states::{AppState, Cleanup};
 
 /// Spawn a player controlled entity

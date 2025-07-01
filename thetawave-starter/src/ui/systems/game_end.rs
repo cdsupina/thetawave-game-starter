@@ -1,9 +1,6 @@
-use crate::{
-    assets::UiAssets,
-    ui::{
-        data::{ButtonAction, UiChildBuilderExt},
-        GameEndResultResource,
-    },
+use crate::ui::{
+    data::{ButtonAction, UiChildBuilderExt},
+    GameEndResultResource,
 };
 use bevy::{
     color::Color,
@@ -16,6 +13,7 @@ use bevy::{
     },
     utils::default,
 };
+use thetawave_assets::UiAssets;
 use thetawave_states::{AppState, Cleanup, GameState};
 
 /// Spawns the game over/victory ui

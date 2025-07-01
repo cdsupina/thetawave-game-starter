@@ -1,8 +1,9 @@
-use crate::{assets::AppAudioAssets, options::OptionsRes};
+use crate::options::OptionsRes;
 use bevy::prelude::{EventReader, EventWriter, Res, StateTransitionEvent};
 use bevy_kira_audio::{AudioChannel, AudioControl, AudioTween};
 use bevy_persistent::Persistent;
 use std::time::Duration;
+use thetawave_assets::AppAudioAssets;
 use thetawave_states::AppState;
 
 use super::{

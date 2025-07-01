@@ -4,6 +4,7 @@ members = [
     "thetawave-states",
     "thetawave-infinite",
     "thetawave-physics",
+    "thetawave-assets",
 ]
 resolver = "2"
 

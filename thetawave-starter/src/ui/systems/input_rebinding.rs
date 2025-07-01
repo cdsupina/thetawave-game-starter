@@ -1,5 +1,4 @@
 use crate::{
-    assets::UiAssets,
     input::{DummyGamepad, InputType, PlayerAbility, PlayerAction},
     options::OptionsRes,
     ui::data::{ButtonAction, UiChildBuilderExt},
@@ -27,6 +26,7 @@ use bevy_egui::{
 use bevy_persistent::Persistent;
 use itertools::{EitherOrBoth, Itertools};
 use strum::IntoEnumIterator;
+use thetawave_assets::UiAssets;
 use thetawave_states::{Cleanup, MainMenuState};
 
 const LABEL_TEXT_SIZE: f32 = 12.0;

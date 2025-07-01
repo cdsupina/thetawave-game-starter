@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{
     input::CharacterCarouselAction,
-    player::{ChosenCharacterData, ChosenCharactersResource},
+    player::{CharacterType, ChosenCharacterData, ChosenCharactersResource},
     ui::data::{
         CarouselReadyTimer, CarouselSlotPosition, CharacterCarousel, CharacterSelector,
         MenuButtonState, PlayerReadyButton, StartGameButton, UiChildBuilderExt,
@@ -28,7 +28,22 @@ use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use bevy_persistent::Persistent;
 use leafwing_input_manager::prelude::{ActionState, InputMap};
+use thetawave_assets::GameAssets;
 use thetawave_states::AppState;
+
+trait GameAssetsExt {
+    fn get_character_sprite(&self, character_type: &CharacterType);
+}
+
+impl GameAssetsExt for GameAssets {
+    fn get_character_sprite(&self, character_type: &CharacterType) {
+        match character_type {
+            CharacterType::Captain => self.captain_character_aseprite.clone(),
+            CharacterType::Juggernaut => self.juggernaut_character_aseprite.clone(),
+            CharacterType::Doomwing => self.doomwing_character_aseprite.clone(),
+        }
+    }
+}
 
 /// Spawn ui for character selection
 pub(in crate::ui) fn spawn_character_selection_system(
