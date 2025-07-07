@@ -2,6 +2,7 @@ use crate::ui::data::{ButtonAction, UiChildBuilderExt};
 
 use super::{ApplyOptionsEvent, Cleanup, MainMenuState, OptionsRes, UiAssets};
 use bevy::{
+    ecs::error::Result,
     log::info,
     prelude::{Commands, EventReader, Name, Res, ResMut},
     ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
@@ -75,14 +76,14 @@ pub(in crate::ui) fn spawn_options_menu_system(mut cmds: Commands, ui_assets: Re
 pub(in crate::ui) fn options_menu_system(
     mut contexts: EguiContexts,
     mut options_res: ResMut<Persistent<OptionsRes>>,
-) {
+) -> Result {
     CentralPanel::default()
         .frame(Frame {
             fill: Color32::TRANSPARENT,
             inner_margin: Margin::same(10),
             ..Default::default()
         })
-        .show(contexts.ctx_mut(), |ui| {
+        .show(contexts.ctx_mut()?, |ui| {
             Grid::new("options_grid").num_columns(6).show(ui, |ui| {
                 // Title row
                 ui.label(RichText::new("Volume").size(TITLE_LABEL_TEXT_SIZE));
@@ -153,6 +154,8 @@ pub(in crate::ui) fn options_menu_system(
                 ui.end_row();
             });
         });
+
+    Ok(())
 }
 
 /// Converts WindowMode enum to a string representation

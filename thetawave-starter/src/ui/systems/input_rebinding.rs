@@ -6,6 +6,7 @@ use crate::{
 use bevy::{
     ecs::{
         entity::Entity,
+        error::Result,
         prelude::Name,
         query::With,
         system::{Commands, Local, Query, Res, ResMut},
@@ -235,7 +236,7 @@ pub(in crate::ui) fn input_rebinding_menu_system(
     keys: Res<ButtonInput<KeyCode>>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     gamepads_q: Query<&Gamepad>,
-) {
+) -> Result {
     if let Some(rebinding_target) = rebinding_flag.clone() {
         match active_input_method.clone() {
             InputType::Keyboard => {
@@ -322,7 +323,7 @@ pub(in crate::ui) fn input_rebinding_menu_system(
             inner_margin: Margin::same(10),
             ..Default::default()
         })
-        .show(contexts.ctx_mut(), |ui| {
+        .show(contexts.ctx_mut()?, |ui| {
             Grid::new("input_grid").num_columns(4).show(ui, |ui| {
                 // Top row for selecting input method to be edited
                 ui.label(RichText::new("Input Method").size(LABEL_TEXT_SIZE));
@@ -398,4 +399,6 @@ pub(in crate::ui) fn input_rebinding_menu_system(
                 }
             });
         });
+
+    Ok(())
 }

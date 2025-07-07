@@ -1,5 +1,5 @@
 use bevy::{
-    ecs::query::With,
+    ecs::{error::Result, query::With},
     prelude::Query,
     window::{PrimaryWindow, Window},
 };
@@ -32,60 +32,60 @@ const SELECTION_BG_COLOR: Color32 = Color32::from_rgb(139, 68, 89);
 pub(in crate::ui) fn setup_egui_system(
     mut egui_settings: Query<&mut EguiContextSettings>,
     mut contexts: EguiContexts,
-) {
-    if let Ok(mut egui_settings) = egui_settings.single_mut() {
-        // Increase scale of egui options menu
-        egui_settings.scale_factor = 2.0;
+) -> Result {
+    // Increase scale of egui options menu
+    egui_settings.single_mut()?.scale_factor = 2.0;
 
-        // Customize style of egui
-        contexts.ctx_mut().set_style(Style {
-            visuals: Visuals {
-                //dark_mode: true,
-                slider_trailing_fill: true,
-                handle_shape: HandleShape::Rect { aspect_ratio: 0.5 },
-                widgets: Widgets {
-                    hovered: WidgetVisuals {
-                        bg_fill: HOVERED_BG_COLOR,
-                        weak_bg_fill: HOVERED_BG_COLOR,
-                        bg_stroke: HOVERED_STROKE,
-                        corner_radius: CornerRadius::same(2),
-                        fg_stroke: HOVERED_STROKE,
-                        expansion: 1.2,
-                    },
-                    inactive: WidgetVisuals {
-                        bg_fill: INACTIVE_BG_COLOR,
-                        weak_bg_fill: INACTIVE_BG_COLOR,
-                        bg_stroke: INACTIVE_STROKE,
-                        corner_radius: CornerRadius::same(2),
-                        fg_stroke: INACTIVE_STROKE,
-                        expansion: 1.0,
-                    },
-                    active: WidgetVisuals {
-                        bg_fill: ACTIVE_BG_COLOR,
-                        weak_bg_fill: ACTIVE_BG_COLOR,
-                        bg_stroke: ACTIVE_STROKE,
-                        corner_radius: CornerRadius::same(2),
-                        fg_stroke: ACTIVE_STROKE,
-                        expansion: 1.0,
-                    },
-                    ..Default::default()
+    // Customize style of egui
+    contexts.ctx_mut()?.set_style(Style {
+        visuals: Visuals {
+            //dark_mode: true,
+            slider_trailing_fill: true,
+            handle_shape: HandleShape::Rect { aspect_ratio: 0.5 },
+            widgets: Widgets {
+                hovered: WidgetVisuals {
+                    bg_fill: HOVERED_BG_COLOR,
+                    weak_bg_fill: HOVERED_BG_COLOR,
+                    bg_stroke: HOVERED_STROKE,
+                    corner_radius: CornerRadius::same(2),
+                    fg_stroke: HOVERED_STROKE,
+                    expansion: 1.2,
                 },
-                override_text_color: Some(Color32::WHITE),
-                selection: Selection {
-                    bg_fill: SELECTION_BG_COLOR,
-                    ..Default::default()
+                inactive: WidgetVisuals {
+                    bg_fill: INACTIVE_BG_COLOR,
+                    weak_bg_fill: INACTIVE_BG_COLOR,
+                    bg_stroke: INACTIVE_STROKE,
+                    corner_radius: CornerRadius::same(2),
+                    fg_stroke: INACTIVE_STROKE,
+                    expansion: 1.0,
+                },
+                active: WidgetVisuals {
+                    bg_fill: ACTIVE_BG_COLOR,
+                    weak_bg_fill: ACTIVE_BG_COLOR,
+                    bg_stroke: ACTIVE_STROKE,
+                    corner_radius: CornerRadius::same(2),
+                    fg_stroke: ACTIVE_STROKE,
+                    expansion: 1.0,
                 },
                 ..Default::default()
             },
-            spacing: Spacing {
-                item_spacing: Vec2::new(12.0, 12.0),
-                slider_width: 100.0,
-                slider_rail_height: 15.0,
+            override_text_color: Some(Color32::WHITE),
+            selection: Selection {
+                bg_fill: SELECTION_BG_COLOR,
                 ..Default::default()
             },
             ..Default::default()
-        });
-    }
+        },
+        spacing: Spacing {
+            item_spacing: Vec2::new(12.0, 12.0),
+            slider_width: 100.0,
+            slider_rail_height: 15.0,
+            ..Default::default()
+        },
+        ..Default::default()
+    });
+
+    Ok(())
 }
 
 /// System that updates egui scale based on window height
