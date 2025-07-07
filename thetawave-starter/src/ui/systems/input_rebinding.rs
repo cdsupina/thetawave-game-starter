@@ -87,19 +87,19 @@ trait InputCodeToStringExt {
 
 impl InputCodeToStringExt for KeyCode {
     fn to_string(&self) -> String {
-        format!("{:?}", self)
+        format!("{self:?}")
     }
 }
 
 impl InputCodeToStringExt for MouseButton {
     fn to_string(&self) -> String {
-        format!("{:?}", self)
+        format!("{self:?}")
     }
 }
 
 impl InputCodeToStringExt for GamepadButton {
     fn to_string(&self) -> String {
-        format!("{:?}", self)
+        format!("{self:?}")
     }
 }
 

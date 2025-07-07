@@ -23,17 +23,6 @@ pub struct GameAssets {
     #[asset(path = "media/aseprite/doomwing_character.aseprite")]
     pub doomwing_character_aseprite: Handle<Aseprite>,
 }
-/*
-impl GameAssets {
-    pub(crate) fn get_character_sprite(&self, character_type: &CharacterType) -> Handle<Aseprite> {
-        match character_type {
-            CharacterType::Captain => self.captain_character_aseprite.clone(),
-            CharacterType::Juggernaut => self.juggernaut_character_aseprite.clone(),
-            CharacterType::Doomwing => self.doomwing_character_aseprite.clone(),
-        }
-    }
-}
-*/
 
 /// Audio assets used throughout all states of the app
 #[derive(AssetCollection, Resource)]
@@ -129,18 +118,6 @@ pub struct UiAssets {
     #[asset(path = "media/fonts/Dank-Depths.ttf")]
     pub dank_depths_font: Handle<Font>,
 }
-
-/*
-impl UiAssets {
-    pub(crate) fn get_character_image(&self, character_type: &CharacterType) -> Handle<Image> {
-        match character_type {
-            CharacterType::Captain => self.captain_character_image.clone(),
-            CharacterType::Juggernaut => self.juggernaut_character_image.clone(),
-            CharacterType::Doomwing => self.doomwing_character_image.clone(),
-        }
-    }
-}
-*/
 
 // Assets for background images
 #[derive(AssetCollection, Resource)]
