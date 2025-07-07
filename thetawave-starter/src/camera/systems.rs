@@ -11,6 +11,7 @@ use bevy::{
     render::camera::ScalingMode,
     utils::default,
 };
+use bevy_egui::PrimaryEguiContext;
 use bevy_persistent::Persistent;
 
 const VIEWPORT_HEIGHT: f32 = 250.0;
@@ -20,6 +21,7 @@ pub(super) fn setup_cameras_system(mut cmd: Commands, options_res: Res<Persisten
     // Necessary for viewing 2d sprites
     cmd.spawn((
         Camera2d,
+        PrimaryEguiContext,
         Camera {
             order: 1,
             hdr: true,
