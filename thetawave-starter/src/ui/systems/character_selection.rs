@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{
     input::CharacterCarouselAction,
-    player::{ChosenCharacterData, ChosenCharactersResource},
+    player::{CharacterType, ChosenCharacterData, ChosenCharactersResource},
     ui::data::{
         CarouselReadyTimer, CarouselSlotPosition, CharacterCarousel, CharacterSelector,
         MenuButtonState, PlayerReadyButton, StartGameButton, UiChildBuilderExt,
@@ -12,8 +12,10 @@ use crate::{
     },
 };
 use bevy::{
+    asset::Handle,
     color::{Alpha, Color},
     ecs::hierarchy::ChildOf,
+    image::Image,
     input::ButtonInput,
     log::warn,
     prelude::{
@@ -176,6 +178,20 @@ pub(in crate::ui) fn cycle_player_one_carousel_system(
 
                 break;
             }
+        }
+    }
+}
+
+trait UiAssetsExt {
+    fn get_character_image(&self, character_type: &CharacterType) -> Handle<Image>;
+}
+
+impl UiAssetsExt for UiAssets {
+    fn get_character_image(&self, character_type: &CharacterType) -> Handle<Image> {
+        match character_type {
+            CharacterType::Captain => self.captain_character_image.clone(),
+            CharacterType::Juggernaut => self.juggernaut_character_image.clone(),
+            CharacterType::Doomwing => self.doomwing_character_image.clone(),
         }
     }
 }

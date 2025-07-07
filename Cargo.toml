@@ -1,5 +1,11 @@
 [workspace]
-members = ["thetawave-starter", "thetawave-states"]
+members = [
+    "thetawave-starter",
+    "thetawave-states",
+    "thetawave-infinite",
+    "thetawave-physics",
+    "thetawave-assets",
+]
 resolver = "2"
 
 [workspace.package]

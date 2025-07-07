@@ -1,22 +1,38 @@
 use super::data::{CharactersResource, ChosenCharactersResource, PlayerStats};
 use crate::{
-    assets::GameAssets,
     input::{InputType, PlayerAbility, PlayerAction},
     options::OptionsRes,
+    player::CharacterType,
 };
 use avian2d::prelude::{Collider, LinearVelocity, MaxLinearSpeed, RigidBody};
 use bevy::{
+    asset::Handle,
     log::info,
     prelude::{Commands, Name, Query, Res, ResMut},
     sprite::Sprite,
     utils::default,
 };
-use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
+use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_egui::egui::Vec2;
 use bevy_persistent::Persistent;
 use leafwing_abilities::{prelude::CooldownState, AbilitiesBundle};
 use leafwing_input_manager::prelude::{ActionState, InputMap};
+use thetawave_assets::GameAssets;
 use thetawave_states::{AppState, Cleanup};
+
+trait GameAssetsExt {
+    fn get_character_sprite(&self, character_type: &CharacterType) -> Handle<Aseprite>;
+}
+
+impl GameAssetsExt for GameAssets {
+    fn get_character_sprite(&self, character_type: &CharacterType) -> Handle<Aseprite> {
+        match character_type {
+            CharacterType::Captain => self.captain_character_aseprite.clone(),
+            CharacterType::Juggernaut => self.juggernaut_character_aseprite.clone(),
+            CharacterType::Doomwing => self.doomwing_character_aseprite.clone(),
+        }
+    }
+}
 
 /// Spawn a player controlled entity
 pub(super) fn spawn_players_system(

@@ -1,0 +1,19 @@
+[package]
+name = "thetawave-assets"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+thetawave-states = { path = "../thetawave-states" }
+bevy = { workspace = true, default-features = false }
+iyes_progress = { workspace = true }
+bevy_asset_loader = { workspace = true, features = ["progress_tracking"] }
+bevy_embedded_assets = { workspace = true }
+bevy_aseprite_ultra = { workspace = true }
+bevy_kira_audio = { workspace = true, features = ["mp3", "wav"] }
+rand = { workspace = true }
+
+[features]
+default = ["dynamic_linking"]
+dynamic_linking = ["bevy/dynamic_linking"]
+physics_debug = []

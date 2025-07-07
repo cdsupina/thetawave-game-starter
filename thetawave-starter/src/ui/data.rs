@@ -1,5 +1,4 @@
 use crate::{
-    assets::UiAssets,
     input::InputType,
     player::{CharacterType, PlayerNum},
 };
@@ -17,6 +16,7 @@ use bevy::{
 use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use strum::IntoEnumIterator;
+use thetawave_assets::UiAssets;
 use thetawave_states::{AppState, GameState, MainMenuState, PauseMenuState};
 
 const BUTTON_ACTION_DELAY_TIME: f32 = 0.3;

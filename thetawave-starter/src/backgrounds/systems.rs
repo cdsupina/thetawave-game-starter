@@ -1,5 +1,4 @@
 use super::data::PlanetRotationComponent;
-use crate::assets::BackgroundAssets;
 use bevy::{
     asset::Assets,
     color::{Alpha, Color},
@@ -15,6 +14,7 @@ use bevy::{
 };
 use rand::{rngs::ThreadRng, Rng};
 use std::ops::RangeInclusive;
+use thetawave_assets::BackgroundAssets;
 use thetawave_states::{AppState, Cleanup};
 
 // Background properties

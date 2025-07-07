@@ -1,4 +1,3 @@
-use crate::player::CharacterType;
 use bevy::{
     asset::Handle,
     image::Image,
@@ -13,7 +12,7 @@ use rand::Rng;
 
 /// Assets used in the game state
 #[derive(AssetCollection, Resource)]
-pub(crate) struct GameAssets {
+pub struct GameAssets {
     // Animated captain characater Aseprite
     #[asset(path = "media/aseprite/captain_character.aseprite")]
     pub captain_character_aseprite: Handle<Aseprite>,
@@ -25,19 +24,9 @@ pub(crate) struct GameAssets {
     pub doomwing_character_aseprite: Handle<Aseprite>,
 }
 
-impl GameAssets {
-    pub(crate) fn get_character_sprite(&self, character_type: &CharacterType) -> Handle<Aseprite> {
-        match character_type {
-            CharacterType::Captain => self.captain_character_aseprite.clone(),
-            CharacterType::Juggernaut => self.juggernaut_character_aseprite.clone(),
-            CharacterType::Doomwing => self.doomwing_character_aseprite.clone(),
-        }
-    }
-}
-
 /// Audio assets used throughout all states of the app
 #[derive(AssetCollection, Resource)]
-pub(crate) struct AppAudioAssets {
+pub struct AppAudioAssets {
     #[asset(path = "media/audio/music/main_menu_theme.mp3")]
     pub main_menu_theme: Handle<AudioSource>,
     #[asset(path = "media/audio/music/game_theme.mp3")]
@@ -74,19 +63,19 @@ pub(crate) struct AppAudioAssets {
 }
 
 impl AppAudioAssets {
-    pub(crate) fn get_random_button_press_effect(&self) -> Handle<AudioSource> {
+    pub fn get_random_button_press_effect(&self) -> Handle<AudioSource> {
         self.menu_button_select_effects
             [rand::rng().random_range(0..self.menu_button_select_effects.len())]
         .clone()
     }
 
-    pub(crate) fn get_random_button_release_effect(&self) -> Handle<AudioSource> {
+    pub fn get_random_button_release_effect(&self) -> Handle<AudioSource> {
         self.menu_button_release_effects
             [rand::rng().random_range(0..self.menu_button_release_effects.len())]
         .clone()
     }
 
-    pub(crate) fn get_random_button_confirm_effect(&self) -> Handle<AudioSource> {
+    pub fn get_random_button_confirm_effect(&self) -> Handle<AudioSource> {
         self.menu_button_confirm_effects
             [rand::rng().random_range(0..self.menu_button_confirm_effects.len())]
         .clone()
@@ -95,7 +84,7 @@ impl AppAudioAssets {
 
 // Assets for Bevy ui
 #[derive(AssetCollection, Resource)]
-pub(crate) struct UiAssets {
+pub struct UiAssets {
     // Animated title logo Aseprite
     #[asset(path = "media/aseprite/thetawave_logo.aseprite")]
     pub thetawave_logo_aseprite: Handle<Aseprite>,
@@ -130,19 +119,9 @@ pub(crate) struct UiAssets {
     pub dank_depths_font: Handle<Font>,
 }
 
-impl UiAssets {
-    pub(crate) fn get_character_image(&self, character_type: &CharacterType) -> Handle<Image> {
-        match character_type {
-            CharacterType::Captain => self.captain_character_image.clone(),
-            CharacterType::Juggernaut => self.juggernaut_character_image.clone(),
-            CharacterType::Doomwing => self.doomwing_character_image.clone(),
-        }
-    }
-}
-
 // Assets for background images
 #[derive(AssetCollection, Resource)]
-pub(crate) struct BackgroundAssets {
+pub struct BackgroundAssets {
     // all space backgrounds
     #[asset(
         paths(
@@ -280,15 +259,15 @@ pub(crate) struct BackgroundAssets {
 }
 
 impl BackgroundAssets {
-    pub(crate) fn get_random_space_bg(&self) -> Handle<Image> {
+    pub fn get_random_space_bg(&self) -> Handle<Image> {
         self.space_backgrounds[rand::rng().random_range(0..self.space_backgrounds.len())].clone()
     }
 
-    pub(crate) fn get_random_planet(&self) -> Handle<Scene> {
+    pub fn get_random_planet(&self) -> Handle<Scene> {
         self.planets[rand::rng().random_range(0..self.planets.len())].clone()
     }
 }
 
 /// Event for sending percentage of loading progress
 #[derive(Event)]
-pub(crate) struct LoadingProgressEvent(pub f32);
+pub struct LoadingProgressEvent(pub f32);

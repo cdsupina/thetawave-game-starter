@@ -16,7 +16,7 @@ use iyes_progress::ProgressPlugin;
 use thetawave_states::AppState;
 
 /// Plugin for managing asset loading states in Thetawave
-pub(crate) struct ThetawaveAssetsPlugin;
+pub struct ThetawaveAssetsPlugin;
 
 impl Plugin for ThetawaveAssetsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
