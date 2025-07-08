@@ -13,7 +13,7 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace.dependencies]
-bevy = { version = "0.16.0", default-features = false, features = [
+bevy = { version = "0.16.1", default-features = false, features = [
     "animation",
     "bevy_asset",
     "bevy_color",
@@ -55,7 +55,7 @@ bevy_egui = { version = "0.35.0", default-features = false, features = [
 bevy-alt-ui-navigation-lite = "0.4.0"
 bevy_asset_loader = { version = "0.23.0", features = ["progress_tracking"] }
 bevy_embedded_assets = "0.13.0"
-bevy_state_macros = "=0.16.0"
+bevy_state_macros = "=0.16.1"
 log = { version = "*", features = [
     "max_level_debug",
     "release_max_level_warn",
