@@ -7,6 +7,7 @@ edition.workspace = true
 thetawave-states = { path = "../thetawave-states" }
 thetawave-physics = { path = "../thetawave-physics" }
 thetawave-assets = { path = "../thetawave-assets" }
+thetawave-backgrounds = { path = "../thetawave-backgrounds" }
 bevy.workspace = true
 bevy_platform.workspace = true
 bevy_egui.workspace = true

@@ -1,0 +1,15 @@
+[package]
+name = "thetawave-backgrounds"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+rand.workspace = true
+bevy = { workspace = true, default-features = false }
+thetawave-states = { path = "../thetawave-states" }
+thetawave-assets = { path = "../thetawave-assets" }
+
+[features]
+default = ["dynamic_linking"]
+dynamic_linking = ["bevy/dynamic_linking"]
+physics_debug = []

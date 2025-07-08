@@ -8,11 +8,11 @@ use bevy::{
 };
 use bevy_aseprite_ultra::AsepriteUltraPlugin;
 use thetawave_assets::ThetawaveAssetsPlugin;
+use thetawave_backgrounds::ThetawaveBackgroundsPlugin;
 use thetawave_physics::ThetawavePhysicsPlugin;
 use thetawave_states::ThetawaveStatesPlugin;
 
 mod audio;
-mod backgrounds;
 mod camera;
 mod core;
 mod input;
@@ -51,7 +51,7 @@ impl Plugin for ThetawaveStarterPlugin {
             input::ThetawaveInputPlugin,
             ThetawaveStatesPlugin,
             camera::ThetawaveCameraPlugin,
-            backgrounds::ThetawaveBackgroundsPlugin,
+            ThetawaveBackgroundsPlugin,
             audio::ThetawaveAudioPlugin,
             player::ThetawavePlayerPlugin,
             ThetawavePhysicsPlugin,
