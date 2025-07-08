@@ -7,7 +7,7 @@ use bevy::{
 use thetawave_states::{AppState, GameState};
 
 /// Plugin for managing background elements in Thetawave
-pub(crate) struct ThetawaveBackgroundsPlugin;
+pub struct ThetawaveBackgroundsPlugin;
 
 impl Plugin for ThetawaveBackgroundsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
