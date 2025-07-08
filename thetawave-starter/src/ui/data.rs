@@ -283,7 +283,7 @@ pub(super) trait UiChildBuilderExt {
         width: f32,
         is_first: bool,
         is_disabled: bool,
-    ) -> EntityCommands;
+    ) -> EntityCommands<'_>;
 }
 
 impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
@@ -370,7 +370,7 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
         width: f32,
         is_first: bool,
         is_disabled: bool,
-    ) -> EntityCommands {
+    ) -> EntityCommands<'_> {
         let mut entity_cmds = self.spawn_empty();
 
         // if a button is disabled do not spawn it in focusable
@@ -451,6 +451,7 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
 
 /// Enum for all types of run results
 #[derive(Default, Debug, Clone)]
+#[allow(dead_code)]
 pub(crate) enum GameEndResultType {
     #[default]
     Loss,
