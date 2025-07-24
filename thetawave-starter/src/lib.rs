@@ -19,7 +19,7 @@ mod input;
 mod options;
 mod player;
 mod save;
-mod ui;
+pub mod ui;
 mod window;
 
 pub struct ThetawaveStarterPlugin {
