@@ -1,23 +1,18 @@
-use bevy::{
-    ecs::{
-        error::Result,
-        system::{Local, Res},
-    },
-    input::{keyboard::KeyCode, ButtonInput},
-};
+use bevy::ecs::{error::Result, event::EventReader, system::Local};
 use bevy_egui::{
     egui::{menu, TopBottomPanel},
     EguiContexts,
 };
+use thetawave_starter::ToggleDebugModeEvent;
 
 /// This function is a system that handles the egui options menu
 pub(in crate::ui) fn game_debug_menu_system(
     mut contexts: EguiContexts,
     mut is_active: Local<bool>,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut toggle_debug_event_reader: EventReader<ToggleDebugModeEvent>,
 ) -> Result {
-    if keyboard_input.just_released(KeyCode::Backquote) {
-        *is_active = !*is_active;
+    if let Some(event) = toggle_debug_event_reader.read().next() {
+        *is_active = event.0;
     }
 
     if *is_active {

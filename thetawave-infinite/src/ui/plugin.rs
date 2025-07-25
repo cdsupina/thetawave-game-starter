@@ -1,7 +1,6 @@
 use bevy::{app::Plugin, ecs::schedule::IntoScheduleConfigs, state::condition::in_state};
 use bevy_egui::EguiPrimaryContextPass;
-use thetawave_starter::ui::update_egui_scale_system;
-use thetawave_states::AppState;
+use thetawave_starter::{ui::update_egui_scale_system, AppState};
 
 use crate::ui::systems::game_debug::game_debug_menu_system;
 

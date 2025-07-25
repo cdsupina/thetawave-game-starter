@@ -9,6 +9,7 @@ use bevy::{
 use bevy_aseprite_ultra::AsepriteUltraPlugin;
 use thetawave_assets::ThetawaveAssetsPlugin;
 use thetawave_backgrounds::ThetawaveBackgroundsPlugin;
+use thetawave_debug::ThetawaveDebugPlugin;
 use thetawave_physics::ThetawavePhysicsPlugin;
 use thetawave_states::ThetawaveStatesPlugin;
 
@@ -21,6 +22,9 @@ mod player;
 mod save;
 pub mod ui;
 mod window;
+
+pub use thetawave_debug::ToggleDebugModeEvent;
+pub use thetawave_states::AppState;
 
 pub struct ThetawaveStarterPlugin {
     pub window_title: String,
@@ -57,6 +61,7 @@ impl Plugin for ThetawaveStarterPlugin {
             ThetawavePhysicsPlugin,
             save::ThetawaveSavePlugin,
             core::ThetawaveCorePlugin,
+            ThetawaveDebugPlugin,
         ));
 
         // plugins not used for wasm32 builds

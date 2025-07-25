@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 bevy = { workspace = true, default-features = false }
+thetawave-states = { path = "../thetawave-states" }
 
 [features]
 default = ["dynamic_linking"]
