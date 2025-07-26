@@ -35,6 +35,12 @@ image.workspace = true
 itertools.workspace = true
 
 [features]
-default = ["dynamic_linking"]
-dynamic_linking = ["bevy/dynamic_linking"]
-physics_debug = []
+dynamic_linking = [
+    "bevy/dynamic_linking",
+    "thetawave-physics/dynamic_linking",
+    "thetawave-assets/dynamic_linking",
+    "thetawave-backgrounds/dynamic_linking",
+    "thetawave-debug/dynamic_linking",
+    "thetawave-states/dynamic_linking",
+]
+physics_debug = ["thetawave-physics/physics_debug"]

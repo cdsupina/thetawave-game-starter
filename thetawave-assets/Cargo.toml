@@ -14,6 +14,4 @@ bevy_kira_audio = { workspace = true, features = ["mp3", "wav"] }
 rand = { workspace = true }
 
 [features]
-default = ["dynamic_linking"]
-dynamic_linking = ["bevy/dynamic_linking"]
-physics_debug = []
+dynamic_linking = ["bevy/dynamic_linking", "thetawave-states/dynamic_linking"]

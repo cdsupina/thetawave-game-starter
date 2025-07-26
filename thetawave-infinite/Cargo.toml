@@ -9,6 +9,5 @@ bevy = { workspace = true, default-features = false }
 thetawave-starter = { path = "../thetawave-starter" }
 
 [features]
-default = ["dynamic_linking"]
-dynamic_linking = ["bevy/dynamic_linking"]
-physics_debug = []
+dynamic_linking = ["bevy/dynamic_linking", "thetawave-starter/dynamic_linking"]
+default = ["thetawave-starter/physics_debug", "dynamic_linking"]

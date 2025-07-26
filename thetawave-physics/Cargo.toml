@@ -10,6 +10,5 @@ avian2d = { workspace = true }
 
 
 [features]
-default = ["dynamic_linking"]
-dynamic_linking = ["bevy/dynamic_linking"]
-physics_debug = []
+physics_debug = ["avian2d/diagnostic_ui"]
+dynamic_linking = ["bevy/dynamic_linking", "thetawave-states/dynamic_linking"]

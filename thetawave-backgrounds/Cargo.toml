@@ -10,6 +10,8 @@ thetawave-states = { path = "../thetawave-states" }
 thetawave-assets = { path = "../thetawave-assets" }
 
 [features]
-default = ["dynamic_linking"]
-dynamic_linking = ["bevy/dynamic_linking"]
-physics_debug = []
+dynamic_linking = [
+    "bevy/dynamic_linking",
+    "thetawave-states/dynamic_linking",
+    "thetawave-assets/dynamic_linking",
+]

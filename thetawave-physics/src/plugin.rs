@@ -17,8 +17,14 @@ impl Plugin for ThetawavePhysicsPlugin {
             )
             .add_systems(OnEnter(AppState::GameLoading), resume_physics_system);
 
-        if cfg!(feature = "physics_debug") {
-            app.add_plugins(PhysicsDebugPlugin::default());
+        #[cfg(feature = "physics_debug")]
+        {
+            app.add_plugins((
+                PhysicsDebugPlugin::default(),
+                avian2d::prelude::PhysicsDiagnosticsPlugin,
+                avian2d::prelude::PhysicsDiagnosticsUiPlugin,
+            ));
+            app.add_systems(Update, crate::systems::toggle_physics_debug_system);
         }
     }
 }
