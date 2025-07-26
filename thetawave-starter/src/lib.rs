@@ -1,5 +1,6 @@
 use bevy::{
     app::Plugin,
+    input::keyboard::KeyCode,
     prelude::PluginGroup,
     render::texture::ImagePlugin,
     utils::default,
@@ -23,12 +24,12 @@ mod save;
 pub mod ui;
 mod window;
 
-pub use thetawave_debug::ToggleDebugModeEvent;
-pub use thetawave_states::AppState;
+pub use thetawave_states::{AppState, DebugState};
 
 pub struct ThetawaveStarterPlugin {
     pub window_title: String,
     pub starting_resolution: (f32, f32),
+    pub show_debug_keycode: KeyCode,
 }
 
 impl Plugin for ThetawaveStarterPlugin {
@@ -61,8 +62,14 @@ impl Plugin for ThetawaveStarterPlugin {
             ThetawavePhysicsPlugin,
             save::ThetawaveSavePlugin,
             core::ThetawaveCorePlugin,
-            ThetawaveDebugPlugin,
         ));
+
+        // plugins only used in debug builds
+        if cfg!(debug_assertions) {
+            app.add_plugins(ThetawaveDebugPlugin {
+                show_debug_keycode: self.show_debug_keycode,
+            });
+        }
 
         // plugins not used for wasm32 builds
         if !cfg!(target_arch = "wasm32") {

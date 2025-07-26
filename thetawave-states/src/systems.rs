@@ -1,3 +1,5 @@
+use crate::data::{DebugState, ToggleDebugStateEvent};
+
 use super::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState, ToggleGameStateEvent};
 use bevy::{
     input::{keyboard::KeyCode, ButtonInput},
@@ -98,5 +100,23 @@ pub(super) fn enter_game_end_system(
 ) {
     if keys.just_pressed(KeyCode::KeyV) {
         next_game_state.set(GameState::End);
+    }
+}
+
+// Toggle whether the game is in the debug state or not
+pub(super) fn toggle_debug_state_system(
+    mut next_debug_state: ResMut<NextState<DebugState>>,
+    current_state: Res<State<DebugState>>,
+    mut toggle_debug_state_event: EventReader<ToggleDebugStateEvent>,
+) {
+    if toggle_debug_state_event.read().next().is_some() {
+        match **current_state {
+            DebugState::None => {
+                next_debug_state.set(DebugState::Debug);
+            }
+            DebugState::Debug => {
+                next_debug_state.set(DebugState::None);
+            }
+        };
     }
 }

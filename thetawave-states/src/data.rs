@@ -54,6 +54,14 @@ pub enum PauseMenuState {
     Options,
 }
 
+/// States enum for managing pause menu states
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
+pub enum DebugState {
+    #[default]
+    None,
+    Debug,
+}
+
 /// Component for cleaning up after exting a vec of states
 #[derive(Component)]
 pub struct Cleanup<S: States> {
@@ -63,3 +71,7 @@ pub struct Cleanup<S: States> {
 /// Event for pausing and unpausing the game
 #[derive(Event)]
 pub struct ToggleGameStateEvent;
+
+/// Event for switching between normal and debug mode
+#[derive(Event)]
+pub struct ToggleDebugStateEvent;

@@ -1,35 +1,32 @@
 use bevy::{
     app::{Plugin, Update},
-    ecs::{
-        event::{Event, EventWriter},
-        schedule::IntoScheduleConfigs,
-        system::{Local, Res},
-    },
+    ecs::{event::EventWriter, resource::Resource, system::Res},
     input::{keyboard::KeyCode, ButtonInput},
-    state::condition::in_state,
 };
-use thetawave_states::AppState;
+use thetawave_states::ToggleDebugStateEvent;
 
-pub struct ThetawaveDebugPlugin;
+pub struct ThetawaveDebugPlugin {
+    /// The keycode to toggle debug mode on release
+    pub show_debug_keycode: KeyCode,
+}
 
 impl Plugin for ThetawaveDebugPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Update, toggle_debug_mode.run_if(in_state(AppState::Game)));
-        app.add_event::<ToggleDebugModeEvent>();
+        app.add_systems(Update, toggle_debug_mode);
+        app.insert_resource(DebugKeycode(self.show_debug_keycode));
     }
 }
 
-#[derive(Event)]
-pub struct ToggleDebugModeEvent(pub bool);
+#[derive(Resource)]
+struct DebugKeycode(KeyCode);
 
+// Toggle debug mode on keycode release specified in plugin
 fn toggle_debug_mode(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut is_active: Local<bool>,
-    mut toggle_debug_event_writer: EventWriter<ToggleDebugModeEvent>,
+    mut toggle_debug_event_writer: EventWriter<ToggleDebugStateEvent>,
+    debug_keycode: Res<DebugKeycode>,
 ) {
-    if keyboard_input.just_released(KeyCode::Backquote) {
-        *is_active = !*is_active;
+    if keyboard_input.just_released(debug_keycode.0) {
+        toggle_debug_event_writer.write(ToggleDebugStateEvent);
     }
-
-    toggle_debug_event_writer.write(ToggleDebugModeEvent(*is_active));
 }
