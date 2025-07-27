@@ -10,4 +10,5 @@ thetawave-starter = { path = "../thetawave-starter" }
 
 [features]
 dynamic_linking = ["bevy/dynamic_linking", "thetawave-starter/dynamic_linking"]
-default = ["thetawave-starter/physics_debug", "dynamic_linking"]
+default = ["debug", "dynamic_linking"]
+debug = ["thetawave-starter/debug"]

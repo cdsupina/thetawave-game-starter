@@ -1,6 +1,5 @@
 use super::systems::{pause_physics_system, resume_physics_system};
-use crate::data::PhysicsDebugSettings;
-use avian2d::{prelude::PhysicsDebugPlugin, PhysicsPlugins};
+use avian2d::PhysicsPlugins;
 use bevy::{
     app::{Plugin, Update},
     prelude::{in_state, IntoScheduleConfigs, OnEnter},
@@ -17,16 +16,22 @@ impl Plugin for ThetawavePhysicsPlugin {
                 pause_physics_system.run_if(in_state(AppState::Game)),
             )
             .add_systems(OnEnter(AppState::GameLoading), resume_physics_system);
-        app.insert_resource(PhysicsDebugSettings::default());
 
         #[cfg(feature = "physics_debug")]
         {
+            use avian2d::prelude::{
+                PhysicsDebugPlugin, PhysicsDiagnosticsPlugin, PhysicsDiagnosticsUiPlugin,
+            };
             use bevy::ecs::schedule::common_conditions::resource_changed;
+
+            use crate::PhysicsDebugSettings;
+
+            app.insert_resource(PhysicsDebugSettings::default());
 
             app.add_plugins((
                 PhysicsDebugPlugin::default(),
-                avian2d::prelude::PhysicsDiagnosticsPlugin,
-                avian2d::prelude::PhysicsDiagnosticsUiPlugin,
+                PhysicsDiagnosticsPlugin,
+                PhysicsDiagnosticsUiPlugin,
             ));
             app.add_systems(
                 Update,

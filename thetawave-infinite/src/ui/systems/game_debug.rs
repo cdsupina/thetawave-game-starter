@@ -3,8 +3,11 @@ use bevy_egui::{
     egui::{menu, TopBottomPanel},
     EguiContexts,
 };
+
+#[cfg(feature = "debug")]
 use thetawave_starter::PhysicsDebugSettings;
 
+#[cfg(feature = "debug")]
 /// This function is a system that handles the egui options menu
 pub(in crate::ui) fn game_debug_menu_system(
     mut contexts: EguiContexts,

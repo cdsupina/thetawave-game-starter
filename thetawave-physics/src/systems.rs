@@ -1,7 +1,5 @@
-use avian2d::prelude::{Physics, PhysicsGizmos, PhysicsTime};
+use avian2d::prelude::{Physics, PhysicsTime};
 use bevy::{
-    ecs::system::Res,
-    gizmos::config::GizmoConfigStore,
     prelude::{EventReader, ResMut, StateTransitionEvent},
     time::Time,
 };
@@ -9,6 +7,12 @@ use thetawave_states::GameState;
 
 #[cfg(feature = "physics_debug")]
 use crate::PhysicsDebugSettings;
+
+#[cfg(feature = "physics_debug")]
+use avian2d::prelude::PhysicsGizmos;
+
+#[cfg(feature = "physics_debug")]
+use bevy::{ecs::system::Res, gizmos::config::GizmoConfigStore};
 
 /// Pause and resume physics on GameState change
 pub(super) fn pause_physics_system(

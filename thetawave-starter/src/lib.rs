@@ -10,9 +10,11 @@ use bevy::{
 use bevy_aseprite_ultra::AsepriteUltraPlugin;
 use thetawave_assets::ThetawaveAssetsPlugin;
 use thetawave_backgrounds::ThetawaveBackgroundsPlugin;
-use thetawave_debug::ThetawaveDebugPlugin;
 use thetawave_physics::ThetawavePhysicsPlugin;
 use thetawave_states::ThetawaveStatesPlugin;
+
+#[cfg(feature = "debug")]
+use thetawave_debug::ThetawaveDebugPlugin;
 
 mod audio;
 mod camera;
@@ -24,7 +26,9 @@ mod save;
 pub mod ui;
 mod window;
 
+#[cfg(feature = "debug")]
 pub use thetawave_physics::PhysicsDebugSettings;
+
 pub use thetawave_states::{AppState, DebugState};
 
 pub struct ThetawaveStarterPlugin {
@@ -66,11 +70,10 @@ impl Plugin for ThetawaveStarterPlugin {
         ));
 
         // plugins only used in debug builds
-        if cfg!(debug_assertions) {
-            app.add_plugins(ThetawaveDebugPlugin {
-                show_debug_keycode: self.show_debug_keycode,
-            });
-        }
+        #[cfg(feature = "debug")]
+        app.add_plugins(ThetawaveDebugPlugin {
+            show_debug_keycode: self.show_debug_keycode,
+        });
 
         // plugins not used for wasm32 builds
         if !cfg!(target_arch = "wasm32") {
