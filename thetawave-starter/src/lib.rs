@@ -24,6 +24,7 @@ mod save;
 pub mod ui;
 mod window;
 
+pub use thetawave_physics::PhysicsDebugSettings;
 pub use thetawave_states::{AppState, DebugState};
 
 pub struct ThetawaveStarterPlugin {
