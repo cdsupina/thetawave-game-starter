@@ -31,6 +31,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                 );
             });
 
+            /*
             ui.menu_button("Spawn", |ui| {
                 ui.menu_button("Mob", |ui| {
                     // Add contents to the menu
@@ -42,6 +43,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                     // Add contents to the menu
                 });
             });
+            */
         })
     });
 
