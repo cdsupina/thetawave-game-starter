@@ -3,6 +3,7 @@ use bevy::{
     ecs::{event::EventWriter, resource::Resource, system::Res},
     input::{keyboard::KeyCode, ButtonInput},
 };
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use thetawave_states::ToggleDebugStateEvent;
 
 pub struct ThetawaveDebugPlugin {
@@ -12,6 +13,11 @@ pub struct ThetawaveDebugPlugin {
 
 impl Plugin for ThetawaveDebugPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
+        app.insert_resource(InspectorDebugSettings::default());
+        app.add_plugins(
+            WorldInspectorPlugin::new()
+                .run_if(|res: Res<InspectorDebugSettings>| res.inspector_enabled),
+        );
         app.add_systems(Update, toggle_debug_mode);
         app.insert_resource(DebugKeycode(self.show_debug_keycode));
     }
@@ -29,4 +35,9 @@ fn toggle_debug_mode(
     if keyboard_input.just_released(debug_keycode.0) {
         toggle_debug_event_writer.write(ToggleDebugStateEvent);
     }
+}
+
+#[derive(Resource, Default)]
+pub struct InspectorDebugSettings {
+    pub inspector_enabled: bool,
 }
