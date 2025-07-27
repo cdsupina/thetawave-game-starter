@@ -8,7 +8,7 @@ use bevy_egui::{
 use thetawave_starter::{InspectorDebugSettings, PhysicsDebugSettings};
 
 #[cfg(feature = "debug")]
-/// This function is a system that handles the egui options menu
+/// System that handles the egui debug menu
 pub(in crate::ui) fn game_debug_menu_system(
     mut contexts: EguiContexts,
     mut physics_debug_settings: ResMut<PhysicsDebugSettings>,

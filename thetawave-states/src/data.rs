@@ -54,7 +54,7 @@ pub enum PauseMenuState {
     Options,
 }
 
-/// States enum for managing pause menu states
+/// States enum for managing debug states
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
 pub enum DebugState {
     #[default]
