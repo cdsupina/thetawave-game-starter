@@ -4,10 +4,11 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+bevy_egui = { workspace = true }
 bevy = { workspace = true, default-features = false }
 thetawave-starter = { path = "../thetawave-starter" }
 
 [features]
-default = ["dynamic_linking"]
-dynamic_linking = ["bevy/dynamic_linking"]
-physics_debug = []
+dynamic_linking = ["bevy/dynamic_linking", "thetawave-starter/dynamic_linking"]
+default = ["debug", "dynamic_linking"]
+debug = ["thetawave-starter/debug"]

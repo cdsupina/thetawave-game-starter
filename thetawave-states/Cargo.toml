@@ -7,6 +7,4 @@ edition.workspace = true
 bevy = { workspace = true, default-features = false }
 
 [features]
-default = ["dynamic_linking"]
 dynamic_linking = ["bevy/dynamic_linking"]
-physics_debug = []

@@ -1,14 +1,11 @@
 [package]
-name = "thetawave-physics"
+name = "thetawave-debug"
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
+bevy-inspector-egui = { version = "0.32.0" }
 bevy = { workspace = true, default-features = false }
 thetawave-states = { path = "../thetawave-states" }
-avian2d = { workspace = true }
-
-
 [features]
-physics_debug = ["avian2d/diagnostic_ui"]
 dynamic_linking = ["bevy/dynamic_linking", "thetawave-states/dynamic_linking"]

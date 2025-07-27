@@ -1,5 +1,6 @@
 use bevy::{
     app::Plugin,
+    input::keyboard::KeyCode,
     prelude::PluginGroup,
     render::texture::ImagePlugin,
     utils::default,
@@ -12,6 +13,9 @@ use thetawave_backgrounds::ThetawaveBackgroundsPlugin;
 use thetawave_physics::ThetawavePhysicsPlugin;
 use thetawave_states::ThetawaveStatesPlugin;
 
+#[cfg(feature = "debug")]
+use thetawave_debug::ThetawaveDebugPlugin;
+
 mod audio;
 mod camera;
 mod core;
@@ -19,12 +23,21 @@ mod input;
 mod options;
 mod player;
 mod save;
-mod ui;
+pub mod ui;
 mod window;
+
+#[cfg(feature = "debug")]
+pub use thetawave_physics::PhysicsDebugSettings;
+
+#[cfg(feature = "debug")]
+pub use thetawave_debug::InspectorDebugSettings;
+
+pub use thetawave_states::{AppState, DebugState};
 
 pub struct ThetawaveStarterPlugin {
     pub window_title: String,
     pub starting_resolution: (f32, f32),
+    pub show_debug_keycode: KeyCode,
 }
 
 impl Plugin for ThetawaveStarterPlugin {
@@ -58,6 +71,12 @@ impl Plugin for ThetawaveStarterPlugin {
             save::ThetawaveSavePlugin,
             core::ThetawaveCorePlugin,
         ));
+
+        // plugins only used in debug builds
+        #[cfg(feature = "debug")]
+        app.add_plugins(ThetawaveDebugPlugin {
+            show_debug_keycode: self.show_debug_keycode,
+        });
 
         // plugins not used for wasm32 builds
         if !cfg!(target_arch = "wasm32") {
