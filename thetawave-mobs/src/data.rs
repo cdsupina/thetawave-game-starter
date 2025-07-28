@@ -1,12 +1,13 @@
 use avian2d::prelude::Collider;
 use bevy::{
-    ecs::{event::Event, resource::Resource},
+    ecs::{event::Event, name::Name, resource::Resource},
     math::Vec2,
     platform::collections::HashMap,
 };
 use serde::Deserialize;
 
 const DEFAULT_COLLIDER_DIMENSIONS: Vec2 = Vec2::new(10.0, 10.0);
+const DEFAULT_Z_LEVEL: f32 = 0.0;
 
 /// All types of spawnable mobs
 #[derive(Deserialize, Debug, Eq, PartialEq, Hash)]
@@ -25,8 +26,16 @@ pub struct SpawnMobEvent {
 // Contains all attributes for a mob
 #[derive(Deserialize, Debug, Clone)]
 pub struct MobAttributes {
-    pub collider_dimensions: Option<Vec2>,
-    pub name: String,
+    collider_dimensions: Option<Vec2>,
+    name: String,
+    z_level: Option<f32>,
+}
+
+impl MobAttributes {
+    /// Get z level from attributes or default to DEFAULT_Z_LEVEL
+    pub fn get_z_level(&self) -> f32 {
+        self.z_level.unwrap_or(DEFAULT_Z_LEVEL)
+    }
 }
 
 // Resource tracking all data for mobs
@@ -43,5 +52,11 @@ impl From<&MobAttributes> for Collider {
             .unwrap_or(DEFAULT_COLLIDER_DIMENSIONS);
 
         Collider::rectangle(collider_dimensions.x, collider_dimensions.y)
+    }
+}
+
+impl From<&MobAttributes> for Name {
+    fn from(value: &MobAttributes) -> Self {
+        Name::new(value.name.clone())
     }
 }

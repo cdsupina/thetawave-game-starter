@@ -45,7 +45,7 @@ pub(super) fn spawn_mob_system(
             .ok_or(bevy::prelude::BevyError::from("Mob attributes not found"))?;
 
         cmds.spawn((
-            Name::new(mob_attributes.name.clone()),
+            Name::from(mob_attributes),
             AseAnimation {
                 animation: Animation::tag("idle"),
                 aseprite: assets.get_mob_sprite(&event.mob_type),
@@ -57,7 +57,11 @@ pub(super) fn spawn_mob_system(
             Collider::from(mob_attributes),
             RigidBody::Dynamic,
             LockedAxes::ROTATION_LOCKED,
-            Transform::from_xyz(event.position.x, event.position.y, 0.0),
+            Transform::from_xyz(
+                event.position.x,
+                event.position.y,
+                mob_attributes.get_z_level(),
+            ),
         ));
     }
 
