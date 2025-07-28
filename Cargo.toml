@@ -7,6 +7,7 @@ members = [
     "thetawave-assets",
     "thetawave-backgrounds",
     "thetawave-debug",
+    "thetawave-mobs",
 ]
 resolver = "2"
 

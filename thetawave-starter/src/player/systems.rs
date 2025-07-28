@@ -4,7 +4,7 @@ use crate::{
     options::OptionsRes,
     player::CharacterType,
 };
-use avian2d::prelude::{Collider, LinearVelocity, MaxLinearSpeed, RigidBody};
+use avian2d::prelude::{Collider, LinearVelocity, LockedAxes, MaxLinearSpeed, RigidBody};
 use bevy::{
     asset::Handle,
     log::info,
@@ -63,7 +63,8 @@ pub(super) fn spawn_players_system(
                     character_data.collider_dimensions.x,
                     character_data.collider_dimensions.y,
                 ),
-                RigidBody::Kinematic,
+                RigidBody::Dynamic,
+                LockedAxes::ROTATION_LOCKED,
                 MaxLinearSpeed(character_data.max_speed),
                 match chosen_character_data.input {
                     InputType::Keyboard => {
