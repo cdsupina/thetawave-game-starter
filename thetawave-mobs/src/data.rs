@@ -26,7 +26,7 @@ pub struct SpawnMobEvent {
 
 // Contains all attributes for a mob
 #[derive(Deserialize, Debug, Clone)]
-pub struct MobAttributes {
+pub(super) struct MobAttributes {
     collider_dimensions: Option<Vec2>,
     name: String,
     z_level: Option<f32>,
@@ -42,7 +42,7 @@ impl MobAttributes {
 
 // Resource tracking all data for mobs
 #[derive(Deserialize, Debug, Resource)]
-pub struct MobResource {
+pub(super) struct MobAttributesResource {
     pub attributes: HashMap<MobType, MobAttributes>,
 }
 

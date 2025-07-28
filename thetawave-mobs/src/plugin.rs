@@ -6,15 +6,27 @@ use bevy::{
 use thetawave_states::{AppState, GameState};
 use toml::from_slice;
 
-use crate::{systems::spawn_mob_system, MobResource, SpawnMobEvent};
+use crate::{
+    behavior::MobBehaviorsResource, data::MobAttributesResource, systems::spawn_mob_system,
+    SpawnMobEvent,
+};
 
 pub struct ThetawaveMobsPlugin;
 
 impl Plugin for ThetawaveMobsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(
-            from_slice::<MobResource>(include_bytes!("../../assets/data/mobs.toml"))
-                .expect("Failed to parse MobResource from `mobs.toml`."),
+            from_slice::<MobAttributesResource>(include_bytes!(
+                "../../assets/data/mob_attributes.toml"
+            ))
+            .expect("Failed to parse MobAttributesResource from `mob_attributes.toml`."),
+        );
+
+        app.insert_resource(
+            from_slice::<MobBehaviorsResource>(include_bytes!(
+                "../../assets/data/mob_behaviors.toml"
+            ))
+            .expect("Failed to parse MobBehaviorsResource from `mob_behaviors.toml`."),
         );
 
         app.add_systems(

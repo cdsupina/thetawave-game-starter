@@ -1,6 +1,7 @@
+mod behavior;
 mod data;
 mod plugin;
 mod systems;
 
-pub use data::{MobResource, MobType, SpawnMobEvent};
+pub use data::{MobType, SpawnMobEvent};
 pub use plugin::ThetawaveMobsPlugin;

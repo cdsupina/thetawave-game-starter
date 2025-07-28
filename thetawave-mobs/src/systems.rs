@@ -14,7 +14,7 @@ use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use thetawave_assets::GameAssets;
 use thetawave_states::{AppState, Cleanup};
 
-use crate::{MobResource, MobType, SpawnMobEvent};
+use crate::{data::MobAttributesResource, MobType, SpawnMobEvent};
 
 trait GameAssetsExt {
     fn get_mob_sprite(&self, mob_type: &MobType) -> Handle<Aseprite>;
@@ -34,7 +34,7 @@ pub(super) fn spawn_mob_system(
     mut cmds: Commands,
     assets: Res<GameAssets>,
     mut spawn_mob_event_reader: EventReader<SpawnMobEvent>,
-    mob_resource: Res<MobResource>,
+    mob_resource: Res<MobAttributesResource>,
 ) -> std::result::Result<(), bevy::prelude::BevyError> {
     for event in spawn_mob_event_reader.read() {
         info!(
