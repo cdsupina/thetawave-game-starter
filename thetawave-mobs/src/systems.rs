@@ -37,7 +37,11 @@ pub(super) fn spawn_mob_system(
     mob_resource: Res<MobResource>,
 ) -> std::result::Result<(), bevy::prelude::BevyError> {
     for event in spawn_mob_event_reader.read() {
-        info!("{event:?}");
+        info!(
+            "Spawning Mob: {:?} at {}",
+            event.mob_type,
+            event.position.to_string()
+        );
 
         let mob_attributes = mob_resource
             .attributes
