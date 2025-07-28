@@ -6,6 +6,7 @@ use bevy::{
         system::{Commands, Res},
     },
     log::info,
+    prelude::Name,
     sprite::Sprite,
     transform::components::Transform,
 };
@@ -44,6 +45,7 @@ pub(super) fn spawn_mob_system(
             .ok_or(bevy::prelude::BevyError::from("Mob attributes not found"))?;
 
         cmds.spawn((
+            Name::new(mob_attributes.name.clone()),
             AseAnimation {
                 animation: Animation::tag("idle"),
                 aseprite: assets.get_mob_sprite(&event.mob_type),
@@ -52,10 +54,7 @@ pub(super) fn spawn_mob_system(
             Cleanup::<AppState> {
                 states: vec![AppState::Game],
             },
-            Collider::rectangle(
-                mob_attributes.collider_dimensions.x,
-                mob_attributes.collider_dimensions.y,
-            ),
+            Collider::from(mob_attributes),
             RigidBody::Dynamic,
             LockedAxes::ROTATION_LOCKED,
             Transform::from_xyz(event.position.x, event.position.y, 0.0),
