@@ -1,4 +1,4 @@
-use avian2d::prelude::Collider;
+use avian2d::prelude::{Collider, LockedAxes};
 use bevy::{
     ecs::{event::Event, name::Name, resource::Resource},
     math::Vec2,
@@ -8,6 +8,7 @@ use serde::Deserialize;
 
 const DEFAULT_COLLIDER_DIMENSIONS: Vec2 = Vec2::new(10.0, 10.0);
 const DEFAULT_Z_LEVEL: f32 = 0.0;
+const DEFAULT_ROTATION_LOCKED: bool = true;
 
 /// All types of spawnable mobs
 #[derive(Deserialize, Debug, Eq, PartialEq, Hash)]
@@ -29,6 +30,7 @@ pub struct MobAttributes {
     collider_dimensions: Option<Vec2>,
     name: String,
     z_level: Option<f32>,
+    rotation_locked: Option<bool>,
 }
 
 impl MobAttributes {
@@ -58,5 +60,18 @@ impl From<&MobAttributes> for Collider {
 impl From<&MobAttributes> for Name {
     fn from(value: &MobAttributes) -> Self {
         Name::new(value.name.clone())
+    }
+}
+
+impl From<&MobAttributes> for LockedAxes {
+    fn from(value: &MobAttributes) -> Self {
+        let rotation_locked = value.rotation_locked.unwrap_or(DEFAULT_ROTATION_LOCKED);
+
+        if rotation_locked {
+            return LockedAxes::ROTATION_LOCKED;
+        }
+
+        // unlock rotation if rotation locked is not true
+        LockedAxes::new()
     }
 }

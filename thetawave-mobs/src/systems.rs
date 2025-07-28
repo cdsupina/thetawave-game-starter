@@ -56,7 +56,7 @@ pub(super) fn spawn_mob_system(
             },
             Collider::from(mob_attributes),
             RigidBody::Dynamic,
-            LockedAxes::ROTATION_LOCKED,
+            LockedAxes::from(mob_attributes),
             Transform::from_xyz(
                 event.position.x,
                 event.position.y,
