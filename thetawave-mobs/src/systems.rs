@@ -2,6 +2,7 @@ use avian2d::prelude::{Collider, LockedAxes, RigidBody};
 use bevy::{
     asset::Handle,
     ecs::{
+        error::BevyError,
         event::EventReader,
         system::{Commands, Res},
     },
@@ -14,7 +15,7 @@ use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use thetawave_assets::GameAssets;
 use thetawave_states::{AppState, Cleanup};
 
-use crate::{data::MobAttributesResource, MobType, SpawnMobEvent};
+use crate::{behavior::MobBehaviorsResource, data::MobAttributesResource, MobType, SpawnMobEvent};
 
 trait GameAssetsExt {
     fn get_mob_sprite(&self, mob_type: &MobType) -> Handle<Aseprite>;
@@ -34,7 +35,8 @@ pub(super) fn spawn_mob_system(
     mut cmds: Commands,
     assets: Res<GameAssets>,
     mut spawn_mob_event_reader: EventReader<SpawnMobEvent>,
-    mob_resource: Res<MobAttributesResource>,
+    attributes_res: Res<MobAttributesResource>,
+    behaviors_res: Res<MobBehaviorsResource>,
 ) -> std::result::Result<(), bevy::prelude::BevyError> {
     for event in spawn_mob_event_reader.read() {
         info!(
@@ -43,10 +45,15 @@ pub(super) fn spawn_mob_system(
             event.position.to_string()
         );
 
-        let mob_attributes = mob_resource
+        let mob_attributes = attributes_res
             .attributes
             .get(&event.mob_type)
-            .ok_or(bevy::prelude::BevyError::from("Mob attributes not found"))?;
+            .ok_or(BevyError::from("Mob attributes not found"))?;
+
+        let mob_behavior_sequence = behaviors_res
+            .behaviors
+            .get(&event.mob_type)
+            .ok_or(BevyError::from("Mob behaviors not found"))?;
 
         cmds.spawn((
             Name::from(mob_attributes),
@@ -66,6 +73,7 @@ pub(super) fn spawn_mob_system(
                 event.position.y,
                 mob_attributes.get_z_level(),
             ),
+            mob_behavior_sequence.clone(),
         ));
     }
 
