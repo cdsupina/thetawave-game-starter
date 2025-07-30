@@ -27,17 +27,25 @@ pub struct SpawnMobEvent {
 // Contains all attributes for a mob
 #[derive(Deserialize, Debug, Clone)]
 pub(super) struct MobAttributes {
-    collider_dimensions: Option<Vec2>,
+    #[serde(default = "default_collider_dimensions")]
+    collider_dimensions: Vec2,
     name: String,
-    z_level: Option<f32>,
-    rotation_locked: Option<bool>,
+    #[serde(default = "default_z_level")]
+    pub z_level: f32,
+    #[serde(default = "default_rotation_locked")]
+    rotation_locked: bool,
 }
 
-impl MobAttributes {
-    /// Get z level from attributes or default to DEFAULT_Z_LEVEL
-    pub fn get_z_level(&self) -> f32 {
-        self.z_level.unwrap_or(DEFAULT_Z_LEVEL)
-    }
+fn default_collider_dimensions() -> Vec2 {
+    DEFAULT_COLLIDER_DIMENSIONS
+}
+
+fn default_z_level() -> f32 {
+    DEFAULT_Z_LEVEL
+}
+
+fn default_rotation_locked() -> bool {
+    DEFAULT_ROTATION_LOCKED
 }
 
 // Resource tracking all data for mobs
@@ -49,9 +57,7 @@ pub(super) struct MobAttributesResource {
 /// Create a collider component using mob attributes
 impl From<&MobAttributes> for Collider {
     fn from(value: &MobAttributes) -> Self {
-        let collider_dimensions = value
-            .collider_dimensions
-            .unwrap_or(DEFAULT_COLLIDER_DIMENSIONS);
+        let collider_dimensions = value.collider_dimensions;
 
         Collider::rectangle(collider_dimensions.x, collider_dimensions.y)
     }
@@ -65,7 +71,7 @@ impl From<&MobAttributes> for Name {
 
 impl From<&MobAttributes> for LockedAxes {
     fn from(value: &MobAttributes) -> Self {
-        let rotation_locked = value.rotation_locked.unwrap_or(DEFAULT_ROTATION_LOCKED);
+        let rotation_locked = value.rotation_locked;
 
         if rotation_locked {
             return LockedAxes::ROTATION_LOCKED;

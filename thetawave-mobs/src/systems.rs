@@ -15,7 +15,7 @@ use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use thetawave_assets::GameAssets;
 use thetawave_states::{AppState, Cleanup};
 
-use crate::{behavior::MobBehaviorsResource, data::MobAttributesResource, MobType, SpawnMobEvent};
+use crate::{MobType, SpawnMobEvent, behavior::MobBehaviorsResource, data::MobAttributesResource};
 
 trait GameAssetsExt {
     fn get_mob_sprite(&self, mob_type: &MobType) -> Handle<Aseprite>;
@@ -68,11 +68,7 @@ pub(super) fn spawn_mob_system(
             Collider::from(mob_attributes),
             RigidBody::Dynamic,
             LockedAxes::from(mob_attributes),
-            Transform::from_xyz(
-                event.position.x,
-                event.position.y,
-                mob_attributes.get_z_level(),
-            ),
+            Transform::from_xyz(event.position.x, event.position.y, mob_attributes.z_level),
             mob_behavior_sequence.clone(),
         ));
     }
