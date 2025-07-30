@@ -1,4 +1,4 @@
-use avian2d::prelude::{Collider, LockedAxes, RigidBody};
+use avian2d::prelude::{Collider, LockedAxes, MaxLinearSpeed, RigidBody};
 use bevy::{
     asset::Handle,
     ecs::{
@@ -16,7 +16,9 @@ use thetawave_assets::GameAssets;
 use thetawave_states::{AppState, Cleanup};
 
 use crate::{
-    MobType, SpawnMobEvent, attributes::MobAttributesResource, behavior::MobBehaviorsResource,
+    MobType, SpawnMobEvent,
+    attributes::{MobAttributesComponent, MobAttributesResource},
+    behavior::MobBehaviorsResource,
 };
 
 trait GameAssetsExt {
@@ -59,6 +61,7 @@ pub(super) fn spawn_mob_system(
 
         cmds.spawn((
             Name::from(mob_attributes),
+            MobAttributesComponent::from(mob_attributes),
             AseAnimation {
                 animation: Animation::tag("idle"),
                 aseprite: assets.get_mob_sprite(&event.mob_type),
@@ -69,6 +72,7 @@ pub(super) fn spawn_mob_system(
             },
             Collider::from(mob_attributes),
             RigidBody::Dynamic,
+            MaxLinearSpeed::from(mob_attributes),
             LockedAxes::from(mob_attributes),
             Transform::from_xyz(event.position.x, event.position.y, mob_attributes.z_level),
             mob_behavior_sequence.clone(),

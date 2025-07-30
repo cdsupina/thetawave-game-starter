@@ -9,7 +9,10 @@ use bevy::{
     platform::collections::HashMap,
 };
 
-use crate::behavior::data::{MobBehavior, MobBehaviorEvent, MobBehaviorSequence};
+use crate::{
+    attributes::MobAttributesComponent,
+    behavior::data::{MobBehavior, MobBehaviorEvent, MobBehaviorSequence},
+};
 
 /// Create events to activate behaviors
 /// TODO: Update timers and change active behavior blocks on behavior sequences
@@ -42,12 +45,12 @@ pub(super) fn activate_behaviors_system(
 /// Accelerate the mob downwards using the mobs acceleration attribute
 pub(super) fn move_down_system(
     mut behavior_event_reader: EventReader<MobBehaviorEvent>,
-    mut mob_query: Query<&mut LinearVelocity, With<MobBehaviorSequence>>,
+    mut mob_query: Query<(&mut LinearVelocity, &MobAttributesComponent), With<MobBehaviorSequence>>,
 ) {
     for event in behavior_event_reader.read() {
         for entity in &event.entities {
-            if let Ok(mut velocity) = mob_query.get_mut(*entity) {
-                velocity.y -= 1.0;
+            if let Ok((mut velocity, attributes)) = mob_query.get_mut(*entity) {
+                velocity.y -= attributes.linear_acceleration;
             }
         }
     }
