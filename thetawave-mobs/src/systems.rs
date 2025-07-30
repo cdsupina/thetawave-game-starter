@@ -15,7 +15,9 @@ use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use thetawave_assets::GameAssets;
 use thetawave_states::{AppState, Cleanup};
 
-use crate::{MobType, SpawnMobEvent, behavior::MobBehaviorsResource, data::MobAttributesResource};
+use crate::{
+    MobType, SpawnMobEvent, attributes::MobAttributesResource, behavior::MobBehaviorsResource,
+};
 
 trait GameAssetsExt {
     fn get_mob_sprite(&self, mob_type: &MobType) -> Handle<Aseprite>;

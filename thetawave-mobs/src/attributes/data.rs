@@ -26,7 +26,7 @@ pub struct SpawnMobEvent {
 
 // Contains all attributes for a mob
 #[derive(Deserialize, Debug, Clone)]
-pub(super) struct MobAttributes {
+pub(crate) struct MobAttributes {
     #[serde(default = "default_collider_dimensions")]
     collider_dimensions: Vec2,
     name: String,
@@ -50,7 +50,7 @@ fn default_rotation_locked() -> bool {
 
 // Resource tracking all data for mobs
 #[derive(Deserialize, Debug, Resource)]
-pub(super) struct MobAttributesResource {
+pub(crate) struct MobAttributesResource {
     pub attributes: HashMap<MobType, MobAttributes>,
 }
 
