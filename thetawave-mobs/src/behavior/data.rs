@@ -1,7 +1,10 @@
+use std::time::Duration;
+
 use bevy::{
     ecs::{entity::Entity, event::Event, resource::Resource},
     platform::collections::HashMap,
     prelude::Component,
+    time::{Timer, TimerMode},
 };
 use serde::Deserialize;
 
@@ -14,7 +17,10 @@ const DEFAULT_WEIGHT: f32 = 1.0;
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq, Hash)]
 pub(crate) enum MobBehavior {
     MoveDown,
+    MoveLeft,
+    MoveRight,
     BrakeHorizontal,
+    BrakeVertical,
 }
 
 /// Event storing a behavior and Vec of entities to run on behavior on
@@ -51,11 +57,48 @@ pub(crate) struct MobBehaviorSequence {
     execution_order: ExecutionOrder,
     #[serde(default)]
     current_idx: usize,
+    #[serde(default)]
+    timer: Timer,
 }
 
 impl MobBehaviorSequence {
+    /// Gets the active block in the blocks vec using current_idx
     pub(super) fn get_active_block(&self) -> Option<&MobBehaviorBlock> {
         self.blocks.get(self.current_idx)
+    }
+
+    /// Initializes the timer based on the active block's duration
+    pub(crate) fn init_timer(&self) -> Self {
+        Self {
+            blocks: self.blocks.clone(),
+            execution_order: self.execution_order.clone(),
+            current_idx: self.current_idx,
+            timer: if let Some(active_block) = self.get_active_block() {
+                Timer::new(
+                    Duration::from_secs_f32(active_block.duration),
+                    TimerMode::Once,
+                )
+            } else {
+                Timer::default()
+            },
+        }
+    }
+
+    /// Updates the timer based on the delta time
+    /// Updates current_idx to next block if timer is finished
+    /// Sets the timer duration to the next block's duration if available
+    /// TODO: Use execution_order to determine next block
+    pub(super) fn update_timer(&mut self, delta_time: f32) {
+        self.timer.tick(Duration::from_secs_f32(delta_time));
+        if self.timer.just_finished() {
+            // Find the next block sequentially
+            self.current_idx = (self.current_idx + 1) % self.blocks.len();
+            if let Some(active_block) = self.get_active_block() {
+                self.timer
+                    .set_duration(Duration::from_secs_f32(active_block.duration));
+                self.timer.reset();
+            }
+        }
     }
 }
 

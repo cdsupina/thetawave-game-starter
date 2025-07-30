@@ -74,7 +74,7 @@ pub(super) fn spawn_mob_system(
             RigidBody::Dynamic,
             LockedAxes::from(mob_attributes),
             Transform::from_xyz(event.position.x, event.position.y, mob_attributes.z_level),
-            mob_behavior_sequence.clone(),
+            mob_behavior_sequence.clone().init_timer(),
         ));
     }
 
