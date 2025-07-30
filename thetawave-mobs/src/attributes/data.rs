@@ -1,4 +1,4 @@
-use avian2d::prelude::{Collider, LockedAxes, MaxLinearSpeed};
+use avian2d::prelude::{Collider, LockedAxes};
 use bevy::{
     ecs::{component::Component, event::Event, name::Name, resource::Resource},
     math::Vec2,
@@ -9,8 +9,9 @@ use serde::Deserialize;
 const DEFAULT_COLLIDER_DIMENSIONS: Vec2 = Vec2::new(10.0, 10.0);
 const DEFAULT_Z_LEVEL: f32 = 0.0;
 const DEFAULT_ROTATION_LOCKED: bool = true;
-const DEFAULT_MAX_LINEAR_SPEED: f32 = 20.0;
-const DEFAULT_LINEAR_ACCELERATION: f32 = 0.1;
+const DEFAULT_MAX_LINEAR_SPEED: Vec2 = Vec2::new(10.0, 20.0);
+const DEFAULT_LINEAR_ACCELERATION: Vec2 = Vec2::new(0.05, 0.1);
+const DEFAULT_LINEAR_DECELERATION: Vec2 = Vec2::new(0.1, 0.1);
 
 /// All types of spawnable mobs
 #[derive(Deserialize, Debug, Eq, PartialEq, Hash)]
@@ -30,7 +31,9 @@ pub struct SpawnMobEvent {
 /// Such as in mob behaviors
 #[derive(Component)]
 pub(crate) struct MobAttributesComponent {
-    pub linear_acceleration: f32,
+    pub linear_acceleration: Vec2,
+    pub linear_deceleration: Vec2,
+    pub max_linear_speed: Vec2,
 }
 
 // Contains all attributes for a mob
@@ -44,9 +47,11 @@ pub(crate) struct MobAttributes {
     #[serde(default = "default_rotation_locked")]
     rotation_locked: bool,
     #[serde(default = "default_max_linear_speed")]
-    max_linear_speed: f32,
+    max_linear_speed: Vec2,
     #[serde(default = "default_linear_acceleration")]
-    pub linear_acceleration: f32,
+    pub linear_acceleration: Vec2,
+    #[serde(default = "default_linear_deceleration")]
+    pub linear_deceleration: Vec2,
 }
 
 fn default_collider_dimensions() -> Vec2 {
@@ -61,12 +66,16 @@ fn default_rotation_locked() -> bool {
     DEFAULT_ROTATION_LOCKED
 }
 
-fn default_max_linear_speed() -> f32 {
+fn default_max_linear_speed() -> Vec2 {
     DEFAULT_MAX_LINEAR_SPEED
 }
 
-fn default_linear_acceleration() -> f32 {
+fn default_linear_acceleration() -> Vec2 {
     DEFAULT_LINEAR_ACCELERATION
+}
+
+fn default_linear_deceleration() -> Vec2 {
+    DEFAULT_LINEAR_DECELERATION
 }
 
 // Resource tracking all data for mobs
@@ -103,16 +112,12 @@ impl From<&MobAttributes> for LockedAxes {
     }
 }
 
-impl From<&MobAttributes> for MaxLinearSpeed {
-    fn from(value: &MobAttributes) -> Self {
-        MaxLinearSpeed(value.max_linear_speed)
-    }
-}
-
 impl From<&MobAttributes> for MobAttributesComponent {
     fn from(value: &MobAttributes) -> Self {
         MobAttributesComponent {
             linear_acceleration: value.linear_acceleration,
+            linear_deceleration: value.linear_deceleration,
+            max_linear_speed: value.max_linear_speed,
         }
     }
 }

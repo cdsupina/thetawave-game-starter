@@ -9,7 +9,7 @@ use toml::from_slice;
 use crate::behavior::{
     MobBehaviorsResource,
     data::MobBehaviorEvent,
-    systems::{activate_behaviors_system, move_down_system},
+    systems::{activate_behaviors_system, brake_horizontal_system, move_down_system},
 };
 
 pub(crate) struct ThetawaveMobBehaviorPlugin;
@@ -27,7 +27,11 @@ impl Plugin for ThetawaveMobBehaviorPlugin {
 
         app.add_systems(
             Update,
-            (activate_behaviors_system, move_down_system)
+            (
+                activate_behaviors_system,
+                move_down_system,
+                brake_horizontal_system,
+            )
                 .run_if(in_state(AppState::Game).and(in_state(GameState::Playing))),
         );
     }

@@ -48,9 +48,32 @@ pub(super) fn move_down_system(
     mut mob_query: Query<(&mut LinearVelocity, &MobAttributesComponent), With<MobBehaviorSequence>>,
 ) {
     for event in behavior_event_reader.read() {
-        for entity in &event.entities {
-            if let Ok((mut velocity, attributes)) = mob_query.get_mut(*entity) {
-                velocity.y -= attributes.linear_acceleration;
+        if matches!(event.behavior, MobBehavior::MoveDown) {
+            for entity in &event.entities {
+                if let Ok((mut velocity, attributes)) = mob_query.get_mut(*entity) {
+                    velocity.y -= attributes.linear_acceleration.y;
+                    velocity.y = velocity.y.max(-attributes.max_linear_speed.y);
+                }
+            }
+        }
+    }
+}
+
+/// Accelerate the mob downwards using the mobs acceleration attribute
+pub(super) fn brake_horizontal_system(
+    mut behavior_event_reader: EventReader<MobBehaviorEvent>,
+    mut mob_query: Query<(&mut LinearVelocity, &MobAttributesComponent), With<MobBehaviorSequence>>,
+) {
+    for event in behavior_event_reader.read() {
+        if matches!(event.behavior, MobBehavior::BrakeHorizontal) {
+            for entity in &event.entities {
+                if let Ok((mut velocity, attributes)) = mob_query.get_mut(*entity) {
+                    if velocity.x > 0.0 {
+                        velocity.x = (velocity.x - attributes.linear_deceleration.x).max(0.0);
+                    } else if velocity.x < 0.0 {
+                        velocity.x = (velocity.x + attributes.linear_deceleration.x).min(0.0);
+                    }
+                }
             }
         }
     }

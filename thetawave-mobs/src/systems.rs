@@ -1,4 +1,4 @@
-use avian2d::prelude::{Collider, LockedAxes, MaxLinearSpeed, RigidBody};
+use avian2d::prelude::{Collider, LockedAxes, RigidBody};
 use bevy::{
     asset::Handle,
     ecs::{
@@ -72,7 +72,6 @@ pub(super) fn spawn_mob_system(
             },
             Collider::from(mob_attributes),
             RigidBody::Dynamic,
-            MaxLinearSpeed::from(mob_attributes),
             LockedAxes::from(mob_attributes),
             Transform::from_xyz(event.position.x, event.position.y, mob_attributes.z_level),
             mob_behavior_sequence.clone(),
