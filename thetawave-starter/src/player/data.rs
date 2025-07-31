@@ -5,12 +5,13 @@ use bevy::{
 };
 use bevy_platform::collections::HashMap;
 use leafwing_abilities::prelude::{Cooldown, CooldownState};
+use serde::Deserialize;
 use strum_macros::{AsRefStr, EnumIter};
 
 /// Resource for storing all of the data about every character
-#[derive(Resource)]
+#[derive(Resource, Deserialize, Debug)]
 pub(super) struct CharactersResource {
-    pub characters: HashMap<CharacterType, CharacterData>,
+    pub characters: HashMap<CharacterType, CharacterAttributes>,
 }
 
 impl Default for CharactersResource {
@@ -19,7 +20,7 @@ impl Default for CharactersResource {
             characters: [
                 (
                     CharacterType::Captain,
-                    CharacterData {
+                    CharacterAttributes {
                         acceleration: 2.0,
                         deceleration_factor: 0.972,
                         max_speed: 100.0,
@@ -35,7 +36,7 @@ impl Default for CharactersResource {
                 ),
                 (
                     CharacterType::Juggernaut,
-                    CharacterData {
+                    CharacterAttributes {
                         acceleration: 1.8,
                         deceleration_factor: 0.988,
                         max_speed: 90.0,
@@ -51,7 +52,7 @@ impl Default for CharactersResource {
                 ),
                 (
                     CharacterType::Doomwing,
-                    CharacterData {
+                    CharacterAttributes {
                         acceleration: 2.5,
                         deceleration_factor: 0.955,
                         max_speed: 165.0,
@@ -72,7 +73,7 @@ impl Default for CharactersResource {
 }
 
 /// Characters that can be chosen by players to play as
-#[derive(Eq, PartialEq, Hash, Debug, EnumIter, Clone)]
+#[derive(Eq, PartialEq, Hash, Debug, EnumIter, Clone, Deserialize)]
 pub(crate) enum CharacterType {
     Captain,
     Juggernaut,
@@ -80,13 +81,55 @@ pub(crate) enum CharacterType {
 }
 
 /// All data used to construct a player entity
-pub(super) struct CharacterData {
+#[derive(Debug)]
+pub(super) struct CharacterAttributes {
     pub acceleration: f32,
     pub deceleration_factor: f32,
     pub max_speed: f32,
     pub collider_dimensions: Vec2,
     pub cooldowns: CooldownState<PlayerAbility>,
     pub restitution: f32,
+}
+
+impl<'de> Deserialize<'de> for CharacterAttributes {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        // Define a "helper" struct that mirrors CharacterAttributes
+        // but uses types that can be deserialized
+        #[derive(Deserialize)]
+        struct Helper {
+            acceleration: f32,
+            deceleration_factor: f32,
+            max_speed: f32,
+            collider_dimensions: Vec2,
+            // Instead of CooldownState, use a HashMap with seconds as f32
+            cooldowns: HashMap<PlayerAbility, f32>,
+            restitution: f32,
+        }
+
+        // Let serde deserialize into the Helper struct first
+        let helper = Helper::deserialize(deserializer)?;
+
+        // Transform the deserialized data into the format we need
+        let cooldown_pairs: Vec<(PlayerAbility, Cooldown)> = helper
+            .cooldowns
+            .into_iter()
+            .map(|(ability, secs)| (ability, Cooldown::from_secs(secs)))
+            .collect();
+
+        // Construct our actual struct with the transformed data
+        Ok(CharacterAttributes {
+            acceleration: helper.acceleration,
+            deceleration_factor: helper.deceleration_factor,
+            max_speed: helper.max_speed,
+            collider_dimensions: helper.collider_dimensions,
+            // Create CooldownState from the transformed pairs
+            cooldowns: CooldownState::new(cooldown_pairs),
+            restitution: helper.restitution,
+        })
+    }
 }
 
 /// Component for storing values used in systems for player entities
