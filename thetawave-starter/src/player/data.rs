@@ -5,88 +5,73 @@ use bevy::{
 };
 use bevy_platform::collections::HashMap;
 use leafwing_abilities::prelude::{Cooldown, CooldownState};
+use serde::Deserialize;
 use strum_macros::{AsRefStr, EnumIter};
 
 /// Resource for storing all of the data about every character
-#[derive(Resource)]
+#[derive(Resource, Deserialize, Debug)]
 pub(super) struct CharactersResource {
-    pub characters: HashMap<CharacterType, CharacterData>,
-}
-
-impl Default for CharactersResource {
-    fn default() -> Self {
-        Self {
-            characters: [
-                (
-                    CharacterType::Captain,
-                    CharacterData {
-                        acceleration: 2.0,
-                        deceleration_factor: 0.972,
-                        max_speed: 100.0,
-                        collider_dimensions: Vec2::new(6.0, 12.0),
-                        restitution: 0.3,
-                        cooldowns: CooldownState::<PlayerAbility>::new([
-                            (PlayerAbility::BasicAttack, Cooldown::from_secs(0.5)),
-                            (PlayerAbility::SecondaryAttack, Cooldown::from_secs(1.5)),
-                            (PlayerAbility::Utility, Cooldown::from_secs(2.0)),
-                            (PlayerAbility::Ultimate, Cooldown::from_secs(10.0)),
-                        ]),
-                    },
-                ),
-                (
-                    CharacterType::Juggernaut,
-                    CharacterData {
-                        acceleration: 1.8,
-                        deceleration_factor: 0.988,
-                        max_speed: 90.0,
-                        collider_dimensions: Vec2::new(12.0, 20.0),
-                        restitution: 0.5,
-                        cooldowns: CooldownState::<PlayerAbility>::new([
-                            (PlayerAbility::BasicAttack, Cooldown::from_secs(0.8)),
-                            (PlayerAbility::SecondaryAttack, Cooldown::from_secs(2.0)),
-                            (PlayerAbility::Utility, Cooldown::from_secs(2.3)),
-                            (PlayerAbility::Ultimate, Cooldown::from_secs(15.0)),
-                        ]),
-                    },
-                ),
-                (
-                    CharacterType::Doomwing,
-                    CharacterData {
-                        acceleration: 2.5,
-                        deceleration_factor: 0.955,
-                        max_speed: 165.0,
-                        collider_dimensions: Vec2::new(12.0, 20.0),
-                        restitution: 0.1,
-                        cooldowns: CooldownState::<PlayerAbility>::new([
-                            (PlayerAbility::BasicAttack, Cooldown::from_secs(1.0)),
-                            (PlayerAbility::SecondaryAttack, Cooldown::from_secs(3.0)),
-                            (PlayerAbility::Utility, Cooldown::from_secs(1.9)),
-                            (PlayerAbility::Ultimate, Cooldown::from_secs(18.5)),
-                        ]),
-                    },
-                ),
-            ]
-            .into(),
-        }
-    }
+    pub characters: HashMap<CharacterType, CharacterAttributes>,
 }
 
 /// Characters that can be chosen by players to play as
-#[derive(Eq, PartialEq, Hash, Debug, EnumIter, Clone)]
+#[derive(Eq, PartialEq, Hash, Debug, EnumIter, Clone, Deserialize)]
 pub(crate) enum CharacterType {
     Captain,
     Juggernaut,
     Doomwing,
 }
 
-/// All data used to construct a player entity
-pub(super) struct CharacterData {
+/// Attributes of a character
+#[derive(Debug)]
+pub(super) struct CharacterAttributes {
     pub acceleration: f32,
     pub deceleration_factor: f32,
     pub max_speed: f32,
     pub collider_dimensions: Vec2,
     pub cooldowns: CooldownState<PlayerAbility>,
     pub restitution: f32,
+}
+
+impl<'de> Deserialize<'de> for CharacterAttributes {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        // Define a "helper" struct that mirrors CharacterAttributes
+        // but uses types that can be deserialized
+        #[derive(Deserialize)]
+        struct Helper {
+            acceleration: f32,
+            deceleration_factor: f32,
+            max_speed: f32,
+            collider_dimensions: Vec2,
+            // Instead of CooldownState, use a HashMap with seconds as f32
+            cooldowns: HashMap<PlayerAbility, f32>,
+            restitution: f32,
+        }
+
+        // Let serde deserialize into the Helper struct first
+        let helper = Helper::deserialize(deserializer)?;
+
+        // Transform the deserialized data into the format we need
+        let cooldown_pairs: Vec<(PlayerAbility, Cooldown)> = helper
+            .cooldowns
+            .into_iter()
+            .map(|(ability, secs)| (ability, Cooldown::from_secs(secs)))
+            .collect();
+
+        // Construct our actual struct with the transformed data
+        Ok(CharacterAttributes {
+            acceleration: helper.acceleration,
+            deceleration_factor: helper.deceleration_factor,
+            max_speed: helper.max_speed,
+            collider_dimensions: helper.collider_dimensions,
+            // Create CooldownState from the transformed pairs
+            cooldowns: CooldownState::new(cooldown_pairs),
+            restitution: helper.restitution,
+        })
+    }
 }
 
 /// Component for storing values used in systems for player entities
@@ -158,6 +143,7 @@ impl ChosenCharactersResource {
     }
 }
 
+/// Resource for transferring character choices from character selection screen to game
 #[derive(Clone, Debug)]
 pub(crate) struct ChosenCharacterData {
     pub character: CharacterType,
