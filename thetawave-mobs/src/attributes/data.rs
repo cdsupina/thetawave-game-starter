@@ -12,7 +12,7 @@ const DEFAULT_ROTATION_LOCKED: bool = true;
 const DEFAULT_MAX_LINEAR_SPEED: Vec2 = Vec2::new(20.0, 20.0);
 const DEFAULT_LINEAR_ACCELERATION: Vec2 = Vec2::new(0.1, 0.1);
 const DEFAULT_LINEAR_DECELERATION: Vec2 = Vec2::new(0.3, 0.3);
-const DEFAULT_RESTITUTION: f32 = 0.3;
+const DEFAULT_RESTITUTION: f32 = 0.5;
 
 /// All types of spawnable mobs
 #[derive(Deserialize, Debug, Eq, PartialEq, Hash)]
