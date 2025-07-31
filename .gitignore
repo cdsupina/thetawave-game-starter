@@ -15,3 +15,16 @@ Cargo.lock
 
 # Ignore media assets without open liscenses
 assets/media/
+assets/data/
+
+# Ignore environment files with credentials
+scripts/pcloud/.env
+
+# Ignore virtual environment
+scripts/pcloud/venv/
+
+# Ignore Python rope library files
+.ropeproject/
+
+# Ignore editor files
+.zed/
