@@ -87,12 +87,29 @@ impl MobBehaviorSequence {
     /// Updates the timer based on the delta time
     /// Updates current_idx to next block if timer is finished
     /// Sets the timer duration to the next block's duration if available
-    /// TODO: Use execution_order to determine next block
     pub(super) fn update_timer(&mut self, delta_time: f32) {
         self.timer.tick(Duration::from_secs_f32(delta_time));
         if self.timer.just_finished() {
-            // Find the next block sequentially
-            self.current_idx = (self.current_idx + 1) % self.blocks.len();
+            // Get the current idx of the next block using the execution order method
+            self.current_idx = match self.execution_order {
+                ExecutionOrder::Sequential => (self.current_idx + 1) % self.blocks.len(),
+                ExecutionOrder::Random => {
+                    let total_weight: f32 = self.blocks.iter().map(|block| block.weight).sum();
+                    let mut random_value = rand::random::<f32>() * total_weight;
+                    let mut current_idx = 0;
+
+                    for (idx, block) in self.blocks.iter().enumerate() {
+                        random_value -= block.weight;
+                        if random_value <= 0.0 {
+                            current_idx = idx;
+                            break;
+                        }
+                    }
+                    current_idx
+                }
+            };
+
+            // Set the timer to the duration of the new active block
             if let Some(active_block) = self.get_active_block() {
                 self.timer
                     .set_duration(Duration::from_secs_f32(active_block.duration));
