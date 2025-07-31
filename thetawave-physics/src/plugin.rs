@@ -1,7 +1,8 @@
 use super::systems::{pause_physics_system, resume_physics_system};
-use avian2d::PhysicsPlugins;
+use avian2d::{prelude::Gravity, PhysicsPlugins};
 use bevy::{
     app::{Plugin, Update},
+    math::Vec2,
     prelude::{in_state, IntoScheduleConfigs, OnEnter},
 };
 use thetawave_states::AppState;
@@ -11,6 +12,7 @@ pub struct ThetawavePhysicsPlugin;
 impl Plugin for ThetawavePhysicsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_plugins(PhysicsPlugins::default())
+            .insert_resource(Gravity(Vec2::ZERO))
             .add_systems(
                 Update,
                 pause_physics_system.run_if(in_state(AppState::Game)),

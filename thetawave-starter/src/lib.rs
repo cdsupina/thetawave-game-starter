@@ -10,6 +10,7 @@ use bevy::{
 use bevy_aseprite_ultra::AsepriteUltraPlugin;
 use thetawave_assets::ThetawaveAssetsPlugin;
 use thetawave_backgrounds::ThetawaveBackgroundsPlugin;
+use thetawave_mobs::ThetawaveMobsPlugin;
 use thetawave_physics::ThetawavePhysicsPlugin;
 use thetawave_states::ThetawaveStatesPlugin;
 
@@ -32,6 +33,7 @@ pub use thetawave_physics::PhysicsDebugSettings;
 #[cfg(feature = "debug")]
 pub use thetawave_debug::InspectorDebugSettings;
 
+pub use thetawave_mobs::{MobType, SpawnMobEvent};
 pub use thetawave_states::{AppState, DebugState};
 
 pub struct ThetawaveStarterPlugin {
@@ -70,6 +72,7 @@ impl Plugin for ThetawaveStarterPlugin {
             ThetawavePhysicsPlugin,
             save::ThetawaveSavePlugin,
             core::ThetawaveCorePlugin,
+            ThetawaveMobsPlugin,
         ));
 
         // plugins only used in debug builds

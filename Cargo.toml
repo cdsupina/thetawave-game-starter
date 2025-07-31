@@ -7,12 +7,13 @@ members = [
     "thetawave-assets",
     "thetawave-backgrounds",
     "thetawave-debug",
+    "thetawave-mobs",
 ]
 resolver = "2"
 
 [workspace.package]
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [workspace.dependencies]
 bevy = { version = "0.16.1", default-features = false, features = [
@@ -75,7 +76,7 @@ leafwing_abilities = "0.11.0"
 avian2d = { version = "0.3.1", features = ["debug-plugin"] }
 strum = "0.27.2"
 strum_macros = "0.27.2"
-winit = "0.30.11"
+winit = "0.30.12"
 image = "0.25.6"
 itertools = "0.14.0"
 

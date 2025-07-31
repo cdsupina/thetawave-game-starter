@@ -1,0 +1,17 @@
+[package]
+name = "thetawave-mobs"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+bevy = { workspace = true, default-features = false }
+bevy_aseprite_ultra.workspace = true
+avian2d.workspace = true
+serde.workspace = true
+toml = "0.9.4"
+rand.workspace = true
+thetawave-assets = { path = "../thetawave-assets" }
+thetawave-states = { path = "../thetawave-states" }
+
+[features]
+dynamic_linking = ["bevy/dynamic_linking", "thetawave-assets/dynamic_linking"]

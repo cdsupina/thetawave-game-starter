@@ -22,6 +22,12 @@ pub struct GameAssets {
     // Animated doomwing character Aseprite
     #[asset(path = "media/aseprite/doomwing_character.aseprite")]
     pub doomwing_character_aseprite: Handle<Aseprite>,
+    // Animated grunt mob Aseprite
+    #[asset(path = "media/aseprite/grunt_mob.aseprite")]
+    pub grunt_mob_aseprite: Handle<Aseprite>,
+    // Animated shooter mob Aseprite
+    #[asset(path = "media/aseprite/shooter_mob.aseprite")]
+    pub shooter_mob_aseprite: Handle<Aseprite>,
 }
 
 /// Audio assets used throughout all states of the app
