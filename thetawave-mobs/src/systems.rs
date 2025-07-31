@@ -1,4 +1,4 @@
-use avian2d::prelude::{Collider, LockedAxes, RigidBody};
+use avian2d::prelude::{Collider, LockedAxes, Restitution, RigidBody};
 use bevy::{
     asset::Handle,
     ecs::{
@@ -70,6 +70,7 @@ pub(super) fn spawn_mob_system(
             Cleanup::<AppState> {
                 states: vec![AppState::Game],
             },
+            Restitution::from(mob_attributes),
             Collider::from(mob_attributes),
             RigidBody::Dynamic,
             LockedAxes::from(mob_attributes),

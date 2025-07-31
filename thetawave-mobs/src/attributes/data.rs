@@ -1,4 +1,4 @@
-use avian2d::prelude::{Collider, LockedAxes};
+use avian2d::prelude::{Collider, LockedAxes, Restitution};
 use bevy::{
     ecs::{component::Component, event::Event, name::Name, resource::Resource},
     math::Vec2,
@@ -12,6 +12,7 @@ const DEFAULT_ROTATION_LOCKED: bool = true;
 const DEFAULT_MAX_LINEAR_SPEED: Vec2 = Vec2::new(20.0, 20.0);
 const DEFAULT_LINEAR_ACCELERATION: Vec2 = Vec2::new(0.1, 0.1);
 const DEFAULT_LINEAR_DECELERATION: Vec2 = Vec2::new(0.3, 0.3);
+const DEFAULT_RESTITUTION: f32 = 0.3;
 
 /// All types of spawnable mobs
 #[derive(Deserialize, Debug, Eq, PartialEq, Hash)]
@@ -52,6 +53,8 @@ pub(crate) struct MobAttributes {
     pub linear_acceleration: Vec2,
     #[serde(default = "default_linear_deceleration")]
     pub linear_deceleration: Vec2,
+    #[serde(default = "default_restitution")]
+    pub restitution: f32,
 }
 
 fn default_collider_dimensions() -> Vec2 {
@@ -78,10 +81,20 @@ fn default_linear_deceleration() -> Vec2 {
     DEFAULT_LINEAR_DECELERATION
 }
 
+fn default_restitution() -> f32 {
+    DEFAULT_RESTITUTION
+}
+
 // Resource tracking all data for mobs
 #[derive(Deserialize, Debug, Resource)]
 pub(crate) struct MobAttributesResource {
     pub attributes: HashMap<MobType, MobAttributes>,
+}
+
+impl From<&MobAttributes> for Restitution {
+    fn from(value: &MobAttributes) -> Self {
+        Restitution::new(value.restitution)
+    }
 }
 
 /// Create a collider component using mob attributes
