@@ -22,7 +22,7 @@ pub(crate) enum CharacterType {
     Doomwing,
 }
 
-/// All data used to construct a player entity
+/// Attributes of a character
 #[derive(Debug)]
 pub(super) struct CharacterAttributes {
     pub acceleration: f32,
@@ -143,6 +143,7 @@ impl ChosenCharactersResource {
     }
 }
 
+/// Resource for transferring character choices from character selection screen to game
 #[derive(Clone, Debug)]
 pub(crate) struct ChosenCharacterData {
     pub character: CharacterType,
