@@ -16,7 +16,7 @@ use crate::{
 };
 
 /// Create events to activate behaviors
-/// TODO: Update timers and change active behavior blocks on behavior sequences
+/// Updates timers and changes active behavior blocks on behavior sequences
 pub(super) fn activate_behaviors_system(
     mut mob_query: Query<(Entity, &mut MobBehaviorSequence)>,
     mut behavior_event_writer: EventWriter<MobBehaviorEvent>,
@@ -56,8 +56,11 @@ pub(super) fn move_down_system(
         if matches!(event.behavior, MobBehavior::MoveDown) {
             for entity in &event.entities {
                 if let Ok((mut velocity, attributes)) = mob_query.get_mut(*entity) {
-                    velocity.y -= attributes.linear_acceleration.y;
-                    velocity.y = velocity.y.max(-attributes.max_linear_speed.y);
+                    if velocity.y < -attributes.max_linear_speed.y {
+                        velocity.y += attributes.linear_deceleration.y;
+                    } else {
+                        velocity.y -= attributes.linear_acceleration.y;
+                    }
                 }
             }
         }
@@ -73,8 +76,11 @@ pub(super) fn move_right_system(
         if matches!(event.behavior, MobBehavior::MoveRight) {
             for entity in &event.entities {
                 if let Ok((mut velocity, attributes)) = mob_query.get_mut(*entity) {
-                    velocity.x += attributes.linear_acceleration.x;
-                    velocity.x = velocity.x.min(attributes.max_linear_speed.x);
+                    if velocity.x > attributes.max_linear_speed.x {
+                        velocity.x -= attributes.linear_deceleration.x;
+                    } else {
+                        velocity.x += attributes.linear_acceleration.x;
+                    }
                 }
             }
         }
@@ -90,8 +96,11 @@ pub(super) fn move_left_system(
         if matches!(event.behavior, MobBehavior::MoveLeft) {
             for entity in &event.entities {
                 if let Ok((mut velocity, attributes)) = mob_query.get_mut(*entity) {
-                    velocity.x -= attributes.linear_acceleration.x;
-                    velocity.x = velocity.x.max(-attributes.max_linear_speed.x);
+                    if velocity.x < -attributes.max_linear_speed.x {
+                        velocity.x += attributes.linear_deceleration.x;
+                    } else {
+                        velocity.x -= attributes.linear_acceleration.x;
+                    }
                 }
             }
         }

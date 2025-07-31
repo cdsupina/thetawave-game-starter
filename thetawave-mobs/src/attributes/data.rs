@@ -10,8 +10,8 @@ const DEFAULT_COLLIDER_DIMENSIONS: Vec2 = Vec2::new(10.0, 10.0);
 const DEFAULT_Z_LEVEL: f32 = 0.0;
 const DEFAULT_ROTATION_LOCKED: bool = true;
 const DEFAULT_MAX_LINEAR_SPEED: Vec2 = Vec2::new(20.0, 20.0);
-const DEFAULT_LINEAR_ACCELERATION: Vec2 = Vec2::new(0.05, 0.1);
-const DEFAULT_LINEAR_DECELERATION: Vec2 = Vec2::new(0.1, 0.1);
+const DEFAULT_LINEAR_ACCELERATION: Vec2 = Vec2::new(0.1, 0.1);
+const DEFAULT_LINEAR_DECELERATION: Vec2 = Vec2::new(0.3, 0.3);
 
 /// All types of spawnable mobs
 #[derive(Deserialize, Debug, Eq, PartialEq, Hash)]
