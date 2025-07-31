@@ -14,64 +14,6 @@ pub(super) struct CharactersResource {
     pub characters: HashMap<CharacterType, CharacterAttributes>,
 }
 
-impl Default for CharactersResource {
-    fn default() -> Self {
-        Self {
-            characters: [
-                (
-                    CharacterType::Captain,
-                    CharacterAttributes {
-                        acceleration: 2.0,
-                        deceleration_factor: 0.972,
-                        max_speed: 100.0,
-                        collider_dimensions: Vec2::new(6.0, 12.0),
-                        restitution: 0.3,
-                        cooldowns: CooldownState::<PlayerAbility>::new([
-                            (PlayerAbility::BasicAttack, Cooldown::from_secs(0.5)),
-                            (PlayerAbility::SecondaryAttack, Cooldown::from_secs(1.5)),
-                            (PlayerAbility::Utility, Cooldown::from_secs(2.0)),
-                            (PlayerAbility::Ultimate, Cooldown::from_secs(10.0)),
-                        ]),
-                    },
-                ),
-                (
-                    CharacterType::Juggernaut,
-                    CharacterAttributes {
-                        acceleration: 1.8,
-                        deceleration_factor: 0.988,
-                        max_speed: 90.0,
-                        collider_dimensions: Vec2::new(12.0, 20.0),
-                        restitution: 0.5,
-                        cooldowns: CooldownState::<PlayerAbility>::new([
-                            (PlayerAbility::BasicAttack, Cooldown::from_secs(0.8)),
-                            (PlayerAbility::SecondaryAttack, Cooldown::from_secs(2.0)),
-                            (PlayerAbility::Utility, Cooldown::from_secs(2.3)),
-                            (PlayerAbility::Ultimate, Cooldown::from_secs(15.0)),
-                        ]),
-                    },
-                ),
-                (
-                    CharacterType::Doomwing,
-                    CharacterAttributes {
-                        acceleration: 2.5,
-                        deceleration_factor: 0.955,
-                        max_speed: 165.0,
-                        collider_dimensions: Vec2::new(12.0, 20.0),
-                        restitution: 0.1,
-                        cooldowns: CooldownState::<PlayerAbility>::new([
-                            (PlayerAbility::BasicAttack, Cooldown::from_secs(1.0)),
-                            (PlayerAbility::SecondaryAttack, Cooldown::from_secs(3.0)),
-                            (PlayerAbility::Utility, Cooldown::from_secs(1.9)),
-                            (PlayerAbility::Ultimate, Cooldown::from_secs(18.5)),
-                        ]),
-                    },
-                ),
-            ]
-            .into(),
-        }
-    }
-}
-
 /// Characters that can be chosen by players to play as
 #[derive(Eq, PartialEq, Hash, Debug, EnumIter, Clone, Deserialize)]
 pub(crate) enum CharacterType {
