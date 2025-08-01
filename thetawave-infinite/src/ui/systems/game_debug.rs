@@ -9,7 +9,8 @@ use bevy_egui::{
 
 #[cfg(feature = "debug")]
 use thetawave_starter::{
-    InspectorDebugSettings, PhysicsDebugSettings, SpawnMobEvent, camera::CameraZoomEvent,
+    InspectorDebugSettings, PhysicsDebugSettings, SpawnMobEvent,
+    camera::{Camera2DZoomEvent, Camera3DZoomEvent},
 };
 
 #[cfg(feature = "debug")]
@@ -19,13 +20,16 @@ pub(in crate::ui) fn game_debug_menu_system(
     mut physics_debug_settings: ResMut<PhysicsDebugSettings>,
     mut inspector_debug_settings: ResMut<InspectorDebugSettings>,
     mut spawn_mob_event_writer: EventWriter<SpawnMobEvent>,
-    mut camera_zoom_event_writer: EventWriter<CameraZoomEvent>,
-    mut camera_zoom: Local<i8>,
+    mut camera2d_zoom_event_writer: EventWriter<Camera2DZoomEvent>,
+    mut camera2d_zoom: Local<i8>,
+    mut camera3d_zoom_event_writer: EventWriter<Camera3DZoomEvent>,
+    mut camera3d_zoom: Local<i8>,
 ) -> Result {
     use bevy::math::Vec2;
     use thetawave_starter::MobType;
 
-    let mut camera_zoom_new = *camera_zoom;
+    let mut camera2d_zoom_new = *camera2d_zoom;
+    let mut camera3d_zoom_new = *camera3d_zoom;
 
     TopBottomPanel::top("menu_bar").show(contexts.ctx_mut()?, |ui| {
         menu::bar(ui, |ui| {
@@ -40,8 +44,13 @@ pub(in crate::ui) fn game_debug_menu_system(
                 use bevy_egui::egui::Slider;
 
                 ui.horizontal(|ui| {
-                    ui.label("Zoom");
-                    ui.add(Slider::new(&mut camera_zoom_new, -100..=100));
+                    ui.label("2D Zoom");
+                    ui.add(Slider::new(&mut camera2d_zoom_new, -100..=100));
+                });
+
+                ui.horizontal(|ui| {
+                    ui.label("3D Zoom");
+                    ui.add(Slider::new(&mut camera3d_zoom_new, -100..=100));
                 });
             });
 
@@ -73,10 +82,16 @@ pub(in crate::ui) fn game_debug_menu_system(
         })
     });
 
-    // Update local variable and send zoom event if it changed
-    if camera_zoom_new != *camera_zoom {
-        *camera_zoom = camera_zoom_new;
-        camera_zoom_event_writer.write(CameraZoomEvent(*camera_zoom));
+    // Update local variable and send zoom 2d event if it changed
+    if camera2d_zoom_new != *camera2d_zoom {
+        *camera2d_zoom = camera2d_zoom_new;
+        camera2d_zoom_event_writer.write(Camera2DZoomEvent(*camera2d_zoom));
+    }
+
+    // Update local variable and send zoom 3d event if it changed
+    if camera3d_zoom_new != *camera3d_zoom {
+        *camera3d_zoom = camera3d_zoom_new;
+        camera3d_zoom_event_writer.write(Camera3DZoomEvent(*camera3d_zoom));
     }
 
     Ok(())
