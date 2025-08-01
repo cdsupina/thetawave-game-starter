@@ -53,6 +53,7 @@ fn default_duration() -> f32 {
 /// A collection of behavior blocks that execute in order
 #[derive(Component, Deserialize, Debug, Clone)]
 pub(crate) struct MobBehaviorSequence {
+    #[serde(default)]
     pub blocks: Vec<MobBehaviorBlock>,
     execution_order: ExecutionOrder,
     #[serde(default)]
@@ -89,7 +90,7 @@ impl MobBehaviorSequence {
     /// Sets the timer duration to the next block's duration if available
     pub(super) fn update_timer(&mut self, delta_time: f32) {
         self.timer.tick(Duration::from_secs_f32(delta_time));
-        if self.timer.just_finished() {
+        if self.timer.just_finished() && !self.blocks.is_empty() {
             // Get the current idx of the next block using the execution order method
             self.current_idx = match self.execution_order {
                 ExecutionOrder::Sequential => (self.current_idx + 1) % self.blocks.len(),

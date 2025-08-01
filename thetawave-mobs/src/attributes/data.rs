@@ -14,6 +14,13 @@ const DEFAULT_LINEAR_ACCELERATION: Vec2 = Vec2::new(0.1, 0.1);
 const DEFAULT_LINEAR_DECELERATION: Vec2 = Vec2::new(0.3, 0.3);
 const DEFAULT_RESTITUTION: f32 = 0.5;
 
+// All types of decorations that can be attached to mobs
+#[derive(Deserialize, Debug, Clone)]
+pub(crate) enum MobDecorationType {
+    GruntThrusters,
+    ShooterThrusters,
+}
+
 /// All types of spawnable mobs
 #[derive(Deserialize, Debug, Eq, PartialEq, Hash)]
 pub enum MobType {
@@ -55,6 +62,8 @@ pub(crate) struct MobAttributes {
     pub linear_deceleration: Vec2,
     #[serde(default = "default_restitution")]
     pub restitution: f32,
+    #[serde(default)]
+    pub decorations: Vec<(MobDecorationType, Vec2)>,
 }
 
 fn default_collider_dimensions() -> Vec2 {
