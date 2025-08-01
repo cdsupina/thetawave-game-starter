@@ -41,6 +41,7 @@ impl GameAssetsExt for GameAssets {
             }
             MobType::FreighterMiddle => self.freighter_middle_mob_aseprite.clone(),
             MobType::FreighterBack => self.freighter_back_mob_aseprite.clone(),
+            MobType::Trizetheron => self.trizetheron_mob_aseprite.clone(),
         }
     }
 

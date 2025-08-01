@@ -44,6 +44,18 @@ pub struct GameAssets {
     // Animated shooter thrusters Aseprite
     #[asset(path = "media/aseprite/xhitara_spitter_thrusters.aseprite")]
     pub xhitara_spitter_thrusters_aseprite: Handle<Aseprite>,
+    // Animated Trizetheron spritesheet
+    #[asset(path = "media/aseprite/trizetheron_mob.aseprite")]
+    pub trizetheron_mob_aseprite: Handle<Aseprite>,
+    // Animated Xhitara tentacle start spritesheet
+    #[asset(path = "media/aseprite/xhitara_tentacle_start_mob.aseprite")]
+    pub xhitara_tentacle_start_mob_aseprite: Handle<Aseprite>,
+    // Animated Xhitara tentacle middle spritesheet
+    #[asset(path = "media/aseprite/xhitara_tentacle_middle_mob.aseprite")]
+    pub xhitara_tentacle_middle_mob_aseprite: Handle<Aseprite>,
+    // Animated Xhitara tentacle end spritesheet
+    #[asset(path = "media/aseprite/xhitara_tentacle_end_mob.aseprite")]
+    pub xhitara_tentacle_end_mob_aseprite: Handle<Aseprite>,
 }
 
 /// Audio assets used throughout all states of the app

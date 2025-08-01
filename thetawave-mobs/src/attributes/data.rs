@@ -33,6 +33,7 @@ pub enum MobType {
     FreighterFront,
     FreighterMiddle,
     FreighterBack,
+    Trizetheron,
 }
 
 /// Event for spawning mobs using a mob type and position
@@ -73,6 +74,12 @@ pub(crate) struct JointedMob {
     pub angle_limit_range: Option<JointAngleLimit>,
     #[serde(default)]
     pub compliance: f32,
+    #[serde(default = "default_chain_length")]
+    pub chain_length: u8,
+}
+
+fn default_chain_length() -> u8 {
+    1
 }
 
 /// Contains all attributes for a mob
