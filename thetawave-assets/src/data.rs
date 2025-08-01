@@ -31,6 +31,13 @@ pub struct GameAssets {
     // Animated gyro mob Aseprite
     #[asset(path = "media/aseprite/xhitara_gyro_mob.aseprite")]
     pub xhitara_gyro_mob_aseprite: Handle<Aseprite>,
+    // Animated freighter mob Aseprite
+    #[asset(path = "media/aseprite/freighter_front_mob.aseprite")]
+    pub freighter_front_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/freighter_middle_mob.aseprite")]
+    pub freighter_middle_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/freighter_back_mob.aseprite")]
+    pub freighter_back_mob_aseprite: Handle<Aseprite>,
     // Animated grunt thrusters Aseprite
     #[asset(path = "media/aseprite/xhitara_grunt_thrusters.aseprite")]
     pub xhitara_grunt_thrusters_aseprite: Handle<Aseprite>,

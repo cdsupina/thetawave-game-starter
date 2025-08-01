@@ -28,6 +28,9 @@ pub enum MobType {
     XhitaraGrunt,
     XhitaraSpitter,
     XhitaraGyro,
+    FreighterFront,
+    FreighterMiddle,
+    FreighterBack,
 }
 
 /// Event for spawning mobs using a mob type and position
