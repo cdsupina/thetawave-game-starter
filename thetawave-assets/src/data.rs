@@ -23,17 +23,20 @@ pub struct GameAssets {
     #[asset(path = "media/aseprite/doomwing_character.aseprite")]
     pub doomwing_character_aseprite: Handle<Aseprite>,
     // Animated grunt mob Aseprite
-    #[asset(path = "media/aseprite/grunt_mob.aseprite")]
-    pub grunt_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/xhitara_grunt_mob.aseprite")]
+    pub xhitara_grunt_mob_aseprite: Handle<Aseprite>,
     // Animated shooter mob Aseprite
-    #[asset(path = "media/aseprite/shooter_mob.aseprite")]
-    pub shooter_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/xhitara_spitter_mob.aseprite")]
+    pub xhitara_spitter_mob_aseprite: Handle<Aseprite>,
+    // Animated gyro mob Aseprite
+    #[asset(path = "media/aseprite/xhitara_gyro_mob.aseprite")]
+    pub xhitara_gyro_mob_aseprite: Handle<Aseprite>,
     // Animated grunt thrusters Aseprite
-    #[asset(path = "media/aseprite/grunt_thrusters.aseprite")]
-    pub grunt_thrusters_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/xhitara_grunt_thrusters.aseprite")]
+    pub xhitara_grunt_thrusters_aseprite: Handle<Aseprite>,
     // Animated shooter thrusters Aseprite
-    #[asset(path = "media/aseprite/shooter_thrusters.aseprite")]
-    pub shooter_thrusters_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/xhitara_spitter_thrusters.aseprite")]
+    pub xhitara_spitter_thrusters_aseprite: Handle<Aseprite>,
 }
 
 /// Audio assets used throughout all states of the app

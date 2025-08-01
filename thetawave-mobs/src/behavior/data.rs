@@ -55,6 +55,7 @@ fn default_duration() -> f32 {
 pub(crate) struct MobBehaviorSequence {
     #[serde(default)]
     pub blocks: Vec<MobBehaviorBlock>,
+    #[serde(default)]
     execution_order: ExecutionOrder,
     #[serde(default)]
     current_idx: usize,
@@ -125,6 +126,12 @@ impl MobBehaviorSequence {
 enum ExecutionOrder {
     Sequential,
     Random,
+}
+
+impl Default for ExecutionOrder {
+    fn default() -> Self {
+        Self::Sequential
+    }
 }
 
 /// Resource containing behavior sequences for mobs

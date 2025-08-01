@@ -4,8 +4,9 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-bevy_egui = { workspace = true }
+bevy_egui.workspace = true
 bevy = { workspace = true, default-features = false }
+strum.workspace = true
 thetawave-starter = { path = "../thetawave-starter" }
 
 [features]

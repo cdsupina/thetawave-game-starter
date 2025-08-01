@@ -26,6 +26,7 @@ pub(in crate::ui) fn game_debug_menu_system(
     mut camera3d_zoom: Local<i8>,
 ) -> Result {
     use bevy::math::Vec2;
+    use strum::IntoEnumIterator;
     use thetawave_starter::MobType;
 
     let mut camera2d_zoom_new = *camera2d_zoom;
@@ -64,18 +65,14 @@ pub(in crate::ui) fn game_debug_menu_system(
 
             ui.menu_button("Spawn", |ui| {
                 ui.menu_button("Mob", |ui| {
-                    if ui.button("Grunt").clicked() {
-                        spawn_mob_event_writer.write(SpawnMobEvent {
-                            mob_type: MobType::Grunt,
-                            position: Vec2::new(0.0, 50.0),
-                        });
-                    }
-
-                    if ui.button("Shooter").clicked() {
-                        spawn_mob_event_writer.write(SpawnMobEvent {
-                            mob_type: MobType::Shooter,
-                            position: Vec2::new(0.0, 50.0),
-                        });
+                    // Iterate through all MobTypes and create spawn buttons
+                    for mob_type in MobType::iter() {
+                        if ui.button(format!("{mob_type:?}")).clicked() {
+                            spawn_mob_event_writer.write(SpawnMobEvent {
+                                mob_type,
+                                position: Vec2::new(0.0, 100.0),
+                            });
+                        }
                     }
                 });
             });
