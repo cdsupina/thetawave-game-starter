@@ -5,6 +5,7 @@ use bevy::{
     platform::collections::HashMap,
 };
 use serde::Deserialize;
+use strum_macros::EnumIter;
 
 const DEFAULT_COLLIDER_DIMENSIONS: Vec2 = Vec2::new(10.0, 10.0);
 const DEFAULT_Z_LEVEL: f32 = 0.0;
@@ -22,7 +23,7 @@ pub(crate) enum MobDecorationType {
 }
 
 /// All types of spawnable mobs
-#[derive(Deserialize, Debug, Eq, PartialEq, Hash)]
+#[derive(Deserialize, Debug, Eq, PartialEq, Hash, EnumIter)]
 pub enum MobType {
     XhitaraGrunt,
     XhitaraSpitter,
