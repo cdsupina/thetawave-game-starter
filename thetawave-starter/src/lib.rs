@@ -1,11 +1,11 @@
 use bevy::{
+    DefaultPlugins,
     app::Plugin,
     input::keyboard::KeyCode,
     prelude::PluginGroup,
     render::texture::ImagePlugin,
     utils::default,
     window::{Window, WindowMode, WindowPlugin, WindowResolution},
-    DefaultPlugins,
 };
 use bevy_aseprite_ultra::AsepriteUltraPlugin;
 use thetawave_assets::ThetawaveAssetsPlugin;
@@ -18,7 +18,7 @@ use thetawave_states::ThetawaveStatesPlugin;
 use thetawave_debug::ThetawaveDebugPlugin;
 
 mod audio;
-mod camera;
+pub mod camera;
 mod core;
 mod input;
 mod options;
