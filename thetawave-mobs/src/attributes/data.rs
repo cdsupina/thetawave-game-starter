@@ -23,11 +23,13 @@ pub(crate) enum MobDecorationType {
 }
 
 /// All types of spawnable mobs
-#[derive(Deserialize, Debug, Eq, PartialEq, Hash, EnumIter)]
+#[derive(Deserialize, Debug, Eq, PartialEq, Hash, EnumIter, Clone)]
 pub enum MobType {
     XhitaraGrunt,
     XhitaraSpitter,
     XhitaraGyro,
+    FreighterOne,
+    FreighterTwo,
     FreighterFront,
     FreighterMiddle,
     FreighterBack,
@@ -49,7 +51,31 @@ pub(crate) struct MobAttributesComponent {
     pub max_linear_speed: Vec2,
 }
 
-// Contains all attributes for a mob
+/// Describes an angle limit for a joint
+#[derive(Deserialize, Debug, Clone)]
+pub(crate) struct JointAngleLimit {
+    pub min: f32,
+    pub max: f32,
+    pub torque: f32,
+}
+
+/// Mob that is also spawned and jointed to the original mob
+#[derive(Deserialize, Debug, Clone)]
+pub(crate) struct JointedMob {
+    pub mob_type: MobType,
+    #[serde(default)]
+    pub offset_pos: Vec2,
+    #[serde(default)]
+    pub anchor_1_pos: Vec2,
+    #[serde(default)]
+    pub anchor_2_pos: Vec2,
+    #[serde(default)]
+    pub angle_limit_range: Option<JointAngleLimit>,
+    #[serde(default)]
+    pub compliance: f32,
+}
+
+/// Contains all attributes for a mob
 #[derive(Deserialize, Debug, Clone)]
 pub(crate) struct MobAttributes {
     #[serde(default = "default_collider_dimensions")]
@@ -69,6 +95,8 @@ pub(crate) struct MobAttributes {
     pub restitution: f32,
     #[serde(default)]
     pub decorations: Vec<(MobDecorationType, Vec2)>,
+    #[serde(default)]
+    pub jointed_mobs: Vec<JointedMob>,
 }
 
 fn default_collider_dimensions() -> Vec2 {
@@ -99,7 +127,7 @@ fn default_restitution() -> f32 {
     DEFAULT_RESTITUTION
 }
 
-// Resource tracking all data for mobs
+/// Resource tracking all data for mobs
 #[derive(Deserialize, Debug, Resource)]
 pub(crate) struct MobAttributesResource {
     pub attributes: HashMap<MobType, MobAttributes>,

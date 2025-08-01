@@ -13,8 +13,8 @@ use thetawave_starter::{
     camera::{Camera2DZoomEvent, Camera3DZoomEvent},
 };
 
-#[cfg(feature = "debug")]
 /// System that handles the egui debug menu
+#[cfg(feature = "debug")]
 pub(in crate::ui) fn game_debug_menu_system(
     mut contexts: EguiContexts,
     mut physics_debug_settings: ResMut<PhysicsDebugSettings>,
@@ -70,7 +70,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                         if ui.button(format!("{mob_type:?}")).clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent {
                                 mob_type,
-                                position: Vec2::new(0.0, 100.0),
+                                position: Vec2::new(0.0, 75.0),
                             });
                         }
                     }
