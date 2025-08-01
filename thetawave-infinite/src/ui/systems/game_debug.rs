@@ -66,14 +66,21 @@ pub(in crate::ui) fn game_debug_menu_system(
                 ui.menu_button("Mob", |ui| {
                     if ui.button("Grunt").clicked() {
                         spawn_mob_event_writer.write(SpawnMobEvent {
-                            mob_type: MobType::Grunt,
+                            mob_type: MobType::XhitaraGrunt,
                             position: Vec2::new(0.0, 50.0),
                         });
                     }
 
                     if ui.button("Shooter").clicked() {
                         spawn_mob_event_writer.write(SpawnMobEvent {
-                            mob_type: MobType::Shooter,
+                            mob_type: MobType::XhitaraSpitter,
+                            position: Vec2::new(0.0, 50.0),
+                        });
+                    }
+
+                    if ui.button("Gyro").clicked() {
+                        spawn_mob_event_writer.write(SpawnMobEvent {
+                            mob_type: MobType::XhitaraGyro,
                             position: Vec2::new(0.0, 50.0),
                         });
                     }

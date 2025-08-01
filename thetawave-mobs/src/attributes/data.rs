@@ -24,8 +24,9 @@ pub(crate) enum MobDecorationType {
 /// All types of spawnable mobs
 #[derive(Deserialize, Debug, Eq, PartialEq, Hash)]
 pub enum MobType {
-    Grunt,
-    Shooter,
+    XhitaraGrunt,
+    XhitaraSpitter,
+    XhitaraGyro,
 }
 
 /// Event for spawning mobs using a mob type and position

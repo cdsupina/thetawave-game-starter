@@ -29,15 +29,16 @@ trait GameAssetsExt {
 impl GameAssetsExt for GameAssets {
     fn get_mob_sprite(&self, mob_type: &MobType) -> Handle<Aseprite> {
         match mob_type {
-            MobType::Grunt => self.grunt_mob_aseprite.clone(),
-            MobType::Shooter => self.shooter_mob_aseprite.clone(),
+            MobType::XhitaraGrunt => self.xhitara_grunt_mob_aseprite.clone(),
+            MobType::XhitaraSpitter => self.xhitara_spitter_mob_aseprite.clone(),
+            MobType::XhitaraGyro => self.xhitara_gyro_mob_aseprite.clone(),
         }
     }
 
     fn get_mob_decoration(&self, mob_type: &MobDecorationType) -> Handle<Aseprite> {
         match mob_type {
-            MobDecorationType::GruntThrusters => self.grunt_thrusters_aseprite.clone(),
-            MobDecorationType::ShooterThrusters => self.shooter_thrusters_aseprite.clone(),
+            MobDecorationType::GruntThrusters => self.xhitara_grunt_thrusters_aseprite.clone(),
+            MobDecorationType::ShooterThrusters => self.xhitara_spitter_thrusters_aseprite.clone(),
         }
     }
 }
