@@ -17,12 +17,13 @@ use thetawave_states::{AppState, Cleanup};
 
 use crate::{
     MobType, SpawnMobEvent,
-    attributes::{MobAttributesComponent, MobAttributesResource},
+    attributes::{MobAttributesComponent, MobAttributesResource, MobDecorationType},
     behavior::MobBehaviorsResource,
 };
 
 trait GameAssetsExt {
     fn get_mob_sprite(&self, mob_type: &MobType) -> Handle<Aseprite>;
+    fn get_mob_decoration(&self, mob_type: &MobDecorationType) -> Handle<Aseprite>;
 }
 
 impl GameAssetsExt for GameAssets {
@@ -30,6 +31,13 @@ impl GameAssetsExt for GameAssets {
         match mob_type {
             MobType::Grunt => self.grunt_mob_aseprite.clone(),
             MobType::Shooter => self.shooter_mob_aseprite.clone(),
+        }
+    }
+
+    fn get_mob_decoration(&self, mob_type: &MobDecorationType) -> Handle<Aseprite> {
+        match mob_type {
+            MobDecorationType::GruntThrusters => self.grunt_thrusters_aseprite.clone(),
+            MobDecorationType::ShooterThrusters => self.shooter_thrusters_aseprite.clone(),
         }
     }
 }
@@ -59,7 +67,7 @@ pub(super) fn spawn_mob_system(
             .get(&event.mob_type)
             .ok_or(BevyError::from("Mob behaviors not found"))?;
 
-        cmds.spawn((
+        let mut entity = cmds.spawn((
             Name::from(mob_attributes),
             MobAttributesComponent::from(mob_attributes),
             AseAnimation {
@@ -77,6 +85,21 @@ pub(super) fn spawn_mob_system(
             Transform::from_xyz(event.position.x, event.position.y, mob_attributes.z_level),
             mob_behavior_sequence.clone().init_timer(),
         ));
+
+        // Spawn all decorations
+        entity.with_children(|parent| {
+            for (decoration_type, pos) in mob_attributes.decorations.iter() {
+                parent.spawn((
+                    Transform::from_xyz(pos.x, pos.y, 0.0),
+                    AseAnimation {
+                        animation: Animation::tag("idle"),
+                        aseprite: assets.get_mob_decoration(decoration_type),
+                    },
+                    Sprite::default(),
+                    Name::new("Decoration"),
+                ));
+            }
+        });
     }
 
     Ok(())

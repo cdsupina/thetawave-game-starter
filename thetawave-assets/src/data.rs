@@ -28,6 +28,12 @@ pub struct GameAssets {
     // Animated shooter mob Aseprite
     #[asset(path = "media/aseprite/shooter_mob.aseprite")]
     pub shooter_mob_aseprite: Handle<Aseprite>,
+    // Animated grunt thrusters Aseprite
+    #[asset(path = "media/aseprite/grunt_thrusters.aseprite")]
+    pub grunt_thrusters_aseprite: Handle<Aseprite>,
+    // Animated shooter thrusters Aseprite
+    #[asset(path = "media/aseprite/shooter_thrusters.aseprite")]
+    pub shooter_thrusters_aseprite: Handle<Aseprite>,
 }
 
 /// Audio assets used throughout all states of the app
