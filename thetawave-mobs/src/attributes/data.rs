@@ -60,11 +60,20 @@ pub(crate) struct JointAngleLimit {
     pub torque: f32,
 }
 
+/// Used for making chains of random length
+#[derive(Deserialize, Debug, Clone)]
+pub(crate) struct RandomMobChain {
+    pub min_length: u8,
+    pub end_chance: f32,
+}
+
+/// Describes a chain of mobs that are spawned and jointed together
 #[derive(Deserialize, Debug, Clone)]
 pub(crate) struct MobChain {
     pub length: u8,
     pub pos_offset: Vec2,
     pub anchor_offset: Vec2,
+    pub random_chain: Option<RandomMobChain>,
 }
 
 /// Mob that is also spawned and jointed to the original mob

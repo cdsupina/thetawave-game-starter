@@ -75,6 +75,7 @@ pub(super) fn spawn_mob_system(
     Ok(())
 }
 
+/// Creates a revolute joint between two mob entities with optional angle limits
 fn create_joint(
     cmds: &mut Commands,
     anchor: Entity,
@@ -82,11 +83,13 @@ fn create_joint(
     jointed_mob: &JointedMob,
     anchor_offset: Vec2,
 ) {
+    // Create the revolute joint with anchor positions and compliance settings
     let mut joint = RevoluteJoint::new(anchor, jointed)
         .with_local_anchor_1(jointed_mob.anchor_1_pos + anchor_offset)
         .with_local_anchor_2(jointed_mob.anchor_2_pos)
         .with_compliance(jointed_mob.compliance);
 
+    // Apply angle limits if specified (constrains how far the joint can rotate)
     if let Some(angle_limit_range) = &jointed_mob.angle_limit_range {
         joint.angle_limit = Some(AngleLimit::new(
             angle_limit_range.min.to_radians(),
@@ -94,9 +97,11 @@ fn create_joint(
         ));
         joint.angle_limit_torque = angle_limit_range.torque;
     }
+    // Spawn the joint entity into the world
     cmds.spawn(joint);
 }
 
+/// Spawns a mob entity with all its components, decorations, and jointed sub-mobs
 fn spawn_mob(
     cmds: &mut Commands,
     mob_type: &MobType,
@@ -108,7 +113,7 @@ fn spawn_mob(
 ) -> Result<Entity, BevyError> {
     info!("Spawning Mob: {:?} at {}", mob_type, position.to_string());
 
-    // Get the attributes and behaviors for the mob
+    // Look up the mob's configuration data from resources
     let mob_attributes = attributes_res
         .attributes
         .get(mob_type)
@@ -118,7 +123,7 @@ fn spawn_mob(
         .get(mob_type)
         .ok_or(BevyError::from("Mob behaviors not found"))?;
 
-    // Spawn the base mob
+    // Spawn the main anchor entity with all core components
     let anchor_id = cmds
         .spawn((
             Name::from(mob_attributes),
@@ -138,6 +143,7 @@ fn spawn_mob(
             Transform::from_xyz(position.x, position.y, mob_attributes.z_level),
             mob_behavior_sequence.clone().init_timer(),
         ))
+        // Spawn visual decorations as child entities
         .with_children(|parent| {
             for (decoration_type, pos) in &mob_attributes.decorations {
                 parent.spawn((
@@ -153,12 +159,28 @@ fn spawn_mob(
         })
         .id();
 
-    // Spawn jointed mobs
+    // Process all jointed sub-mobs (mobs connected via physics joints)
     for jointed_mob in &mob_attributes.jointed_mobs {
-        // Spawn mob chains before spawning the next jointed mob
+        // Handle chain spawning: creates a sequence of connected mobs
         if let Some(chain) = &jointed_mob.chain {
             let mut previous_id = anchor_id;
-            for chain_index in 0..chain.length {
+            let mut actual_length = chain.length;
+
+            // Apply random chain termination logic if configured
+            if let Some(random_chain) = &chain.random_chain {
+                actual_length = random_chain.min_length;
+
+                // Roll for early termination after minimum length is guaranteed
+                for i in random_chain.min_length..chain.length {
+                    if rand::random::<f32>() < random_chain.end_chance {
+                        break;
+                    }
+                    actual_length = i + 1;
+                }
+            }
+
+            // Spawn each mob in the chain and connect them with joints
+            for chain_index in 0..actual_length {
                 let jointed_id = spawn_mob(
                     cmds,
                     &jointed_mob.mob_type,
@@ -166,9 +188,11 @@ fn spawn_mob(
                     attributes_res,
                     behaviors_res,
                     assets,
-                    chain_index < chain.length - 1, // suprress the next jointed mob unless the last mob in the chain is being spawned
+                    chain_index < actual_length - 1, // Suppress jointed mobs except on the last chain link
                 )?;
 
+                // Create joint between current and previous mob in chain
+                // First link uses no anchor offset, subsequent links use chain.anchor_offset
                 create_joint(
                     cmds,
                     previous_id,
@@ -180,9 +204,11 @@ fn spawn_mob(
                         Vec2::ZERO
                     },
                 );
+                // Update the previous_id for the next iteration
                 previous_id = jointed_id;
             }
         } else if !suppress_jointed_mobs {
+            // Handle single jointed mob (not part of a chain)
             let jointed_id = spawn_mob(
                 cmds,
                 &jointed_mob.mob_type,
@@ -192,6 +218,7 @@ fn spawn_mob(
                 assets,
                 false,
             )?;
+            // Connect the jointed mob directly to the anchor with no offset
             create_joint(cmds, anchor_id, jointed_id, jointed_mob, Vec2::ZERO);
         }
     }
