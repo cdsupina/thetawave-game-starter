@@ -60,6 +60,13 @@ pub(crate) struct JointAngleLimit {
     pub torque: f32,
 }
 
+#[derive(Deserialize, Debug, Clone)]
+pub(crate) struct MobChain {
+    pub length: u8,
+    pub pos_offset: Vec2,
+    pub anchor_offset: Vec2,
+}
+
 /// Mob that is also spawned and jointed to the original mob
 #[derive(Deserialize, Debug, Clone)]
 pub(crate) struct JointedMob {
@@ -74,12 +81,8 @@ pub(crate) struct JointedMob {
     pub angle_limit_range: Option<JointAngleLimit>,
     #[serde(default)]
     pub compliance: f32,
-    #[serde(default = "default_chain_length")]
-    pub chain_length: u8,
-}
-
-fn default_chain_length() -> u8 {
-    1
+    #[serde(default)]
+    pub chain: Option<MobChain>,
 }
 
 /// Contains all attributes for a mob

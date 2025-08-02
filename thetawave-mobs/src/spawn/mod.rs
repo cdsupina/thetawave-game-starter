@@ -21,7 +21,7 @@ use thetawave_states::{AppState, Cleanup};
 
 use crate::{
     MobType, SpawnMobEvent,
-    attributes::{MobAttributesComponent, MobAttributesResource, MobDecorationType},
+    attributes::{JointedMob, MobAttributesComponent, MobAttributesResource, MobDecorationType},
     behavior::MobBehaviorsResource,
 };
 
@@ -69,9 +69,32 @@ pub(super) fn spawn_mob_system(
             &attributes_res,
             &behaviors_res,
             &assets,
+            false,
         )?;
     }
     Ok(())
+}
+
+fn create_joint(
+    cmds: &mut Commands,
+    anchor: Entity,
+    jointed: Entity,
+    jointed_mob: &JointedMob,
+    anchor_offset: Vec2,
+) {
+    let mut joint = RevoluteJoint::new(anchor, jointed)
+        .with_local_anchor_1(jointed_mob.anchor_1_pos + anchor_offset)
+        .with_local_anchor_2(jointed_mob.anchor_2_pos)
+        .with_compliance(jointed_mob.compliance);
+
+    if let Some(angle_limit_range) = &jointed_mob.angle_limit_range {
+        joint.angle_limit = Some(AngleLimit::new(
+            angle_limit_range.min.to_radians(),
+            angle_limit_range.max.to_radians(),
+        ));
+        joint.angle_limit_torque = angle_limit_range.torque;
+    }
+    cmds.spawn(joint);
 }
 
 fn spawn_mob(
@@ -81,80 +104,96 @@ fn spawn_mob(
     attributes_res: &MobAttributesResource,
     behaviors_res: &MobBehaviorsResource,
     assets: &GameAssets,
+    suppress_jointed_mobs: bool,
 ) -> Result<Entity, BevyError> {
     info!("Spawning Mob: {:?} at {}", mob_type, position.to_string());
 
+    // Get the attributes and behaviors for the mob
     let mob_attributes = attributes_res
         .attributes
         .get(mob_type)
         .ok_or(BevyError::from("Mob attributes not found"))?;
-
     let mob_behavior_sequence = behaviors_res
         .behaviors
         .get(mob_type)
         .ok_or(BevyError::from("Mob behaviors not found"))?;
 
-    let mut anchor_entity = cmds.spawn((
-        Name::from(mob_attributes),
-        MobAttributesComponent::from(mob_attributes),
-        AseAnimation {
-            animation: Animation::tag("idle"),
-            aseprite: assets.get_mob_sprite(mob_type),
-        },
-        Sprite::default(),
-        Cleanup::<AppState> {
-            states: vec![AppState::Game],
-        },
-        Restitution::from(mob_attributes),
-        Collider::from(mob_attributes),
-        RigidBody::Dynamic,
-        LockedAxes::from(mob_attributes),
-        Transform::from_xyz(position.x, position.y, mob_attributes.z_level),
-        mob_behavior_sequence.clone().init_timer(),
-    ));
+    // Spawn the base mob
+    let anchor_id = cmds
+        .spawn((
+            Name::from(mob_attributes),
+            MobAttributesComponent::from(mob_attributes),
+            AseAnimation {
+                animation: Animation::tag("idle"),
+                aseprite: assets.get_mob_sprite(mob_type),
+            },
+            Sprite::default(),
+            Cleanup::<AppState> {
+                states: vec![AppState::Game],
+            },
+            Restitution::from(mob_attributes),
+            Collider::from(mob_attributes),
+            RigidBody::Dynamic,
+            LockedAxes::from(mob_attributes),
+            Transform::from_xyz(position.x, position.y, mob_attributes.z_level),
+            mob_behavior_sequence.clone().init_timer(),
+        ))
+        .with_children(|parent| {
+            for (decoration_type, pos) in &mob_attributes.decorations {
+                parent.spawn((
+                    Transform::from_xyz(pos.x, pos.y, 0.0),
+                    AseAnimation {
+                        animation: Animation::tag("idle"),
+                        aseprite: assets.get_mob_decoration(decoration_type),
+                    },
+                    Sprite::default(),
+                    Name::new("Decoration"),
+                ));
+            }
+        })
+        .id();
 
-    let anchor_id = anchor_entity.id();
+    // Spawn jointed mobs
+    for jointed_mob in &mob_attributes.jointed_mobs {
+        // Spawn mob chains before spawning the next jointed mob
+        if let Some(chain) = &jointed_mob.chain {
+            let mut previous_id = anchor_id;
+            for chain_index in 0..chain.length {
+                let jointed_id = spawn_mob(
+                    cmds,
+                    &jointed_mob.mob_type,
+                    position + jointed_mob.offset_pos + chain.pos_offset * chain_index as f32,
+                    attributes_res,
+                    behaviors_res,
+                    assets,
+                    chain_index < chain.length - 1, // suprress the next jointed mob unless the last mob in the chain is being spawned
+                )?;
 
-    // Spawn all decorations
-    anchor_entity.with_children(|parent| {
-        for (decoration_type, pos) in mob_attributes.decorations.iter() {
-            parent.spawn((
-                Transform::from_xyz(pos.x, pos.y, 0.0),
-                AseAnimation {
-                    animation: Animation::tag("idle"),
-                    aseprite: assets.get_mob_decoration(decoration_type),
-                },
-                Sprite::default(),
-                Name::new("Decoration"),
-            ));
+                create_joint(
+                    cmds,
+                    previous_id,
+                    jointed_id,
+                    jointed_mob,
+                    if chain_index != 0 {
+                        chain.anchor_offset
+                    } else {
+                        Vec2::ZERO
+                    },
+                );
+                previous_id = jointed_id;
+            }
+        } else if !suppress_jointed_mobs {
+            let jointed_id = spawn_mob(
+                cmds,
+                &jointed_mob.mob_type,
+                position + jointed_mob.offset_pos,
+                attributes_res,
+                behaviors_res,
+                assets,
+                false,
+            )?;
+            create_joint(cmds, anchor_id, jointed_id, jointed_mob, Vec2::ZERO);
         }
-    });
-
-    for jointed_mob in mob_attributes.jointed_mobs.iter() {
-        println!("{:?}", jointed_mob.mob_type);
-        let jointed_id = spawn_mob(
-            cmds,
-            &jointed_mob.mob_type,
-            position + jointed_mob.offset_pos,
-            attributes_res,
-            behaviors_res,
-            assets,
-        )?;
-
-        let mut joint = RevoluteJoint::new(anchor_id, jointed_id)
-            .with_local_anchor_1(jointed_mob.anchor_1_pos)
-            .with_local_anchor_2(jointed_mob.anchor_2_pos)
-            .with_compliance(jointed_mob.compliance);
-
-        if let Some(angle_limit_range) = jointed_mob.angle_limit_range.as_ref() {
-            joint.angle_limit = Some(AngleLimit::new(
-                angle_limit_range.min.to_radians(),
-                angle_limit_range.max.to_radians(),
-            ));
-            joint.angle_limit_torque = angle_limit_range.torque;
-        }
-
-        cmds.spawn(joint);
     }
 
     Ok(anchor_id)
