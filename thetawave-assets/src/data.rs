@@ -56,6 +56,9 @@ pub struct GameAssets {
     // Animated Xhitara tentacle end spritesheet
     #[asset(path = "media/aseprite/xhitara_tentacle_end_mob.aseprite")]
     pub xhitara_tentacle_end_mob_aseprite: Handle<Aseprite>,
+    // Animated Xhitara Cyclusk spritesheet
+    #[asset(path = "media/aseprite/xhitara_cyclusk_mob.aseprite")]
+    pub xhitara_cyclusk_mob_aseprite: Handle<Aseprite>,
 }
 
 /// Audio assets used throughout all states of the app

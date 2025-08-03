@@ -52,6 +52,7 @@ pub enum MobType {
     FreighterFront,
     FreighterMiddle,
     FreighterBack,
+    XhitaraCyclusk,
     Trizetheron,
     XhitaraTentacleShort,
     XhitaraTentacleLong,
