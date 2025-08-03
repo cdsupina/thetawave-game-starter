@@ -1,5 +1,5 @@
 use avian2d::prelude::{
-    Collider, CollisionLayers, Friction, LockedAxes, PhysicsLayer, Restitution,
+    Collider, ColliderDensity, CollisionLayers, Friction, LockedAxes, PhysicsLayer, Restitution,
 };
 use bevy::{
     ecs::{component::Component, event::Event, name::Name, resource::Resource},
@@ -26,6 +26,7 @@ const DEFAULT_COLLISION_LAYER_FILTER: &[ThetawavePhysicsLayer] = &[
     ThetawavePhysicsLayer::Player,
     ThetawavePhysicsLayer::Tentacle,
 ];
+const DEFAULT_COLLIDER_DENSITY: f32 = 1.0;
 
 /// All types of collider shapes that can be attached to mobs
 #[derive(Deserialize, Debug, Clone)]
@@ -146,6 +147,8 @@ pub(crate) struct MobAttributes {
     pub collision_layer_membership: Vec<ThetawavePhysicsLayer>,
     #[serde(default = "default_collision_layer_filter")]
     pub collision_layer_filter: Vec<ThetawavePhysicsLayer>,
+    #[serde(default = "default_collider_density")]
+    pub collider_density: f32,
 }
 
 fn default_collider_shape() -> ColliderShape {
@@ -186,6 +189,10 @@ fn default_collision_layer_membership() -> Vec<ThetawavePhysicsLayer> {
 
 fn default_collision_layer_filter() -> Vec<ThetawavePhysicsLayer> {
     DEFAULT_COLLISION_LAYER_FILTER.into()
+}
+
+fn default_collider_density() -> f32 {
+    DEFAULT_COLLIDER_DENSITY
 }
 
 /// Resource tracking all data for mobs
@@ -250,6 +257,12 @@ impl From<&MobAttributes> for LockedAxes {
 
         // unlock rotation if rotation locked is not true
         LockedAxes::new()
+    }
+}
+
+impl From<&MobAttributes> for ColliderDensity {
+    fn from(value: &MobAttributes) -> Self {
+        ColliderDensity(value.collider_density)
     }
 }
 
