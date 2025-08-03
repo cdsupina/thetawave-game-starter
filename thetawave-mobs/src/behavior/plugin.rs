@@ -1,17 +1,23 @@
 use bevy::{
     app::{Plugin, Update},
-    ecs::schedule::{Condition, IntoScheduleConfigs},
+    ecs::{
+        schedule::{Condition, IntoScheduleConfigs},
+        system::Res,
+    },
     state::condition::in_state,
 };
 use thetawave_states::{AppState, GameState};
 use toml::from_slice;
 
-use crate::behavior::{
-    MobBehaviorsResource,
-    data::MobBehaviorEvent,
-    systems::{
-        activate_behaviors_system, brake_horizontal_system, brake_vertical_system,
-        move_down_system, move_left_system, move_right_system,
+use crate::{
+    MobDebugSettings,
+    behavior::{
+        MobBehaviorsResource,
+        data::MobBehaviorEvent,
+        systems::{
+            activate_behaviors_system, brake_horizontal_system, brake_vertical_system,
+            move_down_system, move_left_system, move_right_system,
+        },
     },
 };
 
@@ -31,7 +37,8 @@ impl Plugin for ThetawaveMobBehaviorPlugin {
         app.add_systems(
             Update,
             (
-                activate_behaviors_system,
+                activate_behaviors_system
+                    .run_if(|mob_res: Res<MobDebugSettings>| mob_res.behaviors_enabled),
                 move_down_system,
                 move_left_system,
                 move_right_system,

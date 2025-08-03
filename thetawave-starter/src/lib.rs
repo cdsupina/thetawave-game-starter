@@ -33,7 +33,7 @@ pub use thetawave_physics::PhysicsDebugSettings;
 #[cfg(feature = "debug")]
 pub use thetawave_debug::InspectorDebugSettings;
 
-pub use thetawave_mobs::{MobType, SpawnMobEvent};
+pub use thetawave_mobs::{MobDebugSettings, MobType, SpawnMobEvent};
 pub use thetawave_states::{AppState, DebugState};
 
 pub struct ThetawaveStarterPlugin {

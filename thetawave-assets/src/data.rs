@@ -31,12 +31,34 @@ pub struct GameAssets {
     // Animated gyro mob Aseprite
     #[asset(path = "media/aseprite/xhitara_gyro_mob.aseprite")]
     pub xhitara_gyro_mob_aseprite: Handle<Aseprite>,
+    // Animated freighter mob Aseprite
+    #[asset(path = "media/aseprite/freighter_front_mob.aseprite")]
+    pub freighter_front_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/freighter_middle_mob.aseprite")]
+    pub freighter_middle_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/freighter_back_mob.aseprite")]
+    pub freighter_back_mob_aseprite: Handle<Aseprite>,
     // Animated grunt thrusters Aseprite
     #[asset(path = "media/aseprite/xhitara_grunt_thrusters.aseprite")]
     pub xhitara_grunt_thrusters_aseprite: Handle<Aseprite>,
     // Animated shooter thrusters Aseprite
     #[asset(path = "media/aseprite/xhitara_spitter_thrusters.aseprite")]
     pub xhitara_spitter_thrusters_aseprite: Handle<Aseprite>,
+    // Animated Trizetheron spritesheet
+    #[asset(path = "media/aseprite/trizetheron_mob.aseprite")]
+    pub trizetheron_mob_aseprite: Handle<Aseprite>,
+    // Animated Xhitara tentacle start spritesheet
+    #[asset(path = "media/aseprite/xhitara_tentacle_start_mob.aseprite")]
+    pub xhitara_tentacle_start_mob_aseprite: Handle<Aseprite>,
+    // Animated Xhitara tentacle middle spritesheet
+    #[asset(path = "media/aseprite/xhitara_tentacle_middle_mob.aseprite")]
+    pub xhitara_tentacle_middle_mob_aseprite: Handle<Aseprite>,
+    // Animated Xhitara tentacle end spritesheet
+    #[asset(path = "media/aseprite/xhitara_tentacle_end_mob.aseprite")]
+    pub xhitara_tentacle_end_mob_aseprite: Handle<Aseprite>,
+    // Animated Xhitara Cyclusk spritesheet
+    #[asset(path = "media/aseprite/xhitara_cyclusk_mob.aseprite")]
+    pub xhitara_cyclusk_mob_aseprite: Handle<Aseprite>,
 }
 
 /// Audio assets used throughout all states of the app
