@@ -1,6 +1,6 @@
 use avian2d::prelude::{
-    AngleLimit, Collider, CollisionLayers, Friction, Joint, LockedAxes, Restitution, RevoluteJoint,
-    RigidBody,
+    AngleLimit, Collider, ColliderDensity, CollisionLayers, Friction, Joint, LockedAxes,
+    Restitution, RevoluteJoint, RigidBody,
 };
 use bevy::{
     asset::Handle,
@@ -167,6 +167,7 @@ fn spawn_mob(
             Restitution::from(mob_attributes),
             Friction::from(mob_attributes),
             Collider::from(mob_attributes),
+            ColliderDensity::from(mob_attributes),
             RigidBody::Dynamic,
             CollisionLayers::from(mob_attributes),
             LockedAxes::from(mob_attributes),
