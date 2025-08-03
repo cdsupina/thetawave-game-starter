@@ -3,6 +3,7 @@ mod behavior;
 mod spawn;
 
 pub use attributes::{MobType, SpawnMobEvent};
+pub use spawn::MobDebugSettings;
 
 use bevy::{
     app::{Plugin, Update},
@@ -20,6 +21,8 @@ pub struct ThetawaveMobsPlugin;
 
 impl Plugin for ThetawaveMobsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
+        app.insert_resource(MobDebugSettings::default());
+
         app.add_plugins((ThetawaveMobBehaviorPlugin, ThetawaveAttributesPlugin));
 
         app.add_systems(

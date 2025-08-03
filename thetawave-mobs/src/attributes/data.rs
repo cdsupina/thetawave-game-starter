@@ -1,4 +1,6 @@
-use avian2d::prelude::{Collider, LockedAxes, Restitution};
+use avian2d::prelude::{
+    Collider, CollisionLayers, Friction, LockedAxes, PhysicsLayer, Restitution,
+};
 use bevy::{
     ecs::{component::Component, event::Event, name::Name, resource::Resource},
     math::Vec2,
@@ -6,14 +8,31 @@ use bevy::{
 };
 use serde::Deserialize;
 use strum_macros::EnumIter;
+use thetawave_physics::ThetawavePhysicsLayer;
 
-const DEFAULT_COLLIDER_DIMENSIONS: Vec2 = Vec2::new(10.0, 10.0);
+const DEFAULT_COLLIDER_SHAPE: ColliderShape = ColliderShape::Rectangle(10.0, 10.0);
 const DEFAULT_Z_LEVEL: f32 = 0.0;
 const DEFAULT_ROTATION_LOCKED: bool = true;
 const DEFAULT_MAX_LINEAR_SPEED: Vec2 = Vec2::new(20.0, 20.0);
 const DEFAULT_LINEAR_ACCELERATION: Vec2 = Vec2::new(0.1, 0.1);
 const DEFAULT_LINEAR_DECELERATION: Vec2 = Vec2::new(0.3, 0.3);
 const DEFAULT_RESTITUTION: f32 = 0.5;
+const DEFAULT_FRICTION: f32 = 0.5;
+const DEFAULT_COLLISION_LAYER_MEMBERSHIP: &[ThetawavePhysicsLayer] =
+    &[ThetawavePhysicsLayer::Enemy];
+const DEFAULT_COLLISION_LAYER_FILTER: &[ThetawavePhysicsLayer] = &[
+    ThetawavePhysicsLayer::Ally,
+    ThetawavePhysicsLayer::Enemy,
+    ThetawavePhysicsLayer::Player,
+    ThetawavePhysicsLayer::Tentacle,
+];
+
+/// All types of collider shapes that can be attached to mobs
+#[derive(Deserialize, Debug, Clone)]
+pub(crate) enum ColliderShape {
+    Circle(f32),
+    Rectangle(f32, f32),
+}
 
 // All types of decorations that can be attached to mobs
 #[derive(Deserialize, Debug, Clone)]
@@ -34,6 +53,10 @@ pub enum MobType {
     FreighterMiddle,
     FreighterBack,
     Trizetheron,
+    XhitaraTentacleShort,
+    XhitaraTentacleLong,
+    XhitaraTentacleMiddle,
+    XhitaraTentacleEnd,
 }
 
 /// Event for spawning mobs using a mob type and position
@@ -97,8 +120,8 @@ pub(crate) struct JointedMob {
 /// Contains all attributes for a mob
 #[derive(Deserialize, Debug, Clone)]
 pub(crate) struct MobAttributes {
-    #[serde(default = "default_collider_dimensions")]
-    collider_dimensions: Vec2,
+    #[serde(default = "default_collider_shape")]
+    collider_shape: ColliderShape,
     name: String,
     #[serde(default = "default_z_level")]
     pub z_level: f32,
@@ -112,14 +135,20 @@ pub(crate) struct MobAttributes {
     pub linear_deceleration: Vec2,
     #[serde(default = "default_restitution")]
     pub restitution: f32,
+    #[serde(default = "default_friction")]
+    pub friction: f32,
     #[serde(default)]
     pub decorations: Vec<(MobDecorationType, Vec2)>,
     #[serde(default)]
     pub jointed_mobs: Vec<JointedMob>,
+    #[serde(default = "default_collision_layer_membership")]
+    pub collision_layer_membership: Vec<ThetawavePhysicsLayer>,
+    #[serde(default = "default_collision_layer_filter")]
+    pub collision_layer_filter: Vec<ThetawavePhysicsLayer>,
 }
 
-fn default_collider_dimensions() -> Vec2 {
-    DEFAULT_COLLIDER_DIMENSIONS
+fn default_collider_shape() -> ColliderShape {
+    DEFAULT_COLLIDER_SHAPE
 }
 
 fn default_z_level() -> f32 {
@@ -146,6 +175,18 @@ fn default_restitution() -> f32 {
     DEFAULT_RESTITUTION
 }
 
+fn default_friction() -> f32 {
+    DEFAULT_FRICTION
+}
+
+fn default_collision_layer_membership() -> Vec<ThetawavePhysicsLayer> {
+    DEFAULT_COLLISION_LAYER_MEMBERSHIP.into()
+}
+
+fn default_collision_layer_filter() -> Vec<ThetawavePhysicsLayer> {
+    DEFAULT_COLLISION_LAYER_FILTER.into()
+}
+
 /// Resource tracking all data for mobs
 #[derive(Deserialize, Debug, Resource)]
 pub(crate) struct MobAttributesResource {
@@ -158,12 +199,37 @@ impl From<&MobAttributes> for Restitution {
     }
 }
 
+impl From<&MobAttributes> for Friction {
+    fn from(value: &MobAttributes) -> Self {
+        Friction::new(value.friction)
+    }
+}
+
+impl From<&MobAttributes> for CollisionLayers {
+    fn from(value: &MobAttributes) -> Self {
+        let mut membership: u32 = 0;
+
+        for layer in &value.collision_layer_membership {
+            membership |= layer.to_bits();
+        }
+
+        let mut filter: u32 = 0;
+
+        for layer in &value.collision_layer_filter {
+            filter |= layer.to_bits();
+        }
+
+        CollisionLayers::new(membership, filter)
+    }
+}
+
 /// Create a collider component using mob attributes
 impl From<&MobAttributes> for Collider {
     fn from(value: &MobAttributes) -> Self {
-        let collider_dimensions = value.collider_dimensions;
-
-        Collider::rectangle(collider_dimensions.x, collider_dimensions.y)
+        match value.collider_shape {
+            ColliderShape::Rectangle(width, height) => Collider::rectangle(width, height),
+            ColliderShape::Circle(radius) => Collider::circle(radius),
+        }
     }
 }
 

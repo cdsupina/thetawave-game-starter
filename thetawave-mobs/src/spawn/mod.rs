@@ -1,5 +1,6 @@
 use avian2d::prelude::{
-    AngleLimit, Collider, Joint, LockedAxes, Restitution, RevoluteJoint, RigidBody,
+    AngleLimit, Collider, CollisionLayers, Friction, Joint, LockedAxes, Restitution, RevoluteJoint,
+    RigidBody,
 };
 use bevy::{
     asset::Handle,
@@ -7,6 +8,7 @@ use bevy::{
         entity::Entity,
         error::{BevyError, Result},
         event::EventReader,
+        resource::Resource,
         system::{Commands, Res},
     },
     log::info,
@@ -42,6 +44,11 @@ impl GameAssetsExt for GameAssets {
             MobType::FreighterMiddle => self.freighter_middle_mob_aseprite.clone(),
             MobType::FreighterBack => self.freighter_back_mob_aseprite.clone(),
             MobType::Trizetheron => self.trizetheron_mob_aseprite.clone(),
+            MobType::XhitaraTentacleShort | MobType::XhitaraTentacleLong => {
+                self.xhitara_tentacle_start_mob_aseprite.clone()
+            }
+            MobType::XhitaraTentacleMiddle => self.xhitara_tentacle_middle_mob_aseprite.clone(),
+            MobType::XhitaraTentacleEnd => self.xhitara_tentacle_end_mob_aseprite.clone(),
         }
     }
 
@@ -53,10 +60,28 @@ impl GameAssetsExt for GameAssets {
     }
 }
 
+/// Used for the debug menu to disable behaviors and joints
+/// Useful for aligning mob parts
+#[derive(Resource)]
+pub struct MobDebugSettings {
+    pub joints_enabled: bool,
+    pub behaviors_enabled: bool,
+}
+
+impl Default for MobDebugSettings {
+    fn default() -> Self {
+        Self {
+            joints_enabled: true,
+            behaviors_enabled: true,
+        }
+    }
+}
+
 /// Spawn a mob entity
 pub(super) fn spawn_mob_system(
     mut cmds: Commands,
     assets: Res<GameAssets>,
+    mob_debug_settings: Res<MobDebugSettings>,
     mut spawn_mob_event_reader: EventReader<SpawnMobEvent>,
     attributes_res: Res<MobAttributesResource>,
     behaviors_res: Res<MobBehaviorsResource>,
@@ -66,6 +91,7 @@ pub(super) fn spawn_mob_system(
             &mut cmds,
             &event.mob_type,
             event.position,
+            &mob_debug_settings,
             &attributes_res,
             &behaviors_res,
             &assets,
@@ -106,6 +132,7 @@ fn spawn_mob(
     cmds: &mut Commands,
     mob_type: &MobType,
     position: Vec2,
+    mob_debug_settings: &MobDebugSettings,
     attributes_res: &MobAttributesResource,
     behaviors_res: &MobBehaviorsResource,
     assets: &GameAssets,
@@ -137,8 +164,10 @@ fn spawn_mob(
                 states: vec![AppState::Game],
             },
             Restitution::from(mob_attributes),
+            Friction::from(mob_attributes),
             Collider::from(mob_attributes),
             RigidBody::Dynamic,
+            CollisionLayers::from(mob_attributes),
             LockedAxes::from(mob_attributes),
             Transform::from_xyz(position.x, position.y, mob_attributes.z_level),
             mob_behavior_sequence.clone().init_timer(),
@@ -185,6 +214,7 @@ fn spawn_mob(
                     cmds,
                     &jointed_mob.mob_type,
                     position + jointed_mob.offset_pos + chain.pos_offset * chain_index as f32,
+                    mob_debug_settings,
                     attributes_res,
                     behaviors_res,
                     assets,
@@ -193,17 +223,19 @@ fn spawn_mob(
 
                 // Create joint between current and previous mob in chain
                 // First link uses no anchor offset, subsequent links use chain.anchor_offset
-                create_joint(
-                    cmds,
-                    previous_id,
-                    jointed_id,
-                    jointed_mob,
-                    if chain_index != 0 {
-                        chain.anchor_offset
-                    } else {
-                        Vec2::ZERO
-                    },
-                );
+                if mob_debug_settings.joints_enabled {
+                    create_joint(
+                        cmds,
+                        previous_id,
+                        jointed_id,
+                        jointed_mob,
+                        if chain_index != 0 {
+                            chain.anchor_offset
+                        } else {
+                            Vec2::ZERO
+                        },
+                    );
+                }
                 // Update the previous_id for the next iteration
                 previous_id = jointed_id;
             }
@@ -213,13 +245,16 @@ fn spawn_mob(
                 cmds,
                 &jointed_mob.mob_type,
                 position + jointed_mob.offset_pos,
+                mob_debug_settings,
                 attributes_res,
                 behaviors_res,
                 assets,
                 false,
             )?;
             // Connect the jointed mob directly to the anchor with no offset
-            create_joint(cmds, anchor_id, jointed_id, jointed_mob, Vec2::ZERO);
+            if mob_debug_settings.joints_enabled {
+                create_joint(cmds, anchor_id, jointed_id, jointed_mob, Vec2::ZERO);
+            }
         }
     }
 

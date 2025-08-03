@@ -5,7 +5,8 @@ use crate::{
     player::CharacterType,
 };
 use avian2d::prelude::{
-    Collider, LinearVelocity, LockedAxes, MaxLinearSpeed, Restitution, RigidBody,
+    Collider, CollisionLayers, LayerMask, LinearVelocity, LockedAxes, MaxLinearSpeed, Restitution,
+    RigidBody,
 };
 use bevy::{
     asset::Handle,
@@ -20,6 +21,7 @@ use bevy_persistent::Persistent;
 use leafwing_abilities::{AbilitiesBundle, prelude::CooldownState};
 use leafwing_input_manager::prelude::{ActionState, InputMap};
 use thetawave_assets::GameAssets;
+use thetawave_physics::ThetawavePhysicsLayer;
 use thetawave_states::{AppState, Cleanup};
 
 trait GameAssetsExt {
@@ -69,6 +71,7 @@ pub(super) fn spawn_players_system(
                 LockedAxes::ROTATION_LOCKED,
                 MaxLinearSpeed(character_data.max_speed),
                 Restitution::new(character_data.restitution),
+                CollisionLayers::new([ThetawavePhysicsLayer::Player], [LayerMask::ALL]),
                 match chosen_character_data.input {
                     InputType::Keyboard => {
                         InputMap::new(options_res.player_keyboard_action_input_mappings.clone())

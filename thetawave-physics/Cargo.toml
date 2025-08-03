@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 bevy = { workspace = true, default-features = false }
+serde.workspace = true
 thetawave-states = { path = "../thetawave-states" }
 avian2d = { workspace = true }
 

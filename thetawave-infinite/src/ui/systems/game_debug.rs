@@ -1,6 +1,9 @@
-use bevy::ecs::{error::Result, system::ResMut};
 #[cfg(feature = "debug")]
 use bevy::ecs::{event::EventWriter, system::Local};
+use bevy::{
+    ecs::{error::Result, system::ResMut},
+    math::Vec2,
+};
 #[cfg(feature = "debug")]
 use bevy_egui::{
     EguiContexts,
@@ -9,7 +12,7 @@ use bevy_egui::{
 
 #[cfg(feature = "debug")]
 use thetawave_starter::{
-    InspectorDebugSettings, PhysicsDebugSettings, SpawnMobEvent,
+    InspectorDebugSettings, MobDebugSettings, PhysicsDebugSettings, SpawnMobEvent,
     camera::{Camera2DZoomEvent, Camera3DZoomEvent},
 };
 
@@ -17,6 +20,7 @@ use thetawave_starter::{
 #[cfg(feature = "debug")]
 pub(in crate::ui) fn game_debug_menu_system(
     mut contexts: EguiContexts,
+    mut mob_debug_settings: ResMut<MobDebugSettings>,
     mut physics_debug_settings: ResMut<PhysicsDebugSettings>,
     mut inspector_debug_settings: ResMut<InspectorDebugSettings>,
     mut spawn_mob_event_writer: EventWriter<SpawnMobEvent>,
@@ -24,9 +28,8 @@ pub(in crate::ui) fn game_debug_menu_system(
     mut camera2d_zoom: Local<i8>,
     mut camera3d_zoom_event_writer: EventWriter<Camera3DZoomEvent>,
     mut camera3d_zoom: Local<i8>,
+    mut spawn_location: Local<Vec2>,
 ) -> Result {
-    use bevy::math::Vec2;
-    use strum::IntoEnumIterator;
     use thetawave_starter::MobType;
 
     let mut camera2d_zoom_new = *camera2d_zoom;
@@ -64,16 +67,127 @@ pub(in crate::ui) fn game_debug_menu_system(
             });
 
             ui.menu_button("Spawn", |ui| {
+                ui.menu_button("Settings", |ui| {
+                    ui.checkbox(&mut mob_debug_settings.joints_enabled, "Joints Enabled");
+                    ui.checkbox(
+                        &mut mob_debug_settings.behaviors_enabled,
+                        "Behaviors Enabled",
+                    );
+                });
+
+                ui.horizontal(|ui| {
+                    use bevy_egui::egui::DragValue;
+
+                    ui.label("Location");
+                    ui.add(DragValue::new(&mut spawn_location.x));
+                    ui.add(DragValue::new(&mut spawn_location.y));
+                });
+
                 ui.menu_button("Mob", |ui| {
-                    // Iterate through all MobTypes and create spawn buttons
-                    for mob_type in MobType::iter() {
-                        if ui.button(format!("{mob_type:?}")).clicked() {
+                    // Xhitara Mobs
+                    ui.menu_button("Xhitara", |ui| {
+                        if ui.button("Xhitara Grunt").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type,
-                                position: Vec2::new(0.0, 75.0),
+                                mob_type: MobType::XhitaraGrunt,
+                                position: *spawn_location,
                             });
                         }
-                    }
+
+                        if ui.button("Xhitara Spitter").clicked() {
+                            spawn_mob_event_writer.write(SpawnMobEvent {
+                                mob_type: MobType::XhitaraSpitter,
+                                position: *spawn_location,
+                            });
+                        }
+
+                        if ui.button("Xhitara Gyro").clicked() {
+                            spawn_mob_event_writer.write(SpawnMobEvent {
+                                mob_type: MobType::XhitaraGyro,
+                                position: *spawn_location,
+                            });
+                        }
+
+                        if ui.button("Trizetheron").clicked() {
+                            spawn_mob_event_writer.write(SpawnMobEvent {
+                                mob_type: MobType::Trizetheron,
+                                position: *spawn_location,
+                            });
+                        }
+
+                        ui.menu_button("Misc", |ui| {
+                            ui.menu_button("Xhitara Tentacle", |ui| {
+                                if ui.button("Xhitara Tentacle Short").clicked() {
+                                    spawn_mob_event_writer.write(SpawnMobEvent {
+                                        mob_type: MobType::XhitaraTentacleShort,
+                                        position: *spawn_location,
+                                    });
+                                }
+
+                                if ui.button("Xhitara Tentacle Long").clicked() {
+                                    spawn_mob_event_writer.write(SpawnMobEvent {
+                                        mob_type: MobType::XhitaraTentacleLong,
+                                        position: *spawn_location,
+                                    });
+                                }
+
+                                if ui.button("Xhitara Tentacle Middle").clicked() {
+                                    spawn_mob_event_writer.write(SpawnMobEvent {
+                                        mob_type: MobType::XhitaraTentacleMiddle,
+                                        position: *spawn_location,
+                                    });
+                                }
+
+                                if ui.button("Xhitara Tentacle End").clicked() {
+                                    spawn_mob_event_writer.write(SpawnMobEvent {
+                                        mob_type: MobType::XhitaraTentacleEnd,
+                                        position: *spawn_location,
+                                    });
+                                }
+                            });
+                        });
+                    });
+
+                    // Ally Mobs
+                    ui.menu_button("Ally", |ui| {
+                        if ui.button("Freighter One").clicked() {
+                            spawn_mob_event_writer.write(SpawnMobEvent {
+                                mob_type: MobType::FreighterOne,
+                                position: *spawn_location,
+                            });
+                        }
+
+                        if ui.button("Freighter Two").clicked() {
+                            spawn_mob_event_writer.write(SpawnMobEvent {
+                                mob_type: MobType::FreighterTwo,
+                                position: *spawn_location,
+                            });
+                        }
+
+                        ui.menu_button("Misc", |ui| {
+                            ui.menu_button("Freighter", |ui| {
+                                if ui.button("Freighter Front").clicked() {
+                                    spawn_mob_event_writer.write(SpawnMobEvent {
+                                        mob_type: MobType::FreighterFront,
+                                        position: *spawn_location,
+                                    });
+                                }
+
+                                if ui.button("Freighter Middle").clicked() {
+                                    spawn_mob_event_writer.write(SpawnMobEvent {
+                                        mob_type: MobType::FreighterMiddle,
+                                        position: *spawn_location,
+                                    });
+                                }
+
+                                if ui.button("Freighter Back").clicked() {
+                                    spawn_mob_event_writer.write(SpawnMobEvent {
+                                        mob_type: MobType::FreighterBack,
+                                        position: *spawn_location,
+                                    });
+                                }
+                            });
+                        });
+                    });
                 });
             });
         })
