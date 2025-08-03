@@ -1,5 +1,6 @@
 use avian2d::prelude::{
     Collider, ColliderDensity, CollisionLayers, Friction, LockedAxes, PhysicsLayer, Restitution,
+    Rotation,
 };
 use bevy::{
     ecs::{component::Component, event::Event, name::Name, resource::Resource},
@@ -10,7 +11,11 @@ use serde::Deserialize;
 use strum_macros::EnumIter;
 use thetawave_physics::ThetawavePhysicsLayer;
 
-const DEFAULT_COLLIDER_SHAPE: ColliderShape = ColliderShape::Rectangle(10.0, 10.0);
+const DEFAULT_COLLIDERS: &[ThetawaveCollider] = &[ThetawaveCollider {
+    shape: ColliderShape::Rectangle(10.0, 10.0),
+    position: Vec2::ZERO,
+    rotation: 0.0,
+}];
 const DEFAULT_Z_LEVEL: f32 = 0.0;
 const DEFAULT_ROTATION_LOCKED: bool = true;
 const DEFAULT_MAX_LINEAR_SPEED: Vec2 = Vec2::new(20.0, 20.0);
@@ -28,11 +33,28 @@ const DEFAULT_COLLISION_LAYER_FILTER: &[ThetawavePhysicsLayer] = &[
 ];
 const DEFAULT_COLLIDER_DENSITY: f32 = 1.0;
 
+/// Describes a collider that can be attached to mobs
+#[derive(Deserialize, Debug, Clone)]
+pub(crate) struct ThetawaveCollider {
+    pub shape: ColliderShape,
+    pub position: Vec2,
+    pub rotation: f32,
+}
+
 /// All types of collider shapes that can be attached to mobs
 #[derive(Deserialize, Debug, Clone)]
 pub(crate) enum ColliderShape {
     Circle(f32),
     Rectangle(f32, f32),
+}
+
+impl From<&ColliderShape> for Collider {
+    fn from(value: &ColliderShape) -> Self {
+        match value {
+            ColliderShape::Circle(radius) => Collider::circle(*radius),
+            ColliderShape::Rectangle(width, height) => Collider::rectangle(*width, *height),
+        }
+    }
 }
 
 // All types of decorations that can be attached to mobs
@@ -122,8 +144,8 @@ pub(crate) struct JointedMob {
 /// Contains all attributes for a mob
 #[derive(Deserialize, Debug, Clone)]
 pub(crate) struct MobAttributes {
-    #[serde(default = "default_collider_shape")]
-    collider_shape: ColliderShape,
+    #[serde(default = "default_colliders")]
+    colliders: Vec<ThetawaveCollider>,
     name: String,
     #[serde(default = "default_z_level")]
     pub z_level: f32,
@@ -151,8 +173,8 @@ pub(crate) struct MobAttributes {
     pub collider_density: f32,
 }
 
-fn default_collider_shape() -> ColliderShape {
-    DEFAULT_COLLIDER_SHAPE
+fn default_colliders() -> Vec<ThetawaveCollider> {
+    DEFAULT_COLLIDERS.into()
 }
 
 fn default_z_level() -> f32 {
@@ -234,10 +256,19 @@ impl From<&MobAttributes> for CollisionLayers {
 /// Create a collider component using mob attributes
 impl From<&MobAttributes> for Collider {
     fn from(value: &MobAttributes) -> Self {
-        match value.collider_shape {
-            ColliderShape::Rectangle(width, height) => Collider::rectangle(width, height),
-            ColliderShape::Circle(radius) => Collider::circle(radius),
-        }
+        Collider::compound(
+            value
+                .colliders
+                .iter()
+                .map(|c| {
+                    (
+                        c.position,
+                        Rotation::degrees(c.rotation),
+                        Collider::from(&c.shape),
+                    )
+                })
+                .collect(),
+        )
     }
 }
 
