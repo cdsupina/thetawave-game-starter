@@ -63,6 +63,7 @@ pub(crate) enum MobDecorationType {
     XhitaraGruntThrusters,
     XhitaraSpitterThrusters,
     XhitaraPacerThrusters,
+    XhitaraMissileThrusters,
 }
 
 /// All types of spawnable mobs
@@ -83,6 +84,7 @@ pub enum MobType {
     XhitaraTentacleMiddle,
     XhitaraTentacleEnd,
     XhitaraPacer,
+    XhitaraMissile,
 }
 
 /// Event for spawning mobs using a mob type and position

@@ -52,6 +52,7 @@ impl GameAssetsExt for GameAssets {
             MobType::XhitaraTentacleEnd => self.xhitara_tentacle_end_mob_aseprite.clone(),
             MobType::XhitaraCyclusk => self.xhitara_cyclusk_mob_aseprite.clone(),
             MobType::XhitaraPacer => self.xhitara_pacer_mob_aseprite.clone(),
+            MobType::XhitaraMissile => self.xhitara_missile_mob_aseprite.clone(),
         }
     }
 
@@ -65,6 +66,9 @@ impl GameAssetsExt for GameAssets {
             }
             MobDecorationType::XhitaraPacerThrusters => {
                 self.xhitara_pacer_thrusters_aseprite.clone()
+            }
+            MobDecorationType::XhitaraMissileThrusters => {
+                self.xhitara_missile_thrusters_aseprite.clone()
             }
         }
     }
