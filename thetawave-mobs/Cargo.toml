@@ -12,6 +12,7 @@ toml.workspace = true
 rand.workspace = true
 strum_macros.workspace = true
 strum.workspace = true
+bevy_behave.workspace = true
 thetawave-assets = { path = "../thetawave-assets" }
 thetawave-states = { path = "../thetawave-states" }
 thetawave-physics = { path = "../thetawave-physics" }

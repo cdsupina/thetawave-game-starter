@@ -18,6 +18,7 @@ use bevy::{
     transform::components::Transform,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
+use bevy_behave::prelude::BehaveTree;
 use thetawave_assets::GameAssets;
 use thetawave_states::{AppState, Cleanup};
 
@@ -146,11 +147,6 @@ fn spawn_mob(
         .attributes
         .get(mob_type)
         .ok_or(BevyError::from("Mob attributes not found"))?;
-    let mob_behavior_sequence = behaviors_res
-        .behaviors
-        .get(mob_type)
-        .ok_or(BevyError::from("Mob behaviors not found"))?;
-
     // Spawn the main anchor entity with all core components
     let anchor_id = cmds
         .spawn((
@@ -172,10 +168,9 @@ fn spawn_mob(
             CollisionLayers::from(mob_attributes),
             LockedAxes::from(mob_attributes),
             Transform::from_xyz(position.x, position.y, mob_attributes.z_level),
-            mob_behavior_sequence.clone().init_timer(),
         ))
-        // Spawn visual decorations as child entities
         .with_children(|parent| {
+            // Spawn visual decorations as child entities
             for (decoration_type, pos) in &mob_attributes.decorations {
                 parent.spawn((
                     Transform::from_xyz(pos.x, pos.y, 0.0),
@@ -185,6 +180,14 @@ fn spawn_mob(
                     },
                     Sprite::default(),
                     Name::new("Decoration"),
+                ));
+            }
+
+            // Spawn behavior tree
+            if let Some(tree) = behaviors_res.behaviors.get(mob_type) {
+                parent.spawn((
+                    Name::new("Mob Behavior Tree"),
+                    BehaveTree::new(tree.clone()).with_logging(true),
                 ));
             }
         })
