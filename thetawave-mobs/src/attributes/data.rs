@@ -64,6 +64,7 @@ pub(crate) enum MobDecorationType {
     XhitaraSpitterThrusters,
     XhitaraPacerThrusters,
     XhitaraMissileThrusters,
+    FreighterThrusters,
 }
 
 /// All types of spawnable mobs

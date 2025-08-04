@@ -56,6 +56,33 @@ impl MobBehaviorsResource {
                         }
                     },
                 ),
+                (
+                    MobType::FreighterFront,
+                    behave! {
+                        Behave::Forever => {
+                            Behave::spawn_named("Movement", MoveBehavior { behaviors: vec![MoveBehaviorType::MoveDown, MoveBehaviorType::BrakeHorizontal]  }),
+
+                        }
+                    },
+                ),
+                (
+                    MobType::FreighterOne,
+                    behave! {
+                        Behave::Forever => {
+                            Behave::spawn_named("Movement", MoveBehavior { behaviors: vec![MoveBehaviorType::MoveDown, MoveBehaviorType::BrakeHorizontal]  }),
+
+                        }
+                    },
+                ),
+                (
+                    MobType::FreighterTwo,
+                    behave! {
+                        Behave::Forever => {
+                            Behave::spawn_named("Movement", MoveBehavior { behaviors: vec![MoveBehaviorType::MoveDown, MoveBehaviorType::BrakeHorizontal]  }),
+
+                        }
+                    },
+                ),
             ]),
         }
     }

@@ -70,6 +70,7 @@ impl GameAssetsExt for GameAssets {
             MobDecorationType::XhitaraMissileThrusters => {
                 self.xhitara_missile_thrusters_aseprite.clone()
             }
+            MobDecorationType::FreighterThrusters => self.freighter_thrusters_aseprite.clone(),
         }
     }
 }
