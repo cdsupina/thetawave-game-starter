@@ -3,6 +3,17 @@ use bevy_behave::{Behave, behave, prelude::Tree};
 
 use crate::MobType;
 
+#[derive(Clone)]
+pub(crate) enum MoveBehaviorType {
+    MoveDown,
+    BrakeHorizontal,
+}
+
+#[derive(Component, Clone)]
+pub(crate) struct MoveBehavior {
+    pub behaviors: Vec<MoveBehaviorType>,
+}
+
 /// Resource containing behavior sequences for mobs
 #[derive(Resource)]
 pub(crate) struct MobBehaviorsResource {
@@ -37,18 +48,15 @@ impl MobBehaviorsResource {
                         }
                     },
                 ),
+                (
+                    MobType::XhitaraPacer,
+                    behave! {
+                        Behave::Forever => {
+                            Behave::spawn_named("Movement", MoveBehavior { behaviors: vec![MoveBehaviorType::MoveDown, MoveBehaviorType::BrakeHorizontal]  }),
+                        }
+                    },
+                ),
             ]),
         }
     }
-}
-
-#[derive(Clone)]
-pub(crate) enum MoveBehaviorType {
-    MoveDown,
-    BrakeHorizontal,
-}
-
-#[derive(Component, Clone)]
-pub(crate) struct MoveBehavior {
-    pub behaviors: Vec<MoveBehaviorType>,
 }

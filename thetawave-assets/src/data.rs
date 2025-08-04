@@ -59,6 +59,12 @@ pub struct GameAssets {
     // Animated Xhitara Cyclusk spritesheet
     #[asset(path = "media/aseprite/xhitara_cyclusk_mob.aseprite")]
     pub xhitara_cyclusk_mob_aseprite: Handle<Aseprite>,
+    // Animated Xhitara Pacer spritesheet
+    #[asset(path = "media/aseprite/xhitara_pacer_mob.aseprite")]
+    pub xhitara_pacer_mob_aseprite: Handle<Aseprite>,
+    // Animated Xhitara Pacer thrusters spritesheet
+    #[asset(path = "media/aseprite/xhitara_pacer_thrusters.aseprite")]
+    pub xhitara_pacer_thrusters_aseprite: Handle<Aseprite>,
 }
 
 /// Audio assets used throughout all states of the app

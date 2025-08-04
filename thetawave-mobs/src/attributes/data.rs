@@ -60,8 +60,9 @@ impl From<&ColliderShape> for Collider {
 // All types of decorations that can be attached to mobs
 #[derive(Deserialize, Debug, Clone)]
 pub(crate) enum MobDecorationType {
-    GruntThrusters,
-    ShooterThrusters,
+    XhitaraGruntThrusters,
+    XhitaraSpitterThrusters,
+    XhitaraPacerThrusters,
 }
 
 /// All types of spawnable mobs
@@ -81,6 +82,7 @@ pub enum MobType {
     XhitaraTentacleLong,
     XhitaraTentacleMiddle,
     XhitaraTentacleEnd,
+    XhitaraPacer,
 }
 
 /// Event for spawning mobs using a mob type and position

@@ -51,13 +51,21 @@ impl GameAssetsExt for GameAssets {
             MobType::XhitaraTentacleMiddle => self.xhitara_tentacle_middle_mob_aseprite.clone(),
             MobType::XhitaraTentacleEnd => self.xhitara_tentacle_end_mob_aseprite.clone(),
             MobType::XhitaraCyclusk => self.xhitara_cyclusk_mob_aseprite.clone(),
+            MobType::XhitaraPacer => self.xhitara_pacer_mob_aseprite.clone(),
         }
     }
 
     fn get_mob_decoration(&self, mob_type: &MobDecorationType) -> Handle<Aseprite> {
         match mob_type {
-            MobDecorationType::GruntThrusters => self.xhitara_grunt_thrusters_aseprite.clone(),
-            MobDecorationType::ShooterThrusters => self.xhitara_spitter_thrusters_aseprite.clone(),
+            MobDecorationType::XhitaraGruntThrusters => {
+                self.xhitara_grunt_thrusters_aseprite.clone()
+            }
+            MobDecorationType::XhitaraSpitterThrusters => {
+                self.xhitara_spitter_thrusters_aseprite.clone()
+            }
+            MobDecorationType::XhitaraPacerThrusters => {
+                self.xhitara_pacer_thrusters_aseprite.clone()
+            }
         }
     }
 }

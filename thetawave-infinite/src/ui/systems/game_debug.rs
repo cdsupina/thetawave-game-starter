@@ -107,6 +107,13 @@ pub(in crate::ui) fn game_debug_menu_system(
                             });
                         }
 
+                        if ui.button("Xhitara Pacer").clicked() {
+                            spawn_mob_event_writer.write(SpawnMobEvent {
+                                mob_type: MobType::XhitaraPacer,
+                                position: *spawn_location,
+                            });
+                        }
+
                         if ui.button("Xhitara Cyclusk").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent {
                                 mob_type: MobType::XhitaraCyclusk,
