@@ -35,6 +35,7 @@ const DEFAULT_COLLIDER_DENSITY: f32 = 1.0;
 
 /// Describes a collider that can be attached to mobs
 #[derive(Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct ThetawaveCollider {
     pub shape: ColliderShape,
     pub position: Vec2,
@@ -43,6 +44,7 @@ pub(crate) struct ThetawaveCollider {
 
 /// All types of collider shapes that can be attached to mobs
 #[derive(Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
 pub(crate) enum ColliderShape {
     Circle(f32),
     Rectangle(f32, f32),
@@ -106,6 +108,7 @@ pub(crate) struct MobAttributesComponent {
 
 /// Describes an angle limit for a joint
 #[derive(Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct JointAngleLimit {
     pub min: f32,
     pub max: f32,
@@ -121,6 +124,7 @@ pub(crate) struct RandomMobChain {
 
 /// Describes a chain of mobs that are spawned and jointed together
 #[derive(Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct MobChain {
     pub length: u8,
     pub pos_offset: Vec2,
@@ -130,6 +134,7 @@ pub(crate) struct MobChain {
 
 /// Mob that is also spawned and jointed to the original mob
 #[derive(Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct JointedMob {
     pub mob_type: MobType,
     #[serde(default)]
@@ -148,6 +153,7 @@ pub(crate) struct JointedMob {
 
 /// Contains all attributes for a mob
 #[derive(Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct MobAttributes {
     #[serde(default = "default_colliders")]
     colliders: Vec<ThetawaveCollider>,
@@ -224,6 +230,7 @@ fn default_collider_density() -> f32 {
 
 /// Resource tracking all data for mobs
 #[derive(Deserialize, Debug, Resource)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct MobAttributesResource {
     pub attributes: HashMap<MobType, MobAttributes>,
 }

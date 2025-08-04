@@ -1,4 +1,6 @@
-use bevy::{ecs::resource::Resource, platform::collections::HashMap, prelude::Component};
+use bevy::{
+    ecs::resource::Resource, math::Vec2, platform::collections::HashMap, prelude::Component,
+};
 use bevy_behave::{Behave, behave, prelude::Tree};
 
 use crate::MobType;
@@ -7,6 +9,7 @@ use crate::MobType;
 pub(crate) enum MoveBehaviorType {
     MoveDown,
     BrakeHorizontal,
+    MoveTo(Vec2),
 }
 
 #[derive(Component, Clone)]
@@ -79,6 +82,15 @@ impl MobBehaviorsResource {
                     behave! {
                         Behave::Forever => {
                             Behave::spawn_named("Movement", MoveBehavior { behaviors: vec![MoveBehaviorType::MoveDown, MoveBehaviorType::BrakeHorizontal]  }),
+
+                        }
+                    },
+                ),
+                (
+                    MobType::Trizetheron,
+                    behave! {
+                        Behave::Forever => {
+                            Behave::spawn_named("Movement", MoveBehavior { behaviors: vec![MoveBehaviorType::MoveTo(Vec2::new(0.0, 50.0))]  }),
 
                         }
                     },
