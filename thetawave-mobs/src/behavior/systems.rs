@@ -19,9 +19,7 @@ pub(super) fn move_system(
         for behavior in move_behavior.behaviors.iter() {
             match behavior {
                 MoveBehaviorType::MoveDown => {
-                    if lin_vel.y < -attributes.max_linear_speed.y {
-                        lin_vel.y += attributes.linear_deceleration.y;
-                    } else {
+                    if lin_vel.y > -attributes.max_linear_speed.y {
                         lin_vel.y -= attributes.linear_acceleration.y;
                     }
                 }
@@ -47,16 +45,6 @@ pub(super) fn move_system(
                     lin_vel.y += (velocity_diff.y * attributes.linear_acceleration.y).clamp(
                         -attributes.linear_acceleration.y,
                         attributes.linear_acceleration.y,
-                    );
-
-                    // Limit to max linear speed
-                    lin_vel.x = lin_vel.x.clamp(
-                        -attributes.max_linear_speed.x,
-                        attributes.max_linear_speed.x,
-                    );
-                    lin_vel.y = lin_vel.y.clamp(
-                        -attributes.max_linear_speed.y,
-                        attributes.max_linear_speed.y,
                     );
                 }
             }
