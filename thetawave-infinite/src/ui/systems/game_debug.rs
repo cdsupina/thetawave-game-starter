@@ -186,13 +186,6 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         ui.menu_button("Misc", |ui| {
                             ui.menu_button("Freighter", |ui| {
-                                if ui.button("Freighter Front").clicked() {
-                                    spawn_mob_event_writer.write(SpawnMobEvent {
-                                        mob_type: MobType::FreighterFront,
-                                        position: *spawn_location,
-                                    });
-                                }
-
                                 if ui.button("Freighter Middle").clicked() {
                                     spawn_mob_event_writer.write(SpawnMobEvent {
                                         mob_type: MobType::FreighterMiddle,

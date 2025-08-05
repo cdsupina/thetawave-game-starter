@@ -39,12 +39,14 @@ impl GameAssetsExt for GameAssets {
             MobType::XhitaraGrunt => self.xhitara_grunt_mob_aseprite.clone(),
             MobType::XhitaraSpitter => self.xhitara_spitter_mob_aseprite.clone(),
             MobType::XhitaraGyro => self.xhitara_gyro_mob_aseprite.clone(),
-            MobType::FreighterOne | MobType::FreighterTwo | MobType::FreighterFront => {
+            MobType::FreighterOne | MobType::FreighterTwo => {
                 self.freighter_front_mob_aseprite.clone()
             }
             MobType::FreighterMiddle => self.freighter_middle_mob_aseprite.clone(),
             MobType::FreighterBack => self.freighter_back_mob_aseprite.clone(),
             MobType::Trizetheron => self.trizetheron_mob_aseprite.clone(),
+            MobType::TrizetheronLeftHead => self.trizetheron_left_head_mob_aseprite.clone(),
+            MobType::TrizetheronRightHead => self.trizetheron_right_head_mob_aseprite.clone(),
             MobType::XhitaraTentacleShort | MobType::XhitaraTentacleLong => {
                 self.xhitara_tentacle_start_mob_aseprite.clone()
             }

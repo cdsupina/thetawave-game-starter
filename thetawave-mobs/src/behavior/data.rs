@@ -70,15 +70,6 @@ impl MobBehaviorsResource {
                     },
                 ),
                 (
-                    MobType::FreighterFront,
-                    behave! {
-                        Behave::Forever => {
-                            Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveDown, MobBehaviorType::BrakeHorizontal]  }),
-
-                        }
-                    },
-                ),
-                (
                     MobType::FreighterOne,
                     behave! {
                         Behave::Forever => {

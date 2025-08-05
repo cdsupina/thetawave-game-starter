@@ -49,6 +49,10 @@ pub struct GameAssets {
     // Animated Trizetheron spritesheet
     #[asset(path = "media/aseprite/trizetheron_mob.aseprite")]
     pub trizetheron_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/trizetheron_left_head_mob.aseprite")]
+    pub trizetheron_left_head_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/trizetheron_right_head_mob.aseprite")]
+    pub trizetheron_right_head_mob_aseprite: Handle<Aseprite>,
     // Animated Xhitara tentacle start spritesheet
     #[asset(path = "media/aseprite/xhitara_tentacle_start_mob.aseprite")]
     pub xhitara_tentacle_start_mob_aseprite: Handle<Aseprite>,
