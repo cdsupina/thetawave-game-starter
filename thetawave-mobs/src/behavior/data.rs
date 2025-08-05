@@ -116,6 +116,28 @@ impl MobBehaviorsResource {
                         }
                     },
                 ),
+                (
+                    MobType::XhitaraTentacleEnd,
+                    behave! {
+                        Behave::Forever => {
+                            Behave::Sequence => {
+                                Behave::spawn_named("Find Target", MobBehavior{ behaviors: vec![MobBehaviorType::FindPlayerTarget]}),
+                                Behave::spawn_named("Move To Target", MobBehavior{ behaviors: vec![MobBehaviorType::MoveForward, MobBehaviorType::RotateToTarget]})
+                            }
+                        }
+                    },
+                ),
+                (
+                    MobType::XhitaraCyclusk,
+                    behave! {
+                        Behave::Forever => {
+                            Behave::Sequence => {
+                                Behave::spawn_named("Find Target", MobBehavior{ behaviors: vec![MobBehaviorType::FindPlayerTarget]}),
+                                Behave::spawn_named("Move To Target", MobBehavior{ behaviors: vec![MobBehaviorType::MoveToTarget, MobBehaviorType::RotateToTarget]})
+                            }
+                        }
+                    },
+                ),
             ]),
         }
     }
