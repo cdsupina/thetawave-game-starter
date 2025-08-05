@@ -14,8 +14,9 @@ use crate::{
     behavior::{
         MobBehaviorsResource,
         systems::{
-            brake_horizontal_system, find_player_target_system, move_down_system,
-            move_forward_system, move_to_system, move_to_target_system, rotate_to_target_system,
+            brake_angular_system, brake_horizontal_system, find_player_target_system,
+            lose_target_system, move_down_system, move_forward_system, move_to_system,
+            move_to_target_system, rotate_to_target_system,
         },
     },
 };
@@ -36,6 +37,8 @@ impl Plugin for ThetawaveMobBehaviorPlugin {
                 move_to_target_system,
                 rotate_to_target_system,
                 move_forward_system,
+                lose_target_system,
+                brake_angular_system,
             )
                 .run_if(
                     in_state(AppState::Game)

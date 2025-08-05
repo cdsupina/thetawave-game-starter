@@ -20,6 +20,8 @@ pub(crate) enum MobBehaviorType {
     MoveToTarget,
     RotateToTarget,
     MoveForward,
+    LoseTarget,
+    BrakeAngular,
 }
 
 #[derive(Component, Clone)]
@@ -101,8 +103,8 @@ impl MobBehaviorsResource {
                     behave! {
                         Behave::Forever => {
                             Behave::Sequence => {
-                                Behave::spawn_named("Find Target", MobBehavior{ behaviors: vec![MobBehaviorType::FindPlayerTarget]}),
-                                Behave::spawn_named("Move To Target", MobBehavior{ behaviors: vec![MobBehaviorType::MoveForward, MobBehaviorType::RotateToTarget]})
+                                Behave::spawn_named("Find Target", MobBehavior{ behaviors: vec![MobBehaviorType::FindPlayerTarget, MobBehaviorType::MoveForward, MobBehaviorType::BrakeAngular]}),
+                                Behave::spawn_named("Move To Target", MobBehavior{ behaviors: vec![MobBehaviorType::MoveForward, MobBehaviorType::RotateToTarget, MobBehaviorType::LoseTarget]})
                             }
                         }
                     },
@@ -112,8 +114,8 @@ impl MobBehaviorsResource {
                     behave! {
                         Behave::Forever => {
                             Behave::Sequence => {
-                                Behave::spawn_named("Find Target", MobBehavior{ behaviors: vec![MobBehaviorType::FindPlayerTarget]}),
-                                Behave::spawn_named("Move To Target", MobBehavior{ behaviors: vec![MobBehaviorType::MoveForward, MobBehaviorType::RotateToTarget]})
+                                Behave::spawn_named("Find Target", MobBehavior{ behaviors: vec![MobBehaviorType::FindPlayerTarget, MobBehaviorType::BrakeAngular]}),
+                                Behave::spawn_named("Move To Target", MobBehavior{ behaviors: vec![MobBehaviorType::MoveForward, MobBehaviorType::RotateToTarget, MobBehaviorType::LoseTarget]})
                             }
                         }
                     },

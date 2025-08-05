@@ -89,12 +89,12 @@ pub(super) fn move_to_system(
 
 pub(super) fn find_player_target_system(
     mob_behavior_q: Query<(&MobBehavior, &BehaveCtx)>,
-    mob_q: Query<(Entity, &Transform), With<MobAttributesComponent>>,
+    mob_q: Query<(Entity, &Transform, &MobAttributesComponent), With<MobAttributesComponent>>,
     player_q: Query<(Entity, &Transform), With<PlayerStats>>,
     mut cmds: Commands,
 ) {
     for (mob_behavior, ctx) in mob_behavior_q.iter() {
-        let Ok((mob_entity, mob_transform)) = mob_q.get(ctx.target_entity()) else {
+        let Ok((mob_entity, mob_transform, attributes)) = mob_q.get(ctx.target_entity()) else {
             continue;
         };
 
@@ -106,15 +106,70 @@ pub(super) fn find_player_target_system(
 
             let closest_player = player_q
                 .iter()
-                .min_by_key(|(_, player_transform)| {
+                .filter_map(|(entity, player_transform)| {
                     let player_pos = player_transform.translation.truncate();
-                    (mob_pos.distance_squared(player_pos) * 1000.0) as u32 // multiplied by 1000 to avoid floating point precision issues
+                    let distance_squared = mob_pos.distance_squared(player_pos);
+
+                    // If targeting_range is Some, only consider players within that range
+                    // If targeting_range is None, consider all players (infinite range)
+                    if let Some(range) = attributes.targeting_range
+                        && distance_squared > range * range
+                    {
+                        return None; // Player is outside targeting range
+                    }
+
+                    Some((entity, distance_squared))
+                })
+                .min_by_key(|(_, distance_squared)| {
+                    (*distance_squared * 1000.0) as u32 // multiplied by 1000 to avoid floating point precision issues
                 })
                 .map(|(entity, _)| entity);
 
             if let Some(closest_player_entity) = closest_player {
                 cmds.entity(mob_entity)
                     .insert(Target(closest_player_entity));
+                cmds.trigger(ctx.success());
+            }
+        }
+    }
+}
+
+pub(super) fn lose_target_system(
+    mob_behavior_q: Query<(&MobBehavior, &BehaveCtx)>,
+    mut mob_q: Query<
+        (Entity, &Target, &Transform, &MobAttributesComponent),
+        With<MobAttributesComponent>,
+    >,
+    target_q: Query<&Transform>,
+    mut cmds: Commands,
+) {
+    for (mob_behavior, ctx) in mob_behavior_q.iter() {
+        let Ok((mob_entity, target, mob_transform, attributes)) =
+            mob_q.get_mut(ctx.target_entity())
+        else {
+            continue;
+        };
+
+        if mob_behavior
+            .behaviors
+            .contains(&MobBehaviorType::LoseTarget)
+        {
+            let Ok(target_transform) = target_q.get(target.0) else {
+                // Target entity doesn't exist anymore, remove target
+                cmds.entity(mob_entity).remove::<Target>();
+                cmds.trigger(ctx.success());
+                continue;
+            };
+
+            let mob_pos = mob_transform.translation.truncate();
+            let target_pos = target_transform.translation.truncate();
+            let distance_squared = mob_pos.distance_squared(target_pos);
+
+            // Check if target is out of range (if range is specified)
+            if let Some(range) = attributes.targeting_range
+                && distance_squared > range * range
+            {
+                cmds.entity(mob_entity).remove::<Target>();
                 cmds.trigger(ctx.success());
             }
         }
@@ -229,6 +284,32 @@ pub(super) fn rotate_to_target_system(
         }
     }
 }
+
+pub(super) fn brake_angular_system(
+    mob_behavior_q: Query<(&MobBehavior, &BehaveCtx)>,
+    mut mob_q: Query<(&mut AngularVelocity, &MobAttributesComponent)>,
+) {
+    for (mob_behavior, ctx) in mob_behavior_q.iter() {
+        let Ok((mut ang_vel, attributes)) = mob_q.get_mut(ctx.target_entity()) else {
+            continue;
+        };
+
+        if mob_behavior
+            .behaviors
+            .contains(&MobBehaviorType::BrakeAngular)
+        {
+            let target_angular_velocity = 0.0;
+            let velocity_diff = target_angular_velocity - ang_vel.0;
+
+            // Apply deceleration towards target angular velocity, clamped by deceleration limits
+            ang_vel.0 += (velocity_diff * attributes.angular_deceleration).clamp(
+                -attributes.angular_deceleration,
+                attributes.angular_deceleration,
+            );
+        }
+    }
+}
+
 pub(super) fn move_forward_system(
     move_q: Query<(&MobBehavior, &BehaveCtx)>,
     mut mob_q: Query<(&mut LinearVelocity, &Transform, &MobAttributesComponent)>,
