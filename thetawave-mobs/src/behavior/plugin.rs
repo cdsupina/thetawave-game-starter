@@ -11,7 +11,13 @@ use thetawave_states::{AppState, GameState};
 
 use crate::{
     MobDebugSettings,
-    behavior::{MobBehaviorsResource, systems::move_system},
+    behavior::{
+        MobBehaviorsResource,
+        systems::{
+            brake_horizontal_system, find_player_target_system, move_down_system,
+            move_forward_system, move_to_system, move_to_target_system, rotate_to_target_system,
+        },
+    },
 };
 
 pub(crate) struct ThetawaveMobBehaviorPlugin;
@@ -22,11 +28,20 @@ impl Plugin for ThetawaveMobBehaviorPlugin {
         app.insert_resource(MobBehaviorsResource::new());
         app.add_systems(
             Update,
-            move_system.run_if(
-                in_state(AppState::Game)
-                    .and(in_state(GameState::Playing))
-                    .and(|mob_res: Res<MobDebugSettings>| mob_res.behaviors_enabled),
-            ),
+            (
+                move_down_system,
+                brake_horizontal_system,
+                move_to_system,
+                find_player_target_system,
+                move_to_target_system,
+                rotate_to_target_system,
+                move_forward_system,
+            )
+                .run_if(
+                    in_state(AppState::Game)
+                        .and(in_state(GameState::Playing))
+                        .and(|mob_res: Res<MobDebugSettings>| mob_res.behaviors_enabled),
+                ),
         );
     }
 }

@@ -16,6 +16,7 @@ bevy_behave.workspace = true
 thetawave-assets = { path = "../thetawave-assets" }
 thetawave-states = { path = "../thetawave-states" }
 thetawave-physics = { path = "../thetawave-physics" }
+thetawave-player = { path = "../thetawave-player" }
 
 [features]
 dynamic_linking = ["bevy/dynamic_linking", "thetawave-assets/dynamic_linking"]

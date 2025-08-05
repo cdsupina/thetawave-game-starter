@@ -76,13 +76,6 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
     }
 }
 
-/// Component for storing values used in systems for player entities
-#[derive(Component)]
-pub(super) struct PlayerStats {
-    pub acceleration: f32,
-    pub deceleration_factor: f32,
-}
-
 /// Tag for indicating multiplayer association
 #[derive(Component, Debug, Clone, PartialEq, Eq, AsRefStr, Hash, PartialOrd, Ord)]
 pub(crate) enum PlayerNum {

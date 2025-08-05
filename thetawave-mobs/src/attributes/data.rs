@@ -21,6 +21,8 @@ const DEFAULT_ROTATION_LOCKED: bool = true;
 const DEFAULT_MAX_LINEAR_SPEED: Vec2 = Vec2::new(20.0, 20.0);
 const DEFAULT_LINEAR_ACCELERATION: Vec2 = Vec2::new(0.1, 0.1);
 const DEFAULT_LINEAR_DECELERATION: Vec2 = Vec2::new(0.3, 0.3);
+const DEFAULT_ANGULAR_ACCELERATION: f32 = 0.1;
+const DEFAULT_MAX_ANGULAR_SPEED: f32 = 1.0;
 const DEFAULT_RESTITUTION: f32 = 0.5;
 const DEFAULT_FRICTION: f32 = 0.5;
 const DEFAULT_COLLISION_LAYER_MEMBERSHIP: &[ThetawavePhysicsLayer] =
@@ -104,6 +106,8 @@ pub(crate) struct MobAttributesComponent {
     pub linear_acceleration: Vec2,
     pub linear_deceleration: Vec2,
     pub max_linear_speed: Vec2,
+    pub angular_acceleration: f32,
+    pub max_angular_speed: f32,
 }
 
 /// Describes an angle limit for a joint
@@ -168,6 +172,10 @@ pub(crate) struct MobAttributes {
     pub linear_acceleration: Vec2,
     #[serde(default = "default_linear_deceleration")]
     pub linear_deceleration: Vec2,
+    #[serde(default = "default_angular_acceleration")]
+    pub angular_acceleration: f32,
+    #[serde(default = "default_max_angular_speed")]
+    pub max_angular_speed: f32,
     #[serde(default = "default_restitution")]
     pub restitution: f32,
     #[serde(default = "default_friction")]
@@ -226,6 +234,14 @@ fn default_collision_layer_filter() -> Vec<ThetawavePhysicsLayer> {
 
 fn default_collider_density() -> f32 {
     DEFAULT_COLLIDER_DENSITY
+}
+
+fn default_angular_acceleration() -> f32 {
+    DEFAULT_ANGULAR_ACCELERATION
+}
+
+fn default_max_angular_speed() -> f32 {
+    DEFAULT_MAX_ANGULAR_SPEED
 }
 
 /// Resource tracking all data for mobs
@@ -315,6 +331,8 @@ impl From<&MobAttributes> for MobAttributesComponent {
             linear_acceleration: value.linear_acceleration,
             linear_deceleration: value.linear_deceleration,
             max_linear_speed: value.max_linear_speed,
+            angular_acceleration: value.angular_acceleration,
+            max_angular_speed: value.max_angular_speed,
         }
     }
 }
