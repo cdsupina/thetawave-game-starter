@@ -90,6 +90,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                             spawn_mob_event_writer.write(SpawnMobEvent {
                                 mob_type: MobType::XhitaraGrunt,
                                 position: *spawn_location,
+                                rotation: 0.0,
                             });
                         }
 
@@ -97,6 +98,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                             spawn_mob_event_writer.write(SpawnMobEvent {
                                 mob_type: MobType::XhitaraSpitter,
                                 position: *spawn_location,
+                                rotation: 0.0,
                             });
                         }
 
@@ -104,6 +106,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                             spawn_mob_event_writer.write(SpawnMobEvent {
                                 mob_type: MobType::XhitaraGyro,
                                 position: *spawn_location,
+                                rotation: 0.0,
                             });
                         }
 
@@ -111,6 +114,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                             spawn_mob_event_writer.write(SpawnMobEvent {
                                 mob_type: MobType::XhitaraPacer,
                                 position: *spawn_location,
+                                rotation: 0.0,
                             });
                         }
 
@@ -118,6 +122,15 @@ pub(in crate::ui) fn game_debug_menu_system(
                             spawn_mob_event_writer.write(SpawnMobEvent {
                                 mob_type: MobType::XhitaraMissile,
                                 position: *spawn_location,
+                                rotation: 0.0,
+                            });
+                        }
+
+                        if ui.button("Xhitara Launcher").clicked() {
+                            spawn_mob_event_writer.write(SpawnMobEvent {
+                                mob_type: MobType::XhitaraLauncher,
+                                position: *spawn_location,
+                                rotation: 0.0,
                             });
                         }
 
@@ -125,6 +138,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                             spawn_mob_event_writer.write(SpawnMobEvent {
                                 mob_type: MobType::XhitaraCyclusk,
                                 position: *spawn_location,
+                                rotation: 0.0,
                             });
                         }
 
@@ -132,6 +146,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                             spawn_mob_event_writer.write(SpawnMobEvent {
                                 mob_type: MobType::Trizetheron,
                                 position: *spawn_location,
+                                rotation: 0.0,
                             });
                         }
 
@@ -141,6 +156,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                     spawn_mob_event_writer.write(SpawnMobEvent {
                                         mob_type: MobType::XhitaraTentacleShort,
                                         position: *spawn_location,
+                                        rotation: 0.0,
                                     });
                                 }
 
@@ -148,6 +164,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                     spawn_mob_event_writer.write(SpawnMobEvent {
                                         mob_type: MobType::XhitaraTentacleLong,
                                         position: *spawn_location,
+                                        rotation: 0.0,
                                     });
                                 }
 
@@ -155,6 +172,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                     spawn_mob_event_writer.write(SpawnMobEvent {
                                         mob_type: MobType::XhitaraTentacleMiddle,
                                         position: *spawn_location,
+                                        rotation: 0.0,
                                     });
                                 }
 
@@ -162,6 +180,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                     spawn_mob_event_writer.write(SpawnMobEvent {
                                         mob_type: MobType::XhitaraTentacleEnd,
                                         position: *spawn_location,
+                                        rotation: 0.0,
                                     });
                                 }
                             });
@@ -174,6 +193,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                             spawn_mob_event_writer.write(SpawnMobEvent {
                                 mob_type: MobType::FreighterOne,
                                 position: *spawn_location,
+                                rotation: 0.0,
                             });
                         }
 
@@ -181,6 +201,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                             spawn_mob_event_writer.write(SpawnMobEvent {
                                 mob_type: MobType::FreighterTwo,
                                 position: *spawn_location,
+                                rotation: 0.0,
                             });
                         }
 
@@ -190,6 +211,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                     spawn_mob_event_writer.write(SpawnMobEvent {
                                         mob_type: MobType::FreighterMiddle,
                                         position: *spawn_location,
+                                        rotation: 0.0,
                                     });
                                 }
 
@@ -197,6 +219,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                     spawn_mob_event_writer.write(SpawnMobEvent {
                                         mob_type: MobType::FreighterBack,
                                         position: *spawn_location,
+                                        rotation: 0.0,
                                     });
                                 }
                             });

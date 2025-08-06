@@ -12,7 +12,7 @@ use bevy::{
         system::{Commands, Res},
     },
     log::info,
-    math::Vec2,
+    math::{Quat, Vec2},
     prelude::Name,
     sprite::Sprite,
     transform::components::Transform,
@@ -55,6 +55,7 @@ impl GameAssetsExt for GameAssets {
             MobType::XhitaraCyclusk => self.xhitara_cyclusk_mob_aseprite.clone(),
             MobType::XhitaraPacer => self.xhitara_pacer_mob_aseprite.clone(),
             MobType::XhitaraMissile => self.xhitara_missile_mob_aseprite.clone(),
+            MobType::XhitaraLauncher => self.xhitara_launcher_mob_aseprite.clone(),
         }
     }
 
@@ -73,6 +74,9 @@ impl GameAssetsExt for GameAssets {
                 self.xhitara_missile_thrusters_aseprite.clone()
             }
             MobDecorationType::FreighterThrusters => self.freighter_thrusters_aseprite.clone(),
+            MobDecorationType::XhitaraLauncherThrusters => {
+                self.xhitara_launcher_thrusters_aseprite.clone()
+            }
         }
     }
 }
@@ -108,6 +112,7 @@ pub(super) fn spawn_mob_system(
             &mut cmds,
             &event.mob_type,
             event.position,
+            event.rotation,
             &mob_debug_settings,
             &attributes_res,
             &behaviors_res,
@@ -149,6 +154,7 @@ fn spawn_mob(
     cmds: &mut Commands,
     mob_type: &MobType,
     position: Vec2,
+    rotation: f32,
     mob_debug_settings: &MobDebugSettings,
     attributes_res: &MobAttributesResource,
     behaviors_res: &MobBehaviorsResource,
@@ -163,27 +169,33 @@ fn spawn_mob(
         .get(mob_type)
         .ok_or(BevyError::from("Mob attributes not found"))?;
     // Spawn the main anchor entity with all core components
-    let anchor_id = cmds
-        .spawn((
-            Name::from(mob_attributes),
-            MobAttributesComponent::from(mob_attributes),
-            AseAnimation {
-                animation: Animation::tag("idle"),
-                aseprite: assets.get_mob_sprite(mob_type),
-            },
-            Sprite::default(),
-            Cleanup::<AppState> {
-                states: vec![AppState::Game],
-            },
-            Restitution::from(mob_attributes),
-            Friction::from(mob_attributes),
-            Collider::from(mob_attributes),
-            ColliderDensity::from(mob_attributes),
-            RigidBody::Dynamic,
-            CollisionLayers::from(mob_attributes),
-            LockedAxes::from(mob_attributes),
-            Transform::from_xyz(position.x, position.y, mob_attributes.z_level),
-        ))
+    let mut entity_commands = cmds.spawn((
+        Name::from(mob_attributes),
+        MobAttributesComponent::from(mob_attributes),
+        AseAnimation {
+            animation: Animation::tag("idle"),
+            aseprite: assets.get_mob_sprite(mob_type),
+        },
+        Sprite::default(),
+        Cleanup::<AppState> {
+            states: vec![AppState::Game],
+        },
+        Restitution::from(mob_attributes),
+        Friction::from(mob_attributes),
+        Collider::from(mob_attributes),
+        ColliderDensity::from(mob_attributes),
+        RigidBody::Dynamic,
+        CollisionLayers::from(mob_attributes),
+        LockedAxes::from(mob_attributes),
+        Transform::from_xyz(position.x, position.y, mob_attributes.z_level)
+            .with_rotation(Quat::from_rotation_z(rotation.to_radians())),
+    ));
+
+    if let Some(mob_spawners) = &mob_attributes.mob_spawners {
+        entity_commands.insert(mob_spawners.clone());
+    }
+
+    let anchor_id = entity_commands
         .with_children(|parent| {
             // Spawn visual decorations as child entities
             for (decoration_type, pos) in &mob_attributes.decorations {
@@ -234,6 +246,7 @@ fn spawn_mob(
                     cmds,
                     &jointed_mob.mob_type,
                     position + jointed_mob.offset_pos + chain.pos_offset * chain_index as f32,
+                    0.0,
                     mob_debug_settings,
                     attributes_res,
                     behaviors_res,
@@ -265,6 +278,7 @@ fn spawn_mob(
                 cmds,
                 &jointed_mob.mob_type,
                 position + jointed_mob.offset_pos,
+                0.0,
                 mob_debug_settings,
                 attributes_res,
                 behaviors_res,

@@ -77,6 +77,10 @@ pub struct GameAssets {
     // Animated Xhitara Missile thrusters spritesheet
     #[asset(path = "media/aseprite/xhitara_missile_thrusters.aseprite")]
     pub xhitara_missile_thrusters_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/xhitara_launcher_mob.aseprite")]
+    pub xhitara_launcher_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/xhitara_launcher_thrusters.aseprite")]
+    pub xhitara_launcher_thrusters_aseprite: Handle<Aseprite>,
 }
 
 /// Audio assets used throughout all states of the app

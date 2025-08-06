@@ -6,6 +6,7 @@ use bevy::{
     ecs::{component::Component, event::Event, name::Name, resource::Resource},
     math::Vec2,
     platform::collections::HashMap,
+    time::{Timer, TimerMode},
 };
 use serde::Deserialize;
 use strum_macros::EnumIter;
@@ -35,6 +36,48 @@ const DEFAULT_COLLISION_LAYER_FILTER: &[ThetawavePhysicsLayer] = &[
     ThetawavePhysicsLayer::Tentacle,
 ];
 const DEFAULT_COLLIDER_DENSITY: f32 = 1.0;
+
+#[derive(Component, Deserialize, Debug, Clone)]
+pub(crate) struct MobSpawnerComponent {
+    pub spawners: HashMap<String, MobSpawner>,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct MobSpawner {
+    pub timer: Timer,
+    pub position: Vec2,
+    pub rotation: f32,
+    pub mob_type: MobType,
+}
+
+impl<'de> Deserialize<'de> for MobSpawner {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        // Define a "helper" struct that mirrors CharacterAttributes
+        // but uses types that can be deserialized
+        #[derive(Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct Helper {
+            pub timer: f32,
+            pub position: Vec2,
+            pub rotation: f32,
+            pub mob_type: MobType,
+        }
+
+        // Let serde deserialize into the Helper struct first
+        let helper = Helper::deserialize(deserializer)?;
+
+        // Construct our actual struct with the transformed data
+        Ok(MobSpawner {
+            timer: Timer::from_seconds(helper.timer, TimerMode::Repeating),
+            position: helper.position,
+            rotation: helper.rotation,
+            mob_type: helper.mob_type,
+        })
+    }
+}
 
 /// Describes a collider that can be attached to mobs
 #[derive(Deserialize, Debug, Clone)]
@@ -70,6 +113,7 @@ pub(crate) enum MobDecorationType {
     XhitaraPacerThrusters,
     XhitaraMissileThrusters,
     FreighterThrusters,
+    XhitaraLauncherThrusters,
 }
 
 /// All types of spawnable mobs
@@ -92,6 +136,7 @@ pub enum MobType {
     XhitaraTentacleEnd,
     XhitaraPacer,
     XhitaraMissile,
+    XhitaraLauncher,
 }
 
 /// Event for spawning mobs using a mob type and position
@@ -99,6 +144,7 @@ pub enum MobType {
 pub struct SpawnMobEvent {
     pub mob_type: MobType,
     pub position: Vec2,
+    pub rotation: f32,
 }
 
 /// Component to hold mob attributes that are not used in cases outside of creating components
@@ -198,6 +244,8 @@ pub(crate) struct MobAttributes {
     pub collider_density: f32,
     #[serde(default)]
     pub targeting_range: Option<f32>,
+    #[serde(default)]
+    pub mob_spawners: Option<MobSpawnerComponent>,
 }
 
 fn default_colliders() -> Vec<ThetawaveCollider> {

@@ -2,16 +2,19 @@ use avian2d::prelude::{AngularVelocity, LinearVelocity};
 use bevy::{
     ecs::{
         entity::Entity,
+        event::EventWriter,
         query::With,
-        system::{Commands, Query},
+        system::{Commands, Query, Res},
     },
+    time::Time,
     transform::components::Transform,
 };
 use bevy_behave::prelude::BehaveCtx;
 use thetawave_player::PlayerStats;
 
 use crate::{
-    attributes::MobAttributesComponent,
+    SpawnMobEvent,
+    attributes::{MobAttributesComponent, MobSpawnerComponent},
     behavior::{MobBehavior, MobBehaviorType, data::Target},
 };
 
@@ -342,6 +345,35 @@ pub(super) fn move_forward_system(
                 -attributes.linear_acceleration.y,
                 attributes.linear_acceleration.y,
             );
+        }
+    }
+}
+
+pub(super) fn spawn_mob_system(
+    mob_behavior_q: Query<(&MobBehavior, &BehaveCtx)>,
+    mut mob_q: Query<(&mut MobSpawnerComponent, &Transform)>,
+    mut spawn_mob_event_writer: EventWriter<SpawnMobEvent>,
+    time: Res<Time>,
+) {
+    for (mob_behavior, ctx) in mob_behavior_q.iter() {
+        let Ok((mut mob_spawner, transform)) = mob_q.get_mut(ctx.target_entity()) else {
+            continue;
+        };
+
+        for behavior in mob_behavior.behaviors.iter() {
+            if let MobBehaviorType::SpawnMob(Some(spawner_keys)) = behavior {
+                for key in spawner_keys.iter() {
+                    if let Some(spawner) = mob_spawner.spawners.get_mut(key)
+                        && spawner.timer.tick(time.delta()).just_finished()
+                    {
+                        spawn_mob_event_writer.write(SpawnMobEvent {
+                            mob_type: spawner.mob_type.clone(),
+                            rotation: spawner.rotation,
+                            position: transform.translation.truncate() + spawner.position,
+                        });
+                    }
+                }
+            }
         }
     }
 }

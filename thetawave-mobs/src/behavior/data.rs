@@ -22,6 +22,7 @@ pub(crate) enum MobBehaviorType {
     MoveForward,
     LoseTarget,
     BrakeAngular,
+    SpawnMob(Option<Vec<String>>),
 }
 
 #[derive(Component, Clone)]
@@ -106,6 +107,14 @@ impl MobBehaviorsResource {
                                 Behave::spawn_named("Find Target", MobBehavior{ behaviors: vec![MobBehaviorType::FindPlayerTarget, MobBehaviorType::MoveForward, MobBehaviorType::BrakeAngular]}),
                                 Behave::spawn_named("Move To Target", MobBehavior{ behaviors: vec![MobBehaviorType::MoveForward, MobBehaviorType::RotateToTarget, MobBehaviorType::LoseTarget]})
                             }
+                        }
+                    },
+                ),
+                (
+                    MobType::XhitaraLauncher,
+                    behave! {
+                        Behave::Forever => {
+                            Behave::spawn_named("Move and Spawn Missiles", MobBehavior{ behaviors: vec![MobBehaviorType::MoveDown, MobBehaviorType::BrakeHorizontal, MobBehaviorType::SpawnMob(Some(vec!["missiles".to_string()]))]}),
                         }
                     },
                 ),
