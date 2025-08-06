@@ -85,6 +85,18 @@ pub struct GameAssets {
     pub ferritharax_head_mob_aseprite: Handle<Aseprite>,
     #[asset(path = "media/aseprite/ferritharax_body_mob.aseprite")]
     pub ferritharax_body_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/ferritharax_left_shoulder_mob.aseprite")]
+    pub ferritharax_left_shoulder_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/ferritharax_right_shoulder_mob.aseprite")]
+    pub ferritharax_right_shoulder_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/ferritharax_left_arm_mob.aseprite")]
+    pub ferritharax_left_arm_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/ferritharax_right_arm_mob.aseprite")]
+    pub ferritharax_right_arm_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/ferritharax_left_claw_mob.aseprite")]
+    pub ferritharax_left_claw_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/ferritharax_right_claw_mob.aseprite")]
+    pub ferritharax_right_claw_mob_aseprite: Handle<Aseprite>,
 }
 
 /// Audio assets used throughout all states of the app

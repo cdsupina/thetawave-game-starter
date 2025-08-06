@@ -58,6 +58,14 @@ impl GameAssetsExt for GameAssets {
             MobType::XhitaraLauncher => self.xhitara_launcher_mob_aseprite.clone(),
             MobType::Ferritharax => self.ferritharax_head_mob_aseprite.clone(),
             MobType::FerritharaxBody => self.ferritharax_body_mob_aseprite.clone(),
+            MobType::FerritharaxRightShoulder => {
+                self.ferritharax_right_shoulder_mob_aseprite.clone()
+            }
+            MobType::FerritharaxLeftShoulder => self.ferritharax_left_shoulder_mob_aseprite.clone(),
+            MobType::FerritharaxRightClaw => self.ferritharax_right_claw_mob_aseprite.clone(),
+            MobType::FerritharaxLeftClaw => self.ferritharax_left_claw_mob_aseprite.clone(),
+            MobType::FerritharaxLeftArm => self.ferritharax_left_arm_mob_aseprite.clone(),
+            MobType::FerritharaxRightArm => self.ferritharax_right_arm_mob_aseprite.clone(),
         }
     }
 

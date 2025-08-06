@@ -139,6 +139,12 @@ pub enum MobType {
     XhitaraLauncher,
     Ferritharax,
     FerritharaxBody,
+    FerritharaxLeftShoulder,
+    FerritharaxRightShoulder,
+    FerritharaxLeftClaw,
+    FerritharaxRightClaw,
+    FerritharaxLeftArm,
+    FerritharaxRightArm,
 }
 
 /// Event for spawning mobs using a mob type and position
