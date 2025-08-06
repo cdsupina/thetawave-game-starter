@@ -56,6 +56,8 @@ impl GameAssetsExt for GameAssets {
             MobType::XhitaraPacer => self.xhitara_pacer_mob_aseprite.clone(),
             MobType::XhitaraMissile => self.xhitara_missile_mob_aseprite.clone(),
             MobType::XhitaraLauncher => self.xhitara_launcher_mob_aseprite.clone(),
+            MobType::Ferritharax => self.ferritharax_head_mob_aseprite.clone(),
+            MobType::FerritharaxBody => self.ferritharax_body_mob_aseprite.clone(),
         }
     }
 

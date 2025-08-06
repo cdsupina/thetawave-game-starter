@@ -81,6 +81,10 @@ pub struct GameAssets {
     pub xhitara_launcher_mob_aseprite: Handle<Aseprite>,
     #[asset(path = "media/aseprite/xhitara_launcher_thrusters.aseprite")]
     pub xhitara_launcher_thrusters_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/ferritharax_head_mob.aseprite")]
+    pub ferritharax_head_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/ferritharax_body_mob.aseprite")]
+    pub ferritharax_body_mob_aseprite: Handle<Aseprite>,
 }
 
 /// Audio assets used throughout all states of the app

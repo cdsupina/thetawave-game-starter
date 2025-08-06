@@ -137,6 +137,8 @@ pub enum MobType {
     XhitaraPacer,
     XhitaraMissile,
     XhitaraLauncher,
+    Ferritharax,
+    FerritharaxBody,
 }
 
 /// Event for spawning mobs using a mob type and position
