@@ -3,6 +3,7 @@ use bevy::{
     math::Vec2,
     platform::collections::HashMap,
     prelude::Component,
+    time::{Timer, TimerMode},
 };
 use bevy_behave::{Behave, behave, prelude::Tree};
 
@@ -23,6 +24,7 @@ pub(crate) enum MobBehaviorType {
     LoseTarget,
     BrakeAngular,
     SpawnMob(Option<Vec<String>>),
+    DoForTime(Timer),
 }
 
 #[derive(Component, Clone)]
@@ -91,15 +93,6 @@ impl MobBehaviorsResource {
                     },
                 ),
                 (
-                    MobType::Trizetheron,
-                    behave! {
-                        Behave::Forever => {
-                            Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(0.0, 50.0))]  }),
-
-                        }
-                    },
-                ),
-                (
                     MobType::XhitaraMissile,
                     behave! {
                         Behave::Forever => {
@@ -136,6 +129,28 @@ impl MobBehaviorsResource {
                             Behave::Sequence => {
                                 Behave::spawn_named("Find Target", MobBehavior{ behaviors: vec![MobBehaviorType::FindPlayerTarget]}),
                                 Behave::spawn_named("Move To Target", MobBehavior{ behaviors: vec![MobBehaviorType::MoveToTarget, MobBehaviorType::RotateToTarget]})
+                            }
+                        }
+                    },
+                ),
+                (
+                    MobType::Trizetheron,
+                    behave! {
+                        Behave::Forever => {
+                            Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(0.0, 50.0))]  }),
+
+                        }
+                    },
+                ),
+                (
+                    MobType::Ferritharax,
+                    behave! {
+                        Behave::Forever => {
+                            Behave::Sequence => {
+                                Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(0.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once))]  }),
+                                Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(125.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once))]  }),
+                                Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(0.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once))]  }),
+                                Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(-125.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once))]  }),
                             }
                         }
                     },

@@ -377,3 +377,20 @@ pub(super) fn spawn_mob_system(
         }
     }
 }
+
+pub(super) fn do_for_time_system(
+    mut mob_behavior_q: Query<(&mut MobBehavior, &BehaveCtx)>,
+    mut cmds: Commands,
+    time: Res<Time>,
+) {
+    for (mut mob_behavior, ctx) in mob_behavior_q.iter_mut() {
+        for behavior in mob_behavior.behaviors.iter_mut() {
+            if let MobBehaviorType::DoForTime(timer) = behavior {
+                if timer.tick(time.delta()).just_finished() {
+                    // Perform the action when the timer finishes
+                    cmds.trigger(ctx.success());
+                }
+            }
+        }
+    }
+}
