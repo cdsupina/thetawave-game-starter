@@ -1,13 +1,17 @@
 use bevy::{
-    ecs::{entity::Entity, resource::Resource},
+    ecs::{entity::Entity, event::Event, resource::Resource},
     math::Vec2,
     platform::collections::HashMap,
     prelude::Component,
+    reflect::Reflect,
     time::{Timer, TimerMode},
 };
 use bevy_behave::{Behave, behave, prelude::Tree};
 
 use crate::MobType;
+
+#[derive(Component, Reflect)]
+pub(crate) struct BehaviorReceiver(pub Entity);
 
 #[derive(Component)]
 pub(crate) struct Target(pub Entity);
@@ -25,6 +29,10 @@ pub(crate) enum MobBehaviorType {
     BrakeAngular,
     SpawnMob(Option<Vec<String>>),
     DoForTime(Timer),
+    TransmitMobBehavior {
+        mob_type: MobType,
+        behaviors: Box<Vec<MobBehaviorType>>,
+    },
 }
 
 #[derive(Component, Clone)]
@@ -36,6 +44,13 @@ pub(crate) struct MobBehavior {
 #[derive(Resource)]
 pub(crate) struct MobBehaviorsResource {
     pub behaviors: HashMap<MobType, Tree<Behave>>,
+}
+
+#[derive(Event)]
+pub(crate) struct TransmitBehaviorEvent {
+    pub entity: Entity,
+    pub mob_type: MobType,
+    pub behaviors: Vec<MobBehaviorType>,
 }
 
 impl MobBehaviorsResource {
@@ -148,7 +163,7 @@ impl MobBehaviorsResource {
                         Behave::Forever => {
                             Behave::Sequence => {
                                 Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(0.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once))]  }),
-                                Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(125.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once))]  }),
+                                Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(125.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once)), MobBehaviorType::TransmitMobBehavior { mob_type: MobType::FerritharaxLeftArm, behaviors: Box::new(vec![MobBehaviorType::MoveDown]) }, MobBehaviorType::TransmitMobBehavior { mob_type: MobType::FerritharaxLeftClaw, behaviors: Box::new(vec![MobBehaviorType::MoveDown]) }, MobBehaviorType::TransmitMobBehavior { mob_type: MobType::FerritharaxLeftShoulder, behaviors: Box::new(vec![MobBehaviorType::MoveDown]) }]  }),
                                 Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(0.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once))]  }),
                                 Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(-125.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once))]  }),
                             }

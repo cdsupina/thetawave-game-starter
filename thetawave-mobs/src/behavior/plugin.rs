@@ -12,11 +12,13 @@ use thetawave_states::{AppState, GameState};
 use crate::{
     MobDebugSettings,
     behavior::{
-        MobBehaviorsResource,
+        BehaviorReceiver, MobBehaviorsResource,
+        data::TransmitBehaviorEvent,
         systems::{
             brake_angular_system, brake_horizontal_system, do_for_time_system,
             find_player_target_system, lose_target_system, move_down_system, move_forward_system,
-            move_to_system, move_to_target_system, rotate_to_target_system, spawn_mob_system,
+            move_to_system, move_to_target_system, receieve_system, rotate_to_target_system,
+            spawn_mob_system, transmit_system,
         },
     },
 };
@@ -26,7 +28,9 @@ pub(crate) struct ThetawaveMobBehaviorPlugin;
 impl Plugin for ThetawaveMobBehaviorPlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_plugins(BehavePlugin::default());
+        app.add_event::<TransmitBehaviorEvent>();
         app.insert_resource(MobBehaviorsResource::new());
+        app.register_type::<BehaviorReceiver>();
         app.add_systems(
             Update,
             (
@@ -41,6 +45,8 @@ impl Plugin for ThetawaveMobBehaviorPlugin {
                 brake_angular_system,
                 spawn_mob_system,
                 do_for_time_system,
+                transmit_system,
+                receieve_system,
             )
                 .run_if(
                     in_state(AppState::Game)

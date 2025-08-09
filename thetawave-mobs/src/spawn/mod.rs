@@ -25,7 +25,7 @@ use thetawave_states::{AppState, Cleanup};
 use crate::{
     MobType, SpawnMobEvent,
     attributes::{JointedMob, MobAttributesComponent, MobAttributesResource, MobDecorationType},
-    behavior::MobBehaviorsResource,
+    behavior::{BehaviorReceiver, MobBehaviorsResource},
 };
 
 trait GameAssetsExt {
@@ -128,6 +128,7 @@ pub(super) fn spawn_mob_system(
             &behaviors_res,
             &assets,
             false,
+            None,
         )?;
     }
     Ok(())
@@ -170,6 +171,7 @@ fn spawn_mob(
     behaviors_res: &MobBehaviorsResource,
     assets: &GameAssets,
     suppress_jointed_mobs: bool,
+    transmitter_entity: Option<Entity>, // entity that can transmit behaviors to the mob
 ) -> Result<Entity, BevyError> {
     info!("Spawning Mob: {:?} at {}", mob_type, position.to_string());
 
@@ -181,6 +183,7 @@ fn spawn_mob(
     // Spawn the main anchor entity with all core components
     let mut entity_commands = cmds.spawn((
         Name::from(mob_attributes),
+        mob_type.clone(),
         MobAttributesComponent::from(mob_attributes),
         AseAnimation {
             animation: Animation::tag("idle"),
@@ -203,6 +206,10 @@ fn spawn_mob(
 
     if let Some(mob_spawners) = &mob_attributes.mob_spawners {
         entity_commands.insert(mob_spawners.clone());
+    }
+
+    if let Some(entity) = transmitter_entity {
+        entity_commands.insert(BehaviorReceiver(entity));
     }
 
     let anchor_id = entity_commands
@@ -229,6 +236,13 @@ fn spawn_mob(
             }
         })
         .id();
+
+    // Set the transmitter entity for the spawned joints
+    let new_transmitter_entity = if mob_attributes.behavior_transmitter {
+        Some(anchor_id)
+    } else {
+        transmitter_entity
+    };
 
     // Process all jointed sub-mobs (mobs connected via physics joints)
     for jointed_mob in &mob_attributes.jointed_mobs {
@@ -262,6 +276,7 @@ fn spawn_mob(
                     behaviors_res,
                     assets,
                     chain_index < actual_length - 1, // Suppress jointed mobs except on the last chain link
+                    new_transmitter_entity,
                 )?;
 
                 // Create joint between current and previous mob in chain
@@ -294,6 +309,7 @@ fn spawn_mob(
                 behaviors_res,
                 assets,
                 false,
+                new_transmitter_entity,
             )?;
             // Connect the jointed mob directly to the anchor with no offset
             if mob_debug_settings.joints_enabled {

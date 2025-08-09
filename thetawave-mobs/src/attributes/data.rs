@@ -117,7 +117,7 @@ pub(crate) enum MobDecorationType {
 }
 
 /// All types of spawnable mobs
-#[derive(Deserialize, Debug, Eq, PartialEq, Hash, EnumIter, Clone)]
+#[derive(Deserialize, Debug, Eq, PartialEq, Hash, EnumIter, Clone, Component)]
 pub enum MobType {
     XhitaraGrunt,
     XhitaraSpitter,
@@ -254,6 +254,8 @@ pub(crate) struct MobAttributes {
     pub targeting_range: Option<f32>,
     #[serde(default)]
     pub mob_spawners: Option<MobSpawnerComponent>,
+    #[serde(default)]
+    pub behavior_transmitter: bool,
 }
 
 fn default_colliders() -> Vec<ThetawaveCollider> {

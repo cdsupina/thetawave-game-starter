@@ -2,7 +2,7 @@ use avian2d::prelude::{AngularVelocity, LinearVelocity};
 use bevy::{
     ecs::{
         entity::Entity,
-        event::EventWriter,
+        event::{EventReader, EventWriter},
         query::With,
         system::{Commands, Query, Res},
     },
@@ -13,26 +13,76 @@ use bevy_behave::prelude::BehaveCtx;
 use thetawave_player::PlayerStats;
 
 use crate::{
-    SpawnMobEvent,
+    MobType, SpawnMobEvent,
     attributes::{MobAttributesComponent, MobSpawnerComponent},
-    behavior::{MobBehavior, MobBehaviorType, data::Target},
+    behavior::{
+        BehaviorReceiver, MobBehavior, MobBehaviorType,
+        data::{Target, TransmitBehaviorEvent},
+    },
 };
 
+pub(super) fn transmit_system(
+    mob_behavior_q: Query<(&MobBehavior, &BehaveCtx)>,
+    mut transmit_event_writer: EventWriter<TransmitBehaviorEvent>,
+) {
+    for (mob_behavior, ctx) in mob_behavior_q.iter() {
+        for behavior in mob_behavior.behaviors.iter() {
+            if let MobBehaviorType::TransmitMobBehavior {
+                mob_type,
+                behaviors,
+            } = behavior
+            {
+                transmit_event_writer.write(TransmitBehaviorEvent {
+                    entity: ctx.target_entity(),
+                    mob_type: mob_type.clone(),
+                    behaviors: *behaviors.clone(),
+                });
+            }
+        }
+    }
+}
+
+pub(super) fn receieve_system(
+    mut transmit_event_reader: EventReader<TransmitBehaviorEvent>,
+    mut mob_q: Query<(
+        &MobType,
+        &BehaviorReceiver,
+        &MobAttributesComponent,
+        &mut LinearVelocity,
+    )>,
+) {
+    for event in transmit_event_reader.read() {
+        for (mob_type, behavior_recv, mob_attr, mut lin_vel) in mob_q.iter_mut() {
+            if *mob_type == event.mob_type && behavior_recv.0 == event.entity {
+                for behavior in event.behaviors.iter() {
+                    match behavior {
+                        MobBehaviorType::MoveDown => move_down(mob_attr, &mut lin_vel),
+                        _ => {}
+                    }
+                }
+            }
+        }
+    }
+}
+
 pub(super) fn move_down_system(
-    move_q: Query<(&MobBehavior, &BehaveCtx)>,
+    mob_behavior_q: Query<(&MobBehavior, &BehaveCtx)>,
     mut mob_q: Query<(&mut LinearVelocity, &MobAttributesComponent)>,
 ) {
-    for (move_behavior, ctx) in move_q.iter() {
+    for (mob_behavior, ctx) in mob_behavior_q.iter() {
         let Ok((mut lin_vel, attributes)) = mob_q.get_mut(ctx.target_entity()) else {
             continue;
         };
 
-        #[allow(clippy::collapsible_if)]
-        if move_behavior.behaviors.contains(&MobBehaviorType::MoveDown) {
-            if lin_vel.y > -attributes.max_linear_speed.y {
-                lin_vel.y -= attributes.linear_acceleration.y;
-            }
+        if mob_behavior.behaviors.contains(&MobBehaviorType::MoveDown) {
+            move_down(attributes, &mut lin_vel);
         }
+    }
+}
+
+fn move_down(attributes: &MobAttributesComponent, lin_vel: &mut LinearVelocity) {
+    if lin_vel.y > -attributes.max_linear_speed.y {
+        lin_vel.y -= attributes.linear_acceleration.y;
     }
 }
 
@@ -50,12 +100,16 @@ pub(super) fn brake_horizontal_system(
             .behaviors
             .contains(&MobBehaviorType::BrakeHorizontal)
         {
-            if lin_vel.x > 0.0 {
-                lin_vel.x = (lin_vel.x - attributes.linear_deceleration.x).max(0.0);
-            } else if lin_vel.x < 0.0 {
-                lin_vel.x = (lin_vel.x + attributes.linear_deceleration.x).min(0.0);
-            }
+            brake_horizontal(attributes, &mut lin_vel);
         }
+    }
+}
+
+fn brake_horizontal(attributes: &MobAttributesComponent, lin_vel: &mut LinearVelocity) {
+    if lin_vel.x > 0.0 {
+        lin_vel.x = (lin_vel.x - attributes.linear_deceleration.x).max(0.0);
+    } else if lin_vel.x < 0.0 {
+        lin_vel.x = (lin_vel.x + attributes.linear_deceleration.x).min(0.0);
     }
 }
 
