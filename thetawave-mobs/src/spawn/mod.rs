@@ -13,6 +13,7 @@ use bevy::{
     },
     log::info,
     math::{Quat, Vec2},
+    platform::collections::HashMap,
     prelude::Name,
     sprite::Sprite,
     transform::components::Transform,
@@ -24,7 +25,10 @@ use thetawave_states::{AppState, Cleanup};
 
 use crate::{
     MobType, SpawnMobEvent,
-    attributes::{JointedMob, MobAttributesComponent, MobAttributesResource, MobDecorationType},
+    attributes::{
+        JointedMob, JointsComponent, MobAttributesComponent, MobAttributesResource,
+        MobDecorationType,
+    },
     behavior::{BehaviorReceiver, MobBehaviorsResource},
 };
 
@@ -141,7 +145,7 @@ fn create_joint(
     jointed: Entity,
     jointed_mob: &JointedMob,
     anchor_offset: Vec2,
-) {
+) -> Entity {
     // Create the revolute joint with anchor positions and compliance settings
     let mut joint = RevoluteJoint::new(anchor, jointed)
         .with_local_anchor_1(jointed_mob.anchor_1_pos + anchor_offset)
@@ -157,7 +161,7 @@ fn create_joint(
         joint.angle_limit_torque = angle_limit_range.torque;
     }
     // Spawn the joint entity into the world
-    cmds.spawn(joint);
+    cmds.spawn(joint).id()
 }
 
 /// Spawns a mob entity with all its components, decorations, and jointed sub-mobs
@@ -244,6 +248,8 @@ fn spawn_mob(
         transmitter_entity
     };
 
+    let mut mob_joints = HashMap::new();
+
     // Process all jointed sub-mobs (mobs connected via physics joints)
     for jointed_mob in &mob_attributes.jointed_mobs {
         // Handle chain spawning: creates a sequence of connected mobs
@@ -282,16 +288,19 @@ fn spawn_mob(
                 // Create joint between current and previous mob in chain
                 // First link uses no anchor offset, subsequent links use chain.anchor_offset
                 if mob_debug_settings.joints_enabled {
-                    create_joint(
-                        cmds,
-                        previous_id,
-                        jointed_id,
-                        jointed_mob,
-                        if chain_index != 0 {
-                            chain.anchor_offset
-                        } else {
-                            Vec2::ZERO
-                        },
+                    mob_joints.insert(
+                        jointed_mob.key.clone(),
+                        create_joint(
+                            cmds,
+                            previous_id,
+                            jointed_id,
+                            jointed_mob,
+                            if chain_index != 0 {
+                                chain.anchor_offset
+                            } else {
+                                Vec2::ZERO
+                            },
+                        ),
                     );
                 }
                 // Update the previous_id for the next iteration
@@ -313,9 +322,18 @@ fn spawn_mob(
             )?;
             // Connect the jointed mob directly to the anchor with no offset
             if mob_debug_settings.joints_enabled {
-                create_joint(cmds, anchor_id, jointed_id, jointed_mob, Vec2::ZERO);
+                mob_joints.insert(
+                    jointed_mob.key.clone(),
+                    create_joint(cmds, anchor_id, jointed_id, jointed_mob, Vec2::ZERO),
+                );
             }
         }
+    }
+
+    // Add joints component to the anchor entity if we have any joints
+    if !mob_joints.is_empty() {
+        cmds.entity(anchor_id)
+            .insert(JointsComponent { joints: mob_joints });
     }
 
     Ok(anchor_id)

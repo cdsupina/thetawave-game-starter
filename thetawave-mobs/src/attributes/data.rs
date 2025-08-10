@@ -3,9 +3,10 @@ use avian2d::prelude::{
     Rotation,
 };
 use bevy::{
-    ecs::{component::Component, event::Event, name::Name, resource::Resource},
+    ecs::{component::Component, entity::Entity, event::Event, name::Name, resource::Resource},
     math::Vec2,
     platform::collections::HashMap,
+    reflect::Reflect,
     time::{Timer, TimerMode},
 };
 use serde::Deserialize;
@@ -198,6 +199,7 @@ pub(crate) struct MobChain {
 #[derive(Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct JointedMob {
+    pub key: String,
     pub mob_type: MobType,
     #[serde(default)]
     pub offset_pos: Vec2,
@@ -211,6 +213,14 @@ pub(crate) struct JointedMob {
     pub compliance: f32,
     #[serde(default)]
     pub chain: Option<MobChain>,
+}
+
+/// Hashmap of joints connected to a mob
+/// This is for "anchors" only
+/// Used by behaviors for referencing joint entities
+#[derive(Component, Reflect)]
+pub(crate) struct JointsComponent {
+    pub joints: HashMap<String, Entity>,
 }
 
 /// Contains all attributes for a mob
