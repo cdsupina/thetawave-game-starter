@@ -1,4 +1,4 @@
-use avian2d::prelude::{AngularVelocity, LinearVelocity};
+use avian2d::prelude::{AngularVelocity, LinearVelocity, RevoluteJoint};
 use bevy::{
     ecs::{
         entity::Entity,
@@ -14,7 +14,7 @@ use thetawave_player::PlayerStats;
 
 use crate::{
     MobType, SpawnMobEvent,
-    attributes::{MobAttributesComponent, MobSpawnerComponent},
+    attributes::{JointsComponent, MobAttributesComponent, MobSpawnerComponent},
     behavior::{
         BehaviorReceiver, MobBehavior, MobBehaviorType,
         data::{Target, TransmitBehaviorEvent},
@@ -57,6 +57,8 @@ pub(super) fn receieve_system(
                 for behavior in event.behaviors.iter() {
                     match behavior {
                         MobBehaviorType::MoveDown => move_down(mob_attr, &mut lin_vel),
+                        MobBehaviorType::MoveLeft => move_left(mob_attr, &mut lin_vel),
+                        MobBehaviorType::MoveRight => move_right(mob_attr, &mut lin_vel),
                         _ => {}
                     }
                 }
@@ -83,6 +85,48 @@ pub(super) fn move_down_system(
 fn move_down(attributes: &MobAttributesComponent, lin_vel: &mut LinearVelocity) {
     if lin_vel.y > -attributes.max_linear_speed.y {
         lin_vel.y -= attributes.linear_acceleration.y;
+    }
+}
+
+pub(super) fn move_left_system(
+    mob_behavior_q: Query<(&MobBehavior, &BehaveCtx)>,
+    mut mob_q: Query<(&mut LinearVelocity, &MobAttributesComponent)>,
+) {
+    for (mob_behavior, ctx) in mob_behavior_q.iter() {
+        let Ok((mut lin_vel, attributes)) = mob_q.get_mut(ctx.target_entity()) else {
+            continue;
+        };
+
+        if mob_behavior.behaviors.contains(&MobBehaviorType::MoveDown) {
+            move_left(attributes, &mut lin_vel);
+        }
+    }
+}
+
+fn move_left(attributes: &MobAttributesComponent, lin_vel: &mut LinearVelocity) {
+    if lin_vel.x > -attributes.max_linear_speed.x {
+        lin_vel.x -= attributes.linear_acceleration.x;
+    }
+}
+
+pub(super) fn move_right_system(
+    mob_behavior_q: Query<(&MobBehavior, &BehaveCtx)>,
+    mut mob_q: Query<(&mut LinearVelocity, &MobAttributesComponent)>,
+) {
+    for (mob_behavior, ctx) in mob_behavior_q.iter() {
+        let Ok((mut lin_vel, attributes)) = mob_q.get_mut(ctx.target_entity()) else {
+            continue;
+        };
+
+        if mob_behavior.behaviors.contains(&MobBehaviorType::MoveDown) {
+            move_right(attributes, &mut lin_vel);
+        }
+    }
+}
+
+fn move_right(attributes: &MobAttributesComponent, lin_vel: &mut LinearVelocity) {
+    if lin_vel.x < attributes.max_linear_speed.x {
+        lin_vel.x += attributes.linear_acceleration.x;
     }
 }
 
@@ -443,6 +487,30 @@ pub(super) fn do_for_time_system(
                 if timer.tick(time.delta()).just_finished() {
                     // Perform the action when the timer finishes
                     cmds.trigger(ctx.success());
+                }
+            }
+        }
+    }
+}
+
+pub(super) fn rotate_clockwise_system(
+    mut mob_behavior_q: Query<(&mut MobBehavior, &BehaveCtx)>,
+    mob_q: Query<&JointsComponent>,
+    mut joints_q: Query<&mut RevoluteJoint>,
+) {
+    for (mut mob_behavior, ctx) in mob_behavior_q.iter_mut() {
+        let Ok(joints) = mob_q.get(ctx.target_entity()) else {
+            continue;
+        };
+
+        for behavior in mob_behavior.behaviors.iter_mut() {
+            if let MobBehaviorType::RotateJointsClockwise(keys) = behavior {
+                for joint_key in keys {
+                    if let Some(joint_entity) = joints.joints.get(joint_key) {
+                        if let Ok(revolute_joint) = joints_q.get_mut(*joint_entity) {
+                            // rotate the revolute joint, will require joint motors
+                        }
+                    }
                 }
             }
         }
