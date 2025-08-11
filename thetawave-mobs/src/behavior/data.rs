@@ -31,7 +31,7 @@ pub(crate) enum MobBehaviorType {
     DoForTime(Timer),
     TransmitMobBehavior {
         mob_type: MobType,
-        behaviors: Box<Vec<MobBehaviorType>>,
+        behaviors: Vec<MobBehaviorType>,
     },
 }
 
@@ -163,7 +163,7 @@ impl MobBehaviorsResource {
                         Behave::Forever => {
                             Behave::Sequence => {
                                 Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(0.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once))]  }),
-                                Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(125.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once)), MobBehaviorType::TransmitMobBehavior { mob_type: MobType::FerritharaxLeftArm, behaviors: Box::new(vec![MobBehaviorType::MoveDown]) }, MobBehaviorType::TransmitMobBehavior { mob_type: MobType::FerritharaxLeftClaw, behaviors: Box::new(vec![MobBehaviorType::MoveDown]) }, MobBehaviorType::TransmitMobBehavior { mob_type: MobType::FerritharaxLeftShoulder, behaviors: Box::new(vec![MobBehaviorType::MoveDown]) }]  }),
+                                Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(125.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once)), MobBehaviorType::TransmitMobBehavior { mob_type: MobType::FerritharaxLeftArm, behaviors: vec![MobBehaviorType::MoveDown] }, MobBehaviorType::TransmitMobBehavior { mob_type: MobType::FerritharaxLeftClaw, behaviors: vec![MobBehaviorType::MoveDown] }, MobBehaviorType::TransmitMobBehavior { mob_type: MobType::FerritharaxLeftShoulder, behaviors: vec![MobBehaviorType::MoveDown] }]  }),
                                 Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(0.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once))]  }),
                                 Behave::spawn_named("Movement", MobBehavior { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(-125.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once))]  }),
                             }

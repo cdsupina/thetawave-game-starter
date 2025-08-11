@@ -35,7 +35,7 @@ pub(super) fn transmit_system(
                 transmit_event_writer.write(TransmitBehaviorEvent {
                     entity: ctx.target_entity(),
                     mob_type: mob_type.clone(),
-                    behaviors: *behaviors.clone(),
+                    behaviors: behaviors.clone(),
                 });
             }
         }
