@@ -38,12 +38,16 @@ const DEFAULT_COLLISION_LAYER_FILTER: &[ThetawavePhysicsLayer] = &[
 ];
 const DEFAULT_COLLIDER_DENSITY: f32 = 1.0;
 
-#[derive(Component, Deserialize, Debug, Clone)]
+/// Mob spawner component for use in spawned mobs
+/// Maps String keys to MobSpawners
+/// Intended to be used by behaviors
+#[derive(Component, Deserialize, Debug, Clone, Reflect)]
 pub(crate) struct MobSpawnerComponent {
     pub spawners: HashMap<String, MobSpawner>,
 }
 
-#[derive(Debug, Clone)]
+/// Used for periodically spawning mobs with a MobSpawnerComponent
+#[derive(Debug, Clone, Reflect)]
 pub(crate) struct MobSpawner {
     pub timer: Timer,
     pub position: Vec2,
@@ -56,8 +60,8 @@ impl<'de> Deserialize<'de> for MobSpawner {
     where
         D: serde::Deserializer<'de>,
     {
-        // Define a "helper" struct that mirrors CharacterAttributes
-        // but uses types that can be deserialized
+        // Define a "helper" struct that mirrors MobSpawner
+        // but uses types that can be deserialized easily
         #[derive(Deserialize)]
         #[serde(deny_unknown_fields)]
         struct Helper {
@@ -83,7 +87,7 @@ impl<'de> Deserialize<'de> for MobSpawner {
 /// Describes a collider that can be attached to mobs
 #[derive(Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
-pub(crate) struct ThetawaveCollider {
+pub struct ThetawaveCollider {
     pub shape: ColliderShape,
     pub position: Vec2,
     pub rotation: f32,
@@ -92,7 +96,7 @@ pub(crate) struct ThetawaveCollider {
 /// All types of collider shapes that can be attached to mobs
 #[derive(Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
-pub(crate) enum ColliderShape {
+pub enum ColliderShape {
     Circle(f32),
     Rectangle(f32, f32),
 }
@@ -106,8 +110,10 @@ impl From<&ColliderShape> for Collider {
     }
 }
 
-// All types of decorations that can be attached to mobs
+/// Decorations that can be attached to mobs
+/// Decorations don't have colliders, but have independent animations from the mob
 #[derive(Deserialize, Debug, Clone)]
+#[allow(clippy::enum_variant_names)]
 pub(crate) enum MobDecorationType {
     XhitaraGruntThrusters,
     XhitaraSpitterThrusters,
@@ -117,8 +123,8 @@ pub(crate) enum MobDecorationType {
     XhitaraLauncherThrusters,
 }
 
-/// All types of spawnable mobs
-#[derive(Deserialize, Debug, Eq, PartialEq, Hash, EnumIter, Clone, Component)]
+/// Identifiers for mobs, mainly used for spawning
+#[derive(Deserialize, Debug, Eq, PartialEq, Hash, EnumIter, Clone, Component, Reflect)]
 pub enum MobType {
     XhitaraGrunt,
     XhitaraSpitter,
@@ -156,9 +162,9 @@ pub struct SpawnMobEvent {
     pub rotation: f32,
 }
 
-/// Component to hold mob attributes that are not used in cases outside of creating components
-/// Such as in mob behaviors
-#[derive(Component)]
+/// Mob attributes not directly used to make any other componnents
+/// Typically used in mob behaviors
+#[derive(Component, Reflect)]
 pub(crate) struct MobAttributesComponent {
     pub linear_acceleration: Vec2,
     pub linear_deceleration: Vec2,
@@ -169,7 +175,7 @@ pub(crate) struct MobAttributesComponent {
     pub targeting_range: Option<f32>,
 }
 
-/// Describes an angle limit for a joint
+/// Describes an Avian2D angle limit for a joint
 #[derive(Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct JointAngleLimit {
@@ -178,7 +184,7 @@ pub(crate) struct JointAngleLimit {
     pub torque: f32,
 }
 
-/// Used for making chains of random length
+/// Used for making mob chains of random length
 #[derive(Deserialize, Debug, Clone)]
 pub(crate) struct RandomMobChain {
     pub min_length: u8,
@@ -324,7 +330,8 @@ fn default_max_angular_speed() -> f32 {
     DEFAULT_MAX_ANGULAR_SPEED
 }
 
-/// Resource tracking all data for mobs
+/// Resource for storing data for all mobs
+/// Used mainly for spawning mobs with a given MobType
 #[derive(Deserialize, Debug, Resource)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct MobAttributesResource {
@@ -361,7 +368,6 @@ impl From<&MobAttributes> for CollisionLayers {
     }
 }
 
-/// Create a collider component using mob attributes
 impl From<&MobAttributes> for Collider {
     fn from(value: &MobAttributes) -> Self {
         Collider::compound(

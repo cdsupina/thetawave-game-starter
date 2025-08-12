@@ -20,3 +20,4 @@ thetawave-player = { path = "../thetawave-player" }
 
 [features]
 dynamic_linking = ["bevy/dynamic_linking", "thetawave-assets/dynamic_linking"]
+debug = []

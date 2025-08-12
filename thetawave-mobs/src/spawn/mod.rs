@@ -29,7 +29,7 @@ use crate::{
         JointedMob, JointsComponent, MobAttributesComponent, MobAttributesResource,
         MobDecorationType,
     },
-    behavior::{BehaviorReceiver, MobBehaviorsResource},
+    behavior::{BehaviorReceiverComponent, MobBehaviorsResource},
 };
 
 trait GameAssetsExt {
@@ -213,7 +213,7 @@ fn spawn_mob(
     }
 
     if let Some(entity) = transmitter_entity {
-        entity_commands.insert(BehaviorReceiver(entity));
+        entity_commands.insert(BehaviorReceiverComponent(entity));
     }
 
     let anchor_id = entity_commands

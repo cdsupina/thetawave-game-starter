@@ -47,4 +47,8 @@ dynamic_linking = [
     "thetawave-states/dynamic_linking",
     "thetawave-mobs/dynamic_linking",
 ]
-debug = ["thetawave-debug", "thetawave-physics/physics_debug"]
+debug = [
+    "thetawave-debug",
+    "thetawave-physics/physics_debug",
+    "thetawave-mobs/debug",
+]

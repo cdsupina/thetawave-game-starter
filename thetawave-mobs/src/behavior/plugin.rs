@@ -12,8 +12,8 @@ use thetawave_states::{AppState, GameState};
 use crate::{
     MobDebugSettings,
     behavior::{
-        BehaviorReceiver, MobBehaviorsResource,
-        data::TransmitBehaviorEvent,
+        BehaviorReceiverComponent, MobBehaviorsResource,
+        data::{TargetComponent, TransmitBehaviorEvent},
         systems::{
             brake_angular_system, brake_horizontal_system, do_for_time_system,
             find_player_target_system, lose_target_system, move_down_system, move_forward_system,
@@ -30,7 +30,9 @@ impl Plugin for ThetawaveMobBehaviorPlugin {
         app.add_plugins(BehavePlugin::default());
         app.add_event::<TransmitBehaviorEvent>();
         app.insert_resource(MobBehaviorsResource::new());
-        app.register_type::<BehaviorReceiver>();
+
+        // Register types for access in the inspector
+        app.register_type::<(BehaviorReceiverComponent, TargetComponent)>();
         app.add_systems(
             Update,
             (
@@ -50,11 +52,18 @@ impl Plugin for ThetawaveMobBehaviorPlugin {
                 move_left_system,
                 move_right_system,
             )
-                .run_if(
-                    in_state(AppState::Game)
-                        .and(in_state(GameState::Playing))
-                        .and(|mob_res: Res<MobDebugSettings>| mob_res.behaviors_enabled),
-                ),
+                .run_if({
+                    #[cfg(feature = "debug")]
+                    {
+                        in_state(AppState::Game)
+                            .and(in_state(GameState::Playing))
+                            .and(|mob_res: Res<MobDebugSettings>| mob_res.behaviors_enabled)
+                    }
+                    #[cfg(not(feature = "debug"))]
+                    {
+                        in_state(AppState::Game).and(in_state(GameState::Playing))
+                    }
+                }),
         );
     }
 }

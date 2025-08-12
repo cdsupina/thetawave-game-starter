@@ -21,6 +21,7 @@ pub struct ThetawaveMobsPlugin;
 
 impl Plugin for ThetawaveMobsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
+        #[cfg(feature = "debug")]
         app.insert_resource(MobDebugSettings::default());
 
         app.add_plugins((ThetawaveMobBehaviorPlugin, ThetawaveAttributesPlugin));
