@@ -9,17 +9,14 @@ use bevy::{
 use bevy_behave::prelude::BehavePlugin;
 use thetawave_states::{AppState, GameState};
 
-use crate::{
-    MobDebugSettings,
-    behavior::{
-        BehaviorReceiverComponent, MobBehaviorsResource,
-        data::{TargetComponent, TransmitBehaviorEvent},
-        systems::{
-            brake_angular_system, brake_horizontal_system, do_for_time_system,
-            find_player_target_system, lose_target_system, move_down_system, move_forward_system,
-            move_left_system, move_right_system, move_to_system, move_to_target_system,
-            receieve_system, rotate_to_target_system, spawn_mob_system, transmit_system,
-        },
+use crate::behavior::{
+    BehaviorReceiverComponent, MobBehaviorsResource,
+    data::{TargetComponent, TransmitBehaviorEvent},
+    systems::{
+        brake_angular_system, brake_horizontal_system, do_for_time_system,
+        find_player_target_system, lose_target_system, move_down_system, move_forward_system,
+        move_left_system, move_right_system, move_to_system, move_to_target_system,
+        receieve_system, rotate_to_target_system, spawn_mob_system, transmit_system,
     },
 };
 
@@ -55,6 +52,7 @@ impl Plugin for ThetawaveMobBehaviorPlugin {
                 .run_if({
                     #[cfg(feature = "debug")]
                     {
+                        use crate::MobDebugSettings;
                         in_state(AppState::Game)
                             .and(in_state(GameState::Playing))
                             .and(|mob_res: Res<MobDebugSettings>| mob_res.behaviors_enabled)

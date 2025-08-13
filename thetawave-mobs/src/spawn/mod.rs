@@ -34,10 +34,11 @@ use crate::{
 
 trait GameAssetsExt {
     fn get_mob_sprite(&self, mob_type: &MobType) -> Handle<Aseprite>;
-    fn get_mob_decoration(&self, mob_type: &MobDecorationType) -> Handle<Aseprite>;
+    fn get_mob_decoration_sprite(&self, mob_type: &MobDecorationType) -> Handle<Aseprite>;
 }
 
 impl GameAssetsExt for GameAssets {
+    /// Get the Aseprite handle from from a given MobType
     fn get_mob_sprite(&self, mob_type: &MobType) -> Handle<Aseprite> {
         match mob_type {
             MobType::XhitaraGrunt => self.xhitara_grunt_mob_aseprite.clone(),
@@ -73,7 +74,8 @@ impl GameAssetsExt for GameAssets {
         }
     }
 
-    fn get_mob_decoration(&self, mob_type: &MobDecorationType) -> Handle<Aseprite> {
+    /// Get the Aseprite handle for a decoration using a given MobDecorationType
+    fn get_mob_decoration_sprite(&self, mob_type: &MobDecorationType) -> Handle<Aseprite> {
         match mob_type {
             MobDecorationType::XhitaraGruntThrusters => {
                 self.xhitara_grunt_thrusters_aseprite.clone()
@@ -112,7 +114,7 @@ impl Default for MobDebugSettings {
     }
 }
 
-/// Spawn a mob entity
+/// Reads SpawnMobEvents and spawns mobs
 pub(super) fn spawn_mob_system(
     mut cmds: Commands,
     assets: Res<GameAssets>,
@@ -122,6 +124,9 @@ pub(super) fn spawn_mob_system(
     behaviors_res: Res<MobBehaviorsResource>,
 ) -> Result {
     for event in spawn_mob_event_reader.read() {
+        let suppress_jointed_mobs = false;
+        let transmitter_entity: Option<Entity> = None;
+
         spawn_mob(
             &mut cmds,
             &event.mob_type,
@@ -131,40 +136,15 @@ pub(super) fn spawn_mob_system(
             &attributes_res,
             &behaviors_res,
             &assets,
-            false,
-            None,
+            suppress_jointed_mobs,
+            transmitter_entity,
         )?;
     }
     Ok(())
 }
 
-/// Creates a revolute joint between two mob entities with optional angle limits
-fn create_joint(
-    cmds: &mut Commands,
-    anchor: Entity,
-    jointed: Entity,
-    jointed_mob: &JointedMob,
-    anchor_offset: Vec2,
-) -> Entity {
-    // Create the revolute joint with anchor positions and compliance settings
-    let mut joint = RevoluteJoint::new(anchor, jointed)
-        .with_local_anchor_1(jointed_mob.anchor_1_pos + anchor_offset)
-        .with_local_anchor_2(jointed_mob.anchor_2_pos)
-        .with_compliance(jointed_mob.compliance);
-
-    // Apply angle limits if specified (constrains how far the joint can rotate)
-    if let Some(angle_limit_range) = &jointed_mob.angle_limit_range {
-        joint.angle_limit = Some(AngleLimit::new(
-            angle_limit_range.min.to_radians(),
-            angle_limit_range.max.to_radians(),
-        ));
-        joint.angle_limit_torque = angle_limit_range.torque;
-    }
-    // Spawn the joint entity into the world
-    cmds.spawn(joint).id()
-}
-
 /// Spawns a mob entity with all its components, decorations, and jointed sub-mobs
+#[allow(clippy::too_many_arguments)]
 fn spawn_mob(
     cmds: &mut Commands,
     mob_type: &MobType,
@@ -211,7 +191,6 @@ fn spawn_mob(
     if let Some(mob_spawners) = &mob_attributes.mob_spawners {
         entity_commands.insert(mob_spawners.clone());
     }
-
     if let Some(entity) = transmitter_entity {
         entity_commands.insert(BehaviorReceiverComponent(entity));
     }
@@ -224,7 +203,7 @@ fn spawn_mob(
                     Transform::from_xyz(pos.x, pos.y, 0.0),
                     AseAnimation {
                         animation: Animation::tag("idle"),
-                        aseprite: assets.get_mob_decoration(decoration_type),
+                        aseprite: assets.get_mob_decoration_sprite(decoration_type),
                     },
                     Sprite::default(),
                     Name::new("Decoration"),
@@ -337,4 +316,30 @@ fn spawn_mob(
     }
 
     Ok(anchor_id)
+}
+
+/// Creates a revolute joint between two mob entities with optional angle limits
+fn create_joint(
+    cmds: &mut Commands,
+    anchor: Entity,
+    jointed: Entity,
+    jointed_mob: &JointedMob,
+    anchor_offset: Vec2,
+) -> Entity {
+    // Create the revolute joint with anchor positions and compliance settings
+    let mut joint = RevoluteJoint::new(anchor, jointed)
+        .with_local_anchor_1(jointed_mob.anchor_1_pos + anchor_offset)
+        .with_local_anchor_2(jointed_mob.anchor_2_pos)
+        .with_compliance(jointed_mob.compliance);
+
+    // Apply angle limits if specified (constrains how far the joint can rotate)
+    if let Some(angle_limit_range) = &jointed_mob.angle_limit_range {
+        joint.angle_limit = Some(AngleLimit::new(
+            angle_limit_range.min.to_radians(),
+            angle_limit_range.max.to_radians(),
+        ));
+        joint.angle_limit_torque = angle_limit_range.torque;
+    }
+    // Spawn the joint entity into the world
+    cmds.spawn(joint).id()
 }
