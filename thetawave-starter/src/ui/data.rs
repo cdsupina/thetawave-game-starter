@@ -1,15 +1,12 @@
-use crate::{
-    input::InputType,
-    player::{CharacterType, PlayerNum},
-};
+use crate::{input::InputType, player::PlayerNum};
 use bevy::{
     ecs::{resource::Resource, system::EntityCommands},
     prelude::{ChildSpawnerCommands, Component, Entity, Event, Name},
     text::TextFont,
     time::{Timer, TimerMode},
     ui::{
-        widget::{ImageNode, Text},
         AlignItems, FlexDirection, JustifyContent, JustifySelf, Node, UiRect, Val,
+        widget::{ImageNode, Text},
     },
     utils::default,
 };
@@ -17,6 +14,7 @@ use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use strum::IntoEnumIterator;
 use thetawave_assets::UiAssets;
+use thetawave_player::CharacterType;
 use thetawave_states::{AppState, GameState, MainMenuState, PauseMenuState};
 
 const BUTTON_ACTION_DELAY_TIME: f32 = 0.3;

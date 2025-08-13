@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{
     input::CharacterCarouselAction,
-    player::{CharacterType, ChosenCharacterData, ChosenCharactersResource},
+    player::{ChosenCharacterData, ChosenCharactersResource},
     ui::data::{
         CarouselReadyTimer, CarouselSlotPosition, CharacterCarousel, CharacterSelector,
         MenuButtonState, PlayerReadyButton, StartGameButton, UiChildBuilderExt,
@@ -30,6 +30,7 @@ use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use bevy_persistent::Persistent;
 use leafwing_input_manager::prelude::{ActionState, InputMap};
+use thetawave_player::CharacterType;
 use thetawave_states::AppState;
 
 /// Spawn ui for character selection

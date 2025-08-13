@@ -2,7 +2,6 @@ use super::data::{CharactersResource, ChosenCharactersResource};
 use crate::{
     input::{InputType, PlayerAbility, PlayerAction},
     options::OptionsRes,
-    player::CharacterType,
 };
 use avian2d::prelude::{
     Collider, CollisionLayers, LayerMask, LinearVelocity, LockedAxes, MaxLinearSpeed, Restitution,
@@ -22,7 +21,7 @@ use leafwing_abilities::{AbilitiesBundle, prelude::CooldownState};
 use leafwing_input_manager::prelude::{ActionState, InputMap};
 use thetawave_assets::GameAssets;
 use thetawave_physics::ThetawavePhysicsLayer;
-use thetawave_player::PlayerStats;
+use thetawave_player::{CharacterType, PlayerStats};
 use thetawave_states::{AppState, Cleanup};
 
 trait GameAssetsExt {

@@ -6,21 +6,14 @@ use bevy::{
 use bevy_platform::collections::HashMap;
 use leafwing_abilities::prelude::{Cooldown, CooldownState};
 use serde::Deserialize;
-use strum_macros::{AsRefStr, EnumIter};
+use strum_macros::AsRefStr;
+use thetawave_player::CharacterType;
 
 /// Resource for storing all of the data about every character
 #[derive(Resource, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub(super) struct CharactersResource {
     pub characters: HashMap<CharacterType, CharacterAttributes>,
-}
-
-/// Characters that can be chosen by players to play as
-#[derive(Eq, PartialEq, Hash, Debug, EnumIter, Clone, Deserialize)]
-pub(crate) enum CharacterType {
-    Captain,
-    Juggernaut,
-    Doomwing,
 }
 
 /// Attributes of a character
