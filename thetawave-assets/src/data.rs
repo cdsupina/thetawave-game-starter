@@ -38,6 +38,8 @@ pub struct GameAssets {
     pub freighter_middle_mob_aseprite: Handle<Aseprite>,
     #[asset(path = "media/aseprite/freighter_back_mob.aseprite")]
     pub freighter_back_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/freighter_thrusters.aseprite")]
+    pub freighter_thrusters_aseprite: Handle<Aseprite>,
     // Animated grunt thrusters Aseprite
     #[asset(path = "media/aseprite/xhitara_grunt_thrusters.aseprite")]
     pub xhitara_grunt_thrusters_aseprite: Handle<Aseprite>,
@@ -47,6 +49,10 @@ pub struct GameAssets {
     // Animated Trizetheron spritesheet
     #[asset(path = "media/aseprite/trizetheron_mob.aseprite")]
     pub trizetheron_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/trizetheron_left_head_mob.aseprite")]
+    pub trizetheron_left_head_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/trizetheron_right_head_mob.aseprite")]
+    pub trizetheron_right_head_mob_aseprite: Handle<Aseprite>,
     // Animated Xhitara tentacle start spritesheet
     #[asset(path = "media/aseprite/xhitara_tentacle_start_mob.aseprite")]
     pub xhitara_tentacle_start_mob_aseprite: Handle<Aseprite>,
@@ -59,6 +65,38 @@ pub struct GameAssets {
     // Animated Xhitara Cyclusk spritesheet
     #[asset(path = "media/aseprite/xhitara_cyclusk_mob.aseprite")]
     pub xhitara_cyclusk_mob_aseprite: Handle<Aseprite>,
+    // Animated Xhitara Pacer spritesheet
+    #[asset(path = "media/aseprite/xhitara_pacer_mob.aseprite")]
+    pub xhitara_pacer_mob_aseprite: Handle<Aseprite>,
+    // Animated Xhitara Pacer thrusters spritesheet
+    #[asset(path = "media/aseprite/xhitara_pacer_thrusters.aseprite")]
+    pub xhitara_pacer_thrusters_aseprite: Handle<Aseprite>,
+    // Animated Xhitara Missile spritesheet
+    #[asset(path = "media/aseprite/xhitara_missile_mob.aseprite")]
+    pub xhitara_missile_mob_aseprite: Handle<Aseprite>,
+    // Animated Xhitara Missile thrusters spritesheet
+    #[asset(path = "media/aseprite/xhitara_missile_thrusters.aseprite")]
+    pub xhitara_missile_thrusters_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/xhitara_launcher_mob.aseprite")]
+    pub xhitara_launcher_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/xhitara_launcher_thrusters.aseprite")]
+    pub xhitara_launcher_thrusters_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/ferritharax_head_mob.aseprite")]
+    pub ferritharax_head_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/ferritharax_body_mob.aseprite")]
+    pub ferritharax_body_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/ferritharax_left_shoulder_mob.aseprite")]
+    pub ferritharax_left_shoulder_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/ferritharax_right_shoulder_mob.aseprite")]
+    pub ferritharax_right_shoulder_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/ferritharax_left_arm_mob.aseprite")]
+    pub ferritharax_left_arm_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/ferritharax_right_arm_mob.aseprite")]
+    pub ferritharax_right_arm_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/ferritharax_left_claw_mob.aseprite")]
+    pub ferritharax_left_claw_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/ferritharax_right_claw_mob.aseprite")]
+    pub ferritharax_right_claw_mob_aseprite: Handle<Aseprite>,
 }
 
 /// Audio assets used throughout all states of the app

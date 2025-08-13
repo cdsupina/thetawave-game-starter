@@ -10,6 +10,7 @@ use strum_macros::{AsRefStr, EnumIter};
 
 /// Resource for storing all of the data about every character
 #[derive(Resource, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 pub(super) struct CharactersResource {
     pub characters: HashMap<CharacterType, CharacterAttributes>,
 }
@@ -41,6 +42,7 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
         // Define a "helper" struct that mirrors CharacterAttributes
         // but uses types that can be deserialized
         #[derive(Deserialize)]
+        #[serde(deny_unknown_fields)]
         struct Helper {
             acceleration: f32,
             deceleration_factor: f32,
@@ -72,13 +74,6 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
             restitution: helper.restitution,
         })
     }
-}
-
-/// Component for storing values used in systems for player entities
-#[derive(Component)]
-pub(super) struct PlayerStats {
-    pub acceleration: f32,
-    pub deceleration_factor: f32,
 }
 
 /// Tag for indicating multiplayer association

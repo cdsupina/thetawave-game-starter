@@ -1,4 +1,4 @@
-use super::data::{CharactersResource, ChosenCharactersResource, PlayerStats};
+use super::data::{CharactersResource, ChosenCharactersResource};
 use crate::{
     input::{InputType, PlayerAbility, PlayerAction},
     options::OptionsRes,
@@ -22,6 +22,7 @@ use leafwing_abilities::{AbilitiesBundle, prelude::CooldownState};
 use leafwing_input_manager::prelude::{ActionState, InputMap};
 use thetawave_assets::GameAssets;
 use thetawave_physics::ThetawavePhysicsLayer;
+use thetawave_player::PlayerStats;
 use thetawave_states::{AppState, Cleanup};
 
 trait GameAssetsExt {

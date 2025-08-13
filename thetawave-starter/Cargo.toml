@@ -9,6 +9,7 @@ thetawave-physics = { path = "../thetawave-physics" }
 thetawave-assets = { path = "../thetawave-assets" }
 thetawave-backgrounds = { path = "../thetawave-backgrounds" }
 thetawave-mobs = { path = "../thetawave-mobs" }
+thetawave-player = { path = "../thetawave-player" }
 thetawave-debug = { path = "../thetawave-debug", optional = true }
 bevy.workspace = true
 bevy_platform.workspace = true
@@ -46,4 +47,8 @@ dynamic_linking = [
     "thetawave-states/dynamic_linking",
     "thetawave-mobs/dynamic_linking",
 ]
-debug = ["thetawave-debug", "thetawave-physics/physics_debug"]
+debug = [
+    "thetawave-debug",
+    "thetawave-physics/physics_debug",
+    "thetawave-mobs/debug",
+]
