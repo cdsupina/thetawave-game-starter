@@ -7,7 +7,7 @@ use bevy::{
 #[cfg(feature = "debug")]
 use bevy_egui::{
     EguiContexts,
-    egui::{TopBottomPanel, menu},
+    egui::{TopBottomPanel, containers::menu},
 };
 
 #[cfg(feature = "debug")]
@@ -36,7 +36,7 @@ pub(in crate::ui) fn game_debug_menu_system(
     let mut camera3d_zoom_new = *camera3d_zoom;
 
     TopBottomPanel::top("menu_bar").show(contexts.ctx_mut()?, |ui| {
-        menu::bar(ui, |ui| {
+        menu::MenuBar::new().ui(ui, |ui| {
             ui.menu_button("Inspector", |ui| {
                 ui.checkbox(
                     &mut inspector_debug_settings.inspector_enabled,

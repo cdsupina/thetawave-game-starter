@@ -1,5 +1,5 @@
 use super::{
-    data::{CharactersResource, ChosenCharactersResource},
+    data::ChosenCharactersResource,
     systems::{
         player_ability_system, player_move_system, reset_chosen_characters_resource_system,
         spawn_players_system,
@@ -10,6 +10,7 @@ use bevy::{
     ecs::schedule::common_conditions::not,
     prelude::{Condition, IntoScheduleConfigs, OnEnter, in_state},
 };
+use thetawave_player::CharactersResource;
 use thetawave_states::{AppState, DebugState, GameState, MainMenuState};
 use toml::from_slice;
 

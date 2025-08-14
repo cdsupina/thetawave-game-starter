@@ -113,7 +113,6 @@ impl From<&ColliderShape> for Collider {
 /// Decorations that can be attached to mobs
 /// Decorations don't have colliders, but have independent animations from the mob
 #[derive(Deserialize, Debug, Clone)]
-#[allow(clippy::enum_variant_names)]
 pub(crate) enum MobDecorationType {
     XhitaraGruntThrusters,
     XhitaraSpitterThrusters,

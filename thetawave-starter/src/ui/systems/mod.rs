@@ -4,11 +4,11 @@ use super::data::{
 };
 use crate::{
     audio::AudioEffectEvent,
-    input::InputType,
     options::{ApplyOptionsEvent, OptionsRes},
     player::{ChosenCharactersResource, PlayerNum},
 };
 use thetawave_assets::{LoadingProgressEvent, UiAssets};
+use thetawave_player::InputType;
 use thetawave_states::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState};
 
 use bevy::{
@@ -50,48 +50,48 @@ pub(super) fn menu_button_focus_system(
     mut audio_effect_events: EventWriter<AudioEffectEvent>,
 ) {
     for event in nav_events.read() {
-        if let NavEvent::FocusChanged { to, from } = event {
-            if to != from {
-                // Handle newly focused button
-                if let Ok((focusable_children, button_state)) = focusable_q.get(*to.first()) {
-                    // Play pressed button effect
-                    audio_effect_events.write(AudioEffectEvent::MenuButtonSelected);
+        if let NavEvent::FocusChanged { to, from } = event
+            && to != from
+        {
+            // Handle newly focused button
+            if let Ok((focusable_children, button_state)) = focusable_q.get(*to.first()) {
+                // Play pressed button effect
+                audio_effect_events.write(AudioEffectEvent::MenuButtonSelected);
 
-                    // Update the button animation
-                    for focusable_child in focusable_children.iter() {
-                        if let Ok((_, mut ase_animation)) = ase_q.get_mut(*focusable_child) {
-                            if matches!(button_state, MenuButtonState::Ready) {
-                                ase_animation.animation.play_loop("ready_selected");
-                            } else {
-                                ase_animation.animation.play_loop("selected");
-                            }
+                // Update the button animation
+                for focusable_child in focusable_children.iter() {
+                    if let Ok((_, mut ase_animation)) = ase_q.get_mut(*focusable_child) {
+                        if matches!(button_state, MenuButtonState::Ready) {
+                            ase_animation.animation.play_loop("ready_selected");
+                        } else {
+                            ase_animation.animation.play_loop("selected");
                         }
                     }
                 }
+            }
 
-                // Handle previously focused button
-                if let Ok((focusable_children, button_state)) = focusable_q.get(*from.first()) {
-                    // Play released button effect
-                    audio_effect_events.write(AudioEffectEvent::MenuButtonReleased);
+            // Handle previously focused button
+            if let Ok((focusable_children, button_state)) = focusable_q.get(*from.first()) {
+                // Play released button effect
+                audio_effect_events.write(AudioEffectEvent::MenuButtonReleased);
 
-                    // Update the button animation
-                    for focusable_child in focusable_children.iter() {
-                        if let Ok((ase_ani_children, mut ase_animation)) =
-                            ase_q.get_mut(*focusable_child)
-                        {
-                            if matches!(button_state, MenuButtonState::Ready) {
-                                ase_animation.animation.play_loop("ready_released");
-                            } else {
-                                ase_animation.animation.play_loop("released");
-                            }
+                // Update the button animation
+                for focusable_child in focusable_children.iter() {
+                    if let Ok((ase_ani_children, mut ase_animation)) =
+                        ase_q.get_mut(*focusable_child)
+                    {
+                        if matches!(button_state, MenuButtonState::Ready) {
+                            ase_animation.animation.play_loop("ready_released");
+                        } else {
+                            ase_animation.animation.play_loop("released");
+                        }
 
-                            // Reset the text position to the original position
-                            for ase_ani_child in ase_ani_children.iter() {
-                                if let Ok(mut text_container_node) =
-                                    text_container_q.get_mut(*ase_ani_child)
-                                {
-                                    text_container_node.margin = UiRect::bottom(Val::Px(18.0));
-                                }
+                        // Reset the text position to the original position
+                        for ase_ani_child in ase_ani_children.iter() {
+                            if let Ok(mut text_container_node) =
+                                text_container_q.get_mut(*ase_ani_child)
+                            {
+                                text_container_node.margin = UiRect::bottom(Val::Px(18.0));
                             }
                         }
                     }
@@ -116,70 +116,68 @@ pub(super) fn menu_button_action_system(
     mut player_ready_events: EventWriter<PlayerReadyEvent>,
 ) {
     for event in nav_events.read() {
-        if let NavEvent::NoChanges { from, .. } = event {
-            if let Ok((button_entity, button_action)) = focusable_q.get(*from.first()) {
-                // Try to get the input from gamepad
-                let gamepad_input = gamepads_q.iter().find_map(|(entity, gamepad)| {
-                    if gamepad.just_pressed(GamepadButton::South) {
-                        Some(InputType::Gamepad(entity))
-                    } else {
-                        None
-                    }
-                });
-
-                // Store the possible input from keyboard or gamepad
-                let maybe_input_type = if key_code_input.just_pressed(KeyCode::Enter)
-                    || mouse_button_input.just_released(MouseButton::Left)
-                {
-                    Some(InputType::Keyboard)
+        if let NavEvent::NoChanges { from, .. } = event
+            && let Ok((button_entity, button_action)) = focusable_q.get(*from.first())
+        {
+            // Try to get the input from gamepad
+            let gamepad_input = gamepads_q.iter().find_map(|(entity, gamepad)| {
+                if gamepad.just_pressed(GamepadButton::South) {
+                    Some(InputType::Gamepad(entity))
                 } else {
-                    gamepad_input
-                };
+                    None
+                }
+            });
 
-                if let Some(input_type) = maybe_input_type {
-                    let mut valid_input = true;
+            // Store the possible input from keyboard or gamepad
+            let maybe_input_type = if key_code_input.just_pressed(KeyCode::Enter)
+                || mouse_button_input.just_released(MouseButton::Left)
+            {
+                Some(InputType::Keyboard)
+            } else {
+                gamepad_input
+            };
 
-                    // If a player one has been registered, ensure that the given input is from player one
-                    if let Some(player_one_data) =
-                        chosen_characters_res.players.get(&PlayerNum::One)
-                    {
-                        if input_type != player_one_data.input {
-                            valid_input = false;
+            if let Some(input_type) = maybe_input_type {
+                let mut valid_input = true;
+
+                // If a player one has been registered, ensure that the given input is from player one
+                if let Some(player_one_data) = chosen_characters_res.players.get(&PlayerNum::One)
+                    && input_type != player_one_data.input
+                {
+                    valid_input = false;
+                }
+
+                if valid_input {
+                    // Activate join and ready actions instantly, delay other actions by sending DelayedButtonPressEvent
+                    match button_action {
+                        ButtonAction::Join(player_num) => {
+                            player_join_events.write(PlayerJoinEvent {
+                                player_num: player_num.clone(),
+                                input: input_type,
+                            });
+                        }
+                        ButtonAction::Ready(player_num) => {
+                            player_ready_events.write(PlayerReadyEvent {
+                                player_num: player_num.clone(),
+                                is_ready: true,
+                            });
+                        }
+                        ButtonAction::UnReady(player_num) => {
+                            player_ready_events.write(PlayerReadyEvent {
+                                player_num: player_num.clone(),
+                                is_ready: false,
+                            });
+                        }
+                        _ => {
+                            button_action_events.write(DelayedButtonPressEvent {
+                                button_action: button_action.clone(),
+                                button_entity,
+                            });
                         }
                     }
 
-                    if valid_input {
-                        // Activate join and ready actions instantly, delay other actions by sending DelayedButtonPressEvent
-                        match button_action {
-                            ButtonAction::Join(player_num) => {
-                                player_join_events.write(PlayerJoinEvent {
-                                    player_num: player_num.clone(),
-                                    input: input_type,
-                                });
-                            }
-                            ButtonAction::Ready(player_num) => {
-                                player_ready_events.write(PlayerReadyEvent {
-                                    player_num: player_num.clone(),
-                                    is_ready: true,
-                                });
-                            }
-                            ButtonAction::UnReady(player_num) => {
-                                player_ready_events.write(PlayerReadyEvent {
-                                    player_num: player_num.clone(),
-                                    is_ready: false,
-                                });
-                            }
-                            _ => {
-                                button_action_events.write(DelayedButtonPressEvent {
-                                    button_action: button_action.clone(),
-                                    button_entity,
-                                });
-                            }
-                        }
-
-                        // Play the button confirm sound
-                        effect_events.write(AudioEffectEvent::MenuButtonConfirm);
-                    }
+                    // Play the button confirm sound
+                    effect_events.write(AudioEffectEvent::MenuButtonConfirm);
                 }
             }
         }

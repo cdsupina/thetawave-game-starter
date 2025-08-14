@@ -1,0 +1,74 @@
+use bevy::{ecs::resource::Resource, math::Vec2, platform::collections::HashMap};
+use leafwing_abilities::prelude::{Cooldown, CooldownState};
+use serde::Deserialize;
+use strum_macros::EnumIter;
+
+use crate::input::PlayerAbility;
+
+/// Characters that can be chosen by players to play as
+#[derive(Eq, PartialEq, Hash, Debug, EnumIter, Clone, Deserialize)]
+pub enum CharacterType {
+    Captain,
+    Juggernaut,
+    Doomwing,
+}
+
+/// Resource for storing all of the data about every character
+#[derive(Resource, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct CharactersResource {
+    pub characters: HashMap<CharacterType, CharacterAttributes>,
+}
+
+/// Attributes of a character
+#[derive(Debug)]
+pub struct CharacterAttributes {
+    pub acceleration: f32,
+    pub deceleration_factor: f32,
+    pub max_speed: f32,
+    pub collider_dimensions: Vec2,
+    pub cooldowns: CooldownState<PlayerAbility>,
+    pub restitution: f32,
+}
+
+impl<'de> Deserialize<'de> for CharacterAttributes {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        // Define a "helper" struct that mirrors CharacterAttributes
+        // but uses types that can be deserialized
+        #[derive(Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct Helper {
+            acceleration: f32,
+            deceleration_factor: f32,
+            max_speed: f32,
+            collider_dimensions: Vec2,
+            // Instead of CooldownState, use a HashMap with seconds as f32
+            cooldowns: HashMap<PlayerAbility, f32>,
+            restitution: f32,
+        }
+
+        // Let serde deserialize into the Helper struct first
+        let helper = Helper::deserialize(deserializer)?;
+
+        // Transform the deserialized data into the format we need
+        let cooldown_pairs: Vec<(PlayerAbility, Cooldown)> = helper
+            .cooldowns
+            .into_iter()
+            .map(|(ability, secs)| (ability, Cooldown::from_secs(secs)))
+            .collect();
+
+        // Construct our actual struct with the transformed data
+        Ok(CharacterAttributes {
+            acceleration: helper.acceleration,
+            deceleration_factor: helper.deceleration_factor,
+            max_speed: helper.max_speed,
+            collider_dimensions: helper.collider_dimensions,
+            // Create CooldownState from the transformed pairs
+            cooldowns: CooldownState::new(cooldown_pairs),
+            restitution: helper.restitution,
+        })
+    }
+}

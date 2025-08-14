@@ -1,4 +1,4 @@
-use crate::{input::InputType, player::PlayerNum};
+use crate::player::PlayerNum;
 use bevy::{
     ecs::{resource::Resource, system::EntityCommands},
     prelude::{ChildSpawnerCommands, Component, Entity, Event, Name},
@@ -14,7 +14,7 @@ use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use strum::IntoEnumIterator;
 use thetawave_assets::UiAssets;
-use thetawave_player::CharacterType;
+use thetawave_player::{CharacterType, InputType};
 use thetawave_states::{AppState, GameState, MainMenuState, PauseMenuState};
 
 const BUTTON_ACTION_DELAY_TIME: f32 = 0.3;
@@ -51,10 +51,8 @@ impl ButtonAction {
                 MainMenuState::InputRebinding => Some("INPUT".to_string()),
                 _ => None,
             },
-            ButtonAction::EnterGameState(game_state) => match game_state {
-                GameState::Playing => Some("RESUME".to_string()),
-                _ => None,
-            },
+            ButtonAction::EnterGameState(GameState::Playing) => Some("RESUME".to_string()),
+            ButtonAction::EnterGameState(_) => None,
             ButtonAction::EnterPauseMenuState(pause_menu_state) => match pause_menu_state {
                 PauseMenuState::Main => Some("BACK".to_string()),
                 PauseMenuState::Options => Some("OPTIONS".to_string()),

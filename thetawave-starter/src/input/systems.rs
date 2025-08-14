@@ -1,4 +1,3 @@
-use super::{data::DummyGamepad, InputType};
 use crate::{player::PlayerNum, ui::PlayerJoinEvent};
 use bevy::{
     input::keyboard::NativeKeyCode,
@@ -7,6 +6,7 @@ use bevy::{
     },
 };
 use bevy_alt_ui_navigation_lite::systems::InputMapping;
+use thetawave_player::{DummyGamepad, InputType};
 
 /// Setup function for input mapping configuration
 pub(super) fn setup_input_system(mut input_mapping: ResMut<InputMapping>, mut cmds: Commands) {

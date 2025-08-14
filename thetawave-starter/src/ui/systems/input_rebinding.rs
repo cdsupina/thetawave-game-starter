@@ -1,5 +1,4 @@
 use crate::{
-    input::{DummyGamepad, InputType, PlayerAbility, PlayerAction},
     options::OptionsRes,
     ui::data::{ButtonAction, UiChildBuilderExt},
 };
@@ -12,22 +11,23 @@ use bevy::{
         system::{Commands, Local, Query, Res, ResMut},
     },
     input::{
+        ButtonInput,
         gamepad::{Gamepad, GamepadButton},
         keyboard::KeyCode,
         mouse::MouseButton,
-        ButtonInput,
     },
     ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
 use bevy_egui::{
-    egui::{CentralPanel, Color32, ComboBox, Frame, Grid, Margin, RichText, Ui},
     EguiContexts,
+    egui::{CentralPanel, Color32, ComboBox, Frame, Grid, Margin, RichText, Ui},
 };
 use bevy_persistent::Persistent;
 use itertools::{EitherOrBoth, Itertools};
 use strum::IntoEnumIterator;
 use thetawave_assets::UiAssets;
+use thetawave_player::{DummyGamepad, InputType, PlayerAbility, PlayerAction};
 use thetawave_states::{Cleanup, MainMenuState};
 
 const LABEL_TEXT_SIZE: f32 = 12.0;
@@ -128,10 +128,10 @@ fn create_player_action_rebind_button(
                     button_string = key_code.to_string();
                 }
 
-                if let Some(RebindingTarget::PlayerAction(rebinding_target)) = rebinding_flag {
-                    if *rebinding_target == *player_action {
-                        button_string = "Press Input".to_string();
-                    }
+                if let Some(RebindingTarget::PlayerAction(rebinding_target)) = rebinding_flag
+                    && *rebinding_target == *player_action
+                {
+                    button_string = "Press Input".to_string();
                 }
 
                 button_string
@@ -146,10 +146,10 @@ fn create_player_action_rebind_button(
                     button_string = gamepad_button.to_string();
                 }
 
-                if let Some(RebindingTarget::PlayerAction(rebinding_target)) = rebinding_flag {
-                    if *rebinding_target == *player_action {
-                        button_string = "Press Input".to_string();
-                    }
+                if let Some(RebindingTarget::PlayerAction(rebinding_target)) = rebinding_flag
+                    && *rebinding_target == *player_action
+                {
+                    button_string = "Press Input".to_string();
                 }
 
                 button_string
@@ -186,10 +186,10 @@ fn create_player_ability_rebind_button(
                     button_string = key_code.to_string();
                 }
 
-                if let Some(RebindingTarget::PlayerAbility(rebinding_target)) = rebinding_flag {
-                    if *rebinding_target == *player_ability {
-                        button_string = "Press Input".to_string();
-                    }
+                if let Some(RebindingTarget::PlayerAbility(rebinding_target)) = rebinding_flag
+                    && *rebinding_target == *player_ability
+                {
+                    button_string = "Press Input".to_string();
                 }
 
                 button_string
@@ -204,10 +204,10 @@ fn create_player_ability_rebind_button(
                     button_string = gamepad_button.to_string();
                 }
 
-                if let Some(RebindingTarget::PlayerAbility(rebinding_target)) = rebinding_flag {
-                    if *rebinding_target == *player_ability {
-                        button_string = "Press Input".to_string();
-                    }
+                if let Some(RebindingTarget::PlayerAbility(rebinding_target)) = rebinding_flag
+                    && *rebinding_target == *player_ability
+                {
+                    button_string = "Press Input".to_string();
                 }
 
                 button_string

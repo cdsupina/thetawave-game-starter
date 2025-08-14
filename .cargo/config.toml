@@ -11,7 +11,17 @@ codegen-backend = "llvm"
 rustflags = [
     # (Nightly) Make the current crate share its generic instantiations
     "-Zshare-generics=y",
+    # Clippy configuration to disable type complexity warnings
+    "-A", "clippy::type_complexity",
+    "-A", "clippy::enum_variant_names",
+    "-A", "clippy::too_many_arguments"
 ]
 
 [target.wasm32-unknown-unknown]
 runner = "wasm-server-runner"
+rustflags = [
+    # Clippy configuration to disable type complexity warnings
+    "-A", "clippy::type_complexity",
+    "-A", "clippy::enum_variant_names",
+    "-A", "clippy::too_many_arguments"
+]

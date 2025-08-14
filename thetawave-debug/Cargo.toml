@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-bevy-inspector-egui = { version = "0.32.0" }
+bevy-inspector-egui = { version = "0.33.1" }
 bevy = { workspace = true, default-features = false }
 thetawave-states = { path = "../thetawave-states" }
 [features]

@@ -1,18 +1,16 @@
-use super::{
-    systems::{
-        disable_additional_players_navigation_system, disable_horizontal_navigation_system,
-        enable_additional_players_navigation_system, enable_horizontal_navigation_system,
-        setup_input_system,
-    },
-    CharacterCarouselAction, PlayerAbility, PlayerAction,
+use super::systems::{
+    disable_additional_players_navigation_system, disable_horizontal_navigation_system,
+    enable_additional_players_navigation_system, enable_horizontal_navigation_system,
+    setup_input_system,
 };
 use bevy::{
     app::{Plugin, Startup, Update},
-    prelude::{in_state, IntoScheduleConfigs, OnEnter, OnExit},
+    prelude::{IntoScheduleConfigs, OnEnter, OnExit, in_state},
 };
 use bevy_alt_ui_navigation_lite::DefaultNavigationPlugins;
 use leafwing_abilities::plugin::AbilityPlugin;
 use leafwing_input_manager::plugin::InputManagerPlugin;
+use thetawave_player::{CharacterCarouselAction, PlayerAbility, PlayerAction};
 use thetawave_states::MainMenuState;
 
 /// Plugin structure for handling input in the Thetawave game.
