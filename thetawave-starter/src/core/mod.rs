@@ -1,11 +1,10 @@
-use crate::player::PlayerNum;
 use bevy::{
     app::{Plugin, Update},
     ecs::{event::EventWriter, schedule::IntoScheduleConfigs, system::Query},
     state::condition::in_state,
 };
 use leafwing_input_manager::prelude::ActionState;
-use thetawave_player::PlayerAction;
+use thetawave_player::{PlayerAction, PlayerNum};
 use thetawave_states::{AppState, ToggleGameStateEvent};
 
 pub(crate) struct ThetawaveCorePlugin;

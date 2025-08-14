@@ -3,7 +3,10 @@ use leafwing_abilities::prelude::{Cooldown, CooldownState};
 use serde::Deserialize;
 use strum_macros::EnumIter;
 
-use crate::input::PlayerAbility;
+use crate::{
+    InputType,
+    input::{PlayerAbility, PlayerNum},
+};
 
 /// Characters that can be chosen by players to play as
 #[derive(Eq, PartialEq, Hash, Debug, EnumIter, Clone, Deserialize)]
@@ -71,4 +74,39 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
             restitution: helper.restitution,
         })
     }
+}
+
+/// Resource for transferring character choices from character selection screen to game
+#[derive(Resource, Default, Debug)]
+pub struct ChosenCharactersResource {
+    pub players: HashMap<PlayerNum, ChosenCharacterData>,
+}
+
+impl ChosenCharactersResource {
+    pub fn contains_input(&self, input_type: InputType) -> bool {
+        for (_, data) in self.players.iter() {
+            if data.input == input_type {
+                return true;
+            }
+        }
+        false
+    }
+
+    /// Finds the next available PlayerNum (not yet in ChosenCharactersResource)
+    pub fn next_available_player_num(&self) -> Option<PlayerNum> {
+        let max_used_player_num = self.players.keys().max().cloned();
+
+        if let Some(player_num) = max_used_player_num {
+            player_num.next()
+        } else {
+            None
+        }
+    }
+}
+
+/// Resource for transferring character choices from character selection screen to game
+#[derive(Clone, Debug)]
+pub struct ChosenCharacterData {
+    pub character: CharacterType,
+    pub input: InputType,
 }

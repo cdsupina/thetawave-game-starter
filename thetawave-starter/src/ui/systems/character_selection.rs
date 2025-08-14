@@ -2,13 +2,9 @@ use super::{
     AudioEffectEvent, ButtonAction, Cleanup, MainMenuState, OptionsRes, PlayerJoinEvent, PlayerNum,
     PlayerReadyEvent, UiAssets,
 };
-use crate::{
-    player::{ChosenCharacterData, ChosenCharactersResource},
-    ui::data::{
-        CarouselReadyTimer, CarouselSlotPosition, CharacterCarousel, CharacterSelector,
-        MenuButtonState, PlayerReadyButton, StartGameButton, UiChildBuilderExt,
-        VisibleCarouselSlot,
-    },
+use crate::ui::data::{
+    CarouselReadyTimer, CarouselSlotPosition, CharacterCarousel, CharacterSelector,
+    MenuButtonState, PlayerReadyButton, StartGameButton, UiChildBuilderExt, VisibleCarouselSlot,
 };
 use bevy::{
     asset::Handle,
@@ -29,7 +25,10 @@ use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use bevy_persistent::Persistent;
 use leafwing_input_manager::prelude::{ActionState, InputMap};
-use thetawave_player::{CharacterCarouselAction, CharacterType, InputType};
+use thetawave_player::{
+    CharacterCarouselAction, CharacterType, ChosenCharacterData, ChosenCharactersResource,
+    InputType,
+};
 use thetawave_states::AppState;
 
 /// Spawn ui for character selection

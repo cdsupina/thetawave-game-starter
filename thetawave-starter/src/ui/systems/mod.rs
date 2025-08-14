@@ -5,10 +5,9 @@ use super::data::{
 use crate::{
     audio::AudioEffectEvent,
     options::{ApplyOptionsEvent, OptionsRes},
-    player::{ChosenCharactersResource, PlayerNum},
 };
 use thetawave_assets::{LoadingProgressEvent, UiAssets};
-use thetawave_player::InputType;
+use thetawave_player::{ChosenCharactersResource, InputType, PlayerNum};
 use thetawave_states::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState};
 
 use bevy::{

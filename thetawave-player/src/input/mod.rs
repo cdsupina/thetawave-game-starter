@@ -69,3 +69,37 @@ pub enum InputType {
 
 #[derive(Component)]
 pub struct DummyGamepad;
+
+/// Tag for indicating multiplayer association
+#[derive(Component, Debug, Clone, PartialEq, Eq, AsRefStr, Hash, PartialOrd, Ord)]
+pub enum PlayerNum {
+    One,
+    Two,
+    Three,
+    Four,
+}
+
+impl PlayerNum {
+    pub fn next(&self) -> Option<Self> {
+        match self {
+            PlayerNum::One => Some(Self::Two),
+            PlayerNum::Two => Some(Self::Three),
+            PlayerNum::Three => Some(Self::Four),
+            PlayerNum::Four => None,
+        }
+    }
+}
+
+impl TryFrom<&String> for PlayerNum {
+    type Error = String;
+
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        match value.as_str() {
+            "player_one" => Ok(Self::One),
+            "player_two" => Ok(Self::Two),
+            "player_three" => Ok(Self::Three),
+            "player_four" => Ok(Self::Four),
+            _ => Err("Invalid player".to_string()),
+        }
+    }
+}

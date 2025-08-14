@@ -1,16 +1,13 @@
-use super::{
-    data::ChosenCharactersResource,
-    systems::{
-        player_ability_system, player_move_system, reset_chosen_characters_resource_system,
-        spawn_players_system,
-    },
+use super::systems::{
+    player_ability_system, player_move_system, reset_chosen_characters_resource_system,
+    spawn_players_system,
 };
 use bevy::{
     app::{Plugin, Update},
     ecs::schedule::common_conditions::not,
     prelude::{Condition, IntoScheduleConfigs, OnEnter, in_state},
 };
-use thetawave_player::CharactersResource;
+use thetawave_player::{CharactersResource, ChosenCharactersResource};
 use thetawave_states::{AppState, DebugState, GameState, MainMenuState};
 use toml::from_slice;
 
