@@ -2,7 +2,7 @@
 members = [
     "thetawave-starter",
     "thetawave-states",
-    "thetawave-test",
+    "thetawave-test-game",
     "thetawave-physics",
     "thetawave-assets",
     "thetawave-backgrounds",
