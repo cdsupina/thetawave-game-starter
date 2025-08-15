@@ -7,14 +7,17 @@ use bevy::{
 #[cfg(feature = "debug")]
 use bevy_egui::{
     EguiContexts,
-    egui::{TopBottomPanel, menu},
+    egui::{TopBottomPanel, containers::menu},
 };
 
 #[cfg(feature = "debug")]
-use thetawave_starter::{
-    InspectorDebugSettings, MobDebugSettings, PhysicsDebugSettings, SpawnMobEvent,
-    camera::{Camera2DZoomEvent, Camera3DZoomEvent},
-};
+use thetawave_camera::{Camera2DZoomEvent, Camera3DZoomEvent};
+#[cfg(feature = "debug")]
+use thetawave_debug::InspectorDebugSettings;
+#[cfg(feature = "debug")]
+use thetawave_mobs::{MobDebugSettings, MobType, SpawnMobEvent};
+#[cfg(feature = "debug")]
+use thetawave_physics::PhysicsDebugSettings;
 
 /// System that handles the egui debug menu
 #[cfg(feature = "debug")]
@@ -30,13 +33,11 @@ pub(in crate::ui) fn game_debug_menu_system(
     mut camera3d_zoom: Local<i8>,
     mut spawn_location: Local<Vec2>,
 ) -> Result {
-    use thetawave_starter::MobType;
-
     let mut camera2d_zoom_new = *camera2d_zoom;
     let mut camera3d_zoom_new = *camera3d_zoom;
 
     TopBottomPanel::top("menu_bar").show(contexts.ctx_mut()?, |ui| {
-        menu::bar(ui, |ui| {
+        menu::MenuBar::new().ui(ui, |ui| {
             ui.menu_button("Inspector", |ui| {
                 ui.checkbox(
                     &mut inspector_debug_settings.inspector_enabled,

@@ -10,19 +10,16 @@ thetawave-assets = { path = "../thetawave-assets" }
 thetawave-backgrounds = { path = "../thetawave-backgrounds" }
 thetawave-mobs = { path = "../thetawave-mobs" }
 thetawave-player = { path = "../thetawave-player" }
+thetawave-camera = { path = "../thetawave-camera" }
 thetawave-debug = { path = "../thetawave-debug", optional = true }
 bevy.workspace = true
 bevy_platform.workspace = true
 bevy_egui.workspace = true
 bevy-alt-ui-navigation-lite.workspace = true
 bevy_asset_loader.workspace = true
-bevy_embedded_assets.workspace = true
-bevy_state_macros.workspace = true
 log.workspace = true
-rand.workspace = true
 webbrowser.workspace = true
 bevy_aseprite_ultra.workspace = true
-iyes_progress.workspace = true
 bevy_kira_audio.workspace = true
 serde.workspace = true
 bevy-persistent.workspace = true
@@ -31,11 +28,9 @@ leafwing-input-manager.workspace = true
 leafwing_abilities.workspace = true
 avian2d.workspace = true
 strum.workspace = true
-strum_macros.workspace = true
 winit.workspace = true
 image.workspace = true
 itertools.workspace = true
-toml.workspace = true
 
 [features]
 dynamic_linking = [

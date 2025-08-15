@@ -1,15 +1,11 @@
-use crate::{
-    input::InputType,
-    player::{CharacterType, PlayerNum},
-};
 use bevy::{
     ecs::{resource::Resource, system::EntityCommands},
     prelude::{ChildSpawnerCommands, Component, Entity, Event, Name},
     text::TextFont,
     time::{Timer, TimerMode},
     ui::{
-        widget::{ImageNode, Text},
         AlignItems, FlexDirection, JustifyContent, JustifySelf, Node, UiRect, Val,
+        widget::{ImageNode, Text},
     },
     utils::default,
 };
@@ -17,6 +13,7 @@ use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use strum::IntoEnumIterator;
 use thetawave_assets::UiAssets;
+use thetawave_player::{CharacterType, InputType, PlayerNum};
 use thetawave_states::{AppState, GameState, MainMenuState, PauseMenuState};
 
 const BUTTON_ACTION_DELAY_TIME: f32 = 0.3;
@@ -53,10 +50,8 @@ impl ButtonAction {
                 MainMenuState::InputRebinding => Some("INPUT".to_string()),
                 _ => None,
             },
-            ButtonAction::EnterGameState(game_state) => match game_state {
-                GameState::Playing => Some("RESUME".to_string()),
-                _ => None,
-            },
+            ButtonAction::EnterGameState(GameState::Playing) => Some("RESUME".to_string()),
+            ButtonAction::EnterGameState(_) => None,
             ButtonAction::EnterPauseMenuState(pause_menu_state) => match pause_menu_state {
                 PauseMenuState::Main => Some("BACK".to_string()),
                 PauseMenuState::Options => Some("OPTIONS".to_string()),
@@ -210,13 +205,6 @@ impl CharacterCarousel {
             self.characters.insert(0, last);
         }
     }
-}
-
-/// Event for when a player presses a join button on character selection screen
-#[derive(Event, Debug)]
-pub(crate) struct PlayerJoinEvent {
-    pub player_num: PlayerNum,
-    pub input: InputType,
 }
 
 /// Tag for container holding the carousel and arrows for character selection

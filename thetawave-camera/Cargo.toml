@@ -1,0 +1,10 @@
+[package]
+name = "thetawave-camera"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+bevy = { workspace = true, default-features = false }
+
+[features]
+dynamic_linking = ["bevy/dynamic_linking"]

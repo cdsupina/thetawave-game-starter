@@ -2,13 +2,14 @@
 members = [
     "thetawave-starter",
     "thetawave-states",
-    "thetawave-infinite",
+    "thetawave-test-game",
     "thetawave-physics",
     "thetawave-assets",
     "thetawave-backgrounds",
     "thetawave-debug",
     "thetawave-mobs",
     "thetawave-player",
+    "thetawave-camera",
 ]
 resolver = "2"
 
@@ -51,7 +52,7 @@ bevy = { version = "0.16.1", default-features = false, features = [
     "serialize",
 ] }
 bevy_platform = "0.16.1"
-bevy_egui = { version = "0.35.1", default-features = false, features = [
+bevy_egui = { version = "0.36.0", default-features = false, features = [
     "open_url",
     "default_fonts",
     "render",
@@ -80,8 +81,9 @@ strum_macros = "0.27.2"
 winit = "0.30.12"
 image = "0.25.6"
 itertools = "0.14.0"
-toml = "0.9.4"
+toml = "0.9.5"
 bevy_behave = "0.3.0"
+bevy-inspector-egui = "0.33.1"
 
 [profile.dev]
 opt-level = 1

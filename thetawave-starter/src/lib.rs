@@ -8,33 +8,18 @@ use bevy::{
     window::{Window, WindowMode, WindowPlugin, WindowResolution},
 };
 use bevy_aseprite_ultra::AsepriteUltraPlugin;
-use thetawave_assets::ThetawaveAssetsPlugin;
-use thetawave_backgrounds::ThetawaveBackgroundsPlugin;
-use thetawave_mobs::ThetawaveMobsPlugin;
-use thetawave_physics::ThetawavePhysicsPlugin;
-use thetawave_states::ThetawaveStatesPlugin;
 
 #[cfg(feature = "debug")]
 use thetawave_debug::ThetawaveDebugPlugin;
 
 mod audio;
-pub mod camera;
-mod core;
-mod input;
+mod camera;
 mod options;
 mod player;
 mod save;
-pub mod ui;
+mod states;
+mod ui;
 mod window;
-
-#[cfg(feature = "debug")]
-pub use thetawave_physics::PhysicsDebugSettings;
-
-#[cfg(feature = "debug")]
-pub use thetawave_debug::InspectorDebugSettings;
-
-pub use thetawave_mobs::{MobDebugSettings, MobType, SpawnMobEvent};
-pub use thetawave_states::{AppState, DebugState};
 
 pub struct ThetawaveStarterPlugin {
     pub window_title: String,
@@ -45,7 +30,7 @@ pub struct ThetawaveStarterPlugin {
 impl Plugin for ThetawaveStarterPlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_plugins((
-            ThetawaveAssetsPlugin, // must be registered before AssetPlugin due to EmbeddedAssetPlugin
+            thetawave_assets::ThetawaveAssetsPlugin, // must be registered before AssetPlugin due to EmbeddedAssetPlugin
             DefaultPlugins
                 .set(ImagePlugin::default_nearest()) // necessary for crisp pixel art
                 .set(WindowPlugin {
@@ -63,16 +48,14 @@ impl Plugin for ThetawaveStarterPlugin {
             // custom plugins for Thetawave
             ui::ThetawaveUiPlugin,
             options::ThetawaveOptionsPlugin,
-            input::ThetawaveInputPlugin,
-            ThetawaveStatesPlugin,
             camera::ThetawaveCameraPlugin,
-            ThetawaveBackgroundsPlugin,
+            thetawave_backgrounds::ThetawaveBackgroundsPlugin,
             audio::ThetawaveAudioPlugin,
             player::ThetawavePlayerPlugin,
-            ThetawavePhysicsPlugin,
+            thetawave_physics::ThetawavePhysicsPlugin,
             save::ThetawaveSavePlugin,
-            core::ThetawaveCorePlugin,
-            ThetawaveMobsPlugin,
+            states::ThetawaveStatesPlugin,
+            thetawave_mobs::ThetawaveMobsPlugin,
         ));
 
         // plugins only used in debug builds

@@ -151,7 +151,6 @@ pub(super) fn brake_horizontal_system(
             continue;
         };
 
-        #[allow(clippy::collapsible_if)]
         if move_behavior
             .behaviors
             .contains(&MobBehaviorType::BrakeHorizontal)
@@ -386,7 +385,6 @@ pub(super) fn move_to_target_system(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 fn move_to_target(
     mob_entity: Entity,
     target: &TargetComponent,
@@ -460,7 +458,6 @@ pub(super) fn rotate_to_target_system(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 fn rotate_to_target(
     mob_entity: Entity,
     target: &TargetComponent,

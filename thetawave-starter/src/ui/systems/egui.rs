@@ -4,11 +4,11 @@ use bevy::{
     window::{PrimaryWindow, Window},
 };
 use bevy_egui::{
-    egui::{
-        style::{HandleShape, Selection, WidgetVisuals, Widgets},
-        Color32, CornerRadius, Spacing, Stroke, Style, Vec2, Visuals,
-    },
     EguiContextSettings, EguiContexts,
+    egui::{
+        Color32, CornerRadius, Spacing, Stroke, Style, Vec2, Visuals,
+        style::{HandleShape, Selection, WidgetVisuals, Widgets},
+    },
 };
 
 const HOVERED_BG_COLOR: Color32 = Color32::from_rgb(226, 114, 133);
@@ -20,6 +20,10 @@ const INACTIVE_BG_COLOR: Color32 = Color32::from_rgb(178, 82, 102);
 const INACTIVE_STROKE: Stroke = Stroke {
     width: 2.0,
     color: Color32::from_rgb(226, 114, 133),
+};
+const WHITE_STROKE: Stroke = Stroke {
+    width: 2.0,
+    color: Color32::WHITE,
 };
 const ACTIVE_BG_COLOR: Color32 = Color32::from_rgb(139, 68, 89);
 const ACTIVE_STROKE: Stroke = Stroke {
@@ -48,7 +52,7 @@ pub(in crate::ui) fn setup_egui_system(
                     weak_bg_fill: HOVERED_BG_COLOR,
                     bg_stroke: HOVERED_STROKE,
                     corner_radius: CornerRadius::same(2),
-                    fg_stroke: HOVERED_STROKE,
+                    fg_stroke: WHITE_STROKE,
                     expansion: 1.2,
                 },
                 inactive: WidgetVisuals {
@@ -56,7 +60,7 @@ pub(in crate::ui) fn setup_egui_system(
                     weak_bg_fill: INACTIVE_BG_COLOR,
                     bg_stroke: INACTIVE_STROKE,
                     corner_radius: CornerRadius::same(2),
-                    fg_stroke: INACTIVE_STROKE,
+                    fg_stroke: WHITE_STROKE,
                     expansion: 1.0,
                 },
                 active: WidgetVisuals {
@@ -64,7 +68,7 @@ pub(in crate::ui) fn setup_egui_system(
                     weak_bg_fill: ACTIVE_BG_COLOR,
                     bg_stroke: ACTIVE_STROKE,
                     corner_radius: CornerRadius::same(2),
-                    fg_stroke: ACTIVE_STROKE,
+                    fg_stroke: WHITE_STROKE,
                     expansion: 1.0,
                 },
                 ..Default::default()
@@ -89,7 +93,7 @@ pub(in crate::ui) fn setup_egui_system(
 }
 
 /// System that updates egui scale based on window height
-pub fn update_egui_scale_system(
+pub(in crate::ui) fn update_egui_scale_system(
     mut egui_settings: Query<&mut EguiContextSettings>,
     primary_window_q: Query<&Window, With<PrimaryWindow>>,
 ) {

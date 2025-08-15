@@ -1,5 +1,8 @@
+use crate::ui::systems::game_debug::game_debug_menu_system;
+
 use super::{
-    data::{DelayedButtonPressEvent, PlayerJoinEvent, PlayerReadyEvent},
+    GameEndResultResource,
+    data::{DelayedButtonPressEvent, PlayerReadyEvent},
     systems::{
         character_selection::{
             additional_players_join_system, carousel_input_system,
@@ -17,16 +20,15 @@ use super::{
         pause::{spawn_pause_menu_system, spawn_pause_options_system},
         title::{spawn_title_menu_system, website_footer_button_focus_system},
     },
-    GameEndResultResource,
 };
 use bevy::{
     app::{Plugin, Update},
-    prelude::{in_state, Condition, IntoScheduleConfigs, OnEnter},
+    prelude::{Condition, IntoScheduleConfigs, OnEnter, in_state},
 };
 use bevy_alt_ui_navigation_lite::NavRequestSystem;
 use bevy_asset_loader::loading_state::LoadingStateSet;
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
-use thetawave_states::{AppState, GameState, MainMenuState, PauseMenuState};
+use thetawave_states::{AppState, DebugState, GameState, MainMenuState, PauseMenuState};
 
 // Plugin responsible for managing the Thetawave user interface components and systems
 pub(crate) struct ThetawaveUiPlugin;
@@ -36,7 +38,6 @@ impl Plugin for ThetawaveUiPlugin {
         // Initialize required UI plugins - HuiPlugin for UI components and EguiPlugin for immediate mode GUI
         app.add_plugins(EguiPlugin::default())
             .init_resource::<GameEndResultResource>()
-            .add_event::<PlayerJoinEvent>()
             .add_event::<PlayerReadyEvent>()
             .add_event::<DelayedButtonPressEvent>()
             .add_systems(OnEnter(AppState::MainMenuLoading), setup_loading_ui_system)
@@ -117,5 +118,13 @@ impl Plugin for ThetawaveUiPlugin {
                 OnEnter(AppState::GameLoading),
                 reset_game_end_result_resource_system,
             );
+
+        #[cfg(feature = "debug")]
+        {
+            app.add_systems(
+                EguiPrimaryContextPass,
+                game_debug_menu_system.run_if(in_state(DebugState::Debug)),
+            );
+        }
     }
 }

@@ -1,15 +1,10 @@
 use super::{
-    AudioEffectEvent, ButtonAction, Cleanup, InputType, MainMenuState, OptionsRes, PlayerJoinEvent,
-    PlayerNum, PlayerReadyEvent, UiAssets,
+    AudioEffectEvent, ButtonAction, Cleanup, MainMenuState, OptionsRes, PlayerJoinEvent, PlayerNum,
+    PlayerReadyEvent, UiAssets,
 };
-use crate::{
-    input::CharacterCarouselAction,
-    player::{CharacterType, ChosenCharacterData, ChosenCharactersResource},
-    ui::data::{
-        CarouselReadyTimer, CarouselSlotPosition, CharacterCarousel, CharacterSelector,
-        MenuButtonState, PlayerReadyButton, StartGameButton, UiChildBuilderExt,
-        VisibleCarouselSlot,
-    },
+use crate::ui::data::{
+    CarouselReadyTimer, CarouselSlotPosition, CharacterCarousel, CharacterSelector,
+    MenuButtonState, PlayerReadyButton, StartGameButton, UiChildBuilderExt, VisibleCarouselSlot,
 };
 use bevy::{
     asset::Handle,
@@ -30,6 +25,10 @@ use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use bevy_persistent::Persistent;
 use leafwing_input_manager::prelude::{ActionState, InputMap};
+use thetawave_player::{
+    CharacterCarouselAction, CharacterType, ChosenCharacterData, ChosenCharactersResource,
+    InputType,
+};
 use thetawave_states::AppState;
 
 /// Spawn ui for character selection
@@ -139,10 +138,10 @@ pub(in crate::ui) fn cycle_player_one_carousel_system(
                 let mut can_cycle = true;
 
                 for button_action in ready_button_q.iter() {
-                    if let ButtonAction::UnReady(button_player_num) = button_action {
-                        if player_num == button_player_num {
-                            can_cycle = false;
-                        }
+                    if let ButtonAction::UnReady(button_player_num) = button_action
+                        && player_num == button_player_num
+                    {
+                        can_cycle = false;
                     }
                 }
 
@@ -391,26 +390,26 @@ pub(in crate::ui) fn spawn_ready_button_system(
 ) {
     for event in player_join_events.read() {
         for (action, entity, childof) in button_q.iter() {
-            if let ButtonAction::Join(player_num) = action {
-                if event.player_num == *player_num {
-                    cmds.entity(entity).despawn();
-                    cmds.entity(childof.parent()).with_children(|parent| {
-                        let mut entity_cmds = parent.spawn_menu_button(
-                            &ui_assets,
-                            ButtonAction::Ready(player_num.clone()),
-                            300.0,
-                            true,
-                            false,
-                        );
+            if let ButtonAction::Join(player_num) = action
+                && event.player_num == *player_num
+            {
+                cmds.entity(entity).despawn();
+                cmds.entity(childof.parent()).with_children(|parent| {
+                    let mut entity_cmds = parent.spawn_menu_button(
+                        &ui_assets,
+                        ButtonAction::Ready(player_num.clone()),
+                        300.0,
+                        true,
+                        false,
+                    );
 
-                        entity_cmds.insert(PlayerReadyButton);
+                    entity_cmds.insert(PlayerReadyButton);
 
-                        // Remove focusable component for non-player one
-                        if !matches!(player_num, PlayerNum::One) {
-                            entity_cmds.remove::<Focusable>();
-                        }
-                    });
-                }
+                    // Remove focusable component for non-player one
+                    if !matches!(player_num, PlayerNum::One) {
+                        entity_cmds.remove::<Focusable>();
+                    }
+                });
             }
         }
     }
@@ -511,13 +510,13 @@ pub(in crate::ui) fn enable_join_button_system(
     for event in player_join_events.read() {
         if let Some(next_player_num) = event.player_num.next() {
             for (button_action, mut menu_button_state, children) in join_button_q.iter_mut() {
-                if let ButtonAction::Join(player_num) = button_action {
-                    if next_player_num == *player_num {
-                        *menu_button_state = MenuButtonState::Normal;
-                        for child in children.iter() {
-                            if let Ok(mut ase_animation) = button_sprite_q.get_mut(*child) {
-                                ase_animation.animation = Animation::tag("released");
-                            }
+                if let ButtonAction::Join(player_num) = button_action
+                    && next_player_num == *player_num
+                {
+                    *menu_button_state = MenuButtonState::Normal;
+                    for child in children.iter() {
+                        if let Ok(mut ase_animation) = button_sprite_q.get_mut(*child) {
+                            ase_animation.animation = Animation::tag("released");
                         }
                     }
                 }
@@ -575,11 +574,12 @@ pub(in crate::ui) fn additional_players_join_system(
         }
     }
 
-    if let Some(input) = join_input {
-        if let Some(player_num) = chosen_characters_res.next_available_player_num() {
-            player_join_events.write(PlayerJoinEvent { player_num, input });
-            effect_events.write(AudioEffectEvent::MenuButtonConfirm);
-        }
+    if let (Some(input), Some(player_num)) = (
+        join_input,
+        chosen_characters_res.next_available_player_num(),
+    ) {
+        player_join_events.write(PlayerJoinEvent { player_num, input });
+        effect_events.write(AudioEffectEvent::MenuButtonConfirm);
     }
 }
 
@@ -604,10 +604,10 @@ pub(in crate::ui) fn carousel_input_system(
         let mut can_cycle = true;
 
         for button_action in ready_button_q.iter() {
-            if let ButtonAction::UnReady(button_player_num) = button_action {
-                if player_num == button_player_num {
-                    can_cycle = false;
-                }
+            if let ButtonAction::UnReady(button_player_num) = button_action
+                && player_num == button_player_num
+            {
+                can_cycle = false;
             }
         }
 

@@ -144,7 +144,6 @@ pub(super) fn spawn_mob_system(
 }
 
 /// Spawns a mob entity with all its components, decorations, and jointed sub-mobs
-#[allow(clippy::too_many_arguments)]
 fn spawn_mob(
     cmds: &mut Commands,
     mob_type: &MobType,

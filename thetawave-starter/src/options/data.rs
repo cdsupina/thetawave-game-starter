@@ -4,8 +4,7 @@ use bevy::{
 };
 use bevy_platform::collections::HashMap;
 use serde::{Deserialize, Serialize};
-
-use crate::input::{CharacterCarouselAction, PlayerAbility, PlayerAction};
+use thetawave_player::{CharacterCarouselAction, PlayerAbility, PlayerAction};
 
 // Resource for storing window options
 #[derive(Resource, Serialize, Deserialize, Clone)]
