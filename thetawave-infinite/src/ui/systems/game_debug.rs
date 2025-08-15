@@ -12,8 +12,8 @@ use bevy_egui::{
 
 #[cfg(feature = "debug")]
 use thetawave_starter::{
-    InspectorDebugSettings, MobDebugSettings, PhysicsDebugSettings, SpawnMobEvent,
-    camera::{Camera2DZoomEvent, Camera3DZoomEvent},
+    Camera2DZoomEvent, Camera3DZoomEvent, InspectorDebugSettings, MobDebugSettings,
+    PhysicsDebugSettings, SpawnMobEvent,
 };
 
 /// System that handles the egui debug menu

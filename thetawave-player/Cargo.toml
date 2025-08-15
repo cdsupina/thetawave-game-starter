@@ -16,4 +16,4 @@ bevy-alt-ui-navigation-lite.workspace = true
 toml.workspace = true
 
 [features]
-dynamic_linking = ["bevy/dynamic_linking"]
+dynamic_linking = ["bevy/dynamic_linking", "thetawave-states/dynamic_linking"]
