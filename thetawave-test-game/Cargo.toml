@@ -1,0 +1,13 @@
+[package]
+name = "thetawave-test-game"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+bevy = { workspace = true, default-features = false }
+thetawave-starter = { path = "../thetawave-starter" }
+
+[features]
+dynamic_linking = ["bevy/dynamic_linking", "thetawave-starter/dynamic_linking"]
+default = ["debug", "dynamic_linking"]
+debug = ["thetawave-starter/debug"]
