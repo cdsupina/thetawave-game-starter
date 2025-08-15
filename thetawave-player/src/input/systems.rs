@@ -16,7 +16,7 @@ use bevy_alt_ui_navigation_lite::systems::InputMapping;
 use crate::input::{DummyGamepad, InputType, PlayerJoinEvent, PlayerNum};
 
 /// Setup function for input mapping configuration
-pub(super) fn setup_input_system(mut input_mapping: ResMut<InputMapping>, mut cmds: Commands) {
+pub(crate) fn setup_input_system(mut input_mapping: ResMut<InputMapping>, mut cmds: Commands) {
     // dummy gamepad for disabling all gamepads
     cmds.spawn(DummyGamepad);
 
@@ -40,7 +40,7 @@ pub(super) fn setup_input_system(mut input_mapping: ResMut<InputMapping>, mut cm
 }
 
 /// Enable navigation again when entering the Title state
-pub(super) fn enable_additional_players_navigation_system(mut input_mapping: ResMut<InputMapping>) {
+pub(crate) fn enable_additional_players_navigation_system(mut input_mapping: ResMut<InputMapping>) {
     input_mapping.focus_follows_mouse = true;
     input_mapping.keyboard_navigation = true;
     input_mapping.mouse_action = InputMapping::default().mouse_action;
@@ -48,7 +48,7 @@ pub(super) fn enable_additional_players_navigation_system(mut input_mapping: Res
 }
 
 /// Disable horizontal focusable navigation by setting inputs unidentified or large extreme
-pub(super) fn disable_horizontal_navigation_system(mut input_mapping: ResMut<InputMapping>) {
+pub(crate) fn disable_horizontal_navigation_system(mut input_mapping: ResMut<InputMapping>) {
     input_mapping.key_left = KeyCode::Unidentified(NativeKeyCode::Unidentified);
     input_mapping.key_left_alt = KeyCode::Unidentified(NativeKeyCode::Unidentified);
     input_mapping.key_right = KeyCode::Unidentified(NativeKeyCode::Unidentified);
@@ -58,7 +58,7 @@ pub(super) fn disable_horizontal_navigation_system(mut input_mapping: ResMut<Inp
 }
 
 /// Reset horizontal navigation inputs to default
-pub(super) fn enable_horizontal_navigation_system(mut input_mapping: ResMut<InputMapping>) {
+pub(crate) fn enable_horizontal_navigation_system(mut input_mapping: ResMut<InputMapping>) {
     let default_input = InputMapping::default();
 
     input_mapping.key_left = default_input.key_left;
@@ -70,7 +70,7 @@ pub(super) fn enable_horizontal_navigation_system(mut input_mapping: ResMut<Inpu
 }
 
 /// Disable other inputs for menu navigation once a player joins
-pub(super) fn disable_additional_players_navigation_system(
+pub(crate) fn disable_additional_players_navigation_system(
     mut input_mapping: ResMut<InputMapping>,
     mut player_join_events: EventReader<PlayerJoinEvent>,
     dummy_gamepad_q: Query<Entity, With<DummyGamepad>>,

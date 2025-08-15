@@ -1,25 +1,22 @@
 use crate::options::OptionsRes;
 use avian2d::prelude::{
-    Collider, CollisionLayers, LayerMask, LinearVelocity, LockedAxes, MaxLinearSpeed, Restitution,
-    RigidBody,
+    Collider, CollisionLayers, LayerMask, LockedAxes, MaxLinearSpeed, Restitution, RigidBody,
 };
 use bevy::{
     asset::Handle,
-    log::info,
-    prelude::{Commands, Name, Query, Res, ResMut},
+    prelude::{Commands, Name, Res},
     sprite::Sprite,
     utils::default,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
-use bevy_egui::egui::Vec2;
 use bevy_persistent::Persistent;
-use leafwing_abilities::{AbilitiesBundle, prelude::CooldownState};
-use leafwing_input_manager::prelude::{ActionState, InputMap};
+use leafwing_abilities::AbilitiesBundle;
+use leafwing_input_manager::prelude::InputMap;
 use thetawave_assets::GameAssets;
 use thetawave_physics::ThetawavePhysicsLayer;
 use thetawave_player::{
     CharacterType, CharactersResource, ChosenCharactersResource, InputType, PlayerAbility,
-    PlayerAction, PlayerStats,
+    PlayerStats,
 };
 use thetawave_states::{AppState, Cleanup};
 
@@ -107,82 +104,4 @@ pub(super) fn spawn_players_system(
             ));
         }
     }
-}
-
-/// Move the player around by modifying their linear velocity
-pub(super) fn player_move_system(
-    mut player_action_q: Query<(
-        &PlayerStats,
-        &ActionState<PlayerAction>,
-        &mut LinearVelocity,
-    )>,
-) {
-    for (player_stats, player_action, mut lin_vel) in player_action_q.iter_mut() {
-        // Create a direction vector using the player's inputs
-        let mut dir_vec = Vec2::ZERO;
-
-        for action in player_action.get_pressed().iter() {
-            match action {
-                PlayerAction::Up => dir_vec.y += 1.0,
-                PlayerAction::Down => dir_vec.y -= 1.0,
-                PlayerAction::Left => dir_vec.x -= 1.0,
-                PlayerAction::Right => dir_vec.x += 1.0,
-                PlayerAction::Pause => {}
-            }
-        }
-
-        // Normalize the direction vector
-        let dir_vec_norm = dir_vec.normalized();
-
-        // Add the components of the direction vector to the x and y velocity components
-        lin_vel.x += dir_vec_norm.x * player_stats.acceleration;
-        lin_vel.y += dir_vec_norm.y * player_stats.acceleration;
-
-        // Decelerate when there is no input on a particular axis
-        if dir_vec.x == 0.0 {
-            lin_vel.x *= player_stats.deceleration_factor;
-        }
-        if dir_vec.y == 0.0 {
-            lin_vel.y *= player_stats.deceleration_factor;
-        }
-    }
-}
-
-/// System for activating player abilities when ready
-pub(super) fn player_ability_system(
-    mut player_ability_q: Query<(
-        &mut CooldownState<PlayerAbility>,
-        &ActionState<PlayerAbility>,
-    )>,
-) {
-    for (mut cooldown_state, action_state) in player_ability_q.iter_mut() {
-        for ability in action_state.get_just_released() {
-            if cooldown_state.trigger(&ability).is_ok() {
-                info!("Player activated {} ability.", ability.as_ref());
-            } else {
-                let cooldown_str = if let Some(ability_cooldown) = cooldown_state.get(&ability) {
-                    format!(
-                        " Cooldown: {}/{}",
-                        ability_cooldown.elapsed().as_secs_f32(),
-                        ability_cooldown.max_time().as_secs_f32()
-                    )
-                } else {
-                    "".to_string()
-                };
-
-                info!(
-                    "Player attempted activation of {} ability, but it wasn't ready.{}",
-                    ability.as_ref(),
-                    cooldown_str
-                );
-            }
-        }
-    }
-}
-
-/// Reset the ChosenCharactersResource when entering the title state
-pub(super) fn reset_chosen_characters_resource_system(
-    mut chosen_characters_res: ResMut<ChosenCharactersResource>,
-) {
-    *chosen_characters_res = ChosenCharactersResource::default();
 }

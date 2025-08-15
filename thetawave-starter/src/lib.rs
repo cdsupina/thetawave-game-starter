@@ -12,7 +12,6 @@ use thetawave_assets::ThetawaveAssetsPlugin;
 use thetawave_backgrounds::ThetawaveBackgroundsPlugin;
 use thetawave_mobs::ThetawaveMobsPlugin;
 use thetawave_physics::ThetawavePhysicsPlugin;
-use thetawave_player::ThetawaveInputPlugin;
 use thetawave_states::ThetawaveStatesPlugin;
 
 #[cfg(feature = "debug")]
@@ -63,7 +62,6 @@ impl Plugin for ThetawaveStarterPlugin {
             // custom plugins for Thetawave
             ui::ThetawaveUiPlugin,
             options::ThetawaveOptionsPlugin,
-            ThetawaveInputPlugin,
             ThetawaveStatesPlugin,
             camera::ThetawaveCameraPlugin,
             ThetawaveBackgroundsPlugin,
