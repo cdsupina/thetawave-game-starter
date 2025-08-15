@@ -6,6 +6,7 @@ pub use character::{
     CharacterType, CharactersResource, ChosenCharacterData, ChosenCharactersResource,
 };
 pub use input::{
-    CharacterCarouselAction, DummyGamepad, InputType, PlayerAbility, PlayerAction, PlayerNum,
+    CharacterCarouselAction, DummyGamepad, InputType, PlayerAbility, PlayerAction, PlayerJoinEvent,
+    PlayerNum, ThetawaveInputPlugin,
 };
 pub use player::PlayerStats;

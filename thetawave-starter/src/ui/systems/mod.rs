@@ -1,13 +1,13 @@
 use super::data::{
     ButtonAction, ButtonActionDelayTimer, DelayedButtonPressEvent, MenuButtonState,
-    MenuButtonTextContainer, PlayerJoinEvent, PlayerReadyEvent,
+    MenuButtonTextContainer, PlayerReadyEvent,
 };
 use crate::{
     audio::AudioEffectEvent,
     options::{ApplyOptionsEvent, OptionsRes},
 };
 use thetawave_assets::{LoadingProgressEvent, UiAssets};
-use thetawave_player::{ChosenCharactersResource, InputType, PlayerNum};
+use thetawave_player::{ChosenCharactersResource, InputType, PlayerJoinEvent, PlayerNum};
 use thetawave_states::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState};
 
 use bevy::{

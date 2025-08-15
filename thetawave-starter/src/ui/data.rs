@@ -207,13 +207,6 @@ impl CharacterCarousel {
     }
 }
 
-/// Event for when a player presses a join button on character selection screen
-#[derive(Event, Debug)]
-pub(crate) struct PlayerJoinEvent {
-    pub player_num: PlayerNum,
-    pub input: InputType,
-}
-
 /// Tag for container holding the carousel and arrows for character selection
 #[derive(Component)]
 pub(super) struct CharacterSelector;

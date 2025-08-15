@@ -1,5 +1,6 @@
 use super::{
-    data::{DelayedButtonPressEvent, PlayerJoinEvent, PlayerReadyEvent},
+    GameEndResultResource,
+    data::{DelayedButtonPressEvent, PlayerReadyEvent},
     systems::{
         character_selection::{
             additional_players_join_system, carousel_input_system,
@@ -17,11 +18,10 @@ use super::{
         pause::{spawn_pause_menu_system, spawn_pause_options_system},
         title::{spawn_title_menu_system, website_footer_button_focus_system},
     },
-    GameEndResultResource,
 };
 use bevy::{
     app::{Plugin, Update},
-    prelude::{in_state, Condition, IntoScheduleConfigs, OnEnter},
+    prelude::{Condition, IntoScheduleConfigs, OnEnter, in_state},
 };
 use bevy_alt_ui_navigation_lite::NavRequestSystem;
 use bevy_asset_loader::loading_state::LoadingStateSet;
@@ -36,7 +36,6 @@ impl Plugin for ThetawaveUiPlugin {
         // Initialize required UI plugins - HuiPlugin for UI components and EguiPlugin for immediate mode GUI
         app.add_plugins(EguiPlugin::default())
             .init_resource::<GameEndResultResource>()
-            .add_event::<PlayerJoinEvent>()
             .add_event::<PlayerReadyEvent>()
             .add_event::<DelayedButtonPressEvent>()
             .add_systems(OnEnter(AppState::MainMenuLoading), setup_loading_ui_system)
