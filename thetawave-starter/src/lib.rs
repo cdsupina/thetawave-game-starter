@@ -13,23 +13,13 @@ use bevy_aseprite_ultra::AsepriteUltraPlugin;
 use thetawave_debug::ThetawaveDebugPlugin;
 
 mod audio;
-pub mod camera;
+mod camera;
 mod options;
 mod player;
 mod save;
 mod states;
-pub mod ui;
+mod ui;
 mod window;
-
-#[cfg(feature = "debug")]
-pub use thetawave_physics::PhysicsDebugSettings;
-
-#[cfg(feature = "debug")]
-pub use thetawave_debug::InspectorDebugSettings;
-
-pub use thetawave_camera::{Camera2DZoomEvent, Camera3DZoomEvent};
-pub use thetawave_mobs::{MobDebugSettings, MobType, SpawnMobEvent};
-pub use thetawave_states::{AppState, DebugState};
 
 pub struct ThetawaveStarterPlugin {
     pub window_title: String,

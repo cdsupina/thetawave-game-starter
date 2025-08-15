@@ -26,14 +26,13 @@ use log::{info, warn};
 
 pub(super) mod character_selection;
 pub(super) mod egui;
+pub(super) mod game_debug;
 pub(super) mod game_end;
 pub(super) mod input_rebinding;
 pub(super) mod loading;
 pub(super) mod options;
 pub(super) mod pause;
 pub(super) mod title;
-
-pub use egui::update_egui_scale_system;
 
 const GITHUB_URL: &str = "https://github.com/thetawavegame/thetawave";
 const BLUESKY_URL: &str = "https://bsky.app/profile/carlo.metalmancy.tech";

@@ -1,3 +1,5 @@
+use crate::ui::systems::game_debug::game_debug_menu_system;
+
 use super::{
     GameEndResultResource,
     data::{DelayedButtonPressEvent, PlayerReadyEvent},
@@ -26,7 +28,7 @@ use bevy::{
 use bevy_alt_ui_navigation_lite::NavRequestSystem;
 use bevy_asset_loader::loading_state::LoadingStateSet;
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
-use thetawave_states::{AppState, GameState, MainMenuState, PauseMenuState};
+use thetawave_states::{AppState, DebugState, GameState, MainMenuState, PauseMenuState};
 
 // Plugin responsible for managing the Thetawave user interface components and systems
 pub(crate) struct ThetawaveUiPlugin;
@@ -116,5 +118,13 @@ impl Plugin for ThetawaveUiPlugin {
                 OnEnter(AppState::GameLoading),
                 reset_game_end_result_resource_system,
             );
+
+        #[cfg(feature = "debug")]
+        {
+            app.add_systems(
+                EguiPrimaryContextPass,
+                game_debug_menu_system.run_if(in_state(DebugState::Debug)),
+            );
+        }
     }
 }

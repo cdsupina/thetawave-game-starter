@@ -93,7 +93,7 @@ pub(in crate::ui) fn setup_egui_system(
 }
 
 /// System that updates egui scale based on window height
-pub fn update_egui_scale_system(
+pub(in crate::ui) fn update_egui_scale_system(
     mut egui_settings: Query<&mut EguiContextSettings>,
     primary_window_q: Query<&Window, With<PrimaryWindow>>,
 ) {
