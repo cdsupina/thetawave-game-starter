@@ -97,6 +97,10 @@ pub struct GameAssets {
     pub ferritharax_left_claw_mob_aseprite: Handle<Aseprite>,
     #[asset(path = "media/aseprite/ferritharax_right_claw_mob.aseprite")]
     pub ferritharax_right_claw_mob_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/bullet_projectile.aseprite")]
+    pub bullet_projectile_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/blast_projectile.aseprite")]
+    pub blast_projectile_aseprite: Handle<Aseprite>,
 }
 
 /// Audio assets used throughout all states of the app

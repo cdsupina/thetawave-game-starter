@@ -56,6 +56,7 @@ impl Plugin for ThetawaveStarterPlugin {
             save::ThetawaveSavePlugin,
             states::ThetawaveStatesPlugin,
             thetawave_mobs::ThetawaveMobsPlugin,
+            thetawave_projectiles::ThetawaveProjectilesPlugin,
         ));
 
         // plugins only used in debug builds
