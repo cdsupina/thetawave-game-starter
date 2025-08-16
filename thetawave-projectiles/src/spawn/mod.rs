@@ -46,8 +46,8 @@ impl FactionExt for Faction {
                 Faction::Enemy => Color::srgba(5.0, 0.0, 0.0, 1.0),
             },
             ProjectileType::Blast => match self {
-                Faction::Ally => Color::srgba(5.0, 5.0, 0.0, 0.5),
-                Faction::Enemy => Color::srgba(5.0, 0.0, 0.0, 0.5),
+                Faction::Ally => Color::srgba(5.0, 5.0, 0.0, 0.25),
+                Faction::Enemy => Color::srgba(5.0, 0.0, 0.0, 0.25),
             },
         }
     }
