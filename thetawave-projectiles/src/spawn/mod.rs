@@ -1,7 +1,10 @@
+use avian2d::prelude::Collider;
 use bevy::{
     asset::Handle,
     color::Color,
     ecs::{
+        entity::Entity,
+        error::{BevyError, Result},
         event::EventReader,
         name::Name,
         system::{Commands, Res},
@@ -16,7 +19,7 @@ use thetawave_assets::GameAssets;
 use thetawave_core::Faction;
 use thetawave_states::{AppState, Cleanup};
 
-use crate::attributes::{ProjectileType, SpawnProjectileEvent};
+use crate::{ProjectileType, SpawnProjectileEvent, attributes::ProjectileAttributesResource};
 
 trait GameAssetsExt {
     fn get_projecitle_sprite(&self, projectile_type: &ProjectileType) -> Handle<Aseprite>;
@@ -54,7 +57,8 @@ pub(super) fn spawn_projectile_system(
     mut cmds: Commands,
     assets: Res<GameAssets>,
     mut spawn_projectile_event_reader: EventReader<SpawnProjectileEvent>,
-) {
+    attributes_res: Res<ProjectileAttributesResource>,
+) -> Result {
     for event in spawn_projectile_event_reader.read() {
         spawn_projectile(
             &mut cmds,
@@ -63,8 +67,11 @@ pub(super) fn spawn_projectile_system(
             event.position,
             event.rotation,
             &assets,
-        );
+            &attributes_res,
+        )?;
     }
+
+    Ok(())
 }
 
 fn spawn_projectile(
@@ -74,27 +81,39 @@ fn spawn_projectile(
     position: Vec2,
     rotation: f32,
     assets: &GameAssets,
-) {
+    attributes_res: &ProjectileAttributesResource,
+) -> Result<Entity, BevyError> {
     info!(
-        "Spawning Mob: {:?} at {}",
+        "Spawning Projectile: {:?} at {}",
         projectile_type,
         position.to_string()
     );
 
-    cmds.spawn((
-        Name::new("Projectile"),
-        Sprite {
-            color: faction.get_projectile_color(projectile_type),
-            ..Default::default()
-        },
-        AseAnimation {
-            animation: Animation::tag("idle"),
-            aseprite: assets.get_projecitle_sprite(projectile_type),
-        },
-        Cleanup::<AppState> {
-            states: vec![AppState::Game],
-        },
-        Transform::from_xyz(position.x, position.y, 0.0)
-            .with_rotation(Quat::from_rotation_z(rotation.to_radians())),
-    ));
+    // Look up the projectiles's configuration data from resources
+    let projectile_attributes = attributes_res
+        .attributes
+        .get(projectile_type)
+        .ok_or(BevyError::from("Projectile attributes not found"))?;
+
+    let entity = cmds
+        .spawn((
+            Name::new("Projectile"),
+            Sprite {
+                color: faction.get_projectile_color(projectile_type),
+                ..Default::default()
+            },
+            Collider::from(projectile_attributes),
+            AseAnimation {
+                animation: Animation::tag("idle"),
+                aseprite: assets.get_projecitle_sprite(projectile_type),
+            },
+            Cleanup::<AppState> {
+                states: vec![AppState::Game],
+            },
+            Transform::from_xyz(position.x, position.y, 0.0)
+                .with_rotation(Quat::from_rotation_z(rotation.to_radians())),
+        ))
+        .id();
+
+    Ok(entity)
 }

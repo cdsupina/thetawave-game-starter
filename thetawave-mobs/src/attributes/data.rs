@@ -11,7 +11,7 @@ use bevy::{
 };
 use serde::Deserialize;
 use strum_macros::EnumIter;
-use thetawave_physics::ThetawavePhysicsLayer;
+use thetawave_physics::{ColliderShape, ThetawaveCollider, ThetawavePhysicsLayer};
 
 const DEFAULT_COLLIDERS: &[ThetawaveCollider] = &[ThetawaveCollider {
     shape: ColliderShape::Rectangle(10.0, 10.0),
@@ -81,32 +81,6 @@ impl<'de> Deserialize<'de> for MobSpawner {
             rotation: helper.rotation,
             mob_type: helper.mob_type,
         })
-    }
-}
-
-/// Describes a collider that can be attached to mobs
-#[derive(Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-pub struct ThetawaveCollider {
-    pub shape: ColliderShape,
-    pub position: Vec2,
-    pub rotation: f32,
-}
-
-/// All types of collider shapes that can be attached to mobs
-#[derive(Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-pub enum ColliderShape {
-    Circle(f32),
-    Rectangle(f32, f32),
-}
-
-impl From<&ColliderShape> for Collider {
-    fn from(value: &ColliderShape) -> Self {
-        match value {
-            ColliderShape::Circle(radius) => Collider::circle(*radius),
-            ColliderShape::Rectangle(width, height) => Collider::rectangle(*width, *height),
-        }
     }
 }
 

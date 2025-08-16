@@ -8,7 +8,10 @@ bevy = { workspace = true, default-features = false }
 thetawave-assets = { path = "../thetawave-assets" }
 thetawave-states = { path = "../thetawave-states" }
 thetawave-core = { path = "../thetawave-core" }
+thetawave-physics = { path = "../thetawave-physics" }
+serde.workspace = true
 bevy_aseprite_ultra.workspace = true
+toml.workspace = true
 avian2d.workspace = true
 
 [features]

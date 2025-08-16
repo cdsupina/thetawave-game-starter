@@ -1,16 +1,7 @@
-use bevy::{ecs::event::Event, math::Vec2};
-use thetawave_core::Faction;
+mod data;
+mod plugin;
 
-#[derive(Debug)]
-pub enum ProjectileType {
-    Bullet,
-    Blast,
-}
+pub(crate) use data::ProjectileAttributesResource;
+pub(crate) use plugin::ThetawaveAttributesPlugin;
 
-#[derive(Event)]
-pub struct SpawnProjectileEvent {
-    pub projectile_type: ProjectileType,
-    pub faction: Faction,
-    pub position: Vec2,
-    pub rotation: f32,
-}
+pub use data::{ProjectileType, SpawnProjectileEvent};
