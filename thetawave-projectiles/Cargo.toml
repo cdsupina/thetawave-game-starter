@@ -15,5 +15,9 @@ toml.workspace = true
 avian2d.workspace = true
 
 [features]
-dynamic_linking = ["bevy/dynamic_linking", "thetawave-assets/dynamic_linking"]
-debug = []
+dynamic_linking = [
+    "bevy/dynamic_linking",
+    "thetawave-assets/dynamic_linking",
+    "thetawave-states/dynamic_linking",
+    "thetawave-physics/dynamic_linking",
+]

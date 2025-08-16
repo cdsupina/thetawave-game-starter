@@ -19,5 +19,11 @@ thetawave-physics = { path = "../thetawave-physics" }
 thetawave-player = { path = "../thetawave-player" }
 
 [features]
-dynamic_linking = ["bevy/dynamic_linking", "thetawave-assets/dynamic_linking"]
+dynamic_linking = [
+    "bevy/dynamic_linking",
+    "thetawave-assets/dynamic_linking",
+    "thetawave-states/dynamic_linking",
+    "thetawave-physics/dynamic_linking",
+    "thetawave-player/dynamic_linking",
+]
 debug = []
