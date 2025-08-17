@@ -1,4 +1,4 @@
-use avian2d::prelude::{Collider, RigidBody, Sensor};
+use avian2d::prelude::{Collider, LinearVelocity, RigidBody, Sensor};
 use bevy::{
     asset::Handle,
     color::Color,
@@ -22,11 +22,11 @@ use thetawave_states::{AppState, Cleanup};
 use crate::{ProjectileType, SpawnProjectileEvent, attributes::ProjectileAttributesResource};
 
 trait GameAssetsExt {
-    fn get_projecitle_sprite(&self, projectile_type: &ProjectileType) -> Handle<Aseprite>;
+    fn get_projectile_sprite(&self, projectile_type: &ProjectileType) -> Handle<Aseprite>;
 }
 
 impl GameAssetsExt for GameAssets {
-    fn get_projecitle_sprite(&self, projectile_type: &ProjectileType) -> Handle<Aseprite> {
+    fn get_projectile_sprite(&self, projectile_type: &ProjectileType) -> Handle<Aseprite> {
         match projectile_type {
             ProjectileType::Bullet => self.bullet_projectile_aseprite.clone(),
             ProjectileType::Blast => self.blast_projectile_aseprite.clone(),
@@ -66,6 +66,7 @@ pub(super) fn spawn_projectile_system(
             &event.faction,
             event.position,
             event.rotation,
+            event.speed,
             &assets,
             &attributes_res,
         )?;
@@ -80,6 +81,7 @@ fn spawn_projectile(
     faction: &Faction,
     position: Vec2,
     rotation: f32,
+    speed: f32,
     assets: &GameAssets,
     attributes_res: &ProjectileAttributesResource,
 ) -> Result<Entity, BevyError> {
@@ -95,6 +97,12 @@ fn spawn_projectile(
         .get(projectile_type)
         .ok_or(BevyError::from("Projectile attributes not found"))?;
 
+    // Calculate velocity vector based on rotation
+    let velocity_vector = Vec2::new(
+        rotation.to_radians().cos() * speed,
+        rotation.to_radians().sin() * speed,
+    );
+
     let mut entity_cmds = cmds.spawn((
         Name::new("Projectile"),
         Sprite {
@@ -104,7 +112,7 @@ fn spawn_projectile(
         Collider::from(projectile_attributes),
         AseAnimation {
             animation: Animation::tag("idle"),
-            aseprite: assets.get_projecitle_sprite(projectile_type),
+            aseprite: assets.get_projectile_sprite(projectile_type),
         },
         RigidBody::Dynamic,
         Cleanup::<AppState> {
@@ -112,6 +120,7 @@ fn spawn_projectile(
         },
         Transform::from_xyz(position.x, position.y, 0.0)
             .with_rotation(Quat::from_rotation_z(rotation.to_radians())),
+        LinearVelocity(velocity_vector),
     ));
 
     if projectile_attributes.is_sensor {

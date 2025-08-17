@@ -249,6 +249,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                 faction: Faction::Ally,
                                 position: *spawn_location,
                                 rotation: 0.0,
+                                speed: 0.0,
                             });
                         }
 
@@ -258,6 +259,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                 faction: Faction::Enemy,
                                 position: *spawn_location,
                                 rotation: 0.0,
+                                speed: 0.0,
                             });
                         }
                     });
@@ -268,6 +270,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                 faction: Faction::Ally,
                                 position: *spawn_location,
                                 rotation: 0.0,
+                                speed: 0.0,
                             });
                         }
 
@@ -277,6 +280,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                 faction: Faction::Enemy,
                                 position: *spawn_location,
                                 rotation: 0.0,
+                                speed: 0.0,
                             });
                         }
                     });

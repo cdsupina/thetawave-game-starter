@@ -634,12 +634,18 @@ fn spawn_mob(
 /// Spawns projectiles using the ProjectileSpawnerComponent, using the given spawner keys
 pub(super) fn spawn_projectile_system(
     mob_behavior_q: Query<(&MobBehaviorComponent, &BehaveCtx)>,
-    mut mob_q: Query<(&mut ProjectileSpawnerComponent, &Transform)>,
+    mut mob_q: Query<(
+        &mut ProjectileSpawnerComponent,
+        &Transform,
+        &MobAttributesComponent,
+    )>,
     mut spawn_projectile_event_writer: EventWriter<SpawnProjectileEvent>,
     time: Res<Time>,
 ) {
     for (mob_behavior, ctx) in mob_behavior_q.iter() {
-        let Ok((mut projectile_spawner, transform)) = mob_q.get_mut(ctx.target_entity()) else {
+        let Ok((mut projectile_spawner, transform, attributes)) =
+            mob_q.get_mut(ctx.target_entity())
+        else {
             continue;
         };
 
@@ -649,6 +655,7 @@ pub(super) fn spawn_projectile_system(
                     spawner_keys,
                     &mut projectile_spawner,
                     transform,
+                    attributes,
                     &mut spawn_projectile_event_writer,
                     &time,
                 );
@@ -661,6 +668,7 @@ fn spawn_projectile(
     spawner_keys: &[String],
     projectile_spawner: &mut ProjectileSpawnerComponent,
     transform: &Transform,
+    attributes: &MobAttributesComponent,
     spawn_projectile_event_writer: &mut EventWriter<SpawnProjectileEvent>,
     time: &Res<Time>,
 ) {
@@ -673,12 +681,13 @@ fn spawn_projectile(
                 rotation: spawner.rotation,
                 position: transform.translation.truncate() + spawner.position,
                 faction: spawner.faction.clone(),
+                speed: spawner.speed_multiplier * attributes.projectile_speed,
             });
         }
     }
 }
 
-/// MobBehaviorType::DoDorTime
+/// MobBehaviorType::DoForTime
 /// Triggers success when the timer is finsihed to progress the behavior tree
 pub(super) fn do_for_time_system(
     mut mob_behavior_q: Query<(&mut MobBehaviorComponent, &BehaveCtx)>,

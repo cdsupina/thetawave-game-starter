@@ -38,6 +38,7 @@ const DEFAULT_COLLISION_LAYER_FILTER: &[ThetawavePhysicsLayer] = &[
     ThetawavePhysicsLayer::Tentacle,
 ];
 const DEFAULT_COLLIDER_DENSITY: f32 = 1.0;
+const DEFAULT_PROJECTILE_SPEED: f32 = 100.0;
 
 /// Mob spawner component for use in spawned mobs
 /// Maps String keys to MobSpawners
@@ -155,6 +156,7 @@ pub(crate) struct MobAttributesComponent {
     pub angular_deceleration: f32,
     pub max_angular_speed: f32,
     pub targeting_range: Option<f32>,
+    pub projectile_speed: f32,
 }
 
 /// Describes an Avian2D angle limit for a joint
@@ -254,6 +256,8 @@ pub(crate) struct MobAttributes {
     pub mob_spawners: Option<MobSpawnerComponent>,
     #[serde(default)]
     pub projectile_spawners: Option<ProjectileSpawnerComponent>,
+    #[serde(default = "default_projectile_speed")]
+    pub projectile_speed: f32,
     #[serde(default)]
     pub behavior_transmitter: bool,
 }
@@ -312,6 +316,10 @@ fn default_angular_deceleration() -> f32 {
 
 fn default_max_angular_speed() -> f32 {
     DEFAULT_MAX_ANGULAR_SPEED
+}
+
+fn default_projectile_speed() -> f32 {
+    DEFAULT_PROJECTILE_SPEED
 }
 
 /// Resource for storing data for all mobs
@@ -405,6 +413,7 @@ impl From<&MobAttributes> for MobAttributesComponent {
             angular_deceleration: value.angular_deceleration,
             max_angular_speed: value.max_angular_speed,
             targeting_range: value.targeting_range,
+            projectile_speed: value.projectile_speed,
         }
     }
 }

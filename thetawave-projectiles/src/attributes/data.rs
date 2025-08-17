@@ -22,6 +22,7 @@ pub struct SpawnProjectileEvent {
     pub faction: Faction,
     pub position: Vec2,
     pub rotation: f32,
+    pub speed: f32,
 }
 
 /// Contains all attributes for a mob
@@ -65,6 +66,7 @@ pub struct ProjectileSpawner {
     pub rotation: f32,
     pub projectile_type: ProjectileType,
     pub faction: Faction,
+    pub speed_multiplier: f32,
 }
 
 impl<'de> Deserialize<'de> for ProjectileSpawner {
@@ -82,6 +84,12 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
             pub rotation: f32,
             pub projectile_type: ProjectileType,
             pub faction: Faction,
+            #[serde(default = "default_speed_multiplier")]
+            pub speed_multiplier: f32,
+        }
+
+        fn default_speed_multiplier() -> f32 {
+            1.0
         }
 
         // Let serde deserialize into the Helper struct first
@@ -94,6 +102,7 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
             rotation: helper.rotation,
             projectile_type: helper.projectile_type,
             faction: helper.faction,
+            speed_multiplier: helper.speed_multiplier,
         })
     }
 }
