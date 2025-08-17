@@ -1,4 +1,4 @@
-use avian2d::prelude::Collider;
+use avian2d::prelude::{Collider, RigidBody, Sensor};
 use bevy::{
     asset::Handle,
     color::Color,
@@ -95,25 +95,28 @@ fn spawn_projectile(
         .get(projectile_type)
         .ok_or(BevyError::from("Projectile attributes not found"))?;
 
-    let entity = cmds
-        .spawn((
-            Name::new("Projectile"),
-            Sprite {
-                color: faction.get_projectile_color(projectile_type),
-                ..Default::default()
-            },
-            Collider::from(projectile_attributes),
-            AseAnimation {
-                animation: Animation::tag("idle"),
-                aseprite: assets.get_projecitle_sprite(projectile_type),
-            },
-            Cleanup::<AppState> {
-                states: vec![AppState::Game],
-            },
-            Transform::from_xyz(position.x, position.y, 0.0)
-                .with_rotation(Quat::from_rotation_z(rotation.to_radians())),
-        ))
-        .id();
+    let mut entity_cmds = cmds.spawn((
+        Name::new("Projectile"),
+        Sprite {
+            color: faction.get_projectile_color(projectile_type),
+            ..Default::default()
+        },
+        Collider::from(projectile_attributes),
+        AseAnimation {
+            animation: Animation::tag("idle"),
+            aseprite: assets.get_projecitle_sprite(projectile_type),
+        },
+        RigidBody::Dynamic,
+        Cleanup::<AppState> {
+            states: vec![AppState::Game],
+        },
+        Transform::from_xyz(position.x, position.y, 0.0)
+            .with_rotation(Quat::from_rotation_z(rotation.to_radians())),
+    ));
 
-    Ok(entity)
+    if projectile_attributes.is_sensor {
+        entity_cmds.insert(Sensor);
+    }
+
+    Ok(entity_cmds.id())
 }

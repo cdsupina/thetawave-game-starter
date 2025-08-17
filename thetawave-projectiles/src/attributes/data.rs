@@ -27,7 +27,7 @@ pub struct SpawnProjectileEvent {
 #[serde(deny_unknown_fields)]
 pub(crate) struct ProjectileAttributes {
     colliders: Vec<ThetawaveCollider>,
-    is_sensor: bool,
+    pub is_sensor: bool,
 }
 
 impl From<&ProjectileAttributes> for Collider {
