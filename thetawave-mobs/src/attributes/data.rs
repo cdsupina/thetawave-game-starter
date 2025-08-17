@@ -12,6 +12,7 @@ use bevy::{
 use serde::Deserialize;
 use strum_macros::EnumIter;
 use thetawave_physics::{ColliderShape, ThetawaveCollider, ThetawavePhysicsLayer};
+use thetawave_projectiles::ProjectileSpawner;
 
 const DEFAULT_COLLIDERS: &[ThetawaveCollider] = &[ThetawaveCollider {
     shape: ColliderShape::Rectangle(10.0, 10.0),
@@ -44,6 +45,10 @@ const DEFAULT_COLLIDER_DENSITY: f32 = 1.0;
 #[derive(Component, Deserialize, Debug, Clone, Reflect)]
 pub(crate) struct MobSpawnerComponent {
     pub spawners: HashMap<String, MobSpawner>,
+}
+
+pub(crate) struct ProjectileSpawnerComponent {
+    pub spawners: HashMap<String, ProjectileSpawner>,
 }
 
 /// Used for periodically spawning mobs with a MobSpawnerComponent

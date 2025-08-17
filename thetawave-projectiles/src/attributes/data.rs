@@ -3,12 +3,14 @@ use bevy::{
     ecs::{event::Event, resource::Resource},
     math::Vec2,
     platform::collections::HashMap,
+    reflect::Reflect,
+    time::Timer,
 };
 use serde::Deserialize;
 use thetawave_core::Faction;
 use thetawave_physics::ThetawaveCollider;
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Debug, Deserialize, Eq, PartialEq, Hash, Reflect, Clone)]
 pub enum ProjectileType {
     Bullet,
     Blast,
@@ -54,4 +56,12 @@ impl From<&ProjectileAttributes> for Collider {
 #[serde(deny_unknown_fields)]
 pub(crate) struct ProjectileAttributesResource {
     pub attributes: HashMap<ProjectileType, ProjectileAttributes>,
+}
+
+#[derive(Debug, Clone, Reflect)]
+pub struct ProjectileSpawner {
+    pub timer: Timer,
+    pub position: Vec2,
+    pub rotation: f32,
+    pub mob_type: ProjectileType,
 }
