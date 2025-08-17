@@ -47,6 +47,10 @@ pub(crate) struct MobSpawnerComponent {
     pub spawners: HashMap<String, MobSpawner>,
 }
 
+/// Projectile spawner component for use in spawned mobs
+/// Maps String keys to ProjectileSpawners
+/// Intended to be used by behaviors
+#[derive(Component, Deserialize, Debug, Clone, Reflect)]
 pub(crate) struct ProjectileSpawnerComponent {
     pub spawners: HashMap<String, ProjectileSpawner>,
 }
@@ -248,6 +252,8 @@ pub(crate) struct MobAttributes {
     pub targeting_range: Option<f32>,
     #[serde(default)]
     pub mob_spawners: Option<MobSpawnerComponent>,
+    #[serde(default)]
+    pub projectile_spawners: Option<ProjectileSpawnerComponent>,
     #[serde(default)]
     pub behavior_transmitter: bool,
 }

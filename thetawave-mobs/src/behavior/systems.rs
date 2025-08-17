@@ -12,10 +12,13 @@ use bevy::{
 };
 use bevy_behave::prelude::BehaveCtx;
 use thetawave_player::PlayerStats;
+use thetawave_projectiles::SpawnProjectileEvent;
 
 use crate::{
     MobType, SpawnMobEvent,
-    attributes::{JointsComponent, MobAttributesComponent, MobSpawnerComponent},
+    attributes::{
+        JointsComponent, MobAttributesComponent, MobSpawnerComponent, ProjectileSpawnerComponent,
+    },
     behavior::{
         BehaviorReceiverComponent, MobBehaviorComponent, MobBehaviorType,
         data::{TargetComponent, TransmitBehaviorEvent},
@@ -622,6 +625,54 @@ fn spawn_mob(
                 mob_type: spawner.mob_type.clone(),
                 rotation: spawner.rotation,
                 position: transform.translation.truncate() + spawner.position,
+            });
+        }
+    }
+}
+
+/// MobBehaviorType::SpawnProjectile
+/// Spawns projectiles using the ProjectileSpawnerComponent, using the given spawner keys
+pub(super) fn spawn_projectile_system(
+    mob_behavior_q: Query<(&MobBehaviorComponent, &BehaveCtx)>,
+    mut mob_q: Query<(&mut ProjectileSpawnerComponent, &Transform)>,
+    mut spawn_projectile_event_writer: EventWriter<SpawnProjectileEvent>,
+    time: Res<Time>,
+) {
+    for (mob_behavior, ctx) in mob_behavior_q.iter() {
+        let Ok((mut projectile_spawner, transform)) = mob_q.get_mut(ctx.target_entity()) else {
+            continue;
+        };
+
+        for behavior in mob_behavior.behaviors.iter() {
+            if let MobBehaviorType::SpawnProjectile(Some(spawner_keys)) = behavior {
+                spawn_projectile(
+                    spawner_keys,
+                    &mut projectile_spawner,
+                    transform,
+                    &mut spawn_projectile_event_writer,
+                    &time,
+                );
+            }
+        }
+    }
+}
+
+fn spawn_projectile(
+    spawner_keys: &[String],
+    projectile_spawner: &mut ProjectileSpawnerComponent,
+    transform: &Transform,
+    spawn_projectile_event_writer: &mut EventWriter<SpawnProjectileEvent>,
+    time: &Res<Time>,
+) {
+    for key in spawner_keys.iter() {
+        if let Some(spawner) = projectile_spawner.spawners.get_mut(key)
+            && spawner.timer.tick(time.delta()).just_finished()
+        {
+            spawn_projectile_event_writer.write(SpawnProjectileEvent {
+                projectile_type: spawner.projectile_type.clone(),
+                rotation: spawner.rotation,
+                position: transform.translation.truncate() + spawner.position,
+                faction: spawner.faction.clone(),
             });
         }
     }

@@ -20,4 +20,5 @@ dynamic_linking = [
     "thetawave-assets/dynamic_linking",
     "thetawave-states/dynamic_linking",
     "thetawave-physics/dynamic_linking",
+    "thetawave-core/dynamic_linking",
 ]

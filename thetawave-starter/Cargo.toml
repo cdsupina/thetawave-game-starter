@@ -46,6 +46,7 @@ dynamic_linking = [
     "thetawave-projectiles/dynamic_linking",
     "thetawave-player/dynamic_linking",
     "thetawave-camera/dynamic_linking",
+    "thetawave-core/dynamic_linking",
 ]
 debug = [
     "thetawave-debug",

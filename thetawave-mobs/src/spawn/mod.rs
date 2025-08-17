@@ -190,6 +190,11 @@ fn spawn_mob(
     if let Some(mob_spawners) = &mob_attributes.mob_spawners {
         entity_commands.insert(mob_spawners.clone());
     }
+
+    if let Some(projectile_spawners) = &mob_attributes.projectile_spawners {
+        entity_commands.insert(projectile_spawners.clone());
+    }
+
     if let Some(entity) = transmitter_entity {
         entity_commands.insert(BehaviorReceiverComponent(entity));
     }

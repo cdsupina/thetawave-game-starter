@@ -35,6 +35,7 @@ pub(crate) enum MobBehaviorType {
     LoseTarget,
     BrakeAngular,
     SpawnMob(Option<Vec<String>>),
+    SpawnProjectile(Option<Vec<String>>),
     DoForTime(Timer),
     TransmitMobBehavior {
         mob_type: MobType,
@@ -81,7 +82,7 @@ impl MobBehaviorsResource {
                     MobType::XhitaraSpitter,
                     behave! {
                         Behave::Forever => {
-                            Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveDown, MobBehaviorType::BrakeHorizontal]  }),
+                            Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveDown, MobBehaviorType::BrakeHorizontal, MobBehaviorType::SpawnProjectile(Some(vec!["south".to_string()]))]  }),
                         }
                     },
                 ),

@@ -4,7 +4,7 @@ use bevy::{
     math::Vec2,
     platform::collections::HashMap,
     reflect::Reflect,
-    time::Timer,
+    time::{Timer, TimerMode},
 };
 use serde::Deserialize;
 use thetawave_core::Faction;
@@ -63,5 +63,37 @@ pub struct ProjectileSpawner {
     pub timer: Timer,
     pub position: Vec2,
     pub rotation: f32,
-    pub mob_type: ProjectileType,
+    pub projectile_type: ProjectileType,
+    pub faction: Faction,
+}
+
+impl<'de> Deserialize<'de> for ProjectileSpawner {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        // Define a "helper" struct that mirrors ProjectileSpawner
+        // but uses types that can be deserialized easily
+        #[derive(Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct Helper {
+            pub timer: f32,
+            pub position: Vec2,
+            pub rotation: f32,
+            pub projectile_type: ProjectileType,
+            pub faction: Faction,
+        }
+
+        // Let serde deserialize into the Helper struct first
+        let helper = Helper::deserialize(deserializer)?;
+
+        // Construct our actual struct with the transformed data
+        Ok(ProjectileSpawner {
+            timer: Timer::from_seconds(helper.timer, TimerMode::Repeating),
+            position: helper.position,
+            rotation: helper.rotation,
+            projectile_type: helper.projectile_type,
+            faction: helper.faction,
+        })
+    }
 }
