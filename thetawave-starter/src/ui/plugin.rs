@@ -1,5 +1,3 @@
-use crate::ui::systems::game_debug::game_debug_menu_system;
-
 use super::{
     GameEndResultResource,
     data::{DelayedButtonPressEvent, PlayerReadyEvent},
@@ -121,6 +119,8 @@ impl Plugin for ThetawaveUiPlugin {
 
         #[cfg(feature = "debug")]
         {
+            use crate::ui::systems::game_debug::game_debug_menu_system;
+
             app.add_systems(
                 EguiPrimaryContextPass,
                 game_debug_menu_system.run_if(in_state(DebugState::Debug)),

@@ -1,24 +1,18 @@
 [package]
-name = "thetawave-mobs"
+name = "thetawave-projectiles"
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
 bevy = { workspace = true, default-features = false }
-bevy_aseprite_ultra.workspace = true
-avian2d.workspace = true
-serde.workspace = true
-toml.workspace = true
-rand.workspace = true
-strum_macros.workspace = true
-strum.workspace = true
-bevy_behave.workspace = true
 thetawave-assets = { path = "../thetawave-assets" }
 thetawave-states = { path = "../thetawave-states" }
-thetawave-physics = { path = "../thetawave-physics" }
-thetawave-player = { path = "../thetawave-player" }
-thetawave-projectiles = { path = "../thetawave-projectiles" }
 thetawave-core = { path = "../thetawave-core" }
+thetawave-physics = { path = "../thetawave-physics" }
+serde.workspace = true
+bevy_aseprite_ultra.workspace = true
+toml.workspace = true
+avian2d.workspace = true
 
 [features]
 dynamic_linking = [
@@ -26,8 +20,5 @@ dynamic_linking = [
     "thetawave-assets/dynamic_linking",
     "thetawave-states/dynamic_linking",
     "thetawave-physics/dynamic_linking",
-    "thetawave-player/dynamic_linking",
-    "thetawave-projectiles/dynamic_linking",
     "thetawave-core/dynamic_linking",
 ]
-debug = []

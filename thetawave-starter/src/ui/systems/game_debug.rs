@@ -13,11 +13,15 @@ use bevy_egui::{
 #[cfg(feature = "debug")]
 use thetawave_camera::{Camera2DZoomEvent, Camera3DZoomEvent};
 #[cfg(feature = "debug")]
+use thetawave_core::Faction;
+#[cfg(feature = "debug")]
 use thetawave_debug::InspectorDebugSettings;
 #[cfg(feature = "debug")]
 use thetawave_mobs::{MobDebugSettings, MobType, SpawnMobEvent};
 #[cfg(feature = "debug")]
 use thetawave_physics::PhysicsDebugSettings;
+#[cfg(feature = "debug")]
+use thetawave_projectiles::{ProjectileType, SpawnProjectileEvent};
 
 /// System that handles the egui debug menu
 #[cfg(feature = "debug")]
@@ -27,6 +31,7 @@ pub(in crate::ui) fn game_debug_menu_system(
     mut physics_debug_settings: ResMut<PhysicsDebugSettings>,
     mut inspector_debug_settings: ResMut<InspectorDebugSettings>,
     mut spawn_mob_event_writer: EventWriter<SpawnMobEvent>,
+    mut spawn_projectile_event_writer: EventWriter<SpawnProjectileEvent>,
     mut camera2d_zoom_event_writer: EventWriter<Camera2DZoomEvent>,
     mut camera2d_zoom: Local<i8>,
     mut camera3d_zoom_event_writer: EventWriter<Camera3DZoomEvent>,
@@ -233,6 +238,51 @@ pub(in crate::ui) fn game_debug_menu_system(
                                 }
                             });
                         });
+                    });
+                });
+
+                ui.menu_button("Projectile", |ui| {
+                    ui.menu_button("Blast", |ui| {
+                        if ui.button("Ally").clicked() {
+                            spawn_projectile_event_writer.write(SpawnProjectileEvent {
+                                projectile_type: ProjectileType::Blast,
+                                faction: Faction::Ally,
+                                position: *spawn_location,
+                                rotation: 0.0,
+                                speed: 0.0,
+                            });
+                        }
+
+                        if ui.button("Enemy").clicked() {
+                            spawn_projectile_event_writer.write(SpawnProjectileEvent {
+                                projectile_type: ProjectileType::Blast,
+                                faction: Faction::Enemy,
+                                position: *spawn_location,
+                                rotation: 0.0,
+                                speed: 0.0,
+                            });
+                        }
+                    });
+                    ui.menu_button("Bullet", |ui| {
+                        if ui.button("Ally").clicked() {
+                            spawn_projectile_event_writer.write(SpawnProjectileEvent {
+                                projectile_type: ProjectileType::Bullet,
+                                faction: Faction::Ally,
+                                position: *spawn_location,
+                                rotation: 0.0,
+                                speed: 0.0,
+                            });
+                        }
+
+                        if ui.button("Enemy").clicked() {
+                            spawn_projectile_event_writer.write(SpawnProjectileEvent {
+                                projectile_type: ProjectileType::Bullet,
+                                faction: Faction::Enemy,
+                                position: *spawn_location,
+                                rotation: 0.0,
+                                speed: 0.0,
+                            });
+                        }
                     });
                 });
             });

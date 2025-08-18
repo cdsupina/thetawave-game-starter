@@ -21,6 +21,7 @@ use bevy::{
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_behave::prelude::BehaveTree;
 use thetawave_assets::GameAssets;
+use thetawave_core::HealthComponent;
 use thetawave_states::{AppState, Cleanup};
 
 use crate::{
@@ -185,11 +186,17 @@ fn spawn_mob(
         LockedAxes::from(mob_attributes),
         Transform::from_xyz(position.x, position.y, mob_attributes.z_level)
             .with_rotation(Quat::from_rotation_z(rotation.to_radians())),
+        HealthComponent::from(mob_attributes),
     ));
 
     if let Some(mob_spawners) = &mob_attributes.mob_spawners {
         entity_commands.insert(mob_spawners.clone());
     }
+
+    if let Some(projectile_spawners) = &mob_attributes.projectile_spawners {
+        entity_commands.insert(projectile_spawners.clone());
+    }
+
     if let Some(entity) = transmitter_entity {
         entity_commands.insert(BehaviorReceiverComponent(entity));
     }
