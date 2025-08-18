@@ -9,10 +9,7 @@ use crate::{
     SpawnProjectileEvent, attributes::ThetawaveAttributesPlugin, spawn::spawn_projectile_system,
 };
 
-/// Main plugin for the projectiles system.
-/// 
-/// Registers projectile spawning systems, attributes, and events.
-/// This plugin handles the complete lifecycle of projectiles in the game.
+/// Plugin for projectile spawning systems and events.
 pub struct ThetawaveProjectilesPlugin;
 
 impl Plugin for ThetawaveProjectilesPlugin {
