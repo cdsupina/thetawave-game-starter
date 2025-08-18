@@ -13,6 +13,7 @@ use bevy_persistent::Persistent;
 use leafwing_abilities::AbilitiesBundle;
 use leafwing_input_manager::prelude::InputMap;
 use thetawave_assets::GameAssets;
+use thetawave_core::HealthComponent;
 use thetawave_physics::ThetawavePhysicsLayer;
 use thetawave_player::{
     CharacterType, CharactersResource, ChosenCharactersResource, InputType, PlayerAbility,
@@ -49,7 +50,7 @@ pub(super) fn spawn_players_system(
             .characters
             .get(&chosen_character_data.character)
         {
-            cmds.spawn((
+            let mut entity_cmds = cmds.spawn((
                 player_num.clone(),
                 AseAnimation {
                     animation: Animation::tag("idle"),
@@ -102,6 +103,9 @@ pub(super) fn spawn_players_system(
                 },
                 Name::new("Player"),
             ));
+
+            // new insert because of the bundle size limit
+            entity_cmds.insert(HealthComponent::new(character_data.health));
         }
     }
 }

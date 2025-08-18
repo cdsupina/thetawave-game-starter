@@ -11,7 +11,9 @@ use bevy::{
 };
 use serde::Deserialize;
 use strum_macros::EnumIter;
-use thetawave_physics::ThetawavePhysicsLayer;
+use thetawave_core::HealthComponent;
+use thetawave_physics::{ColliderShape, ThetawaveCollider, ThetawavePhysicsLayer};
+use thetawave_projectiles::ProjectileSpawner;
 
 const DEFAULT_COLLIDERS: &[ThetawaveCollider] = &[ThetawaveCollider {
     shape: ColliderShape::Rectangle(10.0, 10.0),
@@ -37,6 +39,8 @@ const DEFAULT_COLLISION_LAYER_FILTER: &[ThetawavePhysicsLayer] = &[
     ThetawavePhysicsLayer::Tentacle,
 ];
 const DEFAULT_COLLIDER_DENSITY: f32 = 1.0;
+const DEFAULT_PROJECTILE_SPEED: f32 = 100.0;
+const DEFAULT_HEALTH: u32 = 50;
 
 /// Mob spawner component for use in spawned mobs
 /// Maps String keys to MobSpawners
@@ -44,6 +48,14 @@ const DEFAULT_COLLIDER_DENSITY: f32 = 1.0;
 #[derive(Component, Deserialize, Debug, Clone, Reflect)]
 pub(crate) struct MobSpawnerComponent {
     pub spawners: HashMap<String, MobSpawner>,
+}
+
+/// Projectile spawner component for use in spawned mobs
+/// Maps String keys to ProjectileSpawners
+/// Intended to be used by behaviors
+#[derive(Component, Deserialize, Debug, Clone, Reflect)]
+pub(crate) struct ProjectileSpawnerComponent {
+    pub spawners: HashMap<String, ProjectileSpawner>,
 }
 
 /// Used for periodically spawning mobs with a MobSpawnerComponent
@@ -81,32 +93,6 @@ impl<'de> Deserialize<'de> for MobSpawner {
             rotation: helper.rotation,
             mob_type: helper.mob_type,
         })
-    }
-}
-
-/// Describes a collider that can be attached to mobs
-#[derive(Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-pub struct ThetawaveCollider {
-    pub shape: ColliderShape,
-    pub position: Vec2,
-    pub rotation: f32,
-}
-
-/// All types of collider shapes that can be attached to mobs
-#[derive(Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-pub enum ColliderShape {
-    Circle(f32),
-    Rectangle(f32, f32),
-}
-
-impl From<&ColliderShape> for Collider {
-    fn from(value: &ColliderShape) -> Self {
-        match value {
-            ColliderShape::Circle(radius) => Collider::circle(*radius),
-            ColliderShape::Rectangle(width, height) => Collider::rectangle(*width, *height),
-        }
     }
 }
 
@@ -172,6 +158,7 @@ pub(crate) struct MobAttributesComponent {
     pub angular_deceleration: f32,
     pub max_angular_speed: f32,
     pub targeting_range: Option<f32>,
+    pub projectile_speed: f32,
 }
 
 /// Describes an Avian2D angle limit for a joint
@@ -270,7 +257,13 @@ pub(crate) struct MobAttributes {
     #[serde(default)]
     pub mob_spawners: Option<MobSpawnerComponent>,
     #[serde(default)]
+    pub projectile_spawners: Option<ProjectileSpawnerComponent>,
+    #[serde(default = "default_projectile_speed")]
+    pub projectile_speed: f32,
+    #[serde(default)]
     pub behavior_transmitter: bool,
+    #[serde(default = "default_health")]
+    pub health: u32,
 }
 
 fn default_colliders() -> Vec<ThetawaveCollider> {
@@ -327,6 +320,14 @@ fn default_angular_deceleration() -> f32 {
 
 fn default_max_angular_speed() -> f32 {
     DEFAULT_MAX_ANGULAR_SPEED
+}
+
+fn default_projectile_speed() -> f32 {
+    DEFAULT_PROJECTILE_SPEED
+}
+
+fn default_health() -> u32 {
+    DEFAULT_HEALTH
 }
 
 /// Resource for storing data for all mobs
@@ -420,6 +421,13 @@ impl From<&MobAttributes> for MobAttributesComponent {
             angular_deceleration: value.angular_deceleration,
             max_angular_speed: value.max_angular_speed,
             targeting_range: value.targeting_range,
+            projectile_speed: value.projectile_speed,
         }
+    }
+}
+
+impl From<&MobAttributes> for HealthComponent {
+    fn from(value: &MobAttributes) -> Self {
+        HealthComponent::new(value.health)
     }
 }

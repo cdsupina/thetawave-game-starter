@@ -29,6 +29,7 @@ pub struct CharacterAttributes {
     pub collider_dimensions: Vec2,
     pub cooldowns: CooldownState<PlayerAbility>,
     pub restitution: f32,
+    pub health: u32,
 }
 
 impl<'de> Deserialize<'de> for CharacterAttributes {
@@ -48,6 +49,7 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
             // Instead of CooldownState, use a HashMap with seconds as f32
             cooldowns: HashMap<PlayerAbility, f32>,
             restitution: f32,
+            health: u32,
         }
 
         // Let serde deserialize into the Helper struct first
@@ -69,6 +71,7 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
             // Create CooldownState from the transformed pairs
             cooldowns: CooldownState::new(cooldown_pairs),
             restitution: helper.restitution,
+            health: helper.health,
         })
     }
 }

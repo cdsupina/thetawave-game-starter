@@ -10,6 +10,8 @@ members = [
     "thetawave-mobs",
     "thetawave-player",
     "thetawave-camera",
+    "thetawave-projectiles",
+    "thetawave-core",
 ]
 resolver = "2"
 
