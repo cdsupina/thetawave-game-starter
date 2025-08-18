@@ -105,7 +105,7 @@ pub(super) fn move_left_system(
             continue;
         };
 
-        if mob_behavior.behaviors.contains(&MobBehaviorType::MoveDown) {
+        if mob_behavior.behaviors.contains(&MobBehaviorType::MoveLeft) {
             move_left(attributes, &mut lin_vel);
         }
     }
@@ -128,7 +128,7 @@ pub(super) fn move_right_system(
             continue;
         };
 
-        if mob_behavior.behaviors.contains(&MobBehaviorType::MoveDown) {
+        if mob_behavior.behaviors.contains(&MobBehaviorType::MoveRight) {
             move_right(attributes, &mut lin_vel);
         }
     }
