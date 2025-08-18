@@ -61,6 +61,7 @@ pub(super) fn receieve_system(
                 for behavior in event.behaviors.iter() {
                     match behavior {
                         MobBehaviorType::MoveDown => apply_move_down(&mut lin_vel, mob_attr),
+                        MobBehaviorType::MoveUp => apply_move_up(&mut lin_vel, mob_attr),
                         MobBehaviorType::MoveLeft => apply_move_left(&mut lin_vel, mob_attr),
                         MobBehaviorType::MoveRight => apply_move_right(&mut lin_vel, mob_attr),
                         _ => {}
@@ -76,6 +77,14 @@ pub(super) fn receieve_system(
 fn apply_move_down(lin_vel: &mut LinearVelocity, attributes: &MobAttributesComponent) {
     if lin_vel.y > -attributes.max_linear_speed.y {
         lin_vel.y -= attributes.linear_acceleration.y;
+    }
+}
+
+/// Helper function to apply upward movement
+#[inline]
+fn apply_move_up(lin_vel: &mut LinearVelocity, attributes: &MobAttributesComponent) {
+    if lin_vel.y < attributes.max_linear_speed.y {
+        lin_vel.y += attributes.linear_acceleration.y;
     }
 }
 
@@ -96,7 +105,7 @@ fn apply_move_right(lin_vel: &mut LinearVelocity, attributes: &MobAttributesComp
 }
 
 /// Unified directional movement system
-/// Handles MoveDown, MoveLeft, and MoveRight behaviors in a single system
+/// Handles MoveDown, MoveUp, MoveLeft, and MoveRight behaviors in a single system
 /// This eliminates the need for separate systems for each direction
 pub(super) fn directional_movement_system(
     mob_behavior_q: Query<(&MobBehaviorComponent, &BehaveCtx)>,
@@ -111,6 +120,7 @@ pub(super) fn directional_movement_system(
         for behavior in &mob_behavior.behaviors {
             match behavior {
                 MobBehaviorType::MoveDown => apply_move_down(&mut lin_vel, attributes),
+                MobBehaviorType::MoveUp => apply_move_up(&mut lin_vel, attributes),
                 MobBehaviorType::MoveLeft => apply_move_left(&mut lin_vel, attributes),
                 MobBehaviorType::MoveRight => apply_move_right(&mut lin_vel, attributes),
                 _ => {} // Ignore non-directional movement behaviors

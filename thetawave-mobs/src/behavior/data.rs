@@ -24,6 +24,7 @@ pub(crate) struct TargetComponent(pub Entity);
 #[derive(Clone, PartialEq)]
 pub(crate) enum MobBehaviorType {
     MoveDown,
+    MoveUp,
     MoveLeft,
     MoveRight,
     BrakeHorizontal,

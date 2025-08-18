@@ -33,7 +33,7 @@ impl Plugin for ThetawaveMobBehaviorPlugin {
         app.add_systems(
             Update,
             (
-                directional_movement_system, // Handles MoveDown, MoveLeft, MoveRight
+                directional_movement_system, // Handles MoveDown, MoveUp, MoveLeft, MoveRight
                 brake_horizontal_system,
                 move_to_system,
                 find_player_target_system,
