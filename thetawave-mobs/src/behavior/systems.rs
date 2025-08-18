@@ -60,26 +60,38 @@ pub(super) fn receieve_system(
             if *mob_type == event.mob_type && behavior_recv.0 == event.source_entity {
                 for behavior in event.behaviors.iter() {
                     match behavior {
-                        MobBehaviorType::MoveDown => {
-                            if lin_vel.y > -mob_attr.max_linear_speed.y {
-                                lin_vel.y -= mob_attr.linear_acceleration.y;
-                            }
-                        }
-                        MobBehaviorType::MoveLeft => {
-                            if lin_vel.x > -mob_attr.max_linear_speed.x {
-                                lin_vel.x -= mob_attr.linear_acceleration.x;
-                            }
-                        }
-                        MobBehaviorType::MoveRight => {
-                            if lin_vel.x < mob_attr.max_linear_speed.x {
-                                lin_vel.x += mob_attr.linear_acceleration.x;
-                            }
-                        }
+                        MobBehaviorType::MoveDown => apply_move_down(&mut lin_vel, mob_attr),
+                        MobBehaviorType::MoveLeft => apply_move_left(&mut lin_vel, mob_attr),
+                        MobBehaviorType::MoveRight => apply_move_right(&mut lin_vel, mob_attr),
                         _ => {}
                     }
                 }
             }
         }
+    }
+}
+
+/// Helper function to apply downward movement
+#[inline]
+fn apply_move_down(lin_vel: &mut LinearVelocity, attributes: &MobAttributesComponent) {
+    if lin_vel.y > -attributes.max_linear_speed.y {
+        lin_vel.y -= attributes.linear_acceleration.y;
+    }
+}
+
+/// Helper function to apply leftward movement
+#[inline]
+fn apply_move_left(lin_vel: &mut LinearVelocity, attributes: &MobAttributesComponent) {
+    if lin_vel.x > -attributes.max_linear_speed.x {
+        lin_vel.x -= attributes.linear_acceleration.x;
+    }
+}
+
+/// Helper function to apply rightward movement
+#[inline]
+fn apply_move_right(lin_vel: &mut LinearVelocity, attributes: &MobAttributesComponent) {
+    if lin_vel.x < attributes.max_linear_speed.x {
+        lin_vel.x += attributes.linear_acceleration.x;
     }
 }
 
@@ -98,21 +110,9 @@ pub(super) fn directional_movement_system(
         // Check all directional behaviors and apply them
         for behavior in &mob_behavior.behaviors {
             match behavior {
-                MobBehaviorType::MoveDown => {
-                    if lin_vel.y > -attributes.max_linear_speed.y {
-                        lin_vel.y -= attributes.linear_acceleration.y;
-                    }
-                }
-                MobBehaviorType::MoveLeft => {
-                    if lin_vel.x > -attributes.max_linear_speed.x {
-                        lin_vel.x -= attributes.linear_acceleration.x;
-                    }
-                }
-                MobBehaviorType::MoveRight => {
-                    if lin_vel.x < attributes.max_linear_speed.x {
-                        lin_vel.x += attributes.linear_acceleration.x;
-                    }
-                }
+                MobBehaviorType::MoveDown => apply_move_down(&mut lin_vel, attributes),
+                MobBehaviorType::MoveLeft => apply_move_left(&mut lin_vel, attributes),
+                MobBehaviorType::MoveRight => apply_move_right(&mut lin_vel, attributes),
                 _ => {} // Ignore non-directional movement behaviors
             }
         }
