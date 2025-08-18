@@ -40,6 +40,7 @@ const DEFAULT_COLLISION_LAYER_FILTER: &[ThetawavePhysicsLayer] = &[
 ];
 const DEFAULT_COLLIDER_DENSITY: f32 = 1.0;
 const DEFAULT_PROJECTILE_SPEED: f32 = 100.0;
+const DEFAULT_PROJECTILE_DAMAGE: u32 = 5;
 const DEFAULT_HEALTH: u32 = 50;
 
 /// Mob spawner component for use in spawned mobs
@@ -159,6 +160,7 @@ pub(crate) struct MobAttributesComponent {
     pub max_angular_speed: f32,
     pub targeting_range: Option<f32>,
     pub projectile_speed: f32,
+    pub projectile_damage: u32,
 }
 
 /// Describes an Avian2D angle limit for a joint
@@ -260,6 +262,8 @@ pub(crate) struct MobAttributes {
     pub projectile_spawners: Option<ProjectileSpawnerComponent>,
     #[serde(default = "default_projectile_speed")]
     pub projectile_speed: f32,
+    #[serde(default = "default_projectile_damage")]
+    pub projectile_damage: u32,
     #[serde(default)]
     pub behavior_transmitter: bool,
     #[serde(default = "default_health")]
@@ -324,6 +328,10 @@ fn default_max_angular_speed() -> f32 {
 
 fn default_projectile_speed() -> f32 {
     DEFAULT_PROJECTILE_SPEED
+}
+
+fn default_projectile_damage() -> u32 {
+    DEFAULT_PROJECTILE_DAMAGE
 }
 
 fn default_health() -> u32 {
@@ -422,6 +430,7 @@ impl From<&MobAttributes> for MobAttributesComponent {
             max_angular_speed: value.max_angular_speed,
             targeting_range: value.targeting_range,
             projectile_speed: value.projectile_speed,
+            projectile_damage: value.projectile_damage,
         }
     }
 }

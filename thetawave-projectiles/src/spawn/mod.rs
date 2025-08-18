@@ -1,4 +1,4 @@
-use avian2d::prelude::{Collider, LinearVelocity, RigidBody, Sensor};
+use avian2d::prelude::{Collider, CollisionEventsEnabled, LinearVelocity, RigidBody, Sensor};
 use bevy::{
     asset::Handle,
     color::Color,
@@ -16,7 +16,7 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use thetawave_assets::GameAssets;
-use thetawave_core::Faction;
+use thetawave_core::{CollisionDamage, Faction};
 use thetawave_states::{AppState, Cleanup};
 
 use crate::{ProjectileType, SpawnProjectileEvent, attributes::ProjectileAttributesResource};
@@ -67,6 +67,7 @@ pub(super) fn spawn_projectile_system(
             event.position,
             event.rotation,
             event.speed,
+            event.damage,
             &assets,
             &attributes_res,
         )?;
@@ -82,6 +83,7 @@ fn spawn_projectile(
     position: Vec2,
     rotation: f32,
     speed: f32,
+    damage: u32,
     assets: &GameAssets,
     attributes_res: &ProjectileAttributesResource,
 ) -> Result<Entity, BevyError> {
@@ -105,6 +107,8 @@ fn spawn_projectile(
 
     let mut entity_cmds = cmds.spawn((
         Name::new("Projectile"),
+        projectile_type.clone(),
+        faction.clone(),
         Sprite {
             color: faction.get_projectile_color(projectile_type),
             ..Default::default()
@@ -121,6 +125,8 @@ fn spawn_projectile(
         Transform::from_xyz(position.x, position.y, 0.0)
             .with_rotation(Quat::from_rotation_z(rotation.to_radians())),
         LinearVelocity(velocity_vector),
+        CollisionEventsEnabled,
+        CollisionDamage(damage),
     ));
 
     if projectile_attributes.is_sensor {

@@ -1,6 +1,6 @@
 use avian2d::prelude::{Collider, Rotation};
 use bevy::{
-    ecs::{event::Event, resource::Resource},
+    ecs::{component::Component, event::Event, resource::Resource},
     math::Vec2,
     platform::collections::HashMap,
     reflect::Reflect,
@@ -10,7 +10,7 @@ use serde::Deserialize;
 use thetawave_core::Faction;
 use thetawave_physics::ThetawaveCollider;
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Hash, Reflect, Clone)]
+#[derive(Component, Debug, Deserialize, Eq, PartialEq, Hash, Reflect, Clone)]
 pub enum ProjectileType {
     Bullet,
     Blast,
@@ -23,6 +23,7 @@ pub struct SpawnProjectileEvent {
     pub position: Vec2,
     pub rotation: f32,
     pub speed: f32,
+    pub damage: u32,
 }
 
 /// Contains all attributes for a mob
@@ -67,6 +68,7 @@ pub struct ProjectileSpawner {
     pub projectile_type: ProjectileType,
     pub faction: Faction,
     pub speed_multiplier: f32,
+    pub damage_multiplier: f32,
 }
 
 impl<'de> Deserialize<'de> for ProjectileSpawner {
@@ -86,9 +88,15 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
             pub faction: Faction,
             #[serde(default = "default_speed_multiplier")]
             pub speed_multiplier: f32,
+            #[serde(default = "default_damage_multiplier")]
+            pub damage_multiplier: f32,
         }
 
         fn default_speed_multiplier() -> f32 {
+            1.0
+        }
+
+        fn default_damage_multiplier() -> f32 {
             1.0
         }
 
@@ -103,6 +111,7 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
             projectile_type: helper.projectile_type,
             faction: helper.faction,
             speed_multiplier: helper.speed_multiplier,
+            damage_multiplier: helper.damage_multiplier,
         })
     }
 }

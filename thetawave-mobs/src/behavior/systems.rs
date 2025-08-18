@@ -671,6 +671,7 @@ fn spawn_projectile(
                 position: transform.translation.truncate() + spawner.position,
                 faction: spawner.faction.clone(),
                 speed: spawner.speed_multiplier * attributes.projectile_speed,
+                damage: (spawner.damage_multiplier * attributes.projectile_damage as f32) as u32,
             });
         }
     }

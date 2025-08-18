@@ -250,6 +250,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                 position: *spawn_location,
                                 rotation: 0.0,
                                 speed: 0.0,
+                                damage: 5,
                             });
                         }
 
@@ -260,6 +261,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                 position: *spawn_location,
                                 rotation: 0.0,
                                 speed: 0.0,
+                                damage: 5,
                             });
                         }
                     });
@@ -271,6 +273,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                 position: *spawn_location,
                                 rotation: 0.0,
                                 speed: 0.0,
+                                damage: 5,
                             });
                         }
 
@@ -281,6 +284,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                 position: *spawn_location,
                                 rotation: 0.0,
                                 speed: 0.0,
+                                damage: 5,
                             });
                         }
                     });

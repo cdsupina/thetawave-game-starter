@@ -2,7 +2,7 @@ use bevy::{app::Plugin, ecs::component::Component, prelude::App, reflect::Reflec
 use serde::Deserialize;
 
 /// Used for designating factions for projectiles
-#[derive(Debug, Clone, Reflect, Deserialize)]
+#[derive(Debug, Clone, Reflect, Deserialize, Component)]
 pub enum Faction {
     Ally,
     Enemy,
@@ -32,6 +32,10 @@ impl HealthComponent {
         self.current_health = (self.current_health + amount).min(self.max_health);
     }
 }
+
+/// Component for transferring collision damage between players, projectiles, and mobs
+#[derive(Component, Reflect)]
+pub struct CollisionDamage(pub u32);
 
 pub struct ThetawaveCorePlugin;
 
