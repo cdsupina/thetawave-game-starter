@@ -13,11 +13,10 @@ use crate::behavior::{
     BehaviorReceiverComponent, MobBehaviorsResource,
     data::{TargetComponent, TransmitBehaviorEvent},
     systems::{
-        brake_angular_system, brake_horizontal_system, do_for_time_system,
-        find_player_target_system, lose_target_system, move_down_system, move_forward_system,
-        move_left_system, move_right_system, move_to_system, move_to_target_system,
-        receieve_system, rotate_to_target_system, spawn_mob_system, spawn_projectile_system,
-        transmit_system,
+        brake_angular_system, brake_horizontal_system, directional_movement_system,
+        do_for_time_system, find_player_target_system, lose_target_system, move_forward_system,
+        move_to_system, move_to_target_system, receieve_system, rotate_to_target_system,
+        spawn_mob_system, spawn_projectile_system, transmit_system,
     },
 };
 
@@ -34,7 +33,7 @@ impl Plugin for ThetawaveMobBehaviorPlugin {
         app.add_systems(
             Update,
             (
-                move_down_system,
+                directional_movement_system, // Handles MoveDown, MoveUp, MoveLeft, MoveRight
                 brake_horizontal_system,
                 move_to_system,
                 find_player_target_system,
@@ -47,8 +46,6 @@ impl Plugin for ThetawaveMobBehaviorPlugin {
                 do_for_time_system,
                 transmit_system,
                 receieve_system,
-                move_left_system,
-                move_right_system,
                 spawn_projectile_system,
             )
                 .run_if({

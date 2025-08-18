@@ -25,7 +25,7 @@ use crate::{
     },
 };
 
-/// MobBheaviorType::TransmitMobBehavior
+/// MobBehaviorType::TransmitMobBehavior
 /// Sends TransmitBehaviorEvents
 pub(super) fn transmit_system(
     mob_behavior_q: Query<(&MobBehaviorComponent, &BehaveCtx)>,
@@ -63,9 +63,10 @@ pub(super) fn receieve_system(
             if *mob_type == event.mob_type && behavior_recv.0 == event.source_entity {
                 for behavior in event.behaviors.iter() {
                     match behavior {
-                        MobBehaviorType::MoveDown => move_down(mob_attr, &mut lin_vel),
-                        MobBehaviorType::MoveLeft => move_left(mob_attr, &mut lin_vel),
-                        MobBehaviorType::MoveRight => move_right(mob_attr, &mut lin_vel),
+                        MobBehaviorType::MoveDown => apply_move_down(&mut lin_vel, mob_attr),
+                        MobBehaviorType::MoveUp => apply_move_up(&mut lin_vel, mob_attr),
+                        MobBehaviorType::MoveLeft => apply_move_left(&mut lin_vel, mob_attr),
+                        MobBehaviorType::MoveRight => apply_move_right(&mut lin_vel, mob_attr),
                         _ => {}
                     }
                 }
@@ -74,55 +75,42 @@ pub(super) fn receieve_system(
     }
 }
 
-/// MobBheaviorType::MoveDown
-/// Modifies LinearVelocity to move down
-pub(super) fn move_down_system(
-    mob_behavior_q: Query<(&MobBehaviorComponent, &BehaveCtx)>,
-    mut mob_q: Query<(&mut LinearVelocity, &MobAttributesComponent)>,
-) {
-    for (mob_behavior, ctx) in mob_behavior_q.iter() {
-        let Ok((mut lin_vel, attributes)) = mob_q.get_mut(ctx.target_entity()) else {
-            continue;
-        };
-
-        if mob_behavior.behaviors.contains(&MobBehaviorType::MoveDown) {
-            move_down(attributes, &mut lin_vel);
-        }
-    }
-}
-
-fn move_down(attributes: &MobAttributesComponent, lin_vel: &mut LinearVelocity) {
+/// Helper function to apply downward movement
+#[inline]
+fn apply_move_down(lin_vel: &mut LinearVelocity, attributes: &MobAttributesComponent) {
     if lin_vel.y > -attributes.max_linear_speed.y {
         lin_vel.y -= attributes.linear_acceleration.y;
     }
 }
 
-/// MobBehaviorType::MoveLeft
-/// Modifies LinearVelocity to move left
-pub(super) fn move_left_system(
-    mob_behavior_q: Query<(&MobBehaviorComponent, &BehaveCtx)>,
-    mut mob_q: Query<(&mut LinearVelocity, &MobAttributesComponent)>,
-) {
-    for (mob_behavior, ctx) in mob_behavior_q.iter() {
-        let Ok((mut lin_vel, attributes)) = mob_q.get_mut(ctx.target_entity()) else {
-            continue;
-        };
-
-        if mob_behavior.behaviors.contains(&MobBehaviorType::MoveLeft) {
-            move_left(attributes, &mut lin_vel);
-        }
+/// Helper function to apply upward movement
+#[inline]
+fn apply_move_up(lin_vel: &mut LinearVelocity, attributes: &MobAttributesComponent) {
+    if lin_vel.y < attributes.max_linear_speed.y {
+        lin_vel.y += attributes.linear_acceleration.y;
     }
 }
 
-fn move_left(attributes: &MobAttributesComponent, lin_vel: &mut LinearVelocity) {
+/// Helper function to apply leftward movement
+#[inline]
+fn apply_move_left(lin_vel: &mut LinearVelocity, attributes: &MobAttributesComponent) {
     if lin_vel.x > -attributes.max_linear_speed.x {
         lin_vel.x -= attributes.linear_acceleration.x;
     }
 }
 
-/// MobBehaviorType::MoveRight
-/// Modifies LinearVelocity to move right
-pub(super) fn move_right_system(
+/// Helper function to apply rightward movement
+#[inline]
+fn apply_move_right(lin_vel: &mut LinearVelocity, attributes: &MobAttributesComponent) {
+    if lin_vel.x < attributes.max_linear_speed.x {
+        lin_vel.x += attributes.linear_acceleration.x;
+    }
+}
+
+/// Unified directional movement system
+/// Handles MoveDown, MoveUp, MoveLeft, and MoveRight behaviors in a single system
+/// This eliminates the need for separate systems for each direction
+pub(super) fn directional_movement_system(
     mob_behavior_q: Query<(&MobBehaviorComponent, &BehaveCtx)>,
     mut mob_q: Query<(&mut LinearVelocity, &MobAttributesComponent)>,
 ) {
@@ -131,15 +119,16 @@ pub(super) fn move_right_system(
             continue;
         };
 
-        if mob_behavior.behaviors.contains(&MobBehaviorType::MoveRight) {
-            move_right(attributes, &mut lin_vel);
+        // Check all directional behaviors and apply them
+        for behavior in &mob_behavior.behaviors {
+            match behavior {
+                MobBehaviorType::MoveDown => apply_move_down(&mut lin_vel, attributes),
+                MobBehaviorType::MoveUp => apply_move_up(&mut lin_vel, attributes),
+                MobBehaviorType::MoveLeft => apply_move_left(&mut lin_vel, attributes),
+                MobBehaviorType::MoveRight => apply_move_right(&mut lin_vel, attributes),
+                _ => {} // Ignore non-directional movement behaviors
+            }
         }
-    }
-}
-
-fn move_right(attributes: &MobAttributesComponent, lin_vel: &mut LinearVelocity) {
-    if lin_vel.x < attributes.max_linear_speed.x {
-        lin_vel.x += attributes.linear_acceleration.x;
     }
 }
 
