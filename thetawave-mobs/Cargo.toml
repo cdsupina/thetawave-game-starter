@@ -18,6 +18,7 @@ thetawave-states = { path = "../thetawave-states" }
 thetawave-physics = { path = "../thetawave-physics" }
 thetawave-player = { path = "../thetawave-player" }
 thetawave-projectiles = { path = "../thetawave-projectiles" }
+thetawave-core = { path = "../thetawave-core" }
 
 [features]
 dynamic_linking = [
@@ -27,5 +28,6 @@ dynamic_linking = [
     "thetawave-physics/dynamic_linking",
     "thetawave-player/dynamic_linking",
     "thetawave-projectiles/dynamic_linking",
+    "thetawave-core/dynamic_linking",
 ]
 debug = []

@@ -11,6 +11,7 @@ use bevy::{
 };
 use serde::Deserialize;
 use strum_macros::EnumIter;
+use thetawave_core::HealthComponent;
 use thetawave_physics::{ColliderShape, ThetawaveCollider, ThetawavePhysicsLayer};
 use thetawave_projectiles::ProjectileSpawner;
 
@@ -39,6 +40,7 @@ const DEFAULT_COLLISION_LAYER_FILTER: &[ThetawavePhysicsLayer] = &[
 ];
 const DEFAULT_COLLIDER_DENSITY: f32 = 1.0;
 const DEFAULT_PROJECTILE_SPEED: f32 = 100.0;
+const DEFAULT_HEALTH: u32 = 50;
 
 /// Mob spawner component for use in spawned mobs
 /// Maps String keys to MobSpawners
@@ -260,6 +262,8 @@ pub(crate) struct MobAttributes {
     pub projectile_speed: f32,
     #[serde(default)]
     pub behavior_transmitter: bool,
+    #[serde(default = "default_health")]
+    pub health: u32,
 }
 
 fn default_colliders() -> Vec<ThetawaveCollider> {
@@ -320,6 +324,10 @@ fn default_max_angular_speed() -> f32 {
 
 fn default_projectile_speed() -> f32 {
     DEFAULT_PROJECTILE_SPEED
+}
+
+fn default_health() -> u32 {
+    DEFAULT_HEALTH
 }
 
 /// Resource for storing data for all mobs
@@ -415,5 +423,11 @@ impl From<&MobAttributes> for MobAttributesComponent {
             targeting_range: value.targeting_range,
             projectile_speed: value.projectile_speed,
         }
+    }
+}
+
+impl From<&MobAttributes> for HealthComponent {
+    fn from(value: &MobAttributes) -> Self {
+        HealthComponent::new(value.health)
     }
 }
