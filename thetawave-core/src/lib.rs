@@ -1,14 +1,16 @@
+//! Core shared components for the Thetawave game.
+
 use bevy::{app::Plugin, ecs::component::Component, prelude::App, reflect::Reflect};
 use serde::Deserialize;
 
-/// Used for designating factions for projectiles
+/// Entity faction for determining combat interactions.
 #[derive(Debug, Clone, Reflect, Deserialize)]
 pub enum Faction {
     Ally,
     Enemy,
 }
 
-/// Component for tracking the health of players and mobs
+/// Component for tracking entity health, damage, and healing.
 #[derive(Component, Reflect)]
 pub struct HealthComponent {
     pub max_health: u32,
@@ -16,6 +18,7 @@ pub struct HealthComponent {
 }
 
 impl HealthComponent {
+    /// Creates a new HealthComponent with the given max health.
     pub fn new(value: u32) -> Self {
         HealthComponent {
             max_health: value,
@@ -23,16 +26,19 @@ impl HealthComponent {
         }
     }
 
+    /// Applies damage and returns true if health reaches 0.
     pub fn take_damage(&mut self, damage: u32) -> bool {
         self.current_health = self.current_health.saturating_sub(damage);
         self.current_health == 0
     }
 
+    /// Heals the entity, capped at max health.
     pub fn heal(&mut self, amount: u32) {
         self.current_health = (self.current_health + amount).min(self.max_health);
     }
 }
 
+/// Plugin that registers core Thetawave components for reflection.
 pub struct ThetawaveCorePlugin;
 
 impl Plugin for ThetawaveCorePlugin {

@@ -28,7 +28,8 @@ pub(super) fn set_window_icon_system(
         let rgba = image.into_raw();
         (rgba, width, height)
     };
-    let icon = Icon::from_rgba(icon_rgba, icon_width, icon_height).unwrap();
+    let icon = Icon::from_rgba(icon_rgba, icon_width, icon_height)
+        .expect("Failed to create window icon from RGBA data");
 
     // do it for all windows
     for window in windows.windows.values() {

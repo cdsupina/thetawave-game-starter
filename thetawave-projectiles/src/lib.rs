@@ -1,3 +1,5 @@
+//! Projectile system for spawning and managing projectiles.
+
 mod attributes;
 mod plugin;
 mod spawn;

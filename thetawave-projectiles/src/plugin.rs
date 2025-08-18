@@ -9,6 +9,7 @@ use crate::{
     SpawnProjectileEvent, attributes::ThetawaveAttributesPlugin, spawn::spawn_projectile_system,
 };
 
+/// Plugin for projectile spawning systems and events.
 pub struct ThetawaveProjectilesPlugin;
 
 impl Plugin for ThetawaveProjectilesPlugin {
