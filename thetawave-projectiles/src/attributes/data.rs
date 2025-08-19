@@ -16,6 +16,20 @@ pub enum ProjectileType {
     Blast,
 }
 
+/// Enforce a range the projectile based on the time existing
+#[derive(Component)]
+pub struct ProjectileRangeComponent {
+    pub timer: Timer,
+}
+
+impl ProjectileRangeComponent {
+    pub fn new(range_seconds: f32) -> Self {
+        Self {
+            timer: Timer::from_seconds(range_seconds, TimerMode::Once),
+        }
+    }
+}
+
 #[derive(Event)]
 pub struct SpawnProjectileEvent {
     pub projectile_type: ProjectileType,
@@ -24,6 +38,7 @@ pub struct SpawnProjectileEvent {
     pub rotation: f32,
     pub speed: f32,
     pub damage: u32,
+    pub range_seconds: f32,
 }
 
 /// Contains all attributes for a mob
@@ -69,6 +84,7 @@ pub struct ProjectileSpawner {
     pub faction: Faction,
     pub speed_multiplier: f32,
     pub damage_multiplier: f32,
+    pub range_seconds_multiplier: f32,
 }
 
 impl<'de> Deserialize<'de> for ProjectileSpawner {
@@ -86,17 +102,15 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
             pub rotation: f32,
             pub projectile_type: ProjectileType,
             pub faction: Faction,
-            #[serde(default = "default_speed_multiplier")]
+            #[serde(default = "default_multiplier")]
             pub speed_multiplier: f32,
-            #[serde(default = "default_damage_multiplier")]
+            #[serde(default = "default_multiplier")]
             pub damage_multiplier: f32,
+            #[serde(default = "default_multiplier")]
+            pub range_seconds_multiplier: f32,
         }
 
-        fn default_speed_multiplier() -> f32 {
-            1.0
-        }
-
-        fn default_damage_multiplier() -> f32 {
+        fn default_multiplier() -> f32 {
             1.0
         }
 
@@ -112,6 +126,7 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
             faction: helper.faction,
             speed_multiplier: helper.speed_multiplier,
             damage_multiplier: helper.damage_multiplier,
+            range_seconds_multiplier: helper.range_seconds_multiplier,
         })
     }
 }

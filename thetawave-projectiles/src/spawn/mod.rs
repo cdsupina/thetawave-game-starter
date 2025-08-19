@@ -19,7 +19,10 @@ use thetawave_assets::GameAssets;
 use thetawave_core::{CollisionDamage, Faction};
 use thetawave_states::{AppState, Cleanup};
 
-use crate::{ProjectileType, SpawnProjectileEvent, attributes::ProjectileAttributesResource};
+use crate::{
+    ProjectileType, SpawnProjectileEvent,
+    attributes::{ProjectileAttributesResource, ProjectileRangeComponent},
+};
 
 trait GameAssetsExt {
     fn get_projectile_sprite(&self, projectile_type: &ProjectileType) -> Handle<Aseprite>;
@@ -68,6 +71,7 @@ pub(super) fn spawn_projectile_system(
             event.rotation,
             event.speed,
             event.damage,
+            event.range_seconds,
             &assets,
             &attributes_res,
         )?;
@@ -84,6 +88,7 @@ fn spawn_projectile(
     rotation: f32,
     speed: f32,
     damage: u32,
+    range_seconds: f32,
     assets: &GameAssets,
     attributes_res: &ProjectileAttributesResource,
 ) -> Result<Entity, BevyError> {
@@ -127,6 +132,7 @@ fn spawn_projectile(
         LinearVelocity(velocity_vector),
         CollisionEventsEnabled,
         CollisionDamage(damage),
+        ProjectileRangeComponent::new(range_seconds),
     ));
 
     if projectile_attributes.is_sensor {

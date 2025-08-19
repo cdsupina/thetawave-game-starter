@@ -42,6 +42,7 @@ const DEFAULT_COLLIDER_DENSITY: f32 = 1.0;
 const DEFAULT_PROJECTILE_SPEED: f32 = 100.0;
 const DEFAULT_PROJECTILE_DAMAGE: u32 = 5;
 const DEFAULT_HEALTH: u32 = 50;
+const DEFAULT_RANGE_SECONDS: f32 = 1.0;
 
 /// Mob spawner component for use in spawned mobs
 /// Maps String keys to MobSpawners
@@ -161,6 +162,7 @@ pub(crate) struct MobAttributesComponent {
     pub targeting_range: Option<f32>,
     pub projectile_speed: f32,
     pub projectile_damage: u32,
+    pub projectile_range_seconds: f32,
 }
 
 /// Describes an Avian2D angle limit for a joint
@@ -268,6 +270,8 @@ pub(crate) struct MobAttributes {
     pub behavior_transmitter: bool,
     #[serde(default = "default_health")]
     pub health: u32,
+    #[serde(default = "default_range_seconds")]
+    pub projectile_range_seconds: f32,
 }
 
 fn default_colliders() -> Vec<ThetawaveCollider> {
@@ -336,6 +340,10 @@ fn default_projectile_damage() -> u32 {
 
 fn default_health() -> u32 {
     DEFAULT_HEALTH
+}
+
+fn default_range_seconds() -> f32 {
+    DEFAULT_RANGE_SECONDS
 }
 
 /// Resource for storing data for all mobs
@@ -431,6 +439,7 @@ impl From<&MobAttributes> for MobAttributesComponent {
             targeting_range: value.targeting_range,
             projectile_speed: value.projectile_speed,
             projectile_damage: value.projectile_damage,
+            projectile_range_seconds: value.projectile_range_seconds,
         }
     }
 }

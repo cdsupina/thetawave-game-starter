@@ -672,6 +672,8 @@ fn spawn_projectile(
                 faction: spawner.faction.clone(),
                 speed: spawner.speed_multiplier * attributes.projectile_speed,
                 damage: (spawner.damage_multiplier * attributes.projectile_damage as f32) as u32,
+                range_seconds: spawner.range_seconds_multiplier
+                    * attributes.projectile_range_seconds,
             });
         }
     }
