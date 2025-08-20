@@ -3,11 +3,14 @@ use bevy::{
     ecs::schedule::{Condition, IntoScheduleConfigs, common_conditions::on_event},
     state::condition::in_state,
 };
+use bevy_aseprite_ultra::prelude::AnimationEvents;
 use thetawave_states::{AppState, GameState};
 
 use crate::{
-    SpawnProjectileEvent, attributes::ThetawaveAttributesPlugin, spawn::spawn_projectile_system,
-    systems::timed_range_system,
+    SpawnProjectileEvent,
+    attributes::{SpawnProjectileEffectEvent, ThetawaveAttributesPlugin},
+    spawn::{spawn_effect_system, spawn_projectile_system},
+    systems::{despawn_after_animation_system, timed_range_system},
 };
 
 pub struct ThetawaveProjectilesPlugin;
@@ -20,9 +23,12 @@ impl Plugin for ThetawaveProjectilesPlugin {
                 (
                     timed_range_system,
                     spawn_projectile_system.run_if(on_event::<SpawnProjectileEvent>),
+                    spawn_effect_system.run_if(on_event::<SpawnProjectileEffectEvent>),
+                    despawn_after_animation_system.run_if(on_event::<AnimationEvents>),
                 )
                     .run_if(in_state(AppState::Game).and(in_state(GameState::Playing))),
             )
-            .add_event::<SpawnProjectileEvent>();
+            .add_event::<SpawnProjectileEvent>()
+            .add_event::<SpawnProjectileEffectEvent>();
     }
 }

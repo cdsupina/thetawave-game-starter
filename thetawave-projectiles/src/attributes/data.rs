@@ -5,6 +5,7 @@ use bevy::{
     platform::collections::HashMap,
     reflect::Reflect,
     time::{Timer, TimerMode},
+    transform::components::Transform,
 };
 use serde::Deserialize;
 use thetawave_core::Faction;
@@ -40,6 +41,16 @@ pub struct SpawnProjectileEvent {
     pub damage: u32,
     pub range_seconds: f32,
 }
+
+#[derive(Event)]
+pub struct SpawnProjectileEffectEvent {
+    pub projectile_type: ProjectileType,
+    pub faction: Faction,
+    pub transform: Transform,
+}
+
+#[derive(Component)]
+pub struct DespawnAfterAnimationComponent;
 
 /// Contains all attributes for a mob
 #[derive(Deserialize, Debug, Clone)]
