@@ -87,6 +87,10 @@ pub struct GameAssets {
     pub blast_projectile_despawn_aseprite: Handle<Aseprite>,
     #[asset(path = "media/aseprite/bullet_projectile_despawn.aseprite")]
     pub bullet_projectile_despawn_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/blast_projectile_hit.aseprite")]
+    pub blast_projectile_hit_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/bullet_projectile_hit.aseprite")]
+    pub bullet_projectile_hit_aseprite: Handle<Aseprite>,
 }
 
 /// Audio assets used throughout all states of the app

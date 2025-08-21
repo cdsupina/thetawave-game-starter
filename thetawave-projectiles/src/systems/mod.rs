@@ -1,3 +1,4 @@
+use avian2d::prelude::CollisionStarted;
 use bevy::{
     ecs::{
         entity::Entity,
@@ -14,7 +15,8 @@ use thetawave_core::Faction;
 use crate::{
     ProjectileType,
     attributes::{
-        DespawnAfterAnimationComponent, ProjectileRangeComponent, SpawnProjectileEffectEvent,
+        DespawnAfterAnimationComponent, ProjectileEffectType, ProjectileRangeComponent,
+        SpawnProjectileEffectEvent,
     },
 };
 
@@ -36,6 +38,37 @@ pub(crate) fn timed_range_system(
             // Spawn the despawn effect
             spawn_effect_event_writer.write(SpawnProjectileEffectEvent {
                 projectile_type: projectile_type.clone(),
+                effect_type: ProjectileEffectType::Despawn,
+                faction: faction.clone(),
+                transform: *transform,
+            });
+
+            cmds.entity(entity).despawn();
+        }
+    }
+}
+
+pub(crate) fn projectile_hit_system(
+    mut cmds: Commands,
+    projectile_q: Query<(Entity, &ProjectileType, &Faction, &Transform)>,
+    mut spawn_effect_event_writer: EventWriter<SpawnProjectileEffectEvent>,
+    mut collision_start_event: EventReader<CollisionStarted>,
+) {
+    for event in collision_start_event.read() {
+        // Get the two entities involved in the collision
+        let entity1 = event.0;
+        let entity2 = event.1;
+
+        // Find which entity is the projectile
+        let projectile_data = projectile_q
+            .get(entity1)
+            .or_else(|_| projectile_q.get(entity2));
+
+        if let Ok((entity, projectile_type, faction, transform)) = projectile_data {
+            // Spawn the hit effect
+            spawn_effect_event_writer.write(SpawnProjectileEffectEvent {
+                projectile_type: projectile_type.clone(),
+                effect_type: ProjectileEffectType::Hit,
                 faction: faction.clone(),
                 transform: *transform,
             });

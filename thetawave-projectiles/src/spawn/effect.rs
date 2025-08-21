@@ -16,19 +16,35 @@ use thetawave_states::{AppState, Cleanup};
 
 use crate::{
     ProjectileType,
-    attributes::{DespawnAfterAnimationComponent, SpawnProjectileEffectEvent},
+    attributes::{
+        DespawnAfterAnimationComponent, ProjectileEffectType, SpawnProjectileEffectEvent,
+    },
     spawn::FactionExt,
 };
 
 trait GameAssetsExt {
-    fn get_effect_sprite(&self, projectile_type: &ProjectileType) -> Handle<Aseprite>;
+    fn get_effect_sprite(
+        &self,
+        projectile_type: &ProjectileType,
+        effect_type: &ProjectileEffectType,
+    ) -> Handle<Aseprite>;
 }
 
 impl GameAssetsExt for GameAssets {
-    fn get_effect_sprite(&self, projectile_type: &ProjectileType) -> Handle<Aseprite> {
+    fn get_effect_sprite(
+        &self,
+        projectile_type: &ProjectileType,
+        effect_type: &ProjectileEffectType,
+    ) -> Handle<Aseprite> {
         match projectile_type {
-            ProjectileType::Bullet => self.bullet_projectile_despawn_aseprite.clone(),
-            ProjectileType::Blast => self.blast_projectile_despawn_aseprite.clone(),
+            ProjectileType::Bullet => match effect_type {
+                ProjectileEffectType::Despawn => self.bullet_projectile_despawn_aseprite.clone(),
+                ProjectileEffectType::Hit => self.bullet_projectile_hit_aseprite.clone(),
+            },
+            ProjectileType::Blast => match effect_type {
+                ProjectileEffectType::Despawn => self.blast_projectile_despawn_aseprite.clone(),
+                ProjectileEffectType::Hit => self.blast_projectile_hit_aseprite.clone(),
+            },
         }
     }
 }
@@ -42,6 +58,7 @@ pub(crate) fn spawn_effect_system(
         spawn_effect(
             &mut cmds,
             &event.projectile_type,
+            &event.effect_type,
             &event.faction,
             &event.transform,
             &assets,
@@ -52,6 +69,7 @@ pub(crate) fn spawn_effect_system(
 fn spawn_effect(
     cmds: &mut Commands,
     projectile_type: &ProjectileType,
+    effect_type: &ProjectileEffectType,
     faction: &Faction,
     transform: &Transform,
     assets: &GameAssets,
@@ -66,7 +84,7 @@ fn spawn_effect(
         },
         AseAnimation {
             animation: Animation::tag("idle"),
-            aseprite: assets.get_effect_sprite(projectile_type),
+            aseprite: assets.get_effect_sprite(projectile_type, effect_type),
         },
         Cleanup::<AppState> {
             states: vec![AppState::Game],

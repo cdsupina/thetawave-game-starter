@@ -1,3 +1,4 @@
+use avian2d::prelude::CollisionStarted;
 use bevy::{
     app::{Plugin, Update},
     ecs::schedule::{Condition, IntoScheduleConfigs, common_conditions::on_event},
@@ -10,7 +11,7 @@ use crate::{
     SpawnProjectileEvent,
     attributes::{SpawnProjectileEffectEvent, ThetawaveAttributesPlugin},
     spawn::{spawn_effect_system, spawn_projectile_system},
-    systems::{despawn_after_animation_system, timed_range_system},
+    systems::{despawn_after_animation_system, projectile_hit_system, timed_range_system},
 };
 
 pub struct ThetawaveProjectilesPlugin;
@@ -22,6 +23,7 @@ impl Plugin for ThetawaveProjectilesPlugin {
                 Update,
                 (
                     timed_range_system,
+                    projectile_hit_system.run_if(on_event::<CollisionStarted>),
                     spawn_projectile_system.run_if(on_event::<SpawnProjectileEvent>),
                     spawn_effect_system.run_if(on_event::<SpawnProjectileEffectEvent>),
                     despawn_after_animation_system.run_if(on_event::<AnimationEvents>),

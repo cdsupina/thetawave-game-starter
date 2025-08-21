@@ -17,6 +17,12 @@ pub enum ProjectileType {
     Blast,
 }
 
+/// Used for indicating which effect to spawn in the spawn effect system
+pub(crate) enum ProjectileEffectType {
+    Despawn,
+    Hit,
+}
+
 /// Enforce a range the projectile based on the time existing
 #[derive(Component)]
 pub struct ProjectileRangeComponent {
@@ -43,8 +49,9 @@ pub struct SpawnProjectileEvent {
 }
 
 #[derive(Event)]
-pub struct SpawnProjectileEffectEvent {
+pub(crate) struct SpawnProjectileEffectEvent {
     pub projectile_type: ProjectileType,
+    pub effect_type: ProjectileEffectType,
     pub faction: Faction,
     pub transform: Transform,
 }
