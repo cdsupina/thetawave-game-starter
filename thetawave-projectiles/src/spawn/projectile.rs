@@ -104,7 +104,7 @@ fn spawn_projectile(
             states: vec![AppState::Game],
         },
         Transform::from_xyz(position.x, position.y, 0.0)
-            .with_rotation(Quat::from_rotation_z(rotation.to_radians())),
+            .with_rotation(Quat::from_rotation_z(rotation)),
         LinearVelocity(velocity),
         CollisionEventsEnabled,
         CollisionDamage(damage),
