@@ -1,6 +1,10 @@
 use bevy::{app::Plugin, color::Color, ecs::component::Component, prelude::App, reflect::Reflect};
 use serde::Deserialize;
 
+// Faction color constants
+const ALLY_BASE_COLOR: Color = Color::srgba(5.0, 5.0, 0.0, 1.0); // Yellow with bloom
+const ENEMY_BASE_COLOR: Color = Color::srgba(5.0, 0.0, 0.0, 1.0); // Red with bloom
+
 /// Used for designating factions for projectiles
 #[derive(Debug, Clone, Reflect, Deserialize, Component)]
 pub enum Faction {
@@ -12,8 +16,8 @@ impl Faction {
     /// Get basic faction color for simple use cases
     pub fn get_base_color(&self) -> Color {
         match self {
-            Faction::Ally => Color::srgba(0.0, 0.0, 5.0, 1.0), // Blue with bloom
-            Faction::Enemy => Color::srgba(5.0, 0.0, 0.0, 1.0), // Red with bloom
+            Faction::Ally => ALLY_BASE_COLOR,
+            Faction::Enemy => ENEMY_BASE_COLOR,
         }
     }
 }
