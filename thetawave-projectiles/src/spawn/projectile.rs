@@ -49,8 +49,7 @@ pub(crate) fn spawn_projectile_system(
             &event.projectile_type,
             &event.faction,
             event.position,
-            event.rotation,
-            event.speed,
+            event.velocity,
             event.damage,
             event.range_seconds,
             &assets,
@@ -66,8 +65,7 @@ fn spawn_projectile(
     projectile_type: &ProjectileType,
     faction: &Faction,
     position: Vec2,
-    rotation: f32,
-    speed: f32,
+    velocity: Vec2,
     damage: u32,
     range_seconds: f32,
     assets: &GameAssets,
@@ -85,11 +83,8 @@ fn spawn_projectile(
         .get(projectile_type)
         .ok_or(BevyError::from("Projectile attributes not found"))?;
 
-    // Calculate velocity vector based on rotation
-    let velocity_vector = Vec2::new(
-        rotation.to_radians().cos() * speed,
-        rotation.to_radians().sin() * speed,
-    );
+    // Calculate the projectile's rotation from its velocity vector
+    let rotation = velocity.y.atan2(velocity.x);
 
     let mut entity_cmds = cmds.spawn((
         Name::new("Projectile"),
@@ -110,7 +105,7 @@ fn spawn_projectile(
         },
         Transform::from_xyz(position.x, position.y, 0.0)
             .with_rotation(Quat::from_rotation_z(rotation.to_radians())),
-        LinearVelocity(velocity_vector),
+        LinearVelocity(velocity),
         CollisionEventsEnabled,
         CollisionDamage(damage),
         ProjectileRangeComponent::new(range_seconds),

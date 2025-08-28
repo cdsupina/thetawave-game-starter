@@ -248,8 +248,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                 projectile_type: ProjectileType::Blast,
                                 faction: Faction::Ally,
                                 position: *spawn_location,
-                                rotation: 0.0,
-                                speed: 0.0,
+                                velocity: Vec2::ZERO,
                                 damage: 5,
                                 range_seconds: 10.0,
                             });
@@ -260,8 +259,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                 projectile_type: ProjectileType::Blast,
                                 faction: Faction::Enemy,
                                 position: *spawn_location,
-                                rotation: 0.0,
-                                speed: 0.0,
+                                velocity: Vec2::ZERO,
                                 damage: 5,
                                 range_seconds: 10.0,
                             });
@@ -273,8 +271,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                 projectile_type: ProjectileType::Bullet,
                                 faction: Faction::Ally,
                                 position: *spawn_location,
-                                rotation: 0.0,
-                                speed: 0.0,
+                                velocity: Vec2::ZERO,
                                 damage: 5,
                                 range_seconds: 10.0,
                             });
@@ -285,8 +282,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                                 projectile_type: ProjectileType::Bullet,
                                 faction: Faction::Enemy,
                                 position: *spawn_location,
-                                rotation: 0.0,
-                                speed: 0.0,
+                                velocity: Vec2::ZERO,
                                 damage: 5,
                                 range_seconds: 10.0,
                             });

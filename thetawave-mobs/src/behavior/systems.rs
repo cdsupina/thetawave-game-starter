@@ -628,13 +628,14 @@ pub(super) fn spawn_projectile_system(
         &mut ProjectileSpawnerComponent,
         &Transform,
         &MobAttributesComponent,
+        &LinearVelocity,
     )>,
     mut spawn_projectile_event_writer: EventWriter<SpawnProjectileEvent>,
     mut activate_particle_event_writer: EventWriter<ActivateParticleEvent>,
     time: Res<Time>,
 ) {
     for (mob_behavior, ctx) in mob_behavior_q.iter() {
-        let Ok((mut projectile_spawner, transform, attributes)) =
+        let Ok((mut projectile_spawner, transform, attributes, velocity)) =
             mob_q.get_mut(ctx.target_entity())
         else {
             continue;
@@ -647,6 +648,7 @@ pub(super) fn spawn_projectile_system(
                     &mut projectile_spawner,
                     transform,
                     attributes,
+                    velocity,
                     &mut spawn_projectile_event_writer,
                     &mut activate_particle_event_writer,
                     &time,
@@ -661,6 +663,7 @@ fn spawn_projectile(
     projectile_spawner: &mut ProjectileSpawnerComponent,
     transform: &Transform,
     attributes: &MobAttributesComponent,
+    velocity: &LinearVelocity,
     spawn_projectile_event_writer: &mut EventWriter<SpawnProjectileEvent>,
     activate_particle_event_writer: &mut EventWriter<ActivateParticleEvent>,
     time: &Res<Time>,
@@ -698,12 +701,21 @@ fn spawn_projectile(
                 let mob_rotation = transform.rotation.to_euler(bevy::math::EulerRot::ZYX).0;
                 let final_rotation = mob_rotation.to_degrees() + spawner.rotation;
                 
+                // Calculate projectile's own velocity vector based on final rotation and speed
+                let projectile_speed = spawner.speed_multiplier * attributes.projectile_speed;
+                let projectile_velocity = Vec2::new(
+                    final_rotation.to_radians().cos() * projectile_speed,
+                    final_rotation.to_radians().sin() * projectile_speed,
+                );
+                
+                // Combine projectile velocity with inherited velocity from the mob
+                let final_velocity = projectile_velocity + velocity.0;
+                
                 spawn_projectile_event_writer.write(SpawnProjectileEvent {
                     projectile_type: spawner.projectile_type.clone(),
-                    rotation: final_rotation,
                     position: world_position,
                     faction: spawner.faction.clone(),
-                    speed: spawner.speed_multiplier * attributes.projectile_speed,
+                    velocity: final_velocity,
                     damage: (spawner.damage_multiplier * attributes.projectile_damage as f32)
                         as u32,
                     range_seconds: spawner.range_seconds_multiplier

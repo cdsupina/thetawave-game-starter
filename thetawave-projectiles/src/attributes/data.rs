@@ -42,8 +42,7 @@ pub struct SpawnProjectileEvent {
     pub projectile_type: ProjectileType,
     pub faction: Faction,
     pub position: Vec2,
-    pub rotation: f32,
-    pub speed: f32,
+    pub velocity: Vec2,
     pub damage: u32,
     pub range_seconds: f32,
 }
