@@ -23,6 +23,7 @@ use bevy_behave::prelude::BehaveTree;
 use thetawave_assets::{GameAssets, ParticleMaterials};
 use thetawave_core::HealthComponent;
 use thetawave_particles::{ParticleEffectType, spawn_particle_effect};
+use thetawave_projectiles::ProjectileType;
 use thetawave_states::{AppState, Cleanup};
 
 use crate::{
@@ -95,6 +96,19 @@ impl GameAssetsExt for GameAssets {
             MobDecorationType::XhitaraLauncherThrusters => {
                 self.xhitara_launcher_thrusters_aseprite.clone()
             }
+        }
+    }
+}
+
+trait ParticleEffectTypeExt {
+    fn from_projectile_type(projectile_type: &ProjectileType) -> ParticleEffectType;
+}
+
+impl ParticleEffectTypeExt for ParticleEffectType {
+    fn from_projectile_type(projectile_type: &ProjectileType) -> ParticleEffectType {
+        match projectile_type {
+            ProjectileType::Bullet => todo!(),
+            ProjectileType::Blast => Self::SpawnBlast,
         }
     }
 }
@@ -331,7 +345,7 @@ fn spawn_mob(
             let particle_entity = spawn_particle_effect(
                 cmds,
                 Some(anchor_id),
-                &ParticleEffectType::SpawnBlast,
+                &ParticleEffectType::from_projectile_type(&spawner.projectile_type),
                 &spawner.faction,
                 &transform,
                 assets,

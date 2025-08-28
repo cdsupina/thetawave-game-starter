@@ -140,7 +140,7 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
         }
 
         fn default_pre_spawn_animation_start_time() -> f32 {
-            0.6
+            0.75
         }
 
         fn default_pre_spawn_animation_end_time() -> f32 {
