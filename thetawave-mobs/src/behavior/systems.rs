@@ -690,10 +690,18 @@ fn spawn_projectile(
             }
 
             if timer_just_finished {
+                // Transform spawner position by mob's rotation
+                let rotated_position = transform.rotation * spawner.position.extend(0.0);
+                let world_position = transform.translation.truncate() + rotated_position.truncate();
+                
+                // Extract mob's Z rotation and combine with spawner rotation
+                let mob_rotation = transform.rotation.to_euler(bevy::math::EulerRot::ZYX).0;
+                let final_rotation = mob_rotation.to_degrees() + spawner.rotation;
+                
                 spawn_projectile_event_writer.write(SpawnProjectileEvent {
                     projectile_type: spawner.projectile_type.clone(),
-                    rotation: spawner.rotation,
-                    position: transform.translation.truncate() + spawner.position,
+                    rotation: final_rotation,
+                    position: world_position,
                     faction: spawner.faction.clone(),
                     speed: spawner.speed_multiplier * attributes.projectile_speed,
                     damage: (spawner.damage_multiplier * attributes.projectile_damage as f32)
