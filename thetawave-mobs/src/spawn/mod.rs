@@ -20,7 +20,7 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_behave::prelude::BehaveTree;
-use thetawave_assets::GameAssets;
+use thetawave_assets::{GameAssets, ParticleMaterials};
 use thetawave_core::HealthComponent;
 use thetawave_particles::{ParticleEffectType, spawn_particle_effect};
 use thetawave_states::{AppState, Cleanup};
@@ -120,6 +120,7 @@ impl Default for MobDebugSettings {
 pub(super) fn spawn_mob_system(
     mut cmds: Commands,
     assets: Res<GameAssets>,
+    materials: Res<ParticleMaterials>,
     mob_debug_settings: Res<MobDebugSettings>,
     mut spawn_mob_event_reader: EventReader<SpawnMobEvent>,
     attributes_res: Res<MobAttributesResource>,
@@ -138,6 +139,7 @@ pub(super) fn spawn_mob_system(
             &attributes_res,
             &behaviors_res,
             &assets,
+            &materials,
             suppress_jointed_mobs,
             transmitter_entity,
         )?;
@@ -155,6 +157,7 @@ fn spawn_mob(
     attributes_res: &MobAttributesResource,
     behaviors_res: &MobBehaviorsResource,
     assets: &GameAssets,
+    materials: &ParticleMaterials,
     suppress_jointed_mobs: bool,
     transmitter_entity: Option<Entity>, // entity that can transmit behaviors to the mob
 ) -> Result<Entity, BevyError> {
@@ -263,6 +266,7 @@ fn spawn_mob(
                     attributes_res,
                     behaviors_res,
                     assets,
+                    materials,
                     chain_index < actual_length - 1, // Suppress jointed mobs except on the last chain link
                     new_transmitter_entity,
                 )?;
@@ -299,6 +303,7 @@ fn spawn_mob(
                 attributes_res,
                 behaviors_res,
                 assets,
+                materials,
                 false,
                 new_transmitter_entity,
             )?;
@@ -327,8 +332,10 @@ fn spawn_mob(
                 cmds,
                 Some(anchor_id),
                 &ParticleEffectType::SpawnBlast,
+                &spawner.faction,
                 &transform,
                 assets,
+                materials,
             );
 
             spawner.spawn_effect_entity = Some(particle_entity);
