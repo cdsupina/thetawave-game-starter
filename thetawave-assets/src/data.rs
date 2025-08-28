@@ -7,6 +7,7 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::Aseprite;
 use bevy_asset_loader::asset_collection::AssetCollection;
+use bevy_enoki::Particle2dEffect;
 use bevy_kira_audio::AudioSource;
 use rand::Rng;
 
@@ -91,6 +92,8 @@ pub struct GameAssets {
     pub blast_projectile_hit_aseprite: Handle<Aseprite>,
     #[asset(path = "media/aseprite/bullet_projectile_hit.aseprite")]
     pub bullet_projectile_hit_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/particles/spawn_blast.ron")]
+    pub spawn_blast_particle_effect: Handle<Particle2dEffect>,
 }
 
 /// Audio assets used throughout all states of the app

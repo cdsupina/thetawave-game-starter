@@ -14,6 +14,7 @@ thetawave-player = { path = "../thetawave-player" }
 thetawave-camera = { path = "../thetawave-camera" }
 thetawave-debug = { path = "../thetawave-debug", optional = true }
 thetawave-core = { path = "../thetawave-core" }
+thetawave-particles = { path = "../thetawave-particles" }
 bevy.workspace = true
 bevy_platform.workspace = true
 bevy_egui.workspace = true
@@ -47,6 +48,7 @@ dynamic_linking = [
     "thetawave-player/dynamic_linking",
     "thetawave-camera/dynamic_linking",
     "thetawave-core/dynamic_linking",
+    "thetawave-particles/dynamic_linking",
 ]
 debug = [
     "thetawave-debug",

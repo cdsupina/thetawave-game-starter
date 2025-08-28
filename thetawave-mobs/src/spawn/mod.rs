@@ -22,6 +22,7 @@ use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_behave::prelude::BehaveTree;
 use thetawave_assets::GameAssets;
 use thetawave_core::HealthComponent;
+use thetawave_particles::{ParticleEffectType, spawn_particle_effect};
 use thetawave_states::{AppState, Cleanup};
 
 use crate::{
@@ -193,10 +194,6 @@ fn spawn_mob(
         entity_commands.insert(mob_spawners.clone());
     }
 
-    if let Some(projectile_spawners) = &mob_attributes.projectile_spawners {
-        entity_commands.insert(projectile_spawners.clone());
-    }
-
     if let Some(entity) = transmitter_entity {
         entity_commands.insert(BehaviorReceiverComponent(entity));
     }
@@ -319,6 +316,26 @@ fn spawn_mob(
     if !mob_joints.is_empty() {
         cmds.entity(anchor_id)
             .insert(JointsComponent { joints: mob_joints });
+    }
+
+    // Now spawn particle effects and update projectile spawners
+    if let Some(ref mut projectile_spawners) = mob_attributes.projectile_spawners.clone() {
+        for (_, spawner) in projectile_spawners.spawners.iter_mut() {
+            // Spawn particle effect directly and store the entity reference
+            let transform = Transform::from_translation(spawner.position.extend(0.0));
+            let particle_entity = spawn_particle_effect(
+                cmds,
+                Some(anchor_id),
+                &ParticleEffectType::SpawnBlast,
+                &transform,
+                assets,
+            );
+
+            spawner.spawn_effect_entity = Some(particle_entity);
+        }
+
+        // Update the entity with the modified projectile spawners
+        cmds.entity(anchor_id).insert(projectile_spawners.clone());
     }
 
     Ok(anchor_id)

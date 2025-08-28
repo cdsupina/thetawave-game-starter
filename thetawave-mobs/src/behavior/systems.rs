@@ -11,6 +11,7 @@ use bevy::{
     transform::components::Transform,
 };
 use bevy_behave::prelude::BehaveCtx;
+use thetawave_particles::ActivateParticleEvent;
 use thetawave_player::PlayerStats;
 use thetawave_projectiles::SpawnProjectileEvent;
 
@@ -629,6 +630,7 @@ pub(super) fn spawn_projectile_system(
         &MobAttributesComponent,
     )>,
     mut spawn_projectile_event_writer: EventWriter<SpawnProjectileEvent>,
+    mut activate_particle_event_writer: EventWriter<ActivateParticleEvent>,
     time: Res<Time>,
 ) {
     for (mob_behavior, ctx) in mob_behavior_q.iter() {
@@ -646,6 +648,7 @@ pub(super) fn spawn_projectile_system(
                     transform,
                     attributes,
                     &mut spawn_projectile_event_writer,
+                    &mut activate_particle_event_writer,
                     &time,
                 );
             }
@@ -659,22 +662,46 @@ fn spawn_projectile(
     transform: &Transform,
     attributes: &MobAttributesComponent,
     spawn_projectile_event_writer: &mut EventWriter<SpawnProjectileEvent>,
+    activate_particle_event_writer: &mut EventWriter<ActivateParticleEvent>,
     time: &Res<Time>,
 ) {
     for key in spawner_keys.iter() {
-        if let Some(spawner) = projectile_spawner.spawners.get_mut(key)
-            && spawner.timer.tick(time.delta()).just_finished()
-        {
-            spawn_projectile_event_writer.write(SpawnProjectileEvent {
-                projectile_type: spawner.projectile_type.clone(),
-                rotation: spawner.rotation,
-                position: transform.translation.truncate() + spawner.position,
-                faction: spawner.faction.clone(),
-                speed: spawner.speed_multiplier * attributes.projectile_speed,
-                damage: (spawner.damage_multiplier * attributes.projectile_damage as f32) as u32,
-                range_seconds: spawner.range_seconds_multiplier
-                    * attributes.projectile_range_seconds,
-            });
+        if let Some(spawner) = projectile_spawner.spawners.get_mut(key) {
+            let timer_just_finished = spawner.timer.tick(time.delta()).just_finished();
+
+            // start the spawn animation particle effect
+            if spawner.timer.remaining_secs() <= spawner.pre_spawn_animation_start_time
+                && let Some(particle_effect_entity) = spawner.spawn_effect_entity
+            {
+                activate_particle_event_writer.write(ActivateParticleEvent {
+                    entity: particle_effect_entity,
+                    active: true,
+                });
+            }
+
+            // stop the spawn animation particle effect
+            if spawner.timer.remaining_secs() <= spawner.pre_spawn_animation_end_time
+                && let Some(particle_effect_entity) = spawner.spawn_effect_entity
+            {
+                activate_particle_event_writer.write(ActivateParticleEvent {
+                    entity: particle_effect_entity,
+                    active: false,
+                });
+            }
+
+            if timer_just_finished {
+                spawn_projectile_event_writer.write(SpawnProjectileEvent {
+                    projectile_type: spawner.projectile_type.clone(),
+                    rotation: spawner.rotation,
+                    position: transform.translation.truncate() + spawner.position,
+                    faction: spawner.faction.clone(),
+                    speed: spawner.speed_multiplier * attributes.projectile_speed,
+                    damage: (spawner.damage_multiplier * attributes.projectile_damage as f32)
+                        as u32,
+                    range_seconds: spawner.range_seconds_multiplier
+                        * attributes.projectile_range_seconds,
+                });
+            }
         }
     }
 }

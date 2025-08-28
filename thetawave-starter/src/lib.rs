@@ -16,6 +16,7 @@ mod audio;
 mod camera;
 mod collisions;
 mod options;
+mod particles;
 mod player;
 mod save;
 mod states;
@@ -61,7 +62,10 @@ impl Plugin for ThetawaveStarterPlugin {
             thetawave_core::ThetawaveCorePlugin,
         ));
 
-        app.add_plugins(collisions::ThetawaveCollisionsPlugin);
+        app.add_plugins((
+            collisions::ThetawaveCollisionsPlugin,
+            particles::ThetawaveParticlesPlugin,
+        ));
 
         // plugins only used in debug builds
         #[cfg(feature = "debug")]

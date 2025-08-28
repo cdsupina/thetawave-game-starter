@@ -1,6 +1,6 @@
 use avian2d::prelude::{Collider, Rotation};
 use bevy::{
-    ecs::{component::Component, event::Event, resource::Resource},
+    ecs::{component::Component, entity::Entity, event::Event, resource::Resource},
     math::Vec2,
     platform::collections::HashMap,
     reflect::Reflect,
@@ -103,6 +103,9 @@ pub struct ProjectileSpawner {
     pub speed_multiplier: f32,
     pub damage_multiplier: f32,
     pub range_seconds_multiplier: f32,
+    pub spawn_effect_entity: Option<Entity>,
+    pub pre_spawn_animation_start_time: f32,
+    pub pre_spawn_animation_end_time: f32,
 }
 
 impl<'de> Deserialize<'de> for ProjectileSpawner {
@@ -126,10 +129,22 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
             pub damage_multiplier: f32,
             #[serde(default = "default_multiplier")]
             pub range_seconds_multiplier: f32,
+            #[serde(default = "default_pre_spawn_animation_start_time")]
+            pub pre_spawn_animation_start_time: f32,
+            #[serde(default = "default_pre_spawn_animation_end_time")]
+            pub pre_spawn_animation_end_time: f32,
         }
 
         fn default_multiplier() -> f32 {
             1.0
+        }
+
+        fn default_pre_spawn_animation_start_time() -> f32 {
+            0.6
+        }
+
+        fn default_pre_spawn_animation_end_time() -> f32 {
+            0.2
         }
 
         // Let serde deserialize into the Helper struct first
@@ -145,6 +160,9 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
             speed_multiplier: helper.speed_multiplier,
             damage_multiplier: helper.damage_multiplier,
             range_seconds_multiplier: helper.range_seconds_multiplier,
+            pre_spawn_animation_start_time: helper.pre_spawn_animation_start_time,
+            pre_spawn_animation_end_time: helper.pre_spawn_animation_end_time,
+            spawn_effect_entity: None, // set to non because the entity cannot be known beforehand
         })
     }
 }
