@@ -91,7 +91,7 @@ impl MobBehaviorsResource {
                     MobType::XhitaraGyro,
                     behave! {
                         Behave::Forever => {
-                            Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveDown, MobBehaviorType::BrakeHorizontal]  }),
+                            Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveDown, MobBehaviorType::BrakeHorizontal, MobBehaviorType::SpawnProjectile(Some(vec!["south".to_string()]))]  }),
                         }
                     },
                 ),
