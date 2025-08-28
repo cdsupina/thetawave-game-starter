@@ -8,6 +8,7 @@ bevy = { workspace = true, default-features = false }
 bevy_enoki.workspace = true
 thetawave-states = { path = "../thetawave-states" }
 thetawave-assets = { path = "../thetawave-assets" }
+thetawave-core = { path = "../thetawave-core" }
 
 [features]
 dynamic_linking = [

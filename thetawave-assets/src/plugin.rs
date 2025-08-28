@@ -1,15 +1,17 @@
 use super::{
     data::{AppAudioAssets, BackgroundAssets, GameAssets, LoadingProgressEvent, UiAssets},
-    systems::{get_loading_progress_system, unload_game_assets_system},
+    systems::{
+        get_loading_progress_system, setup_particle_materials_system, unload_game_assets_system,
+    },
 };
 use bevy::{
     app::{Plugin, Update},
     diagnostic::FrameTimeDiagnosticsPlugin,
-    prelude::{in_state, Condition, IntoScheduleConfigs},
-    state::state::OnExit,
+    prelude::{Condition, IntoScheduleConfigs, in_state},
+    state::state::{OnEnter, OnExit},
 };
 use bevy_asset_loader::loading_state::{
-    config::ConfigureLoadingState, LoadingState, LoadingStateAppExt, LoadingStateSet,
+    LoadingState, LoadingStateAppExt, LoadingStateSet, config::ConfigureLoadingState,
 };
 use bevy_embedded_assets::{EmbeddedAssetPlugin, PluginMode};
 use iyes_progress::ProgressPlugin;
@@ -44,6 +46,7 @@ impl Plugin for ThetawaveAssetsPlugin {
                 .after(LoadingStateSet(AppState::MainMenuLoading))
                 .after(LoadingStateSet(AppState::GameLoading)),
         )
+        .add_systems(OnEnter(AppState::Game), setup_particle_materials_system)
         .add_systems(OnExit(AppState::Game), unload_game_assets_system);
     }
 }

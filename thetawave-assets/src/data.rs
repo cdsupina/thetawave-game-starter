@@ -7,9 +7,10 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::Aseprite;
 use bevy_asset_loader::asset_collection::AssetCollection;
-use bevy_enoki::Particle2dEffect;
+use bevy_enoki::{Particle2dEffect, prelude::ColorParticle2dMaterial};
 use bevy_kira_audio::AudioSource;
 use rand::Rng;
+use thetawave_core::Faction;
 
 /// Assets used in the game state
 #[derive(AssetCollection, Resource)]
@@ -94,6 +95,22 @@ pub struct GameAssets {
     pub bullet_projectile_hit_aseprite: Handle<Aseprite>,
     #[asset(path = "media/particles/spawn_blast.ron")]
     pub spawn_blast_particle_effect: Handle<Particle2dEffect>,
+}
+
+/// Resource for storing faction-based particle materials
+#[derive(Resource)]
+pub struct ParticleMaterials {
+    pub ally_material: Handle<ColorParticle2dMaterial>,
+    pub enemy_material: Handle<ColorParticle2dMaterial>,
+}
+
+impl ParticleMaterials {
+    pub fn get_material_for_faction(&self, faction: &Faction) -> Handle<ColorParticle2dMaterial> {
+        match faction {
+            Faction::Ally => self.ally_material.clone(),
+            Faction::Enemy => self.enemy_material.clone(),
+        }
+    }
 }
 
 /// Audio assets used throughout all states of the app

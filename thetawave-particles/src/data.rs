@@ -3,6 +3,7 @@ use bevy::{
     reflect::Reflect,
     transform::components::Transform,
 };
+use thetawave_core::Faction;
 
 #[derive(Reflect)]
 pub enum ParticleEffectType {
@@ -15,6 +16,7 @@ pub struct SpawnParticleEffectEvent {
     /// The transform will be relative to the parent in this case
     pub parent_entity: Option<Entity>,
     pub effect_type: ParticleEffectType,
+    pub faction: Faction,
     pub transform: Transform,
 }
 

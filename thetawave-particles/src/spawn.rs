@@ -6,7 +6,8 @@ use bevy::{
 use bevy_enoki::{
     Particle2dEffect, ParticleEffectHandle, ParticleSpawner, prelude::ParticleSpawnerState,
 };
-use thetawave_assets::GameAssets;
+use thetawave_assets::{GameAssets, ParticleMaterials};
+use thetawave_core::Faction;
 use thetawave_states::{AppState, Cleanup};
 
 use crate::ParticleEffectType;
@@ -27,19 +28,22 @@ pub fn spawn_particle_effect(
     cmds: &mut Commands,
     parent_entity: Option<Entity>,
     effect_type: &ParticleEffectType,
+    faction: &Faction,
     transform: &Transform,
     assets: &GameAssets,
+    materials: &ParticleMaterials,
 ) -> Entity {
     let particle_entity = cmds
         .spawn((
             Name::new("Particle Effect"),
+            faction.clone(),
             Cleanup::<AppState> {
                 states: vec![AppState::Game],
             },
             *transform,
-            ParticleSpawner::default(),
+            ParticleSpawner(materials.get_material_for_faction(faction)),
             ParticleSpawnerState {
-                active: false,
+                active: true, // Set to true to start immediately
                 ..Default::default()
             },
             ParticleEffectHandle(assets.get_particle_effect(effect_type)),
