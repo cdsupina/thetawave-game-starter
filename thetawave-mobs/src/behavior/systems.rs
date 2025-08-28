@@ -629,13 +629,14 @@ pub(super) fn spawn_projectile_system(
         &Transform,
         &MobAttributesComponent,
         &LinearVelocity,
+        &AngularVelocity,
     )>,
     mut spawn_projectile_event_writer: EventWriter<SpawnProjectileEvent>,
     mut activate_particle_event_writer: EventWriter<ActivateParticleEvent>,
     time: Res<Time>,
 ) {
     for (mob_behavior, ctx) in mob_behavior_q.iter() {
-        let Ok((mut projectile_spawner, transform, attributes, velocity)) =
+        let Ok((mut projectile_spawner, transform, attributes, velocity, angular_velocity)) =
             mob_q.get_mut(ctx.target_entity())
         else {
             continue;
@@ -658,6 +659,7 @@ pub(super) fn spawn_projectile_system(
                 transform,
                 attributes,
                 velocity,
+                angular_velocity,
                 &mut spawn_projectile_event_writer,
                 &mut activate_particle_event_writer,
                 &time,
@@ -672,6 +674,7 @@ fn spawn_projectile(
     transform: &Transform,
     attributes: &MobAttributesComponent,
     velocity: &LinearVelocity,
+    angular_velocity: &AngularVelocity,
     spawn_projectile_event_writer: &mut EventWriter<SpawnProjectileEvent>,
     activate_particle_event_writer: &mut EventWriter<ActivateParticleEvent>,
     time: &Res<Time>,
@@ -716,8 +719,15 @@ fn spawn_projectile(
                     final_rotation.to_radians().sin() * projectile_speed,
                 );
                 
-                // Combine projectile velocity with inherited velocity from the mob
-                let final_velocity = projectile_velocity + velocity.0;
+                // Calculate angular velocity contribution
+                // Angular velocity creates tangential velocity at the spawner position
+                let angular_velocity_contribution = Vec2::new(
+                    -angular_velocity.0 * rotated_position.truncate().y,
+                    angular_velocity.0 * rotated_position.truncate().x,
+                );
+                
+                // Combine projectile velocity with inherited linear and angular velocity from the mob
+                let final_velocity = projectile_velocity + velocity.0 + angular_velocity_contribution;
                 
                 spawn_projectile_event_writer.write(SpawnProjectileEvent {
                     projectile_type: spawner.projectile_type.clone(),
