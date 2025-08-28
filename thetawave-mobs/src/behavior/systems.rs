@@ -641,19 +641,27 @@ pub(super) fn spawn_projectile_system(
             continue;
         };
 
+        // Collect all active spawner keys from the current behavior tree
+        let mut active_spawner_keys = Vec::new();
         for behavior in mob_behavior.behaviors.iter() {
             if let MobBehaviorType::SpawnProjectile(Some(spawner_keys)) = behavior {
-                spawn_projectile(
-                    spawner_keys,
-                    &mut projectile_spawner,
-                    transform,
-                    attributes,
-                    velocity,
-                    &mut spawn_projectile_event_writer,
-                    &mut activate_particle_event_writer,
-                    &time,
-                );
+                active_spawner_keys.extend(spawner_keys.iter().cloned());
             }
+        }
+
+
+        // Only process spawners that are actively referenced by the current behavior
+        if !active_spawner_keys.is_empty() {
+            spawn_projectile(
+                &active_spawner_keys,
+                &mut projectile_spawner,
+                transform,
+                attributes,
+                velocity,
+                &mut spawn_projectile_event_writer,
+                &mut activate_particle_event_writer,
+                &time,
+            );
         }
     }
 }

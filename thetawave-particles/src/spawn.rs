@@ -44,7 +44,7 @@ pub fn spawn_particle_effect(
             *transform,
             ParticleSpawner(materials.get_material_for_faction(faction)),
             ParticleSpawnerState {
-                active: true, // Set to true to start immediately
+                active: false, // Start inactive, will be activated by behavior system when needed
                 ..Default::default()
             },
             ParticleEffectHandle(assets.get_particle_effect(effect_type)),
