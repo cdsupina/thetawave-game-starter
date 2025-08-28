@@ -20,6 +20,7 @@ impl GameAssetsExt for GameAssets {
     fn get_particle_effect(&self, effect_type: &ParticleEffectType) -> Handle<Particle2dEffect> {
         match effect_type {
             ParticleEffectType::SpawnBlast => self.spawn_blast_particle_effect.clone(),
+            ParticleEffectType::SpawnBullet => self.spawn_bullet_particle_effect.clone(),
         }
     }
 }

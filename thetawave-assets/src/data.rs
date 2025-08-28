@@ -95,6 +95,8 @@ pub struct GameAssets {
     pub bullet_projectile_hit_aseprite: Handle<Aseprite>,
     #[asset(path = "media/particles/spawn_blast.ron")]
     pub spawn_blast_particle_effect: Handle<Particle2dEffect>,
+    #[asset(path = "media/particles/spawn_bullet.ron")]
+    pub spawn_bullet_particle_effect: Handle<Particle2dEffect>,
 }
 
 /// Resource for storing faction-based particle materials

@@ -8,6 +8,7 @@ use thetawave_core::Faction;
 #[derive(Reflect)]
 pub enum ParticleEffectType {
     SpawnBlast,
+    SpawnBullet,
 }
 
 #[derive(Event)]

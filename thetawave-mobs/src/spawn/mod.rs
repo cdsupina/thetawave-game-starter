@@ -107,7 +107,7 @@ trait ParticleEffectTypeExt {
 impl ParticleEffectTypeExt for ParticleEffectType {
     fn from_projectile_type(projectile_type: &ProjectileType) -> ParticleEffectType {
         match projectile_type {
-            ProjectileType::Bullet => todo!(),
+            ProjectileType::Bullet => Self::SpawnBullet,
             ProjectileType::Blast => Self::SpawnBlast,
         }
     }
