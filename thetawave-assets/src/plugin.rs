@@ -46,7 +46,10 @@ impl Plugin for ThetawaveAssetsPlugin {
                 .after(LoadingStateSet(AppState::MainMenuLoading))
                 .after(LoadingStateSet(AppState::GameLoading)),
         )
-        .add_systems(OnEnter(AppState::Game), setup_particle_materials_system)
+        .add_systems(
+            OnEnter(AppState::GameLoading),
+            setup_particle_materials_system,
+        )
         .add_systems(OnExit(AppState::Game), unload_game_assets_system);
     }
 }
