@@ -17,11 +17,12 @@ pub struct SpawnParticleEffectEvent {
     /// The transform will be relative to the parent in this case
     pub parent_entity: Option<Entity>,
     pub effect_type: ParticleEffectType,
+    /// For particle effects Faction determines the color
     pub faction: Faction,
     pub transform: Transform,
 }
 
-/// Event for settig the active state of a particle entity
+/// Event for setting the active state of a particle entity
 #[derive(Event)]
 pub struct ActivateParticleEvent {
     pub entity: Entity,

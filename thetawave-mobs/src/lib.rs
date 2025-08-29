@@ -2,7 +2,7 @@ mod attributes;
 mod behavior;
 mod spawn;
 
-pub use attributes::{MobType, SpawnMobEvent};
+pub use attributes::MobType;
 pub use spawn::MobDebugSettings;
 
 use bevy::{
@@ -16,6 +16,8 @@ use crate::{
     attributes::ThetawaveAttributesPlugin, behavior::ThetawaveMobBehaviorPlugin,
     spawn::spawn_mob_system,
 };
+
+pub use spawn::SpawnMobEvent;
 
 pub struct ThetawaveMobsPlugin;
 

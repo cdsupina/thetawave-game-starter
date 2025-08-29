@@ -3,17 +3,21 @@ use avian2d::prelude::{
     Rotation,
 };
 use bevy::{
-    ecs::{component::Component, entity::Entity, event::Event, name::Name, resource::Resource},
+    ecs::{component::Component, name::Name, resource::Resource},
     math::Vec2,
     platform::collections::HashMap,
     reflect::Reflect,
-    time::{Timer, TimerMode},
 };
 use serde::Deserialize;
 use strum_macros::EnumIter;
 use thetawave_core::HealthComponent;
 use thetawave_physics::{ColliderShape, ThetawaveCollider, ThetawavePhysicsLayer};
-use thetawave_projectiles::ProjectileSpawner;
+
+mod joints;
+mod spawners;
+
+pub(crate) use joints::{JointedMob, JointsComponent};
+pub(crate) use spawners::{MobSpawnerComponent, ProjectileSpawnerComponent};
 
 const DEFAULT_COLLIDERS: &[ThetawaveCollider] = &[ThetawaveCollider {
     shape: ColliderShape::Rectangle(10.0, 10.0),
@@ -43,60 +47,6 @@ const DEFAULT_PROJECTILE_SPEED: f32 = 100.0;
 const DEFAULT_PROJECTILE_DAMAGE: u32 = 5;
 const DEFAULT_HEALTH: u32 = 50;
 const DEFAULT_RANGE_SECONDS: f32 = 1.0;
-
-/// Mob spawner component for use in spawned mobs
-/// Maps String keys to MobSpawners
-/// Intended to be used by behaviors
-#[derive(Component, Deserialize, Debug, Clone, Reflect)]
-pub(crate) struct MobSpawnerComponent {
-    pub spawners: HashMap<String, MobSpawner>,
-}
-
-/// Projectile spawner component for use in spawned mobs
-/// Maps String keys to ProjectileSpawners
-/// Intended to be used by behaviors
-#[derive(Component, Deserialize, Debug, Clone, Reflect)]
-pub(crate) struct ProjectileSpawnerComponent {
-    pub spawners: HashMap<String, ProjectileSpawner>,
-}
-
-/// Used for periodically spawning mobs with a MobSpawnerComponent
-#[derive(Debug, Clone, Reflect)]
-pub(crate) struct MobSpawner {
-    pub timer: Timer,
-    pub position: Vec2,
-    pub rotation: f32,
-    pub mob_type: MobType,
-}
-
-impl<'de> Deserialize<'de> for MobSpawner {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        // Define a "helper" struct that mirrors MobSpawner
-        // but uses types that can be deserialized easily
-        #[derive(Deserialize)]
-        #[serde(deny_unknown_fields)]
-        struct Helper {
-            pub timer: f32,
-            pub position: Vec2,
-            pub rotation: f32,
-            pub mob_type: MobType,
-        }
-
-        // Let serde deserialize into the Helper struct first
-        let helper = Helper::deserialize(deserializer)?;
-
-        // Construct our actual struct with the transformed data
-        Ok(MobSpawner {
-            timer: Timer::from_seconds(helper.timer, TimerMode::Repeating),
-            position: helper.position,
-            rotation: helper.rotation,
-            mob_type: helper.mob_type,
-        })
-    }
-}
 
 /// Decorations that can be attached to mobs
 /// Decorations don't have colliders, but have independent animations from the mob
@@ -141,14 +91,6 @@ pub enum MobType {
     FerritharaxRightArm,
 }
 
-/// Event for spawning mobs using a mob type and position
-#[derive(Event, Debug)]
-pub struct SpawnMobEvent {
-    pub mob_type: MobType,
-    pub position: Vec2,
-    pub rotation: f32,
-}
-
 /// Mob attributes not directly used to make any other componnents
 /// Typically used in mob behaviors
 #[derive(Component, Reflect)]
@@ -163,60 +105,6 @@ pub(crate) struct MobAttributesComponent {
     pub projectile_speed: f32,
     pub projectile_damage: u32,
     pub projectile_range_seconds: f32,
-}
-
-/// Describes an Avian2D angle limit for a joint
-#[derive(Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct JointAngleLimit {
-    pub min: f32,
-    pub max: f32,
-    pub torque: f32,
-}
-
-/// Used for making mob chains of random length
-#[derive(Deserialize, Debug, Clone)]
-pub(crate) struct RandomMobChain {
-    pub min_length: u8,
-    pub end_chance: f32,
-}
-
-/// Describes a chain of mobs that are spawned and jointed together
-#[derive(Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct MobChain {
-    pub length: u8,
-    pub pos_offset: Vec2,
-    pub anchor_offset: Vec2,
-    pub random_chain: Option<RandomMobChain>,
-}
-
-/// Mob that is also spawned and jointed to the original mob
-#[derive(Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct JointedMob {
-    pub key: String,
-    pub mob_type: MobType,
-    #[serde(default)]
-    pub offset_pos: Vec2,
-    #[serde(default)]
-    pub anchor_1_pos: Vec2,
-    #[serde(default)]
-    pub anchor_2_pos: Vec2,
-    #[serde(default)]
-    pub angle_limit_range: Option<JointAngleLimit>,
-    #[serde(default)]
-    pub compliance: f32,
-    #[serde(default)]
-    pub chain: Option<MobChain>,
-}
-
-/// Hashmap of joints connected to a mob
-/// This is for "anchors" only
-/// Used by behaviors for referencing joint entities
-#[derive(Component, Reflect)]
-pub(crate) struct JointsComponent {
-    pub joints: HashMap<String, Entity>,
 }
 
 /// Contains all attributes for a mob

@@ -7,7 +7,7 @@ use bevy::{
     ecs::{
         entity::Entity,
         error::{BevyError, Result},
-        event::EventReader,
+        event::{Event, EventReader},
         resource::Resource,
         system::{Commands, Res},
     },
@@ -27,7 +27,7 @@ use thetawave_projectiles::ProjectileType;
 use thetawave_states::{AppState, Cleanup};
 
 use crate::{
-    MobType, SpawnMobEvent,
+    MobType,
     attributes::{
         JointedMob, JointsComponent, MobAttributesComponent, MobAttributesResource,
         MobDecorationType,
@@ -128,6 +128,14 @@ impl Default for MobDebugSettings {
             behaviors_enabled: true,
         }
     }
+}
+
+/// Event for spawning mobs using a mob type and position
+#[derive(Event, Debug)]
+pub struct SpawnMobEvent {
+    pub mob_type: MobType,
+    pub position: Vec2,
+    pub rotation: f32,
 }
 
 /// Reads SpawnMobEvents and spawns mobs

@@ -22,7 +22,7 @@ pub(super) fn get_loading_progress_system(
 }
 
 /// Setup particle materials with faction-specific colors
-/// Should be called when entering the game state
+/// Should be called when entering the game loading state
 pub(super) fn setup_particle_materials_system(
     mut cmds: Commands,
     mut materials: ResMut<Assets<ColorParticle2dMaterial>>,

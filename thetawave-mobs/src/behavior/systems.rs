@@ -16,7 +16,7 @@ use thetawave_player::PlayerStats;
 use thetawave_projectiles::SpawnProjectileEvent;
 
 use crate::{
-    MobType, SpawnMobEvent,
+    MobType,
     attributes::{
         JointsComponent, MobAttributesComponent, MobSpawnerComponent, ProjectileSpawnerComponent,
     },
@@ -24,6 +24,7 @@ use crate::{
         BehaviorReceiverComponent, MobBehaviorComponent, MobBehaviorType,
         data::{TargetComponent, TransmitBehaviorEvent},
     },
+    spawn::SpawnMobEvent,
 };
 
 /// MobBehaviorType::TransmitMobBehavior
@@ -650,7 +651,6 @@ pub(super) fn spawn_projectile_system(
             }
         }
 
-
         // Only process spawners that are actively referenced by the current behavior
         if !active_spawner_keys.is_empty() {
             spawn_projectile(
@@ -707,28 +707,29 @@ fn spawn_projectile(
                 // Transform spawner position by mob's rotation
                 let rotated_position = transform.rotation * spawner.position.extend(0.0);
                 let world_position = transform.translation.truncate() + rotated_position.truncate();
-                
+
                 // Extract mob's Z rotation and combine with spawner rotation
                 let mob_rotation = transform.rotation.to_euler(bevy::math::EulerRot::ZYX).0;
                 let final_rotation = mob_rotation.to_degrees() + spawner.rotation;
-                
+
                 // Calculate projectile's own velocity vector based on final rotation and speed
                 let projectile_speed = spawner.speed_multiplier * attributes.projectile_speed;
                 let projectile_velocity = Vec2::new(
                     final_rotation.to_radians().cos() * projectile_speed,
                     final_rotation.to_radians().sin() * projectile_speed,
                 );
-                
+
                 // Calculate angular velocity contribution
                 // Angular velocity creates tangential velocity at the spawner position
                 let angular_velocity_contribution = Vec2::new(
                     -angular_velocity.0 * rotated_position.truncate().y,
                     angular_velocity.0 * rotated_position.truncate().x,
                 );
-                
+
                 // Combine projectile velocity with inherited linear and angular velocity from the mob
-                let final_velocity = projectile_velocity + velocity.0 + angular_velocity_contribution;
-                
+                let final_velocity =
+                    projectile_velocity + velocity.0 + angular_velocity_contribution;
+
                 spawn_projectile_event_writer.write(SpawnProjectileEvent {
                     projectile_type: spawner.projectile_type.clone(),
                     position: world_position,
