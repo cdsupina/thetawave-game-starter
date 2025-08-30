@@ -76,7 +76,6 @@ fn spawn_effect(
 ) {
     cmds.spawn((
         Name::new("Projectile Effect"),
-        //projectile_type.clone(),
         faction.clone(),
         Sprite {
             color: faction.get_projectile_color(projectile_type),
