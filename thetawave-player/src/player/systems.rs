@@ -1,9 +1,13 @@
 use avian2d::prelude::LinearVelocity;
-use bevy::{ecs::system::Query, log::info, math::Vec2};
+use bevy::{
+    ecs::{event::EventReader, system::Query},
+    log::info,
+    math::Vec2,
+};
 use leafwing_abilities::prelude::CooldownState;
 use leafwing_input_manager::prelude::ActionState;
 
-use crate::{PlayerAbility, PlayerAction, PlayerStats};
+use crate::{PlayerAbility, PlayerAction, PlayerDeathEvent, PlayerStats};
 
 /// Move the player around by modifying their linear velocity
 pub(crate) fn player_move_system(
@@ -73,5 +77,11 @@ pub(crate) fn player_ability_system(
                 );
             }
         }
+    }
+}
+
+pub(crate) fn player_death_system(mut player_death_event_reader: EventReader<PlayerDeathEvent>) {
+    for event in player_death_event_reader.read() {
+        info!("Player {} died.", event.player_entity);
     }
 }

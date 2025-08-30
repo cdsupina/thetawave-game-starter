@@ -22,7 +22,7 @@ pub use input::{
     CharacterCarouselAction, DummyGamepad, InputType, PlayerAbility, PlayerAction, PlayerJoinEvent,
     PlayerNum,
 };
-pub use player::PlayerStats;
+pub use player::{PlayerDeathEvent, PlayerStats};
 use toml::from_slice;
 
 use crate::{
@@ -32,7 +32,7 @@ use crate::{
         enable_additional_players_navigation_system, enable_horizontal_navigation_system,
         setup_input_system,
     },
-    player::{player_ability_system, player_move_system},
+    player::{player_ability_system, player_death_system, player_move_system},
 };
 
 /// Plugin structure for handling input in the Thetawave game.
@@ -54,6 +54,7 @@ impl Plugin for ThetawavePlayerPlugin {
         .add_plugins(InputManagerPlugin::<CharacterCarouselAction>::default())
         .add_plugins(AbilityPlugin::<PlayerAbility>::default())
         .add_event::<PlayerJoinEvent>()
+        .add_event::<PlayerDeathEvent>()
         .add_systems(Startup, setup_input_system)
         .add_systems(
             OnEnter(MainMenuState::Title),
@@ -76,7 +77,8 @@ impl Plugin for ThetawavePlayerPlugin {
             Update,
             (
                 player_move_system,
-                player_ability_system.run_if(not(in_state(DebugState::Debug))),
+                player_death_system,
+                player_ability_system.run_if(not(in_state(DebugState::Debug))), // to prevent abilities from activating on mouse clicks
             )
                 .run_if(in_state(AppState::Game).and(in_state(GameState::Playing))),
         )

@@ -3,17 +3,21 @@ use avian2d::prelude::{
     Rotation,
 };
 use bevy::{
-    ecs::{component::Component, entity::Entity, event::Event, name::Name, resource::Resource},
+    ecs::{bundle::Bundle, component::Component, name::Name, resource::Resource},
     math::Vec2,
     platform::collections::HashMap,
     reflect::Reflect,
-    time::{Timer, TimerMode},
 };
 use serde::Deserialize;
 use strum_macros::EnumIter;
 use thetawave_core::HealthComponent;
 use thetawave_physics::{ColliderShape, ThetawaveCollider, ThetawavePhysicsLayer};
-use thetawave_projectiles::ProjectileSpawner;
+
+mod joints;
+mod spawners;
+
+pub(crate) use joints::{JointedMob, JointsComponent};
+pub(crate) use spawners::{MobSpawnerComponent, ProjectileSpawnerComponent};
 
 const DEFAULT_COLLIDERS: &[ThetawaveCollider] = &[ThetawaveCollider {
     shape: ColliderShape::Rectangle(10.0, 10.0),
@@ -40,61 +44,9 @@ const DEFAULT_COLLISION_LAYER_FILTER: &[ThetawavePhysicsLayer] = &[
 ];
 const DEFAULT_COLLIDER_DENSITY: f32 = 1.0;
 const DEFAULT_PROJECTILE_SPEED: f32 = 100.0;
+const DEFAULT_PROJECTILE_DAMAGE: u32 = 5;
 const DEFAULT_HEALTH: u32 = 50;
-
-/// Mob spawner component for use in spawned mobs
-/// Maps String keys to MobSpawners
-/// Intended to be used by behaviors
-#[derive(Component, Deserialize, Debug, Clone, Reflect)]
-pub(crate) struct MobSpawnerComponent {
-    pub spawners: HashMap<String, MobSpawner>,
-}
-
-/// Projectile spawner component for use in spawned mobs
-/// Maps String keys to ProjectileSpawners
-/// Intended to be used by behaviors
-#[derive(Component, Deserialize, Debug, Clone, Reflect)]
-pub(crate) struct ProjectileSpawnerComponent {
-    pub spawners: HashMap<String, ProjectileSpawner>,
-}
-
-/// Used for periodically spawning mobs with a MobSpawnerComponent
-#[derive(Debug, Clone, Reflect)]
-pub(crate) struct MobSpawner {
-    pub timer: Timer,
-    pub position: Vec2,
-    pub rotation: f32,
-    pub mob_type: MobType,
-}
-
-impl<'de> Deserialize<'de> for MobSpawner {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        // Define a "helper" struct that mirrors MobSpawner
-        // but uses types that can be deserialized easily
-        #[derive(Deserialize)]
-        #[serde(deny_unknown_fields)]
-        struct Helper {
-            pub timer: f32,
-            pub position: Vec2,
-            pub rotation: f32,
-            pub mob_type: MobType,
-        }
-
-        // Let serde deserialize into the Helper struct first
-        let helper = Helper::deserialize(deserializer)?;
-
-        // Construct our actual struct with the transformed data
-        Ok(MobSpawner {
-            timer: Timer::from_seconds(helper.timer, TimerMode::Repeating),
-            position: helper.position,
-            rotation: helper.rotation,
-            mob_type: helper.mob_type,
-        })
-    }
-}
+const DEFAULT_RANGE_SECONDS: f32 = 1.0;
 
 /// Decorations that can be attached to mobs
 /// Decorations don't have colliders, but have independent animations from the mob
@@ -139,14 +91,6 @@ pub enum MobType {
     FerritharaxRightArm,
 }
 
-/// Event for spawning mobs using a mob type and position
-#[derive(Event, Debug)]
-pub struct SpawnMobEvent {
-    pub mob_type: MobType,
-    pub position: Vec2,
-    pub rotation: f32,
-}
-
 /// Mob attributes not directly used to make any other componnents
 /// Typically used in mob behaviors
 #[derive(Component, Reflect)]
@@ -159,60 +103,8 @@ pub(crate) struct MobAttributesComponent {
     pub max_angular_speed: f32,
     pub targeting_range: Option<f32>,
     pub projectile_speed: f32,
-}
-
-/// Describes an Avian2D angle limit for a joint
-#[derive(Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct JointAngleLimit {
-    pub min: f32,
-    pub max: f32,
-    pub torque: f32,
-}
-
-/// Used for making mob chains of random length
-#[derive(Deserialize, Debug, Clone)]
-pub(crate) struct RandomMobChain {
-    pub min_length: u8,
-    pub end_chance: f32,
-}
-
-/// Describes a chain of mobs that are spawned and jointed together
-#[derive(Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct MobChain {
-    pub length: u8,
-    pub pos_offset: Vec2,
-    pub anchor_offset: Vec2,
-    pub random_chain: Option<RandomMobChain>,
-}
-
-/// Mob that is also spawned and jointed to the original mob
-#[derive(Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct JointedMob {
-    pub key: String,
-    pub mob_type: MobType,
-    #[serde(default)]
-    pub offset_pos: Vec2,
-    #[serde(default)]
-    pub anchor_1_pos: Vec2,
-    #[serde(default)]
-    pub anchor_2_pos: Vec2,
-    #[serde(default)]
-    pub angle_limit_range: Option<JointAngleLimit>,
-    #[serde(default)]
-    pub compliance: f32,
-    #[serde(default)]
-    pub chain: Option<MobChain>,
-}
-
-/// Hashmap of joints connected to a mob
-/// This is for "anchors" only
-/// Used by behaviors for referencing joint entities
-#[derive(Component, Reflect)]
-pub(crate) struct JointsComponent {
-    pub joints: HashMap<String, Entity>,
+    pub projectile_damage: u32,
+    pub projectile_range_seconds: f32,
 }
 
 /// Contains all attributes for a mob
@@ -260,10 +152,14 @@ pub(crate) struct MobAttributes {
     pub projectile_spawners: Option<ProjectileSpawnerComponent>,
     #[serde(default = "default_projectile_speed")]
     pub projectile_speed: f32,
+    #[serde(default = "default_projectile_damage")]
+    pub projectile_damage: u32,
     #[serde(default)]
     pub behavior_transmitter: bool,
     #[serde(default = "default_health")]
     pub health: u32,
+    #[serde(default = "default_range_seconds")]
+    pub projectile_range_seconds: f32,
 }
 
 fn default_colliders() -> Vec<ThetawaveCollider> {
@@ -326,8 +222,16 @@ fn default_projectile_speed() -> f32 {
     DEFAULT_PROJECTILE_SPEED
 }
 
+fn default_projectile_damage() -> u32 {
+    DEFAULT_PROJECTILE_DAMAGE
+}
+
 fn default_health() -> u32 {
     DEFAULT_HEALTH
+}
+
+fn default_range_seconds() -> f32 {
+    DEFAULT_RANGE_SECONDS
 }
 
 /// Resource for storing data for all mobs
@@ -338,39 +242,36 @@ pub(crate) struct MobAttributesResource {
     pub attributes: HashMap<MobType, MobAttributes>,
 }
 
-impl From<&MobAttributes> for Restitution {
-    fn from(value: &MobAttributes) -> Self {
-        Restitution::new(value.restitution)
-    }
+/// Bundle containing all the core components needed for a mob entity
+/// Simplifies mob spawning by grouping related components together
+#[derive(Bundle)]
+pub(crate) struct MobComponentBundle {
+    pub name: Name,
+    pub restitution: Restitution,
+    pub friction: Friction,
+    pub collision_layers: CollisionLayers,
+    pub collider: Collider,
+    pub locked_axes: LockedAxes,
+    pub collider_density: ColliderDensity,
+    pub mob_attributes: MobAttributesComponent,
+    pub health: HealthComponent,
 }
 
-impl From<&MobAttributes> for Friction {
-    fn from(value: &MobAttributes) -> Self {
-        Friction::new(value.friction)
-    }
-}
 
-impl From<&MobAttributes> for CollisionLayers {
+impl From<&MobAttributes> for MobComponentBundle {
     fn from(value: &MobAttributes) -> Self {
+        // Calculate collision layers
         let mut membership: u32 = 0;
-
         for layer in &value.collision_layer_membership {
             membership |= layer.to_bits();
         }
-
         let mut filter: u32 = 0;
-
         for layer in &value.collision_layer_filter {
             filter |= layer.to_bits();
         }
 
-        CollisionLayers::new(membership, filter)
-    }
-}
-
-impl From<&MobAttributes> for Collider {
-    fn from(value: &MobAttributes) -> Self {
-        Collider::compound(
+        // Build compound collider
+        let collider = Collider::compound(
             value
                 .colliders
                 .iter()
@@ -382,52 +283,36 @@ impl From<&MobAttributes> for Collider {
                     )
                 })
                 .collect(),
-        )
-    }
-}
+        );
 
-impl From<&MobAttributes> for Name {
-    fn from(value: &MobAttributes) -> Self {
-        Name::new(value.name.clone())
-    }
-}
+        // Determine locked axes
+        let locked_axes = if value.rotation_locked {
+            LockedAxes::ROTATION_LOCKED
+        } else {
+            LockedAxes::new()
+        };
 
-impl From<&MobAttributes> for LockedAxes {
-    fn from(value: &MobAttributes) -> Self {
-        let rotation_locked = value.rotation_locked;
-
-        if rotation_locked {
-            return LockedAxes::ROTATION_LOCKED;
+        MobComponentBundle {
+            name: Name::new(value.name.clone()),
+            restitution: Restitution::new(value.restitution),
+            friction: Friction::new(value.friction),
+            collision_layers: CollisionLayers::new(membership, filter),
+            collider,
+            locked_axes,
+            collider_density: ColliderDensity(value.collider_density),
+            mob_attributes: MobAttributesComponent {
+                linear_acceleration: value.linear_acceleration,
+                linear_deceleration: value.linear_deceleration,
+                max_linear_speed: value.max_linear_speed,
+                angular_acceleration: value.angular_acceleration,
+                angular_deceleration: value.angular_deceleration,
+                max_angular_speed: value.max_angular_speed,
+                targeting_range: value.targeting_range,
+                projectile_speed: value.projectile_speed,
+                projectile_damage: value.projectile_damage,
+                projectile_range_seconds: value.projectile_range_seconds,
+            },
+            health: HealthComponent::new(value.health),
         }
-
-        // unlock rotation if rotation locked is not true
-        LockedAxes::new()
-    }
-}
-
-impl From<&MobAttributes> for ColliderDensity {
-    fn from(value: &MobAttributes) -> Self {
-        ColliderDensity(value.collider_density)
-    }
-}
-
-impl From<&MobAttributes> for MobAttributesComponent {
-    fn from(value: &MobAttributes) -> Self {
-        MobAttributesComponent {
-            linear_acceleration: value.linear_acceleration,
-            linear_deceleration: value.linear_deceleration,
-            max_linear_speed: value.max_linear_speed,
-            angular_acceleration: value.angular_acceleration,
-            angular_deceleration: value.angular_deceleration,
-            max_angular_speed: value.max_angular_speed,
-            targeting_range: value.targeting_range,
-            projectile_speed: value.projectile_speed,
-        }
-    }
-}
-
-impl From<&MobAttributes> for HealthComponent {
-    fn from(value: &MobAttributes) -> Self {
-        HealthComponent::new(value.health)
     }
 }

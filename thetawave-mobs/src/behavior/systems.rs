@@ -11,11 +11,12 @@ use bevy::{
     transform::components::Transform,
 };
 use bevy_behave::prelude::BehaveCtx;
+use thetawave_particles::ActivateParticleEvent;
 use thetawave_player::PlayerStats;
 use thetawave_projectiles::SpawnProjectileEvent;
 
 use crate::{
-    MobType, SpawnMobEvent,
+    MobType,
     attributes::{
         JointsComponent, MobAttributesComponent, MobSpawnerComponent, ProjectileSpawnerComponent,
     },
@@ -23,6 +24,7 @@ use crate::{
         BehaviorReceiverComponent, MobBehaviorComponent, MobBehaviorType,
         data::{TargetComponent, TransmitBehaviorEvent},
     },
+    spawn::SpawnMobEvent,
 };
 
 /// MobBehaviorType::TransmitMobBehavior
@@ -627,28 +629,41 @@ pub(super) fn spawn_projectile_system(
         &mut ProjectileSpawnerComponent,
         &Transform,
         &MobAttributesComponent,
+        &LinearVelocity,
+        &AngularVelocity,
     )>,
     mut spawn_projectile_event_writer: EventWriter<SpawnProjectileEvent>,
+    mut activate_particle_event_writer: EventWriter<ActivateParticleEvent>,
     time: Res<Time>,
 ) {
     for (mob_behavior, ctx) in mob_behavior_q.iter() {
-        let Ok((mut projectile_spawner, transform, attributes)) =
+        let Ok((mut projectile_spawner, transform, attributes, velocity, angular_velocity)) =
             mob_q.get_mut(ctx.target_entity())
         else {
             continue;
         };
 
+        // Collect all active spawner keys from the current behavior tree
+        let mut active_spawner_keys = Vec::new();
         for behavior in mob_behavior.behaviors.iter() {
             if let MobBehaviorType::SpawnProjectile(Some(spawner_keys)) = behavior {
-                spawn_projectile(
-                    spawner_keys,
-                    &mut projectile_spawner,
-                    transform,
-                    attributes,
-                    &mut spawn_projectile_event_writer,
-                    &time,
-                );
+                active_spawner_keys.extend(spawner_keys.iter().cloned());
             }
+        }
+
+        // Only process spawners that are actively referenced by the current behavior
+        if !active_spawner_keys.is_empty() {
+            spawn_projectile(
+                &active_spawner_keys,
+                &mut projectile_spawner,
+                transform,
+                attributes,
+                velocity,
+                angular_velocity,
+                &mut spawn_projectile_event_writer,
+                &mut activate_particle_event_writer,
+                &time,
+            );
         }
     }
 }
@@ -658,20 +673,74 @@ fn spawn_projectile(
     projectile_spawner: &mut ProjectileSpawnerComponent,
     transform: &Transform,
     attributes: &MobAttributesComponent,
+    velocity: &LinearVelocity,
+    angular_velocity: &AngularVelocity,
     spawn_projectile_event_writer: &mut EventWriter<SpawnProjectileEvent>,
+    activate_particle_event_writer: &mut EventWriter<ActivateParticleEvent>,
     time: &Res<Time>,
 ) {
     for key in spawner_keys.iter() {
-        if let Some(spawner) = projectile_spawner.spawners.get_mut(key)
-            && spawner.timer.tick(time.delta()).just_finished()
-        {
-            spawn_projectile_event_writer.write(SpawnProjectileEvent {
-                projectile_type: spawner.projectile_type.clone(),
-                rotation: spawner.rotation,
-                position: transform.translation.truncate() + spawner.position,
-                faction: spawner.faction.clone(),
-                speed: spawner.speed_multiplier * attributes.projectile_speed,
-            });
+        if let Some(spawner) = projectile_spawner.spawners.get_mut(key) {
+            let timer_just_finished = spawner.timer.tick(time.delta()).just_finished();
+
+            // start the spawn animation particle effect
+            if spawner.timer.remaining_secs() <= spawner.pre_spawn_animation_start_time
+                && let Some(particle_effect_entity) = spawner.spawn_effect_entity
+            {
+                activate_particle_event_writer.write(ActivateParticleEvent {
+                    entity: particle_effect_entity,
+                    active: true,
+                });
+            }
+
+            // stop the spawn animation particle effect
+            if spawner.timer.remaining_secs() <= spawner.pre_spawn_animation_end_time
+                && let Some(particle_effect_entity) = spawner.spawn_effect_entity
+            {
+                activate_particle_event_writer.write(ActivateParticleEvent {
+                    entity: particle_effect_entity,
+                    active: false,
+                });
+            }
+
+            if timer_just_finished {
+                // Transform spawner position by mob's rotation
+                let rotated_position = transform.rotation * spawner.position.extend(0.0);
+                let world_position = transform.translation.truncate() + rotated_position.truncate();
+
+                // Extract mob's Z rotation and combine with spawner rotation
+                let mob_rotation = transform.rotation.to_euler(bevy::math::EulerRot::ZYX).0;
+                let final_rotation = mob_rotation.to_degrees() + spawner.rotation;
+
+                // Calculate projectile's own velocity vector based on final rotation and speed
+                let projectile_speed = spawner.speed_multiplier * attributes.projectile_speed;
+                let projectile_velocity = Vec2::new(
+                    final_rotation.to_radians().cos() * projectile_speed,
+                    final_rotation.to_radians().sin() * projectile_speed,
+                );
+
+                // Calculate angular velocity contribution
+                // Angular velocity creates tangential velocity at the spawner position
+                let angular_velocity_contribution = Vec2::new(
+                    -angular_velocity.0 * rotated_position.truncate().y,
+                    angular_velocity.0 * rotated_position.truncate().x,
+                );
+
+                // Combine projectile velocity with inherited linear and angular velocity from the mob
+                let final_velocity =
+                    projectile_velocity + velocity.0 + angular_velocity_contribution;
+
+                spawn_projectile_event_writer.write(SpawnProjectileEvent {
+                    projectile_type: spawner.projectile_type.clone(),
+                    position: world_position,
+                    faction: spawner.faction.clone(),
+                    velocity: final_velocity,
+                    damage: (spawner.damage_multiplier * attributes.projectile_damage as f32)
+                        as u32,
+                    range_seconds: spawner.range_seconds_multiplier
+                        * attributes.projectile_range_seconds,
+                });
+            }
         }
     }
 }

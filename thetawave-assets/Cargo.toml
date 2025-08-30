@@ -4,7 +4,9 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+bevy_enoki.workspace = true
 thetawave-states = { path = "../thetawave-states" }
+thetawave-core = { path = "../thetawave-core" }
 bevy = { workspace = true, default-features = false }
 iyes_progress = { workspace = true }
 bevy_asset_loader = { workspace = true, features = ["progress_tracking"] }

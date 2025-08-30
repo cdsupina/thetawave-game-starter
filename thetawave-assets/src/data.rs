@@ -7,31 +7,26 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::Aseprite;
 use bevy_asset_loader::asset_collection::AssetCollection;
+use bevy_enoki::{Particle2dEffect, prelude::ColorParticle2dMaterial};
 use bevy_kira_audio::AudioSource;
 use rand::Rng;
+use thetawave_core::Faction;
 
 /// Assets used in the game state
 #[derive(AssetCollection, Resource)]
 pub struct GameAssets {
-    // Animated captain characater Aseprite
     #[asset(path = "media/aseprite/captain_character.aseprite")]
     pub captain_character_aseprite: Handle<Aseprite>,
-    // Animated juggernaut character Aseprite
     #[asset(path = "media/aseprite/juggernaut_character.aseprite")]
     pub juggernaut_character_aseprite: Handle<Aseprite>,
-    // Animated doomwing character Aseprite
     #[asset(path = "media/aseprite/doomwing_character.aseprite")]
     pub doomwing_character_aseprite: Handle<Aseprite>,
-    // Animated grunt mob Aseprite
     #[asset(path = "media/aseprite/xhitara_grunt_mob.aseprite")]
     pub xhitara_grunt_mob_aseprite: Handle<Aseprite>,
-    // Animated shooter mob Aseprite
     #[asset(path = "media/aseprite/xhitara_spitter_mob.aseprite")]
     pub xhitara_spitter_mob_aseprite: Handle<Aseprite>,
-    // Animated gyro mob Aseprite
     #[asset(path = "media/aseprite/xhitara_gyro_mob.aseprite")]
     pub xhitara_gyro_mob_aseprite: Handle<Aseprite>,
-    // Animated freighter mob Aseprite
     #[asset(path = "media/aseprite/freighter_front_mob.aseprite")]
     pub freighter_front_mob_aseprite: Handle<Aseprite>,
     #[asset(path = "media/aseprite/freighter_middle_mob.aseprite")]
@@ -40,41 +35,30 @@ pub struct GameAssets {
     pub freighter_back_mob_aseprite: Handle<Aseprite>,
     #[asset(path = "media/aseprite/freighter_thrusters.aseprite")]
     pub freighter_thrusters_aseprite: Handle<Aseprite>,
-    // Animated grunt thrusters Aseprite
     #[asset(path = "media/aseprite/xhitara_grunt_thrusters.aseprite")]
     pub xhitara_grunt_thrusters_aseprite: Handle<Aseprite>,
-    // Animated shooter thrusters Aseprite
     #[asset(path = "media/aseprite/xhitara_spitter_thrusters.aseprite")]
     pub xhitara_spitter_thrusters_aseprite: Handle<Aseprite>,
-    // Animated Trizetheron spritesheet
     #[asset(path = "media/aseprite/trizetheron_mob.aseprite")]
     pub trizetheron_mob_aseprite: Handle<Aseprite>,
     #[asset(path = "media/aseprite/trizetheron_left_head_mob.aseprite")]
     pub trizetheron_left_head_mob_aseprite: Handle<Aseprite>,
     #[asset(path = "media/aseprite/trizetheron_right_head_mob.aseprite")]
     pub trizetheron_right_head_mob_aseprite: Handle<Aseprite>,
-    // Animated Xhitara tentacle start spritesheet
     #[asset(path = "media/aseprite/xhitara_tentacle_start_mob.aseprite")]
     pub xhitara_tentacle_start_mob_aseprite: Handle<Aseprite>,
-    // Animated Xhitara tentacle middle spritesheet
     #[asset(path = "media/aseprite/xhitara_tentacle_middle_mob.aseprite")]
     pub xhitara_tentacle_middle_mob_aseprite: Handle<Aseprite>,
-    // Animated Xhitara tentacle end spritesheet
     #[asset(path = "media/aseprite/xhitara_tentacle_end_mob.aseprite")]
     pub xhitara_tentacle_end_mob_aseprite: Handle<Aseprite>,
-    // Animated Xhitara Cyclusk spritesheet
     #[asset(path = "media/aseprite/xhitara_cyclusk_mob.aseprite")]
     pub xhitara_cyclusk_mob_aseprite: Handle<Aseprite>,
-    // Animated Xhitara Pacer spritesheet
     #[asset(path = "media/aseprite/xhitara_pacer_mob.aseprite")]
     pub xhitara_pacer_mob_aseprite: Handle<Aseprite>,
-    // Animated Xhitara Pacer thrusters spritesheet
     #[asset(path = "media/aseprite/xhitara_pacer_thrusters.aseprite")]
     pub xhitara_pacer_thrusters_aseprite: Handle<Aseprite>,
-    // Animated Xhitara Missile spritesheet
     #[asset(path = "media/aseprite/xhitara_missile_mob.aseprite")]
     pub xhitara_missile_mob_aseprite: Handle<Aseprite>,
-    // Animated Xhitara Missile thrusters spritesheet
     #[asset(path = "media/aseprite/xhitara_missile_thrusters.aseprite")]
     pub xhitara_missile_thrusters_aseprite: Handle<Aseprite>,
     #[asset(path = "media/aseprite/xhitara_launcher_mob.aseprite")]
@@ -101,6 +85,34 @@ pub struct GameAssets {
     pub bullet_projectile_aseprite: Handle<Aseprite>,
     #[asset(path = "media/aseprite/blast_projectile.aseprite")]
     pub blast_projectile_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/blast_projectile_despawn.aseprite")]
+    pub blast_projectile_despawn_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/bullet_projectile_despawn.aseprite")]
+    pub bullet_projectile_despawn_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/blast_projectile_hit.aseprite")]
+    pub blast_projectile_hit_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/aseprite/bullet_projectile_hit.aseprite")]
+    pub bullet_projectile_hit_aseprite: Handle<Aseprite>,
+    #[asset(path = "media/particles/spawn_blast.ron")]
+    pub spawn_blast_particle_effect: Handle<Particle2dEffect>,
+    #[asset(path = "media/particles/spawn_bullet.ron")]
+    pub spawn_bullet_particle_effect: Handle<Particle2dEffect>,
+}
+
+/// Resource for storing faction-based particle materials
+#[derive(Resource)]
+pub struct ParticleMaterials {
+    pub ally_material: Handle<ColorParticle2dMaterial>,
+    pub enemy_material: Handle<ColorParticle2dMaterial>,
+}
+
+impl ParticleMaterials {
+    pub fn get_material_for_faction(&self, faction: &Faction) -> Handle<ColorParticle2dMaterial> {
+        match faction {
+            Faction::Ally => self.ally_material.clone(),
+            Faction::Enemy => self.enemy_material.clone(),
+        }
+    }
 }
 
 /// Audio assets used throughout all states of the app

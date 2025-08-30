@@ -12,6 +12,7 @@ members = [
     "thetawave-camera",
     "thetawave-projectiles",
     "thetawave-core",
+    "thetawave-particles",
 ]
 resolver = "2"
 
@@ -86,6 +87,7 @@ itertools = "0.14.0"
 toml = "0.9.5"
 bevy_behave = "0.3.0"
 bevy-inspector-egui = "0.33.1"
+bevy_enoki = { git = "https://github.com/Lommix/bevy_enoki.git", rev = "5a6dd95f838c9900d519a6548f0ae98edcfa1c02" }
 
 [profile.dev]
 opt-level = 1

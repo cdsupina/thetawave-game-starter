@@ -1,17 +1,15 @@
 use avian2d::prelude::{
-    AngleLimit, Collider, ColliderDensity, CollisionLayers, Friction, Joint, LockedAxes,
-    Restitution, RevoluteJoint, RigidBody,
+    AngleLimit, Joint, RevoluteJoint, RigidBody,
 };
 use bevy::{
     asset::Handle,
     ecs::{
         entity::Entity,
         error::{BevyError, Result},
-        event::EventReader,
+        event::{Event, EventReader},
         resource::Resource,
         system::{Commands, Res},
     },
-    log::info,
     math::{Quat, Vec2},
     platform::collections::HashMap,
     prelude::Name,
@@ -20,15 +18,16 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_behave::prelude::BehaveTree;
-use thetawave_assets::GameAssets;
-use thetawave_core::HealthComponent;
+use thetawave_assets::{GameAssets, ParticleMaterials};
+use thetawave_particles::{ParticleEffectType, spawn_particle_effect};
+use thetawave_projectiles::ProjectileType;
 use thetawave_states::{AppState, Cleanup};
 
 use crate::{
-    MobType, SpawnMobEvent,
+    MobType,
     attributes::{
-        JointedMob, JointsComponent, MobAttributesComponent, MobAttributesResource,
-        MobDecorationType,
+        JointedMob, JointsComponent, MobAttributesResource,
+        MobComponentBundle, MobDecorationType,
     },
     behavior::{BehaviorReceiverComponent, MobBehaviorsResource},
 };
@@ -98,6 +97,19 @@ impl GameAssetsExt for GameAssets {
     }
 }
 
+trait ParticleEffectTypeExt {
+    fn from_projectile_type(projectile_type: &ProjectileType) -> ParticleEffectType;
+}
+
+impl ParticleEffectTypeExt for ParticleEffectType {
+    fn from_projectile_type(projectile_type: &ProjectileType) -> ParticleEffectType {
+        match projectile_type {
+            ProjectileType::Bullet => Self::SpawnBullet,
+            ProjectileType::Blast => Self::SpawnBlast,
+        }
+    }
+}
+
 /// Used for the debug menu to disable behaviors and joints
 /// Useful for aligning mob parts
 #[derive(Resource)]
@@ -115,10 +127,19 @@ impl Default for MobDebugSettings {
     }
 }
 
+/// Event for spawning mobs using a mob type and position
+#[derive(Event, Debug)]
+pub struct SpawnMobEvent {
+    pub mob_type: MobType,
+    pub position: Vec2,
+    pub rotation: f32,
+}
+
 /// Reads SpawnMobEvents and spawns mobs
 pub(super) fn spawn_mob_system(
     mut cmds: Commands,
     assets: Res<GameAssets>,
+    materials: Res<ParticleMaterials>,
     mob_debug_settings: Res<MobDebugSettings>,
     mut spawn_mob_event_reader: EventReader<SpawnMobEvent>,
     attributes_res: Res<MobAttributesResource>,
@@ -137,6 +158,7 @@ pub(super) fn spawn_mob_system(
             &attributes_res,
             &behaviors_res,
             &assets,
+            &materials,
             suppress_jointed_mobs,
             transmitter_entity,
         )?;
@@ -154,11 +176,10 @@ fn spawn_mob(
     attributes_res: &MobAttributesResource,
     behaviors_res: &MobBehaviorsResource,
     assets: &GameAssets,
+    materials: &ParticleMaterials,
     suppress_jointed_mobs: bool,
     transmitter_entity: Option<Entity>, // entity that can transmit behaviors to the mob
 ) -> Result<Entity, BevyError> {
-    info!("Spawning Mob: {:?} at {}", mob_type, position.to_string());
-
     // Look up the mob's configuration data from resources
     let mob_attributes = attributes_res
         .attributes
@@ -166,9 +187,8 @@ fn spawn_mob(
         .ok_or(BevyError::from("Mob attributes not found"))?;
     // Spawn the main anchor entity with all core components
     let mut entity_commands = cmds.spawn((
-        Name::from(mob_attributes),
+        MobComponentBundle::from(mob_attributes),
         mob_type.clone(),
-        MobAttributesComponent::from(mob_attributes),
         AseAnimation {
             animation: Animation::tag("idle"),
             aseprite: assets.get_mob_sprite(mob_type),
@@ -177,24 +197,13 @@ fn spawn_mob(
         Cleanup::<AppState> {
             states: vec![AppState::Game],
         },
-        Restitution::from(mob_attributes),
-        Friction::from(mob_attributes),
-        Collider::from(mob_attributes),
-        ColliderDensity::from(mob_attributes),
         RigidBody::Dynamic,
-        CollisionLayers::from(mob_attributes),
-        LockedAxes::from(mob_attributes),
         Transform::from_xyz(position.x, position.y, mob_attributes.z_level)
             .with_rotation(Quat::from_rotation_z(rotation.to_radians())),
-        HealthComponent::from(mob_attributes),
     ));
 
     if let Some(mob_spawners) = &mob_attributes.mob_spawners {
         entity_commands.insert(mob_spawners.clone());
-    }
-
-    if let Some(projectile_spawners) = &mob_attributes.projectile_spawners {
-        entity_commands.insert(projectile_spawners.clone());
     }
 
     if let Some(entity) = transmitter_entity {
@@ -266,6 +275,7 @@ fn spawn_mob(
                     attributes_res,
                     behaviors_res,
                     assets,
+                    materials,
                     chain_index < actual_length - 1, // Suppress jointed mobs except on the last chain link
                     new_transmitter_entity,
                 )?;
@@ -302,6 +312,7 @@ fn spawn_mob(
                 attributes_res,
                 behaviors_res,
                 assets,
+                materials,
                 false,
                 new_transmitter_entity,
             )?;
@@ -319,6 +330,28 @@ fn spawn_mob(
     if !mob_joints.is_empty() {
         cmds.entity(anchor_id)
             .insert(JointsComponent { joints: mob_joints });
+    }
+
+    // Now spawn particle effects and update projectile spawners
+    if let Some(ref mut projectile_spawners) = mob_attributes.projectile_spawners.clone() {
+        for (_, spawner) in projectile_spawners.spawners.iter_mut() {
+            // Spawn particle effect directly and store the entity reference
+            let transform = Transform::from_translation(spawner.position.extend(0.0));
+            let particle_entity = spawn_particle_effect(
+                cmds,
+                Some(anchor_id),
+                &ParticleEffectType::from_projectile_type(&spawner.projectile_type),
+                &spawner.faction,
+                &transform,
+                assets,
+                materials,
+            );
+
+            spawner.spawn_effect_entity = Some(particle_entity);
+        }
+
+        // Update the entity with the modified projectile spawners
+        cmds.entity(anchor_id).insert(projectile_spawners.clone());
     }
 
     Ok(anchor_id)
