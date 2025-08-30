@@ -61,7 +61,7 @@ pub(in crate::ui) fn spawn_game_end_system(
                     })
                     .with_children(|parent| {
                         parent.spawn((
-                            Text::new(String::from(game_end_result_res.result.clone())),
+                            Text::new(game_end_result_res.result.clone()),
                             TextFont::from_font_size(150.0)
                                 .with_font(ui_assets.dank_depths_font.clone()),
                         ));

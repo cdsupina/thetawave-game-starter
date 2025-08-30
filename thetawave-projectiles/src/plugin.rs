@@ -14,6 +14,7 @@ use crate::{
     systems::{despawn_after_animation_system, projectile_hit_system, timed_range_system},
 };
 
+/// Plugin for projectile spawning systems and events.
 pub struct ThetawaveProjectilesPlugin;
 
 impl Plugin for ThetawaveProjectilesPlugin {

@@ -50,8 +50,8 @@ pub(super) fn transmit_system(
     }
 }
 
-/// Reads TransmitBehaviorEvents and runs the sent behaviors for the designated mobs with matching BehaviorRecieverComponents
-pub(super) fn receieve_system(
+/// Reads TransmitBehaviorEvents and runs the sent behaviors for the designated mobs with matching BehaviorReceiverComponents
+pub(super) fn receive_system(
     mut transmit_event_reader: EventReader<TransmitBehaviorEvent>,
     mut mob_q: Query<(
         &MobType,
@@ -746,7 +746,7 @@ fn spawn_projectile(
 }
 
 /// MobBehaviorType::DoForTime
-/// Triggers success when the timer is finsihed to progress the behavior tree
+/// Triggers success when the timer is finished to progress the behavior tree
 pub(super) fn do_for_time_system(
     mut mob_behavior_q: Query<(&mut MobBehaviorComponent, &BehaveCtx)>,
     mut cmds: Commands,
