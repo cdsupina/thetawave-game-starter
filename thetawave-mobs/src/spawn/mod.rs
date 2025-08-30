@@ -1,6 +1,5 @@
 use avian2d::prelude::{
-    AngleLimit, Collider, ColliderDensity, CollisionLayers, Friction, Joint, LockedAxes,
-    Restitution, RevoluteJoint, RigidBody,
+    AngleLimit, Joint, RevoluteJoint, RigidBody,
 };
 use bevy::{
     asset::Handle,
@@ -11,7 +10,6 @@ use bevy::{
         resource::Resource,
         system::{Commands, Res},
     },
-    log::info,
     math::{Quat, Vec2},
     platform::collections::HashMap,
     prelude::Name,
@@ -21,7 +19,6 @@ use bevy::{
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_behave::prelude::BehaveTree;
 use thetawave_assets::{GameAssets, ParticleMaterials};
-use thetawave_core::HealthComponent;
 use thetawave_particles::{ParticleEffectType, spawn_particle_effect};
 use thetawave_projectiles::ProjectileType;
 use thetawave_states::{AppState, Cleanup};
@@ -29,8 +26,8 @@ use thetawave_states::{AppState, Cleanup};
 use crate::{
     MobType,
     attributes::{
-        JointedMob, JointsComponent, MobAttributesComponent, MobAttributesResource,
-        MobDecorationType,
+        JointedMob, JointsComponent, MobAttributesResource,
+        MobComponentBundle, MobDecorationType,
     },
     behavior::{BehaviorReceiverComponent, MobBehaviorsResource},
 };
@@ -183,8 +180,6 @@ fn spawn_mob(
     suppress_jointed_mobs: bool,
     transmitter_entity: Option<Entity>, // entity that can transmit behaviors to the mob
 ) -> Result<Entity, BevyError> {
-    info!("Spawning Mob: {:?} at {}", mob_type, position.to_string());
-
     // Look up the mob's configuration data from resources
     let mob_attributes = attributes_res
         .attributes
@@ -192,9 +187,8 @@ fn spawn_mob(
         .ok_or(BevyError::from("Mob attributes not found"))?;
     // Spawn the main anchor entity with all core components
     let mut entity_commands = cmds.spawn((
-        Name::from(mob_attributes),
+        MobComponentBundle::from(mob_attributes),
         mob_type.clone(),
-        MobAttributesComponent::from(mob_attributes),
         AseAnimation {
             animation: Animation::tag("idle"),
             aseprite: assets.get_mob_sprite(mob_type),
@@ -203,16 +197,9 @@ fn spawn_mob(
         Cleanup::<AppState> {
             states: vec![AppState::Game],
         },
-        Restitution::from(mob_attributes),
-        Friction::from(mob_attributes),
-        Collider::from(mob_attributes),
-        ColliderDensity::from(mob_attributes),
         RigidBody::Dynamic,
-        CollisionLayers::from(mob_attributes),
-        LockedAxes::from(mob_attributes),
         Transform::from_xyz(position.x, position.y, mob_attributes.z_level)
             .with_rotation(Quat::from_rotation_z(rotation.to_radians())),
-        HealthComponent::from(mob_attributes),
     ));
 
     if let Some(mob_spawners) = &mob_attributes.mob_spawners {

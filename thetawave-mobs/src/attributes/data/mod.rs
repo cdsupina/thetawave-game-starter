@@ -3,7 +3,7 @@ use avian2d::prelude::{
     Rotation,
 };
 use bevy::{
-    ecs::{component::Component, name::Name, resource::Resource},
+    ecs::{bundle::Bundle, component::Component, name::Name, resource::Resource},
     math::Vec2,
     platform::collections::HashMap,
     reflect::Reflect,
@@ -242,39 +242,36 @@ pub(crate) struct MobAttributesResource {
     pub attributes: HashMap<MobType, MobAttributes>,
 }
 
-impl From<&MobAttributes> for Restitution {
-    fn from(value: &MobAttributes) -> Self {
-        Restitution::new(value.restitution)
-    }
+/// Bundle containing all the core components needed for a mob entity
+/// Simplifies mob spawning by grouping related components together
+#[derive(Bundle)]
+pub(crate) struct MobComponentBundle {
+    pub name: Name,
+    pub restitution: Restitution,
+    pub friction: Friction,
+    pub collision_layers: CollisionLayers,
+    pub collider: Collider,
+    pub locked_axes: LockedAxes,
+    pub collider_density: ColliderDensity,
+    pub mob_attributes: MobAttributesComponent,
+    pub health: HealthComponent,
 }
 
-impl From<&MobAttributes> for Friction {
-    fn from(value: &MobAttributes) -> Self {
-        Friction::new(value.friction)
-    }
-}
 
-impl From<&MobAttributes> for CollisionLayers {
+impl From<&MobAttributes> for MobComponentBundle {
     fn from(value: &MobAttributes) -> Self {
+        // Calculate collision layers
         let mut membership: u32 = 0;
-
         for layer in &value.collision_layer_membership {
             membership |= layer.to_bits();
         }
-
         let mut filter: u32 = 0;
-
         for layer in &value.collision_layer_filter {
             filter |= layer.to_bits();
         }
 
-        CollisionLayers::new(membership, filter)
-    }
-}
-
-impl From<&MobAttributes> for Collider {
-    fn from(value: &MobAttributes) -> Self {
-        Collider::compound(
+        // Build compound collider
+        let collider = Collider::compound(
             value
                 .colliders
                 .iter()
@@ -286,54 +283,36 @@ impl From<&MobAttributes> for Collider {
                     )
                 })
                 .collect(),
-        )
-    }
-}
+        );
 
-impl From<&MobAttributes> for Name {
-    fn from(value: &MobAttributes) -> Self {
-        Name::new(value.name.clone())
-    }
-}
+        // Determine locked axes
+        let locked_axes = if value.rotation_locked {
+            LockedAxes::ROTATION_LOCKED
+        } else {
+            LockedAxes::new()
+        };
 
-impl From<&MobAttributes> for LockedAxes {
-    fn from(value: &MobAttributes) -> Self {
-        let rotation_locked = value.rotation_locked;
-
-        if rotation_locked {
-            return LockedAxes::ROTATION_LOCKED;
+        MobComponentBundle {
+            name: Name::new(value.name.clone()),
+            restitution: Restitution::new(value.restitution),
+            friction: Friction::new(value.friction),
+            collision_layers: CollisionLayers::new(membership, filter),
+            collider,
+            locked_axes,
+            collider_density: ColliderDensity(value.collider_density),
+            mob_attributes: MobAttributesComponent {
+                linear_acceleration: value.linear_acceleration,
+                linear_deceleration: value.linear_deceleration,
+                max_linear_speed: value.max_linear_speed,
+                angular_acceleration: value.angular_acceleration,
+                angular_deceleration: value.angular_deceleration,
+                max_angular_speed: value.max_angular_speed,
+                targeting_range: value.targeting_range,
+                projectile_speed: value.projectile_speed,
+                projectile_damage: value.projectile_damage,
+                projectile_range_seconds: value.projectile_range_seconds,
+            },
+            health: HealthComponent::new(value.health),
         }
-
-        // unlock rotation if rotation locked is not true
-        LockedAxes::new()
-    }
-}
-
-impl From<&MobAttributes> for ColliderDensity {
-    fn from(value: &MobAttributes) -> Self {
-        ColliderDensity(value.collider_density)
-    }
-}
-
-impl From<&MobAttributes> for MobAttributesComponent {
-    fn from(value: &MobAttributes) -> Self {
-        MobAttributesComponent {
-            linear_acceleration: value.linear_acceleration,
-            linear_deceleration: value.linear_deceleration,
-            max_linear_speed: value.max_linear_speed,
-            angular_acceleration: value.angular_acceleration,
-            angular_deceleration: value.angular_deceleration,
-            max_angular_speed: value.max_angular_speed,
-            targeting_range: value.targeting_range,
-            projectile_speed: value.projectile_speed,
-            projectile_damage: value.projectile_damage,
-            projectile_range_seconds: value.projectile_range_seconds,
-        }
-    }
-}
-
-impl From<&MobAttributes> for HealthComponent {
-    fn from(value: &MobAttributes) -> Self {
-        HealthComponent::new(value.health)
     }
 }
