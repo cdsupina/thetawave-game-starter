@@ -1,7 +1,8 @@
 use bevy::{
     asset::Handle,
     image::Image,
-    prelude::{Event, Resource},
+    platform::collections::HashMap,
+    prelude::{Event, Res, Resource},
     scene::Scene,
     text::Font,
 };
@@ -15,6 +16,7 @@ use thetawave_core::Faction;
 /// Assets used in the game state
 #[derive(AssetCollection, Resource)]
 pub struct GameAssets {
+    /*
     #[asset(path = "media/aseprite/captain_character.aseprite")]
     pub captain_character_aseprite: Handle<Aseprite>,
     #[asset(path = "media/aseprite/juggernaut_character.aseprite")]
@@ -97,6 +99,17 @@ pub struct GameAssets {
     pub spawn_blast_particle_effect: Handle<Particle2dEffect>,
     #[asset(path = "media/particles/spawn_bullet.ron")]
     pub spawn_bullet_particle_effect: Handle<Particle2dEffect>,
+    */
+    #[asset(key = "sprites", collection(typed, mapped))]
+    pub sprites: HashMap<String, Handle<Aseprite>>,
+    #[asset(key = "particle_effects", collection(typed, mapped))]
+    pub particle_effects: HashMap<String, Handle<Particle2dEffect>>,
+}
+
+#[derive(AssetCollection, Resource, Default, Clone)]
+pub struct ExtendedGameAssets {
+    #[asset(key = "sprites", collection(typed, mapped))]
+    pub sprites: HashMap<String, Handle<Aseprite>>,
 }
 
 /// Resource for storing faction-based particle materials

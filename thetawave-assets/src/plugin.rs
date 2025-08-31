@@ -1,3 +1,5 @@
+use crate::data::ExtendedGameAssets;
+
 use super::{
     data::{AppAudioAssets, BackgroundAssets, GameAssets, LoadingProgressEvent, UiAssets},
     systems::{
@@ -10,22 +12,22 @@ use bevy::{
     prelude::{Condition, IntoScheduleConfigs, in_state},
     state::state::{OnEnter, OnExit},
 };
-use bevy_asset_loader::loading_state::{
-    LoadingState, LoadingStateAppExt, LoadingStateSet, config::ConfigureLoadingState,
+use bevy_asset_loader::{
+    loading_state::{
+        LoadingState, LoadingStateAppExt, LoadingStateSet, config::ConfigureLoadingState,
+    },
+    standard_dynamic_asset::StandardDynamicAssetCollection,
 };
-use bevy_embedded_assets::{EmbeddedAssetPlugin, PluginMode};
 use iyes_progress::ProgressPlugin;
 use thetawave_states::AppState;
 
 /// Plugin for managing asset loading states in Thetawave
+#[derive(Default)]
 pub struct ThetawaveAssetsPlugin;
 
 impl Plugin for ThetawaveAssetsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_plugins((
-            EmbeddedAssetPlugin {
-                mode: PluginMode::ReplaceDefault, //embeds assets into binary
-            },
             ProgressPlugin::<AppState>::new()
                 .with_state_transition(AppState::MainMenuLoading, AppState::MainMenu)
                 .with_state_transition(AppState::GameLoading, AppState::Game),
@@ -38,7 +40,15 @@ impl Plugin for ThetawaveAssetsPlugin {
                 .load_collection::<BackgroundAssets>()
                 .load_collection::<AppAudioAssets>(),
         )
-        .add_loading_state(LoadingState::new(AppState::GameLoading).load_collection::<GameAssets>())
+        .add_loading_state(
+            LoadingState::new(AppState::GameLoading)
+                .load_collection::<GameAssets>()
+                .with_dynamic_assets_file::<StandardDynamicAssetCollection>("game.assets.ron")
+                .load_collection::<ExtendedGameAssets>()
+                .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
+                    "extended_game.assets.ron",
+                ),
+        )
         .add_systems(
             Update,
             get_loading_progress_system
