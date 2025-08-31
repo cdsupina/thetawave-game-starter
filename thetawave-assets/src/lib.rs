@@ -3,7 +3,7 @@ mod plugin;
 mod systems;
 
 pub use data::{
-    AppAudioAssets, BackgroundAssets, ExtendedGameAssets, GameAssets, LoadingProgressEvent,
+    asset_keys, AppAudioAssets, AssetResolver, BackgroundAssets, ExtendedGameAssets, GameAssets, LoadingProgressEvent,
     ParticleMaterials, UiAssets,
 };
 pub use plugin::ThetawaveAssetsPlugin;

@@ -6,23 +6,24 @@ use bevy::{
 use bevy_enoki::{
     Particle2dEffect, ParticleEffectHandle, ParticleSpawner, prelude::ParticleSpawnerState,
 };
-use thetawave_assets::{GameAssets, ParticleMaterials};
+use thetawave_assets::{asset_keys, AssetResolver, GameAssets, ParticleMaterials};
 use thetawave_core::Faction;
 use thetawave_states::{AppState, Cleanup};
 
 use crate::ParticleEffectType;
 
-trait GameAssetsExt {
-    fn get_particle_effect(&self, effect_type: &ParticleEffectType) -> Handle<Particle2dEffect>;
-}
+/// Get the particle effect handle from a given ParticleEffectType using asset resolver
+fn get_particle_effect(
+    effect_type: &ParticleEffectType,
+    game_assets: &GameAssets,
+) -> Handle<Particle2dEffect> {
+    let key = match effect_type {
+        ParticleEffectType::SpawnBlast => asset_keys::SPAWN_BLAST,
+        ParticleEffectType::SpawnBullet => asset_keys::SPAWN_BULLET,
+    };
 
-impl GameAssetsExt for GameAssets {
-    fn get_particle_effect(&self, effect_type: &ParticleEffectType) -> Handle<Particle2dEffect> {
-        match effect_type {
-            ParticleEffectType::SpawnBlast => self.spawn_blast_particle_effect.clone(),
-            ParticleEffectType::SpawnBullet => self.spawn_bullet_particle_effect.clone(),
-        }
-    }
+    AssetResolver::get_particle_effect(key, game_assets)
+        .unwrap_or_else(|| panic!("Missing particle effect asset for type: {:?}", effect_type))
 }
 
 pub fn spawn_particle_effect(
@@ -47,7 +48,7 @@ pub fn spawn_particle_effect(
                 active: false, // Start inactive, will be activated by behavior system when needed
                 ..Default::default()
             },
-            ParticleEffectHandle(assets.get_particle_effect(effect_type)),
+            ParticleEffectHandle(get_particle_effect(effect_type, assets)),
         ))
         .id();
 

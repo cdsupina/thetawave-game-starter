@@ -42,12 +42,10 @@ impl Plugin for ThetawaveAssetsPlugin {
         )
         .add_loading_state(
             LoadingState::new(AppState::GameLoading)
-                .load_collection::<GameAssets>()
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>("game.assets.ron")
-                .load_collection::<ExtendedGameAssets>()
-                .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
-                    "extended_game.assets.ron",
-                ),
+                .with_dynamic_assets_file::<StandardDynamicAssetCollection>("extended_game.assets.ron")
+                .load_collection::<GameAssets>()
+                .load_collection::<ExtendedGameAssets>(),
         )
         .add_systems(
             Update,

@@ -10,7 +10,7 @@ use bevy::{
     transform::components::Transform,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
-use thetawave_assets::GameAssets;
+use thetawave_assets::{asset_keys, AssetResolver, ExtendedGameAssets, GameAssets};
 use thetawave_core::Faction;
 use thetawave_states::{AppState, Cleanup};
 
@@ -22,36 +22,32 @@ use crate::{
     spawn::FactionExt,
 };
 
-trait GameAssetsExt {
-    fn get_effect_sprite(
-        &self,
-        projectile_type: &ProjectileType,
-        effect_type: &ProjectileEffectType,
-    ) -> Handle<Aseprite>;
-}
+/// Get the Aseprite handle from ProjectileType and ProjectileEffectType using asset resolver
+fn get_effect_sprite(
+    projectile_type: &ProjectileType,
+    effect_type: &ProjectileEffectType,
+    extended_assets: &ExtendedGameAssets,
+    game_assets: &GameAssets,
+) -> Handle<Aseprite> {
+    let key = match projectile_type {
+        ProjectileType::Bullet => match effect_type {
+            ProjectileEffectType::Despawn => asset_keys::BULLET_PROJECTILE_DESPAWN,
+            ProjectileEffectType::Hit => asset_keys::BULLET_PROJECTILE_HIT,
+        },
+        ProjectileType::Blast => match effect_type {
+            ProjectileEffectType::Despawn => asset_keys::BLAST_PROJECTILE_DESPAWN,
+            ProjectileEffectType::Hit => asset_keys::BLAST_PROJECTILE_HIT,
+        },
+    };
 
-impl GameAssetsExt for GameAssets {
-    fn get_effect_sprite(
-        &self,
-        projectile_type: &ProjectileType,
-        effect_type: &ProjectileEffectType,
-    ) -> Handle<Aseprite> {
-        match projectile_type {
-            ProjectileType::Bullet => match effect_type {
-                ProjectileEffectType::Despawn => self.bullet_projectile_despawn_aseprite.clone(),
-                ProjectileEffectType::Hit => self.bullet_projectile_hit_aseprite.clone(),
-            },
-            ProjectileType::Blast => match effect_type {
-                ProjectileEffectType::Despawn => self.blast_projectile_despawn_aseprite.clone(),
-                ProjectileEffectType::Hit => self.blast_projectile_hit_aseprite.clone(),
-            },
-        }
-    }
+    AssetResolver::get_sprite(key, extended_assets, game_assets)
+        .unwrap_or_else(|| panic!("Missing sprite asset for projectile effect: {:?} {:?}", projectile_type, effect_type))
 }
 
 pub(crate) fn spawn_effect_system(
     mut cmds: Commands,
-    assets: Res<GameAssets>,
+    game_assets: Res<GameAssets>,
+    extended_assets: Res<ExtendedGameAssets>,
     mut spawn_projectile_effect_event_reader: EventReader<SpawnProjectileEffectEvent>,
 ) {
     for event in spawn_projectile_effect_event_reader.read() {
@@ -61,7 +57,8 @@ pub(crate) fn spawn_effect_system(
             &event.effect_type,
             &event.faction,
             &event.transform,
-            &assets,
+            &game_assets,
+            &extended_assets,
         );
     }
 }
@@ -72,7 +69,8 @@ fn spawn_effect(
     effect_type: &ProjectileEffectType,
     faction: &Faction,
     transform: &Transform,
-    assets: &GameAssets,
+    game_assets: &GameAssets,
+    extended_assets: &ExtendedGameAssets,
 ) {
     cmds.spawn((
         Name::new("Projectile Effect"),
@@ -83,7 +81,7 @@ fn spawn_effect(
         },
         AseAnimation {
             animation: Animation::tag("idle"),
-            aseprite: assets.get_effect_sprite(projectile_type, effect_type),
+            aseprite: get_effect_sprite(projectile_type, effect_type, extended_assets, game_assets),
         },
         Cleanup::<AppState> {
             states: vec![AppState::Game],
