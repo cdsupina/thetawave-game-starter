@@ -13,12 +13,13 @@ use bevy::{
     },
     utils::default,
 };
-use thetawave_assets::{AssetResolver, UiAssets};
+use thetawave_assets::{AssetResolver, ExtendedUiAssets, UiAssets};
 use thetawave_states::{AppState, Cleanup, GameState};
 
 /// Spawns the game over/victory ui
 pub(in crate::ui) fn spawn_game_end_system(
     mut cmds: Commands,
+    extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
     game_end_result_res: Res<GameEndResultResource>,
 ) {
@@ -62,8 +63,11 @@ pub(in crate::ui) fn spawn_game_end_system(
                     .with_children(|parent| {
                         parent.spawn((
                             Text::new(game_end_result_res.result.clone()),
-                            TextFont::from_font_size(150.0)
-                                .with_font(AssetResolver::get_ui_font("Dank-Depths", &ui_assets)),
+                            TextFont::from_font_size(150.0).with_font(AssetResolver::get_ui_font(
+                                "Dank-Depths",
+                                &extended_ui_assets,
+                                &ui_assets,
+                            )),
                         ));
                     });
 
@@ -88,6 +92,7 @@ pub(in crate::ui) fn spawn_game_end_system(
             })
             .with_children(|parent| {
                 parent.spawn_menu_button(
+                    &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterAppState(AppState::MainMenuLoading),
                     300.0,

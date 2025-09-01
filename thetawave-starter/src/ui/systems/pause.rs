@@ -7,9 +7,14 @@ use bevy::{
     ui::{AlignItems, BackgroundColor, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
+use thetawave_assets::ExtendedUiAssets;
 
 /// Spawns the pause menu ui
-pub(in crate::ui) fn spawn_pause_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
+pub(in crate::ui) fn spawn_pause_menu_system(
+    mut cmds: Commands,
+    extended_ui_assets: Res<ExtendedUiAssets>,
+    ui_assets: Res<UiAssets>,
+) {
     cmds.spawn((
         Cleanup::<GameState> {
             states: vec![GameState::Paused],
@@ -33,6 +38,7 @@ pub(in crate::ui) fn spawn_pause_menu_system(mut cmds: Commands, ui_assets: Res<
     ))
     .with_children(|parent| {
         parent.spawn_menu_button(
+            &extended_ui_assets,
             &ui_assets,
             ButtonAction::EnterGameState(GameState::Playing),
             300.0,
@@ -41,6 +47,7 @@ pub(in crate::ui) fn spawn_pause_menu_system(mut cmds: Commands, ui_assets: Res<
         );
 
         parent.spawn_menu_button(
+            &extended_ui_assets,
             &ui_assets,
             ButtonAction::EnterPauseMenuState(PauseMenuState::Options),
             300.0,
@@ -49,6 +56,7 @@ pub(in crate::ui) fn spawn_pause_menu_system(mut cmds: Commands, ui_assets: Res<
         );
 
         parent.spawn_menu_button(
+            &extended_ui_assets,
             &ui_assets,
             ButtonAction::EnterAppState(AppState::MainMenuLoading),
             300.0,
@@ -59,7 +67,11 @@ pub(in crate::ui) fn spawn_pause_menu_system(mut cmds: Commands, ui_assets: Res<
 }
 
 /// Spawns ui for options pause menu
-pub(in crate::ui) fn spawn_pause_options_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
+pub(in crate::ui) fn spawn_pause_options_system(
+    mut cmds: Commands,
+    extended_ui_assets: Res<ExtendedUiAssets>,
+    ui_assets: Res<UiAssets>,
+) {
     cmds.spawn((
         Cleanup::<GameState> {
             states: vec![GameState::Paused],
@@ -94,6 +106,7 @@ pub(in crate::ui) fn spawn_pause_options_system(mut cmds: Commands, ui_assets: R
             })
             .with_children(|parent| {
                 parent.spawn_menu_button(
+                    &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::ApplyOptions,
                     300.0,
@@ -102,6 +115,7 @@ pub(in crate::ui) fn spawn_pause_options_system(mut cmds: Commands, ui_assets: R
                 );
 
                 parent.spawn_menu_button(
+                    &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterPauseMenuState(PauseMenuState::Main),
                     300.0,

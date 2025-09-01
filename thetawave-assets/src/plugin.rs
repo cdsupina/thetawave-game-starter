@@ -1,4 +1,4 @@
-use crate::data::ExtendedGameAssets;
+use crate::data::{ExtendedGameAssets, ExtendedUiAssets};
 
 use super::{
     data::{BackgroundAssets, GameAssets, LoadingProgressEvent, MusicAssets, UiAssets},
@@ -38,6 +38,10 @@ impl Plugin for ThetawaveAssetsPlugin {
             LoadingState::new(AppState::MainMenuLoading)
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>("ui.assets.ron")
                 .load_collection::<UiAssets>()
+                .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
+                    "extended/ui.assets.ron",
+                )
+                .load_collection::<ExtendedUiAssets>()
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>("music.assets.ron")
                 .load_collection::<MusicAssets>()
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>("background.assets.ron")

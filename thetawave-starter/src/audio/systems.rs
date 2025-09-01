@@ -3,7 +3,7 @@ use bevy::prelude::{EventReader, EventWriter, Res, StateTransitionEvent};
 use bevy_kira_audio::{AudioChannel, AudioControl, AudioTween};
 use bevy_persistent::Persistent;
 use std::time::Duration;
-use thetawave_assets::{MusicAssets, UiAssets};
+use thetawave_assets::{AssetResolver, ExtendedUiAssets, MusicAssets, UiAssets};
 use thetawave_states::AppState;
 
 use super::{
@@ -42,6 +42,7 @@ pub(super) fn start_music_system(
 
 /// System for playing audio effects, listens for AudioEffectEvents
 pub(super) fn play_effect_system(
+    extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
     mut effect_events: EventReader<AudioEffectEvent>,
     ui_audio_channel: Res<AudioChannel<UiAudioChannel>>,
@@ -56,17 +57,26 @@ pub(super) fn play_effect_system(
             match event {
                 AudioEffectEvent::MenuButtonSelected => {
                     ui_audio_channel
-                        .play(ui_assets.get_random_button_press_effect())
+                        .play(AssetResolver::get_random_button_press_effect(
+                            &extended_ui_assets,
+                            &ui_assets,
+                        ))
                         .with_volume(ui_volume);
                 }
                 AudioEffectEvent::MenuButtonReleased => {
                     ui_audio_channel
-                        .play(ui_assets.get_random_button_release_effect())
+                        .play(AssetResolver::get_random_button_release_effect(
+                            &extended_ui_assets,
+                            &ui_assets,
+                        ))
                         .with_volume(ui_volume);
                 }
                 AudioEffectEvent::MenuButtonConfirm => {
                     ui_audio_channel
-                        .play(ui_assets.get_random_button_confirm_effect())
+                        .play(AssetResolver::get_random_button_confirm_effect(
+                            &extended_ui_assets,
+                            &ui_assets,
+                        ))
                         .with_volume(ui_volume);
                 }
             }

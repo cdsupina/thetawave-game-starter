@@ -10,16 +10,21 @@ use bevy::{
     window::{MonitorSelection, VideoModeSelection, WindowMode, WindowResolution},
 };
 use bevy_egui::{
-    egui::{CentralPanel, Checkbox, Color32, ComboBox, Frame, Grid, Margin, RichText, Slider},
     EguiContexts,
+    egui::{CentralPanel, Checkbox, Color32, ComboBox, Frame, Grid, Margin, RichText, Slider},
 };
 use bevy_persistent::Persistent;
+use thetawave_assets::ExtendedUiAssets;
 
 const LABEL_TEXT_SIZE: f32 = 12.0;
 const TITLE_LABEL_TEXT_SIZE: f32 = 14.0;
 
 /// Spawns options menu ui for the main menu
-pub(in crate::ui) fn spawn_options_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
+pub(in crate::ui) fn spawn_options_menu_system(
+    mut cmds: Commands,
+    extended_ui_assets: Res<ExtendedUiAssets>,
+    ui_assets: Res<UiAssets>,
+) {
     cmds.spawn((
         Cleanup::<MainMenuState> {
             states: vec![MainMenuState::Options],
@@ -48,6 +53,7 @@ pub(in crate::ui) fn spawn_options_menu_system(mut cmds: Commands, ui_assets: Re
             })
             .with_children(|parent| {
                 parent.spawn_menu_button(
+                    &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::ApplyOptions,
                     300.0,
@@ -55,6 +61,7 @@ pub(in crate::ui) fn spawn_options_menu_system(mut cmds: Commands, ui_assets: Re
                     false,
                 );
                 parent.spawn_menu_button(
+                    &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterMainMenuState(MainMenuState::InputRebinding),
                     300.0,
@@ -62,6 +69,7 @@ pub(in crate::ui) fn spawn_options_menu_system(mut cmds: Commands, ui_assets: Re
                     false,
                 );
                 parent.spawn_menu_button(
+                    &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterMainMenuState(MainMenuState::Title),
                     300.0,

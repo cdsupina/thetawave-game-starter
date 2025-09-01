@@ -25,7 +25,7 @@ use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use bevy_persistent::Persistent;
 use leafwing_input_manager::prelude::{ActionState, InputMap};
-use thetawave_assets::AssetResolver;
+use thetawave_assets::{AssetResolver, ExtendedUiAssets};
 use thetawave_player::{
     CharacterCarouselAction, CharacterType, ChosenCharacterData, ChosenCharactersResource,
     InputType,
@@ -35,6 +35,7 @@ use thetawave_states::AppState;
 /// Spawn ui for character selection
 pub(in crate::ui) fn spawn_character_selection_system(
     mut cmds: Commands,
+    extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
 ) {
     cmds.spawn((
@@ -70,10 +71,18 @@ pub(in crate::ui) fn spawn_character_selection_system(
                     },))
                     .with_children(|parent| {
                         // Player 1 character selection
-                        parent.spawn_character_selection(&ui_assets, PlayerNum::One);
+                        parent.spawn_character_selection(
+                            &extended_ui_assets,
+                            &ui_assets,
+                            PlayerNum::One,
+                        );
 
                         // Player 2 character selection
-                        parent.spawn_character_selection(&ui_assets, PlayerNum::Two);
+                        parent.spawn_character_selection(
+                            &extended_ui_assets,
+                            &ui_assets,
+                            PlayerNum::Two,
+                        );
                     });
 
                 // Second row
@@ -85,10 +94,18 @@ pub(in crate::ui) fn spawn_character_selection_system(
                     },))
                     .with_children(|parent| {
                         // Player 3 character selection
-                        parent.spawn_character_selection(&ui_assets, PlayerNum::Three);
+                        parent.spawn_character_selection(
+                            &extended_ui_assets,
+                            &ui_assets,
+                            PlayerNum::Three,
+                        );
 
                         // Player 4 character selection
-                        parent.spawn_character_selection(&ui_assets, PlayerNum::Four);
+                        parent.spawn_character_selection(
+                            &extended_ui_assets,
+                            &ui_assets,
+                            PlayerNum::Four,
+                        );
                     });
             });
 
@@ -105,6 +122,7 @@ pub(in crate::ui) fn spawn_character_selection_system(
             })
             .with_children(|parent| {
                 parent.spawn_menu_button(
+                    &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterAppState(AppState::GameLoading),
                     300.0,
@@ -113,6 +131,7 @@ pub(in crate::ui) fn spawn_character_selection_system(
                 );
 
                 parent.spawn_menu_button(
+                    &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterMainMenuState(MainMenuState::Title),
                     300.0,
@@ -182,20 +201,25 @@ pub(in crate::ui) fn cycle_player_one_carousel_system(
     }
 }
 
-fn get_character_image(character_type: &CharacterType, ui_assets: &UiAssets) -> Handle<Image> {
+fn get_character_image(
+    character_type: &CharacterType,
+    extended_ui_assets: &ExtendedUiAssets,
+    ui_assets: &UiAssets,
+) -> Handle<Image> {
     let key = match character_type {
         CharacterType::Captain => "captain_character",
         CharacterType::Juggernaut => "juggernaut_character",
         CharacterType::Doomwing => "doomwing_character",
     };
 
-    AssetResolver::get_ui_image(key, ui_assets)
+    AssetResolver::get_ui_image(key, extended_ui_assets, ui_assets)
 }
 
 /// Change shown carousel character images when the character carousel changes from cycle_carousel_system
 pub(in crate::ui) fn update_carousel_ui_system(
     carousel_q: Query<(&Children, &CharacterCarousel), Changed<CharacterCarousel>>,
     mut carousel_slot_q: Query<(&VisibleCarouselSlot, &mut ImageNode)>,
+    extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
 ) {
     for (children, carousel) in carousel_q.iter() {
@@ -210,7 +234,8 @@ pub(in crate::ui) fn update_carousel_ui_system(
 
                 // Set the image of the ui node to the new character
                 if let Some(character_type) = maybe_character_type {
-                    image_node.image = get_character_image(character_type, &ui_assets);
+                    image_node.image =
+                        get_character_image(character_type, &extended_ui_assets, &ui_assets);
                 }
             }
         }
@@ -240,6 +265,7 @@ pub(in crate::ui) fn spawn_carousel_system(
     mut player_join_events: EventReader<PlayerJoinEvent>,
     character_selector_q: Query<(Entity, &PlayerNum), With<CharacterSelector>>,
     mut cmds: Commands,
+    extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
     options_res: Res<Persistent<OptionsRes>>,
 ) {
@@ -269,7 +295,11 @@ pub(in crate::ui) fn spawn_carousel_system(
                             ImageNode::default(),
                             AseAnimation {
                                 animation: Animation::tag("idle"),
-                                aseprite: AssetResolver::get_ui_sprite("arrow_button", &ui_assets),
+                                aseprite: AssetResolver::get_ui_sprite(
+                                    "arrow_button",
+                                    &extended_ui_assets,
+                                    &ui_assets,
+                                ),
                             },
                             Name::new("Arrow Button Sprite"),
                         ));
@@ -308,6 +338,7 @@ pub(in crate::ui) fn spawn_carousel_system(
                                 VisibleCarouselSlot(CarouselSlotPosition::Left),
                                 ImageNode::new(get_character_image(
                                     left_character_type,
+                                    &extended_ui_assets,
                                     &ui_assets,
                                 ))
                                 .with_color(Color::default().with_alpha(0.5)),
@@ -326,6 +357,7 @@ pub(in crate::ui) fn spawn_carousel_system(
                                 VisibleCarouselSlot(CarouselSlotPosition::Center),
                                 ImageNode::new(get_character_image(
                                     active_character_type,
+                                    &extended_ui_assets,
                                     &ui_assets,
                                 )),
                                 Node {
@@ -343,6 +375,7 @@ pub(in crate::ui) fn spawn_carousel_system(
                                 VisibleCarouselSlot(CarouselSlotPosition::Right),
                                 ImageNode::new(get_character_image(
                                     right_character_type,
+                                    &extended_ui_assets,
                                     &ui_assets,
                                 ))
                                 .with_color(Color::default().with_alpha(0.5)),
@@ -374,7 +407,11 @@ pub(in crate::ui) fn spawn_carousel_system(
                             },
                             AseAnimation {
                                 animation: Animation::tag("idle"),
-                                aseprite: AssetResolver::get_ui_sprite("arrow_button", &ui_assets),
+                                aseprite: AssetResolver::get_ui_sprite(
+                                    "arrow_button",
+                                    &extended_ui_assets,
+                                    &ui_assets,
+                                ),
                             },
                             ImageNode::default().with_flip_x(),
                             Name::new("Arrow Button Sprite"),
@@ -389,6 +426,7 @@ pub(in crate::ui) fn spawn_carousel_system(
 pub(in crate::ui) fn spawn_ready_button_system(
     mut player_join_events: EventReader<PlayerJoinEvent>,
     button_q: Query<(&ButtonAction, Entity, &ChildOf)>,
+    extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
     mut cmds: Commands,
 ) {
@@ -400,6 +438,7 @@ pub(in crate::ui) fn spawn_ready_button_system(
                 cmds.entity(entity).despawn();
                 cmds.entity(childof.parent()).with_children(|parent| {
                     let mut entity_cmds = parent.spawn_menu_button(
+                        &extended_ui_assets,
                         &ui_assets,
                         ButtonAction::Ready(player_num.clone()),
                         300.0,
@@ -533,6 +572,7 @@ pub(in crate::ui) fn enable_join_button_system(
 pub(in crate::ui) fn spawn_join_prompt_system(
     mut player_join_events: EventReader<PlayerJoinEvent>,
     character_selector_q: Query<(Entity, &PlayerNum), With<CharacterSelector>>,
+    extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
     mut cmds: Commands,
 ) {
@@ -541,7 +581,7 @@ pub(in crate::ui) fn spawn_join_prompt_system(
             for (entity, player_num) in character_selector_q.iter() {
                 if next_player_num == *player_num {
                     cmds.entity(entity).with_children(|parent| {
-                        parent.spawn_join_prompt(&ui_assets);
+                        parent.spawn_join_prompt(&extended_ui_assets, &ui_assets);
                     });
                 }
             }

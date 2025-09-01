@@ -59,12 +59,12 @@ impl AssetResolver {
     pub fn get_game_sprite(
         key: &str,
         extended_assets: &ExtendedGameAssets,
-        game_assets: &GameAssets,
+        assets: &GameAssets,
     ) -> Handle<Aseprite> {
         extended_assets
             .sprites
             .get(key)
-            .or_else(|| game_assets.sprites.get(key))
+            .or_else(|| assets.sprites.get(key))
             .cloned()
             .unwrap_or_else(|| panic!("Missing sprite asset for key: {:?}", key))
     }
@@ -73,38 +73,94 @@ impl AssetResolver {
     pub fn get_game_particle_effect(
         key: &str,
         extended_assets: &ExtendedGameAssets,
-        game_assets: &GameAssets,
+        assets: &GameAssets,
     ) -> Handle<Particle2dEffect> {
         extended_assets
             .particle_effects
             .get(key)
-            .or_else(|| game_assets.particle_effects.get(key))
+            .or_else(|| assets.particle_effects.get(key))
             .cloned()
             .unwrap_or_else(|| panic!("Missing particle asset for key: {:?}", key))
     }
 
-    pub fn get_ui_image(key: &str, ui_assets: &UiAssets) -> Handle<Image> {
-        ui_assets
+    pub fn get_ui_image(
+        key: &str,
+        extended_assets: &ExtendedUiAssets,
+        assets: &UiAssets,
+    ) -> Handle<Image> {
+        extended_assets
             .images
             .get(key)
+            .or_else(|| assets.images.get(key))
             .cloned()
             .unwrap_or_else(|| panic!("Missing image asset for key: {:?}", key))
     }
 
-    pub fn get_ui_sprite(key: &str, ui_assets: &UiAssets) -> Handle<Aseprite> {
-        ui_assets
+    pub fn get_ui_sprite(
+        key: &str,
+        extended_assets: &ExtendedUiAssets,
+        assets: &UiAssets,
+    ) -> Handle<Aseprite> {
+        extended_assets
             .sprites
             .get(key)
+            .or_else(|| assets.sprites.get(key))
             .cloned()
             .unwrap_or_else(|| panic!("Missing sprite asset for key: {:?}", key))
     }
 
-    pub fn get_ui_font(key: &str, ui_assets: &UiAssets) -> Handle<Font> {
-        ui_assets
+    pub fn get_ui_font(
+        key: &str,
+        extended_assets: &ExtendedUiAssets,
+        assets: &UiAssets,
+    ) -> Handle<Font> {
+        extended_assets
             .fonts
             .get(key)
+            .or_else(|| assets.fonts.get(key))
             .cloned()
             .unwrap_or_else(|| panic!("Missing font asset for key: {:?}", key))
+    }
+
+    pub fn get_random_button_press_effect(
+        extended_assets: &ExtendedUiAssets,
+        assets: &UiAssets,
+    ) -> Handle<AudioSource> {
+        if !extended_assets.menu_button_select_effects.is_empty() {
+            let idx = rand::rng().random_range(0..extended_assets.menu_button_select_effects.len());
+            extended_assets.menu_button_select_effects[idx].clone()
+        } else {
+            let idx = rand::rng().random_range(0..assets.menu_button_select_effects.len());
+            assets.menu_button_select_effects[idx].clone()
+        }
+    }
+
+    pub fn get_random_button_release_effect(
+        extended_assets: &ExtendedUiAssets,
+        assets: &UiAssets,
+    ) -> Handle<AudioSource> {
+        if !extended_assets.menu_button_release_effects.is_empty() {
+            let idx =
+                rand::rng().random_range(0..extended_assets.menu_button_release_effects.len());
+            extended_assets.menu_button_release_effects[idx].clone()
+        } else {
+            let idx = rand::rng().random_range(0..assets.menu_button_release_effects.len());
+            assets.menu_button_release_effects[idx].clone()
+        }
+    }
+
+    pub fn get_random_button_confirm_effect(
+        extended_assets: &ExtendedUiAssets,
+        assets: &UiAssets,
+    ) -> Handle<AudioSource> {
+        if !extended_assets.menu_button_confirm_effects.is_empty() {
+            let idx =
+                rand::rng().random_range(0..extended_assets.menu_button_confirm_effects.len());
+            extended_assets.menu_button_confirm_effects[idx].clone()
+        } else {
+            let idx = rand::rng().random_range(0..assets.menu_button_confirm_effects.len());
+            assets.menu_button_confirm_effects[idx].clone()
+        }
     }
 }
 
@@ -134,24 +190,20 @@ pub struct UiAssets {
     pub menu_button_confirm_effects: Vec<Handle<AudioSource>>,
 }
 
-impl UiAssets {
-    pub fn get_random_button_press_effect(&self) -> Handle<AudioSource> {
-        self.menu_button_select_effects
-            [rand::rng().random_range(0..self.menu_button_select_effects.len())]
-        .clone()
-    }
-
-    pub fn get_random_button_release_effect(&self) -> Handle<AudioSource> {
-        self.menu_button_release_effects
-            [rand::rng().random_range(0..self.menu_button_release_effects.len())]
-        .clone()
-    }
-
-    pub fn get_random_button_confirm_effect(&self) -> Handle<AudioSource> {
-        self.menu_button_confirm_effects
-            [rand::rng().random_range(0..self.menu_button_confirm_effects.len())]
-        .clone()
-    }
+#[derive(AssetCollection, Resource)]
+pub struct ExtendedUiAssets {
+    #[asset(key = "extended_ui_sprites", collection(typed, mapped))]
+    pub sprites: HashMap<AssetFileStem, Handle<Aseprite>>,
+    #[asset(key = "extended_ui_images", collection(typed, mapped))]
+    pub images: HashMap<AssetFileStem, Handle<Image>>,
+    #[asset(key = "extended_ui_fonts", collection(typed, mapped))]
+    pub fonts: HashMap<AssetFileStem, Handle<Font>>,
+    #[asset(key = "extended_ui_button_select_audio", collection(typed))]
+    pub menu_button_select_effects: Vec<Handle<AudioSource>>,
+    #[asset(key = "extended_ui_button_release_audio", collection(typed))]
+    pub menu_button_release_effects: Vec<Handle<AudioSource>>,
+    #[asset(key = "extended_ui_button_confirm_audio", collection(typed))]
+    pub menu_button_confirm_effects: Vec<Handle<AudioSource>>,
 }
 
 // Assets for background images
