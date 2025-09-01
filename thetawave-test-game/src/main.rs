@@ -12,14 +12,3 @@ fn main() {
 
     app.run();
 }
-/*
-fn test_extended_assets_system(extended_assets: Res<ExtendedGameAssets>) {
-    if extended_assets.sprites.is_empty() {
-        return;
-    }
-
-    for (key, handle) in &extended_assets.sprites {
-        info!("Extended asset loaded: {} -> {:?}", key, handle);
-    }
-}
-*/
