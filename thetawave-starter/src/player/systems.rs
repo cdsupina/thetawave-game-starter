@@ -12,7 +12,7 @@ use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_persistent::Persistent;
 use leafwing_abilities::AbilitiesBundle;
 use leafwing_input_manager::prelude::InputMap;
-use thetawave_assets::{asset_keys, AssetResolver, ExtendedGameAssets, GameAssets};
+use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets};
 use thetawave_core::HealthComponent;
 use thetawave_physics::ThetawavePhysicsLayer;
 use thetawave_player::{
@@ -28,13 +28,17 @@ fn get_character_sprite(
     game_assets: &GameAssets,
 ) -> Handle<Aseprite> {
     let key = match character_type {
-        CharacterType::Captain => asset_keys::CAPTAIN_CHARACTER,
-        CharacterType::Juggernaut => asset_keys::JUGGERNAUT_CHARACTER,
-        CharacterType::Doomwing => asset_keys::DOOMWING_CHARACTER,
+        CharacterType::Captain => "captain_character",
+        CharacterType::Juggernaut => "juggernaut_character",
+        CharacterType::Doomwing => "doomwing_character",
     };
 
-    AssetResolver::get_sprite(key, extended_assets, game_assets)
-        .unwrap_or_else(|| panic!("Missing sprite asset for character type: {:?}", character_type))
+    AssetResolver::get_sprite(key, extended_assets, game_assets).unwrap_or_else(|| {
+        panic!(
+            "Missing sprite asset for character type: {:?}",
+            character_type
+        )
+    })
 }
 
 /// Spawn a player controlled entity
@@ -57,7 +61,11 @@ pub(super) fn spawn_players_system(
                 player_num.clone(),
                 AseAnimation {
                     animation: Animation::tag("idle"),
-                    aseprite: get_character_sprite(&chosen_character_data.character, &extended_assets, &game_assets),
+                    aseprite: get_character_sprite(
+                        &chosen_character_data.character,
+                        &extended_assets,
+                        &game_assets,
+                    ),
                 },
                 Sprite::default(),
                 Cleanup::<AppState> {

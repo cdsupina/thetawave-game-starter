@@ -1,6 +1,4 @@
-use avian2d::prelude::{
-    AngleLimit, Joint, RevoluteJoint, RigidBody,
-};
+use avian2d::prelude::{AngleLimit, Joint, RevoluteJoint, RigidBody};
 use bevy::{
     asset::Handle,
     ecs::{
@@ -18,7 +16,7 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_behave::prelude::BehaveTree;
-use thetawave_assets::{asset_keys, AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
+use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
 use thetawave_particles::{ParticleEffectType, spawn_particle_effect};
 use thetawave_projectiles::ProjectileType;
 use thetawave_states::{AppState, Cleanup};
@@ -26,8 +24,7 @@ use thetawave_states::{AppState, Cleanup};
 use crate::{
     MobType,
     attributes::{
-        JointedMob, JointsComponent, MobAttributesResource,
-        MobComponentBundle, MobDecorationType,
+        JointedMob, JointsComponent, MobAttributesResource, MobComponentBundle, MobDecorationType,
     },
     behavior::{BehaviorReceiverComponent, MobBehaviorsResource},
 };
@@ -39,30 +36,32 @@ fn get_mob_sprite(
     game_assets: &GameAssets,
 ) -> Handle<Aseprite> {
     let key = match mob_type {
-        MobType::XhitaraGrunt => asset_keys::XHITARA_GRUNT_MOB,
-        MobType::XhitaraSpitter => asset_keys::XHITARA_SPITTER_MOB,
-        MobType::XhitaraGyro => asset_keys::XHITARA_GYRO_MOB,
-        MobType::FreighterOne | MobType::FreighterTwo => asset_keys::FREIGHTER_FRONT_MOB,
-        MobType::FreighterMiddle => asset_keys::FREIGHTER_MIDDLE_MOB,
-        MobType::FreighterBack => asset_keys::FREIGHTER_BACK_MOB,
-        MobType::Trizetheron => asset_keys::TRIZETHERON_MOB,
-        MobType::TrizetheronLeftHead => asset_keys::TRIZETHERON_LEFT_HEAD_MOB,
-        MobType::TrizetheronRightHead => asset_keys::TRIZETHERON_RIGHT_HEAD_MOB,
-        MobType::XhitaraTentacleShort | MobType::XhitaraTentacleLong => asset_keys::XHITARA_TENTACLE_START_MOB,
-        MobType::XhitaraTentacleMiddle => asset_keys::XHITARA_TENTACLE_MIDDLE_MOB,
-        MobType::XhitaraTentacleEnd => asset_keys::XHITARA_TENTACLE_END_MOB,
-        MobType::XhitaraCyclusk => asset_keys::XHITARA_CYCLUSK_MOB,
-        MobType::XhitaraPacer => asset_keys::XHITARA_PACER_MOB,
-        MobType::XhitaraMissile => asset_keys::XHITARA_MISSILE_MOB,
-        MobType::XhitaraLauncher => asset_keys::XHITARA_LAUNCHER_MOB,
-        MobType::Ferritharax => asset_keys::FERRITHARAX_HEAD_MOB,
-        MobType::FerritharaxBody => asset_keys::FERRITHARAX_BODY_MOB,
-        MobType::FerritharaxRightShoulder => asset_keys::FERRITHARAX_RIGHT_SHOULDER_MOB,
-        MobType::FerritharaxLeftShoulder => asset_keys::FERRITHARAX_LEFT_SHOULDER_MOB,
-        MobType::FerritharaxRightClaw => asset_keys::FERRITHARAX_RIGHT_CLAW_MOB,
-        MobType::FerritharaxLeftClaw => asset_keys::FERRITHARAX_LEFT_CLAW_MOB,
-        MobType::FerritharaxLeftArm => asset_keys::FERRITHARAX_LEFT_ARM_MOB,
-        MobType::FerritharaxRightArm => asset_keys::FERRITHARAX_RIGHT_ARM_MOB,
+        MobType::XhitaraGrunt => "xhitara_grunt_mob",
+        MobType::XhitaraSpitter => "xhitara_spitter_mob",
+        MobType::XhitaraGyro => "xhitara_gyro_mob",
+        MobType::FreighterOne | MobType::FreighterTwo => "freighter_front_mob",
+        MobType::FreighterMiddle => "freighter_middle_mob",
+        MobType::FreighterBack => "freighter_back_mob",
+        MobType::Trizetheron => "trizetheron_mob",
+        MobType::TrizetheronLeftHead => "trizetheron_left_head_mob",
+        MobType::TrizetheronRightHead => "trizetheron_right_head_mob",
+        MobType::XhitaraTentacleShort | MobType::XhitaraTentacleLong => {
+            "xhitara_tentacle_start_mob"
+        }
+        MobType::XhitaraTentacleMiddle => "xhitara_tentacle_middle_mob",
+        MobType::XhitaraTentacleEnd => "xhitara_tentacle_end_mob",
+        MobType::XhitaraCyclusk => "xhitara_cyclusk_mob",
+        MobType::XhitaraPacer => "xhitara_pacer_mob",
+        MobType::XhitaraMissile => "xhitara_missile_mob",
+        MobType::XhitaraLauncher => "xhitara_launcher_mob",
+        MobType::Ferritharax => "ferritharax_head_mob",
+        MobType::FerritharaxBody => "ferritharax_body_mob",
+        MobType::FerritharaxRightShoulder => "ferritharax_right_shoulder_mob",
+        MobType::FerritharaxLeftShoulder => "ferritharax_left_shoulder_mob",
+        MobType::FerritharaxRightClaw => "ferritharax_right_claw_mob",
+        MobType::FerritharaxLeftClaw => "ferritharax_left_claw_mob",
+        MobType::FerritharaxLeftArm => "ferritharax_left_arm_mob",
+        MobType::FerritharaxRightArm => "ferritharax_right_arm_mob",
     };
 
     AssetResolver::get_sprite(key, extended_assets, game_assets)
@@ -76,16 +75,20 @@ fn get_mob_decoration_sprite(
     game_assets: &GameAssets,
 ) -> Handle<Aseprite> {
     let key = match decoration_type {
-        MobDecorationType::XhitaraGruntThrusters => asset_keys::XHITARA_GRUNT_THRUSTERS,
-        MobDecorationType::XhitaraSpitterThrusters => asset_keys::XHITARA_SPITTER_THRUSTERS,
-        MobDecorationType::XhitaraPacerThrusters => asset_keys::XHITARA_PACER_THRUSTERS,
-        MobDecorationType::XhitaraMissileThrusters => asset_keys::XHITARA_MISSILE_THRUSTERS,
-        MobDecorationType::FreighterThrusters => asset_keys::FREIGHTER_THRUSTERS,
-        MobDecorationType::XhitaraLauncherThrusters => asset_keys::XHITARA_LAUNCHER_THRUSTERS,
+        MobDecorationType::XhitaraGruntThrusters => "xhitara_grunt_thrusters",
+        MobDecorationType::XhitaraSpitterThrusters => "xhitara_spitter_thrusters",
+        MobDecorationType::XhitaraPacerThrusters => "xhitara_pacer_thrusters",
+        MobDecorationType::XhitaraMissileThrusters => "xhitara_missile_thrusters",
+        MobDecorationType::FreighterThrusters => "freighter_thrusters",
+        MobDecorationType::XhitaraLauncherThrusters => "xhitara_launcher_thrusters",
     };
 
-    AssetResolver::get_sprite(key, extended_assets, game_assets)
-        .unwrap_or_else(|| panic!("Missing decoration sprite asset for type: {:?}", decoration_type))
+    AssetResolver::get_sprite(key, extended_assets, game_assets).unwrap_or_else(|| {
+        panic!(
+            "Missing decoration sprite asset for type: {:?}",
+            decoration_type
+        )
+    })
 }
 
 trait ParticleEffectTypeExt {
@@ -212,7 +215,11 @@ fn spawn_mob(
                     Transform::from_xyz(pos.x, pos.y, 0.0),
                     AseAnimation {
                         animation: Animation::tag("idle"),
-                        aseprite: get_mob_decoration_sprite(decoration_type, extended_assets, game_assets),
+                        aseprite: get_mob_decoration_sprite(
+                            decoration_type,
+                            extended_assets,
+                            game_assets,
+                        ),
                     },
                     Sprite::default(),
                     Name::new("Decoration"),
@@ -339,6 +346,7 @@ fn spawn_mob(
                 &ParticleEffectType::from_projectile_type(&spawner.projectile_type),
                 &spawner.faction,
                 &transform,
+                extended_assets,
                 game_assets,
                 materials,
             );

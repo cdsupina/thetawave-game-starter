@@ -10,7 +10,7 @@ use bevy::{
     transform::components::Transform,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
-use thetawave_assets::{asset_keys, AssetResolver, ExtendedGameAssets, GameAssets};
+use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets};
 use thetawave_core::Faction;
 use thetawave_states::{AppState, Cleanup};
 
@@ -29,19 +29,24 @@ fn get_effect_sprite(
     extended_assets: &ExtendedGameAssets,
     game_assets: &GameAssets,
 ) -> Handle<Aseprite> {
+    // keys are the file stem of the desired asset
     let key = match projectile_type {
         ProjectileType::Bullet => match effect_type {
-            ProjectileEffectType::Despawn => asset_keys::BULLET_PROJECTILE_DESPAWN,
-            ProjectileEffectType::Hit => asset_keys::BULLET_PROJECTILE_HIT,
+            ProjectileEffectType::Despawn => "bullet_projectile_despawn",
+            ProjectileEffectType::Hit => "bullet_projectile_hit",
         },
         ProjectileType::Blast => match effect_type {
-            ProjectileEffectType::Despawn => asset_keys::BLAST_PROJECTILE_DESPAWN,
-            ProjectileEffectType::Hit => asset_keys::BLAST_PROJECTILE_HIT,
+            ProjectileEffectType::Despawn => "blast_projectile_despawn",
+            ProjectileEffectType::Hit => "blast_projectile_hit",
         },
     };
 
-    AssetResolver::get_sprite(key, extended_assets, game_assets)
-        .unwrap_or_else(|| panic!("Missing sprite asset for projectile effect: {:?} {:?}", projectile_type, effect_type))
+    AssetResolver::get_sprite(key, extended_assets, game_assets).unwrap_or_else(|| {
+        panic!(
+            "Missing sprite asset for projectile effect: {:?} {:?}",
+            projectile_type, effect_type
+        )
+    })
 }
 
 pub(crate) fn spawn_effect_system(

@@ -14,7 +14,7 @@ use bevy::{
     transform::components::Transform,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
-use thetawave_assets::{asset_keys, AssetResolver, ExtendedGameAssets, GameAssets};
+use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets};
 use thetawave_core::{CollisionDamage, Faction};
 use thetawave_states::{AppState, Cleanup};
 
@@ -31,12 +31,16 @@ fn get_projectile_sprite(
     game_assets: &GameAssets,
 ) -> Handle<Aseprite> {
     let key = match projectile_type {
-        ProjectileType::Bullet => asset_keys::BULLET_PROJECTILE,
-        ProjectileType::Blast => asset_keys::BLAST_PROJECTILE,
+        ProjectileType::Bullet => "bullet_projectile",
+        ProjectileType::Blast => "blast_projectile",
     };
 
-    AssetResolver::get_sprite(key, extended_assets, game_assets)
-        .unwrap_or_else(|| panic!("Missing sprite asset for projectile type: {:?}", projectile_type))
+    AssetResolver::get_sprite(key, extended_assets, game_assets).unwrap_or_else(|| {
+        panic!(
+            "Missing sprite asset for projectile type: {:?}",
+            projectile_type
+        )
+    })
 }
 
 pub(crate) fn spawn_projectile_system(
