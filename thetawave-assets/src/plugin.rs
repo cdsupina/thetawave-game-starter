@@ -40,6 +40,7 @@ impl Plugin for ThetawaveAssetsPlugin {
                 .load_collection::<UiAssets>()
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>("music.assets.ron")
                 .load_collection::<MusicAssets>()
+                .with_dynamic_assets_file::<StandardDynamicAssetCollection>("background.assets.ron")
                 .load_collection::<BackgroundAssets>(),
         )
         .add_loading_state(
