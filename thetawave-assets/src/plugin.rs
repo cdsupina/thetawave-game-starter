@@ -1,5 +1,5 @@
 use crate::{
-    ExtendedBackgroundAssets,
+    ExtendedBackgroundAssets, ExtendedMusicAssets,
     data::{ExtendedGameAssets, ExtendedUiAssets},
 };
 
@@ -47,6 +47,10 @@ impl Plugin for ThetawaveAssetsPlugin {
                 .load_collection::<ExtendedUiAssets>()
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>("music.assets.ron")
                 .load_collection::<MusicAssets>()
+                .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
+                    "extended/music.assets.ron",
+                )
+                .load_collection::<ExtendedMusicAssets>()
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>("background.assets.ron")
                 .load_collection::<BackgroundAssets>()
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>(

@@ -3,7 +3,9 @@ use bevy::prelude::{EventReader, EventWriter, Res, StateTransitionEvent};
 use bevy_kira_audio::{AudioChannel, AudioControl, AudioTween};
 use bevy_persistent::Persistent;
 use std::time::Duration;
-use thetawave_assets::{AssetResolver, ExtendedUiAssets, MusicAssets, UiAssets};
+use thetawave_assets::{
+    AssetResolver, ExtendedMusicAssets, ExtendedUiAssets, MusicAssets, UiAssets,
+};
 use thetawave_states::AppState;
 
 use super::{
@@ -18,6 +20,7 @@ const AUDIO_FADE: AudioTween = AudioTween::linear(Duration::from_secs(2));
 /// Start a new track of music on the music audio channel
 pub(super) fn start_music_system(
     app_audio_assets: Res<MusicAssets>,
+    extended_music_assets: Res<ExtendedMusicAssets>,
     mut music_trans_events: EventWriter<MusicTransitionEvent>,
     mut state_trans_events: EventReader<StateTransitionEvent<AppState>>,
 ) {
@@ -26,12 +29,20 @@ pub(super) fn start_music_system(
             match entered_state {
                 AppState::MainMenu => {
                     music_trans_events.write(MusicTransitionEvent {
-                        music: app_audio_assets.main_menu_theme.clone(),
+                        music: AssetResolver::get_music(
+                            "main_menu_theme",
+                            &extended_music_assets,
+                            &app_audio_assets,
+                        ),
                     });
                 }
                 AppState::Game => {
                     music_trans_events.write(MusicTransitionEvent {
-                        music: app_audio_assets.game_theme.clone(),
+                        music: AssetResolver::get_music(
+                            "game_theme",
+                            &extended_music_assets,
+                            &app_audio_assets,
+                        ),
                     });
                 }
                 _ => {}

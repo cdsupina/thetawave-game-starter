@@ -188,15 +188,33 @@ impl AssetResolver {
             assets.planets[idx].clone()
         }
     }
+
+    pub fn get_music(
+        key: &str,
+        extended_assets: &ExtendedMusicAssets,
+        assets: &MusicAssets,
+    ) -> Handle<AudioSource> {
+        extended_assets
+            .music
+            .get(key)
+            .or_else(|| assets.music.get(key))
+            .cloned()
+            .unwrap_or_else(|| panic!("Missing music asset for key: {:?}", key))
+    }
 }
 
 /// Audio assets used throughout all states of the app
 #[derive(AssetCollection, Resource)]
 pub struct MusicAssets {
-    #[asset(key = "main_menu_theme")]
-    pub main_menu_theme: Handle<AudioSource>,
-    #[asset(key = "game_theme")]
-    pub game_theme: Handle<AudioSource>,
+    #[asset(key = "music", collection(typed, mapped))]
+    pub music: HashMap<AssetFileStem, Handle<AudioSource>>,
+}
+
+/// Audio assets used throughout all states of the app
+#[derive(AssetCollection, Resource)]
+pub struct ExtendedMusicAssets {
+    #[asset(key = "extended_music", collection(typed, mapped))]
+    pub music: HashMap<AssetFileStem, Handle<AudioSource>>,
 }
 
 // Assets for Bevy ui
