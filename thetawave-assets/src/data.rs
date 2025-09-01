@@ -110,43 +110,31 @@ impl AssetResolver {
 
 /// Audio assets used throughout all states of the app
 #[derive(AssetCollection, Resource)]
-pub struct AppAudioAssets {
-    #[asset(path = "media/audio/music/main_menu_theme.mp3")]
+pub struct MusicAssets {
+    #[asset(key = "main_menu_theme")]
     pub main_menu_theme: Handle<AudioSource>,
-    #[asset(path = "media/audio/music/game_theme.mp3")]
+    #[asset(key = "game_theme")]
     pub game_theme: Handle<AudioSource>,
-    #[asset(
-        paths(
-            "media/audio/effects/button_press_1.wav",
-            "media/audio/effects/button_press_2.wav",
-            "media/audio/effects/button_press_3.wav",
-            "media/audio/effects/button_press_4.wav",
-            "media/audio/effects/button_press_5.wav",
-        ),
-        collection(typed)
-    )]
+}
+
+// Assets for Bevy ui
+#[derive(AssetCollection, Resource)]
+pub struct UiAssets {
+    #[asset(key = "ui_sprites", collection(typed, mapped))]
+    pub sprites: HashMap<AssetFileStem, Handle<Aseprite>>,
+    #[asset(key = "ui_images", collection(typed, mapped))]
+    pub images: HashMap<AssetFileStem, Handle<Image>>,
+    #[asset(key = "ui_fonts", collection(typed, mapped))]
+    pub fonts: HashMap<AssetFileStem, Handle<Font>>,
+    #[asset(key = "ui_button_select_audio", collection(typed))]
     pub menu_button_select_effects: Vec<Handle<AudioSource>>,
-    #[asset(
-        paths(
-            "media/audio/effects/button_release_1.wav",
-            "media/audio/effects/button_release_2.wav",
-            "media/audio/effects/button_release_3.wav",
-        ),
-        collection(typed)
-    )]
+    #[asset(key = "ui_button_release_audio", collection(typed))]
     pub menu_button_release_effects: Vec<Handle<AudioSource>>,
-    #[asset(
-        paths(
-            "media/audio/effects/button_confirm_1.wav",
-            "media/audio/effects/button_confirm_2.wav",
-            "media/audio/effects/button_confirm_3.wav",
-        ),
-        collection(typed)
-    )]
+    #[asset(key = "ui_button_confirm_audio", collection(typed))]
     pub menu_button_confirm_effects: Vec<Handle<AudioSource>>,
 }
 
-impl AppAudioAssets {
+impl UiAssets {
     pub fn get_random_button_press_effect(&self) -> Handle<AudioSource> {
         self.menu_button_select_effects
             [rand::rng().random_range(0..self.menu_button_select_effects.len())]
@@ -164,51 +152,6 @@ impl AppAudioAssets {
             [rand::rng().random_range(0..self.menu_button_confirm_effects.len())]
         .clone()
     }
-}
-
-// Assets for Bevy ui
-#[derive(AssetCollection, Resource)]
-pub struct UiAssets {
-    /*
-    // Animated title logo Aseprite
-    #[asset(path = "media/aseprite/thetawave_logo.aseprite")]
-    pub thetawave_logo_aseprite: Handle<Aseprite>,
-    // Animated menu button Aseprite
-    #[asset(path = "media/aseprite/menu_button.aseprite")]
-    pub menu_button_aseprite: Handle<Aseprite>,
-    // Animated github logo Aseprite
-    #[asset(path = "media/aseprite/bluesky_logo.aseprite")]
-    pub bluesky_logo_aseprite: Handle<Aseprite>,
-    // Animated github logo Aseprite
-    #[asset(path = "media/aseprite/github_logo.aseprite")]
-    pub github_logo_aseprite: Handle<Aseprite>,
-    // Animated arrow button Aseprite
-    #[asset(path = "media/aseprite/arrow_button.aseprite")]
-    pub arrow_button_aseprite: Handle<Aseprite>,
-    #[asset(path = "media/images/ui/captain_character.png")]
-    pub captain_character_image: Handle<Image>,
-    #[asset(path = "media/images/ui/juggernaut_character.png")]
-    pub juggernaut_character_image: Handle<Image>,
-    #[asset(path = "media/images/ui/doomwing_character.png")]
-    pub doomwing_character_image: Handle<Image>,
-    // Aseprite containing standard sized keyboard key sprites
-    #[asset(path = "media/aseprite/standard_keyboard_buttons.aseprite")]
-    pub standard_keyboard_buttons_aseprite: Handle<Aseprite>,
-    // Aseprite containing the return key sprite
-    #[asset(path = "media/aseprite/return_button.aseprite")]
-    pub return_button_aseprite: Handle<Aseprite>,
-    // Aseprite containing xbox letter buttons
-    #[asset(path = "media/aseprite/xbox_letter_buttons.aseprite")]
-    pub xbox_letter_buttons_aseprite: Handle<Aseprite>,
-    #[asset(path = "media/fonts/Dank-Depths.ttf")]
-    pub dank_depths_font: Handle<Font>,
-    */
-    #[asset(key = "ui_sprites", collection(typed, mapped))]
-    pub sprites: HashMap<AssetFileStem, Handle<Aseprite>>,
-    #[asset(key = "ui_images", collection(typed, mapped))]
-    pub images: HashMap<AssetFileStem, Handle<Image>>,
-    #[asset(key = "ui_fonts", collection(typed, mapped))]
-    pub fonts: HashMap<AssetFileStem, Handle<Font>>,
 }
 
 // Assets for background images
