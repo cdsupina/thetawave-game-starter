@@ -25,6 +25,7 @@ use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use bevy_persistent::Persistent;
 use leafwing_input_manager::prelude::{ActionState, InputMap};
+use thetawave_assets::AssetResolver;
 use thetawave_player::{
     CharacterCarouselAction, CharacterType, ChosenCharacterData, ChosenCharactersResource,
     InputType,
@@ -181,18 +182,14 @@ pub(in crate::ui) fn cycle_player_one_carousel_system(
     }
 }
 
-trait UiAssetsExt {
-    fn get_character_image(&self, character_type: &CharacterType) -> Handle<Image>;
-}
+fn get_character_image(character_type: &CharacterType, ui_assets: &UiAssets) -> Handle<Image> {
+    let key = match character_type {
+        CharacterType::Captain => "captain_character",
+        CharacterType::Juggernaut => "juggernaut_character",
+        CharacterType::Doomwing => "doomwing_character",
+    };
 
-impl UiAssetsExt for UiAssets {
-    fn get_character_image(&self, character_type: &CharacterType) -> Handle<Image> {
-        match character_type {
-            CharacterType::Captain => self.captain_character_image.clone(),
-            CharacterType::Juggernaut => self.juggernaut_character_image.clone(),
-            CharacterType::Doomwing => self.doomwing_character_image.clone(),
-        }
-    }
+    AssetResolver::get_ui_image(key, ui_assets)
 }
 
 /// Change shown carousel character images when the character carousel changes from cycle_carousel_system
@@ -213,7 +210,7 @@ pub(in crate::ui) fn update_carousel_ui_system(
 
                 // Set the image of the ui node to the new character
                 if let Some(character_type) = maybe_character_type {
-                    image_node.image = ui_assets.get_character_image(character_type);
+                    image_node.image = get_character_image(character_type, &ui_assets);
                 }
             }
         }
@@ -272,7 +269,7 @@ pub(in crate::ui) fn spawn_carousel_system(
                             ImageNode::default(),
                             AseAnimation {
                                 animation: Animation::tag("idle"),
-                                aseprite: ui_assets.arrow_button_aseprite.clone(),
+                                aseprite: AssetResolver::get_ui_sprite("arrow_button", &ui_assets),
                             },
                             Name::new("Arrow Button Sprite"),
                         ));
@@ -309,8 +306,11 @@ pub(in crate::ui) fn spawn_carousel_system(
                         if let Some(left_character_type) = carousel.get_left_character() {
                             parent.spawn((
                                 VisibleCarouselSlot(CarouselSlotPosition::Left),
-                                ImageNode::new(ui_assets.get_character_image(left_character_type))
-                                    .with_color(Color::default().with_alpha(0.5)),
+                                ImageNode::new(get_character_image(
+                                    left_character_type,
+                                    &ui_assets,
+                                ))
+                                .with_color(Color::default().with_alpha(0.5)),
                                 Node {
                                     width: Val::Percent(30.0),
                                     margin: UiRect::all(Val::Percent(3.0)),
@@ -324,9 +324,10 @@ pub(in crate::ui) fn spawn_carousel_system(
                         if let Some(active_character_type) = carousel.get_active_character() {
                             parent.spawn((
                                 VisibleCarouselSlot(CarouselSlotPosition::Center),
-                                ImageNode::new(
-                                    ui_assets.get_character_image(active_character_type),
-                                ),
+                                ImageNode::new(get_character_image(
+                                    active_character_type,
+                                    &ui_assets,
+                                )),
                                 Node {
                                     width: Val::Percent(40.0),
                                     margin: UiRect::all(Val::Percent(3.0)),
@@ -340,8 +341,11 @@ pub(in crate::ui) fn spawn_carousel_system(
                         if let Some(right_character_type) = carousel.get_right_character() {
                             parent.spawn((
                                 VisibleCarouselSlot(CarouselSlotPosition::Right),
-                                ImageNode::new(ui_assets.get_character_image(right_character_type))
-                                    .with_color(Color::default().with_alpha(0.5)),
+                                ImageNode::new(get_character_image(
+                                    right_character_type,
+                                    &ui_assets,
+                                ))
+                                .with_color(Color::default().with_alpha(0.5)),
                                 Node {
                                     width: Val::Percent(30.0),
                                     margin: UiRect::all(Val::Percent(3.0)),
@@ -370,7 +374,7 @@ pub(in crate::ui) fn spawn_carousel_system(
                             },
                             AseAnimation {
                                 animation: Animation::tag("idle"),
-                                aseprite: ui_assets.arrow_button_aseprite.clone(),
+                                aseprite: AssetResolver::get_ui_sprite("arrow_button", &ui_assets),
                             },
                             ImageNode::default().with_flip_x(),
                             Name::new("Arrow Button Sprite"),

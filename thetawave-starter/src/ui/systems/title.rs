@@ -8,6 +8,7 @@ use bevy::{
 };
 use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
+use thetawave_assets::AssetResolver;
 
 /// Spawn ui for title menu
 pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
@@ -45,7 +46,7 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
                     },
                     AseAnimation {
                         animation: Animation::tag("title").with_speed(1.25),
-                        aseprite: ui_assets.thetawave_logo_aseprite.clone(),
+                        aseprite: AssetResolver::get_ui_sprite("thetawave_logo", &ui_assets),
                     },
                 ));
             });
@@ -102,7 +103,7 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
                     ImageNode::default(),
                     AseAnimation {
                         animation: Animation::tag("released"),
-                        aseprite: ui_assets.bluesky_logo_aseprite.clone(),
+                        aseprite: AssetResolver::get_ui_sprite("bluesky_logo", &ui_assets),
                     },
                     ButtonAction::OpenBlueskyWebsite,
                     Name::new("Bluesky Website Button"),
@@ -120,7 +121,7 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
                     ImageNode::default(),
                     AseAnimation {
                         animation: Animation::tag("released"),
-                        aseprite: ui_assets.github_logo_aseprite.clone(),
+                        aseprite: AssetResolver::get_ui_sprite("github_logo", &ui_assets),
                     },
                     ButtonAction::OpenGithubWebsite,
                     Name::new("Github Website Button"),

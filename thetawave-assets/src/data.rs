@@ -16,18 +16,18 @@ use thetawave_core::Faction;
 /// Assets used in the game state
 #[derive(AssetCollection, Resource)]
 pub struct GameAssets {
-    #[asset(key = "sprites", collection(typed, mapped))]
+    #[asset(key = "game_sprites", collection(typed, mapped))]
     pub sprites: HashMap<AssetFileStem, Handle<Aseprite>>,
-    #[asset(key = "particle_effects", collection(typed, mapped))]
+    #[asset(key = "game_particle_effects", collection(typed, mapped))]
     pub particle_effects: HashMap<AssetFileStem, Handle<Particle2dEffect>>,
 }
 
 /// Additional assets used in the game state that are not built in to thetawave-assets
 #[derive(AssetCollection, Resource, Default, Clone)]
 pub struct ExtendedGameAssets {
-    #[asset(key = "extended_sprites", collection(typed, mapped))]
+    #[asset(key = "extended_game_sprites", collection(typed, mapped))]
     pub sprites: HashMap<AssetFileStem, Handle<Aseprite>>,
-    #[asset(key = "extended_particle_effects", collection(typed, mapped))]
+    #[asset(key = "extended_game_particle_effects", collection(typed, mapped))]
     pub particle_effects: HashMap<AssetFileStem, Handle<Particle2dEffect>>,
 }
 
@@ -56,29 +56,55 @@ pub struct AssetResolver;
 
 impl AssetResolver {
     /// Get an Aseprite handle by key, checking ExtendedGameAssets first, then GameAssets
-    pub fn get_sprite(
+    pub fn get_game_sprite(
         key: &str,
         extended_assets: &ExtendedGameAssets,
         game_assets: &GameAssets,
-    ) -> Option<Handle<Aseprite>> {
+    ) -> Handle<Aseprite> {
         extended_assets
             .sprites
             .get(key)
             .or_else(|| game_assets.sprites.get(key))
             .cloned()
+            .unwrap_or_else(|| panic!("Missing sprite asset for key: {:?}", key))
     }
 
-    /// Get a particle effect handle by key, checking GameAssets
-    pub fn get_particle_effect(
+    /// Get an Particle2DEffect handle by key, checking ExtendedGameAssets first, then GameAssets
+    pub fn get_game_particle_effect(
         key: &str,
         extended_assets: &ExtendedGameAssets,
         game_assets: &GameAssets,
-    ) -> Option<Handle<Particle2dEffect>> {
+    ) -> Handle<Particle2dEffect> {
         extended_assets
             .particle_effects
             .get(key)
             .or_else(|| game_assets.particle_effects.get(key))
             .cloned()
+            .unwrap_or_else(|| panic!("Missing particle asset for key: {:?}", key))
+    }
+
+    pub fn get_ui_image(key: &str, ui_assets: &UiAssets) -> Handle<Image> {
+        ui_assets
+            .images
+            .get(key)
+            .cloned()
+            .unwrap_or_else(|| panic!("Missing image asset for key: {:?}", key))
+    }
+
+    pub fn get_ui_sprite(key: &str, ui_assets: &UiAssets) -> Handle<Aseprite> {
+        ui_assets
+            .sprites
+            .get(key)
+            .cloned()
+            .unwrap_or_else(|| panic!("Missing sprite asset for key: {:?}", key))
+    }
+
+    pub fn get_ui_font(key: &str, ui_assets: &UiAssets) -> Handle<Font> {
+        ui_assets
+            .fonts
+            .get(key)
+            .cloned()
+            .unwrap_or_else(|| panic!("Missing font asset for key: {:?}", key))
     }
 }
 
@@ -143,6 +169,7 @@ impl AppAudioAssets {
 // Assets for Bevy ui
 #[derive(AssetCollection, Resource)]
 pub struct UiAssets {
+    /*
     // Animated title logo Aseprite
     #[asset(path = "media/aseprite/thetawave_logo.aseprite")]
     pub thetawave_logo_aseprite: Handle<Aseprite>,
@@ -175,6 +202,13 @@ pub struct UiAssets {
     pub xbox_letter_buttons_aseprite: Handle<Aseprite>,
     #[asset(path = "media/fonts/Dank-Depths.ttf")]
     pub dank_depths_font: Handle<Font>,
+    */
+    #[asset(key = "ui_sprites", collection(typed, mapped))]
+    pub sprites: HashMap<AssetFileStem, Handle<Aseprite>>,
+    #[asset(key = "ui_images", collection(typed, mapped))]
+    pub images: HashMap<AssetFileStem, Handle<Image>>,
+    #[asset(key = "ui_fonts", collection(typed, mapped))]
+    pub fonts: HashMap<AssetFileStem, Handle<Font>>,
 }
 
 // Assets for background images

@@ -12,7 +12,7 @@ use bevy::{
 use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use strum::IntoEnumIterator;
-use thetawave_assets::UiAssets;
+use thetawave_assets::{AssetResolver, UiAssets};
 use thetawave_player::{CharacterType, InputType, PlayerNum};
 use thetawave_states::{AppState, GameState, MainMenuState, PauseMenuState};
 
@@ -285,7 +285,7 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
             parent.spawn((
                 AseAnimation {
                     animation: Animation::tag("key_return"),
-                    aseprite: ui_assets.return_button_aseprite.clone(),
+                    aseprite: AssetResolver::get_ui_sprite("return_button", &ui_assets),
                 },
                 Node {
                     margin: UiRect::all(Val::Px(10.0)),
@@ -296,7 +296,7 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
             parent.spawn((
                 AseAnimation {
                     animation: Animation::tag("a"),
-                    aseprite: ui_assets.xbox_letter_buttons_aseprite.clone(),
+                    aseprite: AssetResolver::get_ui_sprite("xbox_letter_buttons", &ui_assets),
                 },
                 Node {
                     margin: UiRect::all(Val::Px(10.0)),
@@ -407,7 +407,7 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
                             } else {
                                 "released"
                             }),
-                            aseprite: ui_assets.menu_button_aseprite.clone(),
+                            aseprite: AssetResolver::get_ui_sprite("menu_button", &ui_assets),
                         },
                     ))
                     .with_children(|parent| {
@@ -425,8 +425,9 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
                                 if let Some(button_text) = button_action.to_string() {
                                     parent.spawn((
                                         Text::new(button_text),
-                                        TextFont::from_font_size(20.0)
-                                            .with_font(ui_assets.dank_depths_font.clone()),
+                                        TextFont::from_font_size(20.0).with_font(
+                                            AssetResolver::get_ui_font("Dank-Depths", &ui_assets),
+                                        ),
                                     ));
                                 }
                             });

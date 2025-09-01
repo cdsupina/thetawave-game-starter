@@ -8,7 +8,6 @@ use bevy::{
         name::Name,
         system::{Commands, Res},
     },
-    log::info,
     math::{Quat, Vec2},
     sprite::Sprite,
     transform::components::Transform,
@@ -35,12 +34,7 @@ fn get_projectile_sprite(
         ProjectileType::Blast => "blast_projectile",
     };
 
-    AssetResolver::get_sprite(key, extended_assets, game_assets).unwrap_or_else(|| {
-        panic!(
-            "Missing sprite asset for projectile type: {:?}",
-            projectile_type
-        )
-    })
+    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
 }
 
 pub(crate) fn spawn_projectile_system(
@@ -80,12 +74,6 @@ fn spawn_projectile(
     extended_assets: &ExtendedGameAssets,
     attributes_res: &ProjectileAttributesResource,
 ) -> Result<Entity, BevyError> {
-    info!(
-        "Spawning Projectile: {:?} at {}",
-        projectile_type,
-        position.to_string()
-    );
-
     // Look up the projectiles's configuration data from resources
     let projectile_attributes = attributes_res
         .attributes

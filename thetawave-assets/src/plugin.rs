@@ -36,6 +36,7 @@ impl Plugin for ThetawaveAssetsPlugin {
         .add_event::<LoadingProgressEvent>()
         .add_loading_state(
             LoadingState::new(AppState::MainMenuLoading)
+                .with_dynamic_assets_file::<StandardDynamicAssetCollection>("ui.assets.ron")
                 .load_collection::<UiAssets>()
                 .load_collection::<BackgroundAssets>()
                 .load_collection::<AppAudioAssets>(),
@@ -43,10 +44,10 @@ impl Plugin for ThetawaveAssetsPlugin {
         .add_loading_state(
             LoadingState::new(AppState::GameLoading)
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>("game.assets.ron")
+                .load_collection::<GameAssets>()
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
                     "extended/game.assets.ron",
                 )
-                .load_collection::<GameAssets>()
                 .load_collection::<ExtendedGameAssets>(),
         )
         .add_systems(

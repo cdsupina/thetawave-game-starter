@@ -24,8 +24,7 @@ fn get_particle_effect(
         ParticleEffectType::SpawnBullet => "spawn_bullet",
     };
 
-    AssetResolver::get_particle_effect(key, extended_game_assets, game_assets)
-        .unwrap_or_else(|| panic!("Missing particle effect asset for type: {:?}", effect_type))
+    AssetResolver::get_game_particle_effect(key, extended_game_assets, game_assets)
 }
 
 pub fn spawn_particle_effect(

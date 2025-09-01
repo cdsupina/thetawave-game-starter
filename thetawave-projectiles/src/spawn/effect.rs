@@ -41,12 +41,7 @@ fn get_effect_sprite(
         },
     };
 
-    AssetResolver::get_sprite(key, extended_assets, game_assets).unwrap_or_else(|| {
-        panic!(
-            "Missing sprite asset for projectile effect: {:?} {:?}",
-            projectile_type, effect_type
-        )
-    })
+    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
 }
 
 pub(crate) fn spawn_effect_system(

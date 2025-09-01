@@ -1,6 +1,6 @@
 use crate::ui::{
-    data::{ButtonAction, UiChildBuilderExt},
     GameEndResultResource,
+    data::{ButtonAction, UiChildBuilderExt},
 };
 use bevy::{
     color::Color,
@@ -8,12 +8,12 @@ use bevy::{
     prelude::Name,
     text::TextFont,
     ui::{
-        widget::Text, AlignItems, BackgroundColor, Display, FlexDirection, JustifyContent, Node,
-        UiRect, Val,
+        AlignItems, BackgroundColor, Display, FlexDirection, JustifyContent, Node, UiRect, Val,
+        widget::Text,
     },
     utils::default,
 };
-use thetawave_assets::UiAssets;
+use thetawave_assets::{AssetResolver, UiAssets};
 use thetawave_states::{AppState, Cleanup, GameState};
 
 /// Spawns the game over/victory ui
@@ -63,7 +63,7 @@ pub(in crate::ui) fn spawn_game_end_system(
                         parent.spawn((
                             Text::new(game_end_result_res.result.clone()),
                             TextFont::from_font_size(150.0)
-                                .with_font(ui_assets.dank_depths_font.clone()),
+                                .with_font(AssetResolver::get_ui_font("Dank-Depths", &ui_assets)),
                         ));
                     });
 

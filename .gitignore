@@ -17,7 +17,7 @@ Cargo.lock
 assets/media/
 assets/data/
 assets/extended/
-assets/game.assets.ron
+assets/*.assets.ron
 
 # Ignore environment files with credentials
 scripts/pcloud/.env

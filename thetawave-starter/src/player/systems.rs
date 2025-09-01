@@ -33,12 +33,7 @@ fn get_character_sprite(
         CharacterType::Doomwing => "doomwing_character",
     };
 
-    AssetResolver::get_sprite(key, extended_assets, game_assets).unwrap_or_else(|| {
-        panic!(
-            "Missing sprite asset for character type: {:?}",
-            character_type
-        )
-    })
+    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
 }
 
 /// Spawn a player controlled entity

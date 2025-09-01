@@ -64,8 +64,7 @@ fn get_mob_sprite(
         MobType::FerritharaxRightArm => "ferritharax_right_arm_mob",
     };
 
-    AssetResolver::get_sprite(key, extended_assets, game_assets)
-        .unwrap_or_else(|| panic!("Missing sprite asset for mob type: {:?}", mob_type))
+    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
 }
 
 /// Get the Aseprite handle from a given MobDecorationType using asset resolver
@@ -83,12 +82,7 @@ fn get_mob_decoration_sprite(
         MobDecorationType::XhitaraLauncherThrusters => "xhitara_launcher_thrusters",
     };
 
-    AssetResolver::get_sprite(key, extended_assets, game_assets).unwrap_or_else(|| {
-        panic!(
-            "Missing decoration sprite asset for type: {:?}",
-            decoration_type
-        )
-    })
+    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
 }
 
 trait ParticleEffectTypeExt {
