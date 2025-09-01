@@ -162,6 +162,32 @@ impl AssetResolver {
             assets.menu_button_confirm_effects[idx].clone()
         }
     }
+
+    pub fn get_random_space_bg(
+        extended_assets: &ExtendedBackgroundAssets,
+        assets: &BackgroundAssets,
+    ) -> Handle<Image> {
+        if !extended_assets.space_backgrounds.is_empty() {
+            let idx = rand::rng().random_range(0..extended_assets.space_backgrounds.len());
+            extended_assets.space_backgrounds[idx].clone()
+        } else {
+            let idx = rand::rng().random_range(0..assets.space_backgrounds.len());
+            assets.space_backgrounds[idx].clone()
+        }
+    }
+
+    pub fn get_random_planet(
+        extended_assets: &ExtendedBackgroundAssets,
+        assets: &BackgroundAssets,
+    ) -> Handle<Scene> {
+        if !extended_assets.planets.is_empty() {
+            let idx = rand::rng().random_range(0..extended_assets.planets.len());
+            extended_assets.planets[idx].clone()
+        } else {
+            let idx = rand::rng().random_range(0..assets.planets.len());
+            assets.planets[idx].clone()
+        }
+    }
 }
 
 /// Audio assets used throughout all states of the app
@@ -217,14 +243,15 @@ pub struct BackgroundAssets {
     pub planets: Vec<Handle<Scene>>,
 }
 
-impl BackgroundAssets {
-    pub fn get_random_space_bg(&self) -> Handle<Image> {
-        self.space_backgrounds[rand::rng().random_range(0..self.space_backgrounds.len())].clone()
-    }
-
-    pub fn get_random_planet(&self) -> Handle<Scene> {
-        self.planets[rand::rng().random_range(0..self.planets.len())].clone()
-    }
+// Assets for background images
+#[derive(AssetCollection, Resource)]
+pub struct ExtendedBackgroundAssets {
+    // all space backgrounds
+    #[asset(key = "extended_space_backgrounds", collection(typed))]
+    pub space_backgrounds: Vec<Handle<Image>>,
+    // all planets
+    #[asset(key = "extended_planets", collection(typed))]
+    pub planets: Vec<Handle<Scene>>,
 }
 
 /// Event for sending percentage of loading progress
