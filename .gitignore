@@ -30,3 +30,6 @@ scripts/pcloud/venv/
 
 # Ignore editor files
 .zed/
+
+# Ignore Claude Code local settings
+.claude/
