@@ -16,7 +16,7 @@ use thetawave_player::PlayerStats;
 use thetawave_projectiles::SpawnProjectileEvent;
 
 use crate::{
-    MobType,
+    MobMarker,
     attributes::{
         JointsComponent, MobAttributesComponent, MobSpawnerComponent, ProjectileSpawnerComponent,
     },
@@ -54,7 +54,7 @@ pub(super) fn transmit_system(
 pub(super) fn receive_system(
     mut transmit_event_reader: EventReader<TransmitBehaviorEvent>,
     mut mob_q: Query<(
-        &MobType,
+        &MobMarker,
         &BehaviorReceiverComponent,
         &MobAttributesComponent,
         &mut LinearVelocity,
@@ -62,7 +62,7 @@ pub(super) fn receive_system(
 ) {
     for event in transmit_event_reader.read() {
         for (mob_type, behavior_recv, mob_attr, mut lin_vel) in mob_q.iter_mut() {
-            if *mob_type == event.mob_type && behavior_recv.0 == event.source_entity {
+            if mob_type.mob_type == event.mob_type && behavior_recv.0 == event.source_entity {
                 for behavior in event.behaviors.iter() {
                     match behavior {
                         MobBehaviorType::MoveDown => apply_move_down(&mut lin_vel, mob_attr),

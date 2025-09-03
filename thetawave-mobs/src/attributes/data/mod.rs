@@ -9,7 +9,6 @@ use bevy::{
     reflect::Reflect,
 };
 use serde::Deserialize;
-use strum_macros::EnumIter;
 use thetawave_core::HealthComponent;
 use thetawave_physics::{ColliderShape, ThetawaveCollider, ThetawavePhysicsLayer};
 
@@ -48,35 +47,18 @@ const DEFAULT_PROJECTILE_DAMAGE: u32 = 5;
 const DEFAULT_HEALTH: u32 = 50;
 const DEFAULT_RANGE_SECONDS: f32 = 1.0;
 
-/// Identifiers for mobs, mainly used for spawning
-#[derive(Deserialize, Debug, Eq, PartialEq, Hash, EnumIter, Clone, Component, Reflect)]
-pub enum MobType {
-    XhitaraGrunt,
-    XhitaraSpitter,
-    XhitaraGyro,
-    FreighterOne,
-    FreighterTwo,
-    FreighterMiddle,
-    FreighterBack,
-    XhitaraCyclusk,
-    Trizetheron,
-    TrizetheronLeftHead,
-    TrizetheronRightHead,
-    XhitaraTentacleShort,
-    XhitaraTentacleLong,
-    XhitaraTentacleMiddle,
-    XhitaraTentacleEnd,
-    XhitaraPacer,
-    XhitaraMissile,
-    XhitaraLauncher,
-    Ferritharax,
-    FerritharaxBody,
-    FerritharaxLeftShoulder,
-    FerritharaxRightShoulder,
-    FerritharaxLeftClaw,
-    FerritharaxRightClaw,
-    FerritharaxLeftArm,
-    FerritharaxRightArm,
+/// Marker component for identifying mob entities in queries
+#[derive(Component, Reflect, Debug, Clone)]
+pub struct MobMarker {
+    pub mob_type: String,
+}
+
+impl MobMarker {
+    pub fn new(mob_type: impl Into<String>) -> Self {
+        Self {
+            mob_type: mob_type.into(),
+        }
+    }
 }
 
 /// Mob attributes not directly used to make any other componnents
@@ -99,7 +81,6 @@ pub(crate) struct MobAttributesComponent {
 #[derive(Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct MobAttributes {
-    pub sprite_stem: String,
     #[serde(default = "default_colliders")]
     colliders: Vec<ThetawaveCollider>,
     name: String,
@@ -224,11 +205,11 @@ fn default_range_seconds() -> f32 {
 }
 
 /// Resource for storing data for all mobs
-/// Used mainly for spawning mobs with a given MobType
+/// Used mainly for spawning mobs with a given mob type string
 #[derive(Deserialize, Debug, Resource)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct MobAttributesResource {
-    pub attributes: HashMap<MobType, MobAttributes>,
+    pub attributes: HashMap<String, MobAttributes>,
 }
 
 /// Bundle containing all the core components needed for a mob entity

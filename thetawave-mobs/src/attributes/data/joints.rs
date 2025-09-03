@@ -6,7 +6,6 @@ use bevy::{
 };
 use serde::Deserialize;
 
-use crate::MobType;
 
 /// Describes an Avian2D angle limit for a joint
 #[derive(Deserialize, Debug, Clone)]
@@ -39,7 +38,7 @@ pub(crate) struct MobChain {
 #[serde(deny_unknown_fields)]
 pub(crate) struct JointedMob {
     pub key: String,
-    pub mob_type: MobType,
+    pub mob_type: String,
     #[serde(default)]
     pub offset_pos: Vec2,
     #[serde(default)]

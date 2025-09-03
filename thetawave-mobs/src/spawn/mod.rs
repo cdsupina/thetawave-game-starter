@@ -22,7 +22,7 @@ use thetawave_projectiles::ProjectileType;
 use thetawave_states::{AppState, Cleanup};
 
 use crate::{
-    MobType,
+    MobMarker,
     attributes::{JointedMob, JointsComponent, MobAttributesResource, MobComponentBundle},
     behavior::{BehaviorReceiverComponent, MobBehaviorsResource},
 };
@@ -60,7 +60,7 @@ impl Default for MobDebugSettings {
 /// Event for spawning mobs using a mob type and position
 #[derive(Event, Debug)]
 pub struct SpawnMobEvent {
-    pub mob_type: MobType,
+    pub mob_type: String,
     pub position: Vec2,
     pub rotation: f32,
 }
@@ -101,7 +101,7 @@ pub(super) fn spawn_mob_system(
 /// Spawns a mob entity with all its components, decorations, and jointed sub-mobs
 fn spawn_mob(
     cmds: &mut Commands,
-    mob_type: &MobType,
+    mob_type: &str,
     position: Vec2,
     rotation: f32,
     mob_debug_settings: &MobDebugSettings,
@@ -121,11 +121,11 @@ fn spawn_mob(
     // Spawn the main anchor entity with all core components
     let mut entity_commands = cmds.spawn((
         MobComponentBundle::from(mob_attributes),
-        mob_type.clone(),
+        MobMarker::new(mob_type),
         AseAnimation {
             animation: Animation::tag("idle"),
             aseprite: AssetResolver::get_game_sprite(
-                &mob_attributes.sprite_stem,
+                mob_type,
                 extended_assets,
                 game_assets,
             )?,
