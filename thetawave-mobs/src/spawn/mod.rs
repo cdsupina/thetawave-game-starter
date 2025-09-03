@@ -26,7 +26,6 @@ use crate::{
     attributes::{JointedMob, JointsComponent, MobAttributesResource, MobComponentBundle},
     behavior::{BehaviorReceiverComponent, MobBehaviorsResource},
 };
-
 trait ParticleEffectTypeExt {
     fn from_projectile_type(projectile_type: &ProjectileType) -> ParticleEffectType;
 }
@@ -128,7 +127,7 @@ fn spawn_mob(
                 mob_type,
                 extended_assets,
                 game_assets,
-            )?,
+            ).expect(&format!("Failed to load mob sprite: {}", mob_type)),
         },
         Sprite::default(),
         Cleanup::<AppState> {
