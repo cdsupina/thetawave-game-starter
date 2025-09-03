@@ -23,7 +23,7 @@ pub(super) fn start_music_system(
     extended_music_assets: Res<ExtendedMusicAssets>,
     mut music_trans_events: EventWriter<MusicTransitionEvent>,
     mut state_trans_events: EventReader<StateTransitionEvent<AppState>>,
-) {
+) -> bevy::ecs::error::Result {
     for event in state_trans_events.read() {
         if let Some(entered_state) = event.entered {
             match entered_state {
@@ -33,7 +33,7 @@ pub(super) fn start_music_system(
                             "main_menu_theme",
                             &extended_music_assets,
                             &app_audio_assets,
-                        ),
+                        )?,
                     });
                 }
                 AppState::Game => {
@@ -42,13 +42,14 @@ pub(super) fn start_music_system(
                             "game_theme",
                             &extended_music_assets,
                             &app_audio_assets,
-                        ),
+                        )?,
                     });
                 }
                 _ => {}
             }
         }
     }
+    Ok(())
 }
 
 /// System for playing audio effects, listens for AudioEffectEvents
@@ -58,7 +59,7 @@ pub(super) fn play_effect_system(
     mut effect_events: EventReader<AudioEffectEvent>,
     ui_audio_channel: Res<AudioChannel<UiAudioChannel>>,
     options_res: Res<Persistent<OptionsRes>>,
-) {
+) -> bevy::ecs::error::Result {
     if !effect_events.is_empty() {
         // volume for ui event channel
         let ui_volume = options_res.master_volume * options_res.ui_volume;
@@ -71,7 +72,7 @@ pub(super) fn play_effect_system(
                         .play(AssetResolver::get_random_button_press_effect(
                             &extended_ui_assets,
                             &ui_assets,
-                        ))
+                        )?)
                         .with_volume(ui_volume);
                 }
                 AudioEffectEvent::MenuButtonReleased => {
@@ -79,7 +80,7 @@ pub(super) fn play_effect_system(
                         .play(AssetResolver::get_random_button_release_effect(
                             &extended_ui_assets,
                             &ui_assets,
-                        ))
+                        )?)
                         .with_volume(ui_volume);
                 }
                 AudioEffectEvent::MenuButtonConfirm => {
@@ -87,12 +88,13 @@ pub(super) fn play_effect_system(
                         .play(AssetResolver::get_random_button_confirm_effect(
                             &extended_ui_assets,
                             &ui_assets,
-                        ))
+                        )?)
                         .with_volume(ui_volume);
                 }
             }
         }
     }
+    Ok(())
 }
 
 /// Start transition between audio tracks on the music audio channel

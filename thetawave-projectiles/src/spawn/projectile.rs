@@ -13,7 +13,7 @@ use bevy::{
     transform::components::Transform,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
-use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets};
+use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
 use thetawave_core::{CollisionDamage, Faction};
 use thetawave_states::{AppState, Cleanup};
 
@@ -28,7 +28,7 @@ fn get_projectile_sprite(
     projectile_type: &ProjectileType,
     extended_assets: &ExtendedGameAssets,
     game_assets: &GameAssets,
-) -> Handle<Aseprite> {
+) -> Result<Handle<Aseprite>, AssetError> {
     let key = match projectile_type {
         ProjectileType::Bullet => "bullet_projectile",
         ProjectileType::Blast => "blast_projectile",
@@ -94,7 +94,7 @@ fn spawn_projectile(
         Collider::from(projectile_attributes),
         AseAnimation {
             animation: Animation::tag("idle"),
-            aseprite: get_projectile_sprite(projectile_type, extended_assets, game_assets),
+            aseprite: get_projectile_sprite(projectile_type, extended_assets, game_assets)?,
         },
         RigidBody::Dynamic,
         Cleanup::<AppState> {

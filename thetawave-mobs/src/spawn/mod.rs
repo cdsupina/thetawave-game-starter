@@ -8,6 +8,7 @@ use bevy::{
         resource::Resource,
         system::{Commands, Res},
     },
+    log::warn,
     math::{Quat, Vec2},
     platform::collections::HashMap,
     prelude::Name,
@@ -16,7 +17,7 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_behave::prelude::BehaveTree;
-use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
+use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
 use thetawave_particles::{ParticleEffectType, spawn_particle_effect};
 use thetawave_projectiles::ProjectileType;
 use thetawave_states::{AppState, Cleanup};
@@ -34,7 +35,7 @@ fn get_mob_sprite(
     mob_type: &MobType,
     extended_assets: &ExtendedGameAssets,
     game_assets: &GameAssets,
-) -> Handle<Aseprite> {
+) -> Result<Handle<Aseprite>, AssetError> {
     let key = match mob_type {
         MobType::XhitaraGrunt => "xhitara_grunt_mob",
         MobType::XhitaraSpitter => "xhitara_spitter_mob",
@@ -72,7 +73,7 @@ fn get_mob_decoration_sprite(
     decoration_type: &MobDecorationType,
     extended_assets: &ExtendedGameAssets,
     game_assets: &GameAssets,
-) -> Handle<Aseprite> {
+) -> Result<Handle<Aseprite>, AssetError> {
     let key = match decoration_type {
         MobDecorationType::XhitaraGruntThrusters => "xhitara_grunt_thrusters",
         MobDecorationType::XhitaraSpitterThrusters => "xhitara_spitter_thrusters",
@@ -182,7 +183,7 @@ fn spawn_mob(
         mob_type.clone(),
         AseAnimation {
             animation: Animation::tag("idle"),
-            aseprite: get_mob_sprite(mob_type, extended_assets, game_assets),
+            aseprite: get_mob_sprite(mob_type, extended_assets, game_assets)?,
         },
         Sprite::default(),
         Cleanup::<AppState> {
@@ -209,11 +210,17 @@ fn spawn_mob(
                     Transform::from_xyz(pos.x, pos.y, 0.0),
                     AseAnimation {
                         animation: Animation::tag("idle"),
-                        aseprite: get_mob_decoration_sprite(
+                        aseprite: match get_mob_decoration_sprite(
                             decoration_type,
                             extended_assets,
                             game_assets,
-                        ),
+                        ) {
+                            Ok(handle) => handle,
+                            Err(e) => {
+                                warn!("Failed to load decoration sprite, skipping decoration: {}", e);
+                                continue;
+                            }
+                        },
                     },
                     Sprite::default(),
                     Name::new("Decoration"),
@@ -345,7 +352,7 @@ fn spawn_mob(
                 materials,
             );
 
-            spawner.spawn_effect_entity = Some(particle_entity);
+            spawner.spawn_effect_entity = particle_entity;
         }
 
         // Update the entity with the modified projectile spawners

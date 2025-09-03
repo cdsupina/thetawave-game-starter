@@ -2,6 +2,7 @@ use super::data::PlanetRotationComponent;
 use bevy::{
     asset::Assets,
     color::{Alpha, Color},
+    ecs::error::Result,
     math::Vec3,
     pbr::{MeshMaterial3d, PointLight, StandardMaterial},
     prelude::{
@@ -56,14 +57,13 @@ pub(super) fn spawn_bg_system(
     bg_assets: Res<BackgroundAssets>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-) {
+) -> Result {
     // Create a semi-transparent material with a random space background texture
     // that will serve as the backdrop
+    let background_texture = AssetResolver::get_random_space_bg(&extended_bg_assets, &bg_assets)?;
+
     let material_handle = materials.add(StandardMaterial {
-        base_color_texture: Some(AssetResolver::get_random_space_bg(
-            &extended_bg_assets,
-            &bg_assets,
-        )),
+        base_color_texture: Some(background_texture),
         unlit: true,
         alpha_mode: AlphaMode::Blend,
         base_color: Color::default().with_alpha(BACKGROUND_ALPHA),
@@ -101,11 +101,10 @@ pub(super) fn spawn_bg_system(
     };
 
     // Spawn a random planet model with rotation behavior
+    let planet_scene = AssetResolver::get_random_planet(&extended_bg_assets, &bg_assets)?;
+
     cmds.spawn((
-        SceneRoot(AssetResolver::get_random_planet(
-            &extended_bg_assets,
-            &bg_assets,
-        )),
+        SceneRoot(planet_scene),
         Transform::default().with_translation(Vec3::new(
             planet_x,
             planet_y,
@@ -174,6 +173,8 @@ pub(super) fn spawn_bg_system(
             );
         }
     });
+
+    Ok(())
 }
 
 /// Helper function to spawn an individual star with random properties

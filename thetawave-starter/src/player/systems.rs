@@ -12,7 +12,7 @@ use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_persistent::Persistent;
 use leafwing_abilities::AbilitiesBundle;
 use leafwing_input_manager::prelude::InputMap;
-use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets};
+use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
 use thetawave_core::HealthComponent;
 use thetawave_physics::ThetawavePhysicsLayer;
 use thetawave_player::{
@@ -26,7 +26,7 @@ fn get_character_sprite(
     character_type: &CharacterType,
     extended_assets: &ExtendedGameAssets,
     game_assets: &GameAssets,
-) -> Handle<Aseprite> {
+) -> Result<Handle<Aseprite>, AssetError> {
     let key = match character_type {
         CharacterType::Captain => "captain_character",
         CharacterType::Juggernaut => "juggernaut_character",
@@ -44,7 +44,7 @@ pub(super) fn spawn_players_system(
     options_res: Res<Persistent<OptionsRes>>,
     characters_res: Res<CharactersResource>,
     chosen_characters_res: Res<ChosenCharactersResource>,
-) {
+) -> bevy::ecs::error::Result {
     // Iterate through all of the chosen characters
     for (player_num, chosen_character_data) in chosen_characters_res.players.iter() {
         // Spawn a player using the CharacterData from the character type
@@ -60,7 +60,7 @@ pub(super) fn spawn_players_system(
                         &chosen_character_data.character,
                         &extended_assets,
                         &game_assets,
-                    ),
+                    )?,
                 },
                 Sprite::default(),
                 Cleanup::<AppState> {
@@ -114,4 +114,5 @@ pub(super) fn spawn_players_system(
             entity_cmds.insert(HealthComponent::new(character_data.health));
         }
     }
+    Ok(())
 }

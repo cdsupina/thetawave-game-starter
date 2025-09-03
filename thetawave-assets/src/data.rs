@@ -13,6 +13,8 @@ use bevy_kira_audio::AudioSource;
 use rand::Rng;
 use thetawave_core::Faction;
 
+use crate::AssetError;
+
 /// Assets used in the game state
 #[derive(AssetCollection, Resource)]
 pub struct GameAssets {
@@ -60,13 +62,13 @@ impl AssetResolver {
         key: &str,
         extended_assets: &ExtendedGameAssets,
         assets: &GameAssets,
-    ) -> Handle<Aseprite> {
+    ) -> Result<Handle<Aseprite>, AssetError> {
         extended_assets
             .sprites
             .get(key)
             .or_else(|| assets.sprites.get(key))
             .cloned()
-            .unwrap_or_else(|| panic!("Missing sprite asset for key: {:?}", key))
+            .ok_or_else(|| AssetError::NotFound(key.to_string()))
     }
 
     /// Get an Particle2DEffect handle by key, checking ExtendedGameAssets first, then GameAssets
@@ -74,118 +76,136 @@ impl AssetResolver {
         key: &str,
         extended_assets: &ExtendedGameAssets,
         assets: &GameAssets,
-    ) -> Handle<Particle2dEffect> {
+    ) -> Result<Handle<Particle2dEffect>, AssetError> {
         extended_assets
             .particle_effects
             .get(key)
             .or_else(|| assets.particle_effects.get(key))
             .cloned()
-            .unwrap_or_else(|| panic!("Missing particle asset for key: {:?}", key))
+            .ok_or_else(|| AssetError::NotFound(key.to_string()))
     }
 
     pub fn get_ui_image(
         key: &str,
         extended_assets: &ExtendedUiAssets,
         assets: &UiAssets,
-    ) -> Handle<Image> {
+    ) -> Result<Handle<Image>, AssetError> {
         extended_assets
             .images
             .get(key)
             .or_else(|| assets.images.get(key))
             .cloned()
-            .unwrap_or_else(|| panic!("Missing image asset for key: {:?}", key))
+            .ok_or_else(|| AssetError::NotFound(key.to_string()))
     }
 
     pub fn get_ui_sprite(
         key: &str,
         extended_assets: &ExtendedUiAssets,
         assets: &UiAssets,
-    ) -> Handle<Aseprite> {
+    ) -> Result<Handle<Aseprite>, AssetError> {
         extended_assets
             .sprites
             .get(key)
             .or_else(|| assets.sprites.get(key))
             .cloned()
-            .unwrap_or_else(|| panic!("Missing sprite asset for key: {:?}", key))
+            .ok_or_else(|| AssetError::NotFound(key.to_string()))
     }
 
     pub fn get_ui_font(
         key: &str,
         extended_assets: &ExtendedUiAssets,
         assets: &UiAssets,
-    ) -> Handle<Font> {
+    ) -> Result<Handle<Font>, AssetError> {
         extended_assets
             .fonts
             .get(key)
             .or_else(|| assets.fonts.get(key))
             .cloned()
-            .unwrap_or_else(|| panic!("Missing font asset for key: {:?}", key))
+            .ok_or_else(|| AssetError::NotFound(key.to_string()))
     }
 
     pub fn get_random_button_press_effect(
         extended_assets: &ExtendedUiAssets,
         assets: &UiAssets,
-    ) -> Handle<AudioSource> {
+    ) -> Result<Handle<AudioSource>, AssetError> {
         if !extended_assets.menu_button_select_effects.is_empty() {
             let idx = rand::rng().random_range(0..extended_assets.menu_button_select_effects.len());
-            extended_assets.menu_button_select_effects[idx].clone()
-        } else {
+            Ok(extended_assets.menu_button_select_effects[idx].clone())
+        } else if !assets.menu_button_select_effects.is_empty() {
             let idx = rand::rng().random_range(0..assets.menu_button_select_effects.len());
-            assets.menu_button_select_effects[idx].clone()
+            Ok(assets.menu_button_select_effects[idx].clone())
+        } else {
+            Err(AssetError::EmptyCollections(
+                "button press effects".to_string(),
+            ))
         }
     }
 
     pub fn get_random_button_release_effect(
         extended_assets: &ExtendedUiAssets,
         assets: &UiAssets,
-    ) -> Handle<AudioSource> {
+    ) -> Result<Handle<AudioSource>, AssetError> {
         if !extended_assets.menu_button_release_effects.is_empty() {
             let idx =
                 rand::rng().random_range(0..extended_assets.menu_button_release_effects.len());
-            extended_assets.menu_button_release_effects[idx].clone()
-        } else {
+            Ok(extended_assets.menu_button_release_effects[idx].clone())
+        } else if !assets.menu_button_release_effects.is_empty() {
             let idx = rand::rng().random_range(0..assets.menu_button_release_effects.len());
-            assets.menu_button_release_effects[idx].clone()
+            Ok(assets.menu_button_release_effects[idx].clone())
+        } else {
+            Err(AssetError::EmptyCollections(
+                "button release effects".to_string(),
+            ))
         }
     }
 
     pub fn get_random_button_confirm_effect(
         extended_assets: &ExtendedUiAssets,
         assets: &UiAssets,
-    ) -> Handle<AudioSource> {
+    ) -> Result<Handle<AudioSource>, AssetError> {
         if !extended_assets.menu_button_confirm_effects.is_empty() {
             let idx =
                 rand::rng().random_range(0..extended_assets.menu_button_confirm_effects.len());
-            extended_assets.menu_button_confirm_effects[idx].clone()
-        } else {
+            Ok(extended_assets.menu_button_confirm_effects[idx].clone())
+        } else if !assets.menu_button_confirm_effects.is_empty() {
             let idx = rand::rng().random_range(0..assets.menu_button_confirm_effects.len());
-            assets.menu_button_confirm_effects[idx].clone()
+            Ok(assets.menu_button_confirm_effects[idx].clone())
+        } else {
+            Err(AssetError::EmptyCollections(
+                "button confirm effects".to_string(),
+            ))
         }
     }
 
     pub fn get_random_space_bg(
         extended_assets: &ExtendedBackgroundAssets,
         assets: &BackgroundAssets,
-    ) -> Handle<Image> {
+    ) -> Result<Handle<Image>, AssetError> {
         if !extended_assets.space_backgrounds.is_empty() {
             let idx = rand::rng().random_range(0..extended_assets.space_backgrounds.len());
-            extended_assets.space_backgrounds[idx].clone()
-        } else {
+            Ok(extended_assets.space_backgrounds[idx].clone())
+        } else if !assets.space_backgrounds.is_empty() {
             let idx = rand::rng().random_range(0..assets.space_backgrounds.len());
-            assets.space_backgrounds[idx].clone()
+            Ok(assets.space_backgrounds[idx].clone())
+        } else {
+            Err(AssetError::EmptyCollections(
+                "space backgrounds".to_string(),
+            ))
         }
     }
 
     pub fn get_random_planet(
         extended_assets: &ExtendedBackgroundAssets,
         assets: &BackgroundAssets,
-    ) -> Handle<Scene> {
+    ) -> Result<Handle<Scene>, AssetError> {
         if !extended_assets.planets.is_empty() {
             let idx = rand::rng().random_range(0..extended_assets.planets.len());
-            extended_assets.planets[idx].clone()
-        } else {
+            Ok(extended_assets.planets[idx].clone())
+        } else if !assets.planets.is_empty() {
             let idx = rand::rng().random_range(0..assets.planets.len());
-            assets.planets[idx].clone()
+            Ok(assets.planets[idx].clone())
+        } else {
+            Err(AssetError::EmptyCollections("planets".to_string()))
         }
     }
 
@@ -193,13 +213,13 @@ impl AssetResolver {
         key: &str,
         extended_assets: &ExtendedMusicAssets,
         assets: &MusicAssets,
-    ) -> Handle<AudioSource> {
+    ) -> Result<Handle<AudioSource>, AssetError> {
         extended_assets
             .music
             .get(key)
             .or_else(|| assets.music.get(key))
             .cloned()
-            .unwrap_or_else(|| panic!("Missing music asset for key: {:?}", key))
+            .ok_or_else(|| AssetError::NotFound(key.to_string()))
     }
 }
 

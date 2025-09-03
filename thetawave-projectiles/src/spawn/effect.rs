@@ -5,12 +5,13 @@ use bevy::{
         name::Name,
         system::{Commands, Res},
     },
+    log::warn,
     math::Quat,
     sprite::Sprite,
     transform::components::Transform,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
-use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets};
+use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
 use thetawave_core::Faction;
 use thetawave_states::{AppState, Cleanup};
 
@@ -28,7 +29,7 @@ fn get_effect_sprite(
     effect_type: &ProjectileEffectType,
     extended_assets: &ExtendedGameAssets,
     game_assets: &GameAssets,
-) -> Handle<Aseprite> {
+) -> Result<Handle<Aseprite>, AssetError> {
     // keys are the file stem of the desired asset
     let key = match projectile_type {
         ProjectileType::Bullet => match effect_type {
@@ -72,6 +73,14 @@ fn spawn_effect(
     game_assets: &GameAssets,
     extended_assets: &ExtendedGameAssets,
 ) {
+    let aseprite = match get_effect_sprite(projectile_type, effect_type, extended_assets, game_assets) {
+        Ok(handle) => handle,
+        Err(e) => {
+            warn!("Failed to load effect sprite, skipping effect spawn: {}", e);
+            return;
+        }
+    };
+
     cmds.spawn((
         Name::new("Projectile Effect"),
         faction.clone(),
@@ -81,7 +90,7 @@ fn spawn_effect(
         },
         AseAnimation {
             animation: Animation::tag("idle"),
-            aseprite: get_effect_sprite(projectile_type, effect_type, extended_assets, game_assets),
+            aseprite,
         },
         Cleanup::<AppState> {
             states: vec![AppState::Game],

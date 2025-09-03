@@ -1,12 +1,13 @@
 use bevy::{
     asset::Handle,
     ecs::{entity::Entity, name::Name, system::Commands},
+    log::warn,
     transform::components::Transform,
 };
 use bevy_enoki::{
     Particle2dEffect, ParticleEffectHandle, ParticleSpawner, prelude::ParticleSpawnerState,
 };
-use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
+use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
 use thetawave_core::Faction;
 use thetawave_states::{AppState, Cleanup};
 
@@ -17,7 +18,7 @@ fn get_particle_effect(
     effect_type: &ParticleEffectType,
     extended_game_assets: &ExtendedGameAssets,
     game_assets: &GameAssets,
-) -> Handle<Particle2dEffect> {
+) -> Result<Handle<Particle2dEffect>, AssetError> {
     // keys are the file stem of the desired asset
     let key = match effect_type {
         ParticleEffectType::SpawnBlast => "spawn_blast",
@@ -36,7 +37,15 @@ pub fn spawn_particle_effect(
     extended_assets: &ExtendedGameAssets,
     assets: &GameAssets,
     materials: &ParticleMaterials,
-) -> Entity {
+) -> Option<Entity> {
+    let particle_effect_handle = match get_particle_effect(effect_type, extended_assets, assets) {
+        Ok(handle) => handle,
+        Err(e) => {
+            warn!("Failed to load particle effect, skipping spawn: {}", e);
+            return None;
+        }
+    };
+
     let particle_entity = cmds
         .spawn((
             Name::new("Particle Effect"),
@@ -50,7 +59,7 @@ pub fn spawn_particle_effect(
                 active: false, // Start inactive, will be activated by behavior system when needed
                 ..Default::default()
             },
-            ParticleEffectHandle(get_particle_effect(effect_type, extended_assets, assets)),
+            ParticleEffectHandle(particle_effect_handle),
         ))
         .id();
 
@@ -58,5 +67,5 @@ pub fn spawn_particle_effect(
         cmds.entity(parent).add_child(particle_entity);
     }
 
-    particle_entity
+    Some(particle_entity)
 }

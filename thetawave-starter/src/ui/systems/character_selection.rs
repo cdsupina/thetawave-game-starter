@@ -12,7 +12,6 @@ use bevy::{
     ecs::hierarchy::ChildOf,
     image::Image,
     input::ButtonInput,
-    log::warn,
     prelude::{
         Changed, Children, Commands, Entity, EventReader, EventWriter, Gamepad, GamepadButton,
         ImageNode, KeyCode, Name, Query, Res, ResMut, With, Without,
@@ -205,14 +204,18 @@ fn get_character_image(
     character_type: &CharacterType,
     extended_ui_assets: &ExtendedUiAssets,
     ui_assets: &UiAssets,
-) -> Handle<Image> {
+) -> bevy::ecs::error::Result<Handle<Image>> {
     let key = match character_type {
         CharacterType::Captain => "captain_character",
         CharacterType::Juggernaut => "juggernaut_character",
         CharacterType::Doomwing => "doomwing_character",
     };
 
-    AssetResolver::get_ui_image(key, extended_ui_assets, ui_assets)
+    Ok(AssetResolver::get_ui_image(
+        key,
+        extended_ui_assets,
+        ui_assets,
+    )?)
 }
 
 /// Change shown carousel character images when the character carousel changes from cycle_carousel_system
@@ -221,7 +224,7 @@ pub(in crate::ui) fn update_carousel_ui_system(
     mut carousel_slot_q: Query<(&VisibleCarouselSlot, &mut ImageNode)>,
     extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
-) {
+) -> bevy::ecs::error::Result {
     for (children, carousel) in carousel_q.iter() {
         // Iterate through all of the visible character image nodes
         for child in children.iter() {
@@ -235,11 +238,12 @@ pub(in crate::ui) fn update_carousel_ui_system(
                 // Set the image of the ui node to the new character
                 if let Some(character_type) = maybe_character_type {
                     image_node.image =
-                        get_character_image(character_type, &extended_ui_assets, &ui_assets);
+                        get_character_image(character_type, &extended_ui_assets, &ui_assets)?;
                 }
             }
         }
     }
+    Ok(())
 }
 
 /// Update the chosen characters resource with the characters from the carousels
@@ -276,6 +280,27 @@ pub(in crate::ui) fn spawn_carousel_system(
 
                 let carousel = CharacterCarousel::new(event.input.clone());
 
+                // Pre-resolve assets - will panic on failure
+                let arrow_sprite =
+                    AssetResolver::get_ui_sprite("arrow_button", &extended_ui_assets, &ui_assets)
+                        .expect("Failed to load arrow_button sprite");
+
+                // Pre-resolve character images - will panic on failure
+                let left_image = carousel.get_left_character().map(|left_character_type| {
+                    get_character_image(left_character_type, &extended_ui_assets, &ui_assets)
+                        .expect("Failed to load left character image")
+                });
+                let active_image = carousel
+                    .get_active_character()
+                    .map(|active_character_type| {
+                        get_character_image(active_character_type, &extended_ui_assets, &ui_assets)
+                            .expect("Failed to load active character image")
+                    });
+                let right_image = carousel.get_right_character().map(|right_character_type| {
+                    get_character_image(right_character_type, &extended_ui_assets, &ui_assets)
+                        .expect("Failed to load right character image")
+                });
+
                 cmds.entity(entity).with_children(|parent| {
                     // Spawn left arrow
                     parent
@@ -295,11 +320,7 @@ pub(in crate::ui) fn spawn_carousel_system(
                             ImageNode::default(),
                             AseAnimation {
                                 animation: Animation::tag("idle"),
-                                aseprite: AssetResolver::get_ui_sprite(
-                                    "arrow_button",
-                                    &extended_ui_assets,
-                                    &ui_assets,
-                                ),
+                                aseprite: arrow_sprite.clone(),
                             },
                             Name::new("Arrow Button Sprite"),
                         ));
@@ -333,60 +354,42 @@ pub(in crate::ui) fn spawn_carousel_system(
 
                     carousel_builder.with_children(|parent| {
                         // spawn child nodes containing carousel character images
-                        if let Some(left_character_type) = carousel.get_left_character() {
+                        if let Some(left_img) = left_image {
                             parent.spawn((
                                 VisibleCarouselSlot(CarouselSlotPosition::Left),
-                                ImageNode::new(get_character_image(
-                                    left_character_type,
-                                    &extended_ui_assets,
-                                    &ui_assets,
-                                ))
-                                .with_color(Color::default().with_alpha(0.5)),
+                                ImageNode::new(left_img)
+                                    .with_color(Color::default().with_alpha(0.5)),
                                 Node {
                                     width: Val::Percent(30.0),
                                     margin: UiRect::all(Val::Percent(3.0)),
                                     ..default()
                                 },
                             ));
-                        } else {
-                            warn!("No left character found in carousel.");
                         }
 
-                        if let Some(active_character_type) = carousel.get_active_character() {
+                        if let Some(active_img) = active_image {
                             parent.spawn((
                                 VisibleCarouselSlot(CarouselSlotPosition::Center),
-                                ImageNode::new(get_character_image(
-                                    active_character_type,
-                                    &extended_ui_assets,
-                                    &ui_assets,
-                                )),
+                                ImageNode::new(active_img),
                                 Node {
                                     width: Val::Percent(40.0),
                                     margin: UiRect::all(Val::Percent(3.0)),
                                     ..default()
                                 },
                             ));
-                        } else {
-                            warn!("No active character found in carousel.");
                         }
 
-                        if let Some(right_character_type) = carousel.get_right_character() {
+                        if let Some(right_img) = right_image {
                             parent.spawn((
                                 VisibleCarouselSlot(CarouselSlotPosition::Right),
-                                ImageNode::new(get_character_image(
-                                    right_character_type,
-                                    &extended_ui_assets,
-                                    &ui_assets,
-                                ))
-                                .with_color(Color::default().with_alpha(0.5)),
+                                ImageNode::new(right_img)
+                                    .with_color(Color::default().with_alpha(0.5)),
                                 Node {
                                     width: Val::Percent(30.0),
                                     margin: UiRect::all(Val::Percent(3.0)),
                                     ..default()
                                 },
                             ));
-                        } else {
-                            warn!("No right character found in carousel.");
                         }
                     });
 
@@ -407,11 +410,7 @@ pub(in crate::ui) fn spawn_carousel_system(
                             },
                             AseAnimation {
                                 animation: Animation::tag("idle"),
-                                aseprite: AssetResolver::get_ui_sprite(
-                                    "arrow_button",
-                                    &extended_ui_assets,
-                                    &ui_assets,
-                                ),
+                                aseprite: arrow_sprite,
                             },
                             ImageNode::default().with_flip_x(),
                             Name::new("Arrow Button Sprite"),
@@ -436,7 +435,11 @@ pub(in crate::ui) fn spawn_ready_button_system(
                 && event.player_num == *player_num
             {
                 cmds.entity(entity).despawn();
-                cmds.entity(childof.parent()).with_children(|parent| {
+
+                let parent_entity = childof.parent();
+                let mut menu_button_cmds = cmds.entity(parent_entity);
+
+                menu_button_cmds.with_children(|parent| {
                     let mut entity_cmds = parent.spawn_menu_button(
                         &extended_ui_assets,
                         &ui_assets,

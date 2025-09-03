@@ -16,6 +16,14 @@ pub(in crate::ui) fn spawn_title_menu_system(
     extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
 ) {
+    // Pre-resolve assets - will panic on failure
+    let thetawave_logo_sprite = AssetResolver::get_ui_sprite("thetawave_logo", &extended_ui_assets, &ui_assets)
+        .expect("Failed to load thetawave_logo sprite");
+    let bluesky_logo_sprite = AssetResolver::get_ui_sprite("bluesky_logo", &extended_ui_assets, &ui_assets)
+        .expect("Failed to load bluesky_logo sprite");
+    let github_logo_sprite = AssetResolver::get_ui_sprite("github_logo", &extended_ui_assets, &ui_assets)
+        .expect("Failed to load github_logo sprite");
+
     cmds.spawn((
         Cleanup::<MainMenuState> {
             states: vec![MainMenuState::Title],
@@ -50,11 +58,7 @@ pub(in crate::ui) fn spawn_title_menu_system(
                     },
                     AseAnimation {
                         animation: Animation::tag("title").with_speed(1.25),
-                        aseprite: AssetResolver::get_ui_sprite(
-                            "thetawave_logo",
-                            &extended_ui_assets,
-                            &ui_assets,
-                        ),
+                        aseprite: thetawave_logo_sprite.clone(),
                     },
                 ));
             });
@@ -120,11 +124,7 @@ pub(in crate::ui) fn spawn_title_menu_system(
                     ImageNode::default(),
                     AseAnimation {
                         animation: Animation::tag("released"),
-                        aseprite: AssetResolver::get_ui_sprite(
-                            "bluesky_logo",
-                            &extended_ui_assets,
-                            &ui_assets,
-                        ),
+                        aseprite: bluesky_logo_sprite.clone(),
                     },
                     ButtonAction::OpenBlueskyWebsite,
                     Name::new("Bluesky Website Button"),
@@ -142,11 +142,7 @@ pub(in crate::ui) fn spawn_title_menu_system(
                     ImageNode::default(),
                     AseAnimation {
                         animation: Animation::tag("released"),
-                        aseprite: AssetResolver::get_ui_sprite(
-                            "github_logo",
-                            &extended_ui_assets,
-                            &ui_assets,
-                        ),
+                        aseprite: github_logo_sprite.clone(),
                     },
                     ButtonAction::OpenGithubWebsite,
                     Name::new("Github Website Button"),

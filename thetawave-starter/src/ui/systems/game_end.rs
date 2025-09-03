@@ -23,6 +23,10 @@ pub(in crate::ui) fn spawn_game_end_system(
     ui_assets: Res<UiAssets>,
     game_end_result_res: Res<GameEndResultResource>,
 ) {
+    // Pre-resolve assets - will panic on failure
+    let dank_depths_font = AssetResolver::get_ui_font("Dank-Depths", &extended_ui_assets, &ui_assets)
+        .expect("Failed to load Dank-Depths font");
+
     cmds.spawn((
         Cleanup::<GameState> {
             states: vec![GameState::End],
@@ -63,11 +67,7 @@ pub(in crate::ui) fn spawn_game_end_system(
                     .with_children(|parent| {
                         parent.spawn((
                             Text::new(game_end_result_res.result.clone()),
-                            TextFont::from_font_size(150.0).with_font(AssetResolver::get_ui_font(
-                                "Dank-Depths",
-                                &extended_ui_assets,
-                                &ui_assets,
-                            )),
+                            TextFont::from_font_size(150.0).with_font(dank_depths_font.clone()),
                         ));
                     });
 
