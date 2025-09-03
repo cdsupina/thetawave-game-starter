@@ -1,6 +1,5 @@
 use avian2d::prelude::{AngleLimit, Joint, RevoluteJoint, RigidBody};
 use bevy::{
-    asset::Handle,
     ecs::{
         entity::Entity,
         error::{BevyError, Result},
@@ -15,40 +14,18 @@ use bevy::{
     sprite::Sprite,
     transform::components::Transform,
 };
-use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
+use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use bevy_behave::prelude::BehaveTree;
-use thetawave_assets::{
-    AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials,
-};
+use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
 use thetawave_particles::{ParticleEffectType, spawn_particle_effect};
 use thetawave_projectiles::ProjectileType;
 use thetawave_states::{AppState, Cleanup};
 
 use crate::{
     MobType,
-    attributes::{
-        JointedMob, JointsComponent, MobAttributesResource, MobComponentBundle, MobDecorationType,
-    },
+    attributes::{JointedMob, JointsComponent, MobAttributesResource, MobComponentBundle},
     behavior::{BehaviorReceiverComponent, MobBehaviorsResource},
 };
-
-/// Get the Aseprite handle from a given MobDecorationType using asset resolver
-fn get_mob_decoration_sprite(
-    decoration_type: &MobDecorationType,
-    extended_assets: &ExtendedGameAssets,
-    game_assets: &GameAssets,
-) -> Result<Handle<Aseprite>, AssetError> {
-    let key = match decoration_type {
-        MobDecorationType::XhitaraGruntThrusters => "xhitara_grunt_thrusters",
-        MobDecorationType::XhitaraSpitterThrusters => "xhitara_spitter_thrusters",
-        MobDecorationType::XhitaraPacerThrusters => "xhitara_pacer_thrusters",
-        MobDecorationType::XhitaraMissileThrusters => "xhitara_missile_thrusters",
-        MobDecorationType::FreighterThrusters => "freighter_thrusters",
-        MobDecorationType::XhitaraLauncherThrusters => "xhitara_launcher_thrusters",
-    };
-
-    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
-}
 
 trait ParticleEffectTypeExt {
     fn from_projectile_type(projectile_type: &ProjectileType) -> ParticleEffectType;
@@ -173,13 +150,13 @@ fn spawn_mob(
     let anchor_id = entity_commands
         .with_children(|parent| {
             // Spawn visual decorations as child entities
-            for (decoration_type, pos) in &mob_attributes.decorations {
+            for (decoration_sprite_stem, pos) in &mob_attributes.decorations {
                 parent.spawn((
                     Transform::from_xyz(pos.x, pos.y, 0.0),
                     AseAnimation {
                         animation: Animation::tag("idle"),
-                        aseprite: match get_mob_decoration_sprite(
-                            decoration_type,
+                        aseprite: match AssetResolver::get_game_sprite(
+                            decoration_sprite_stem,
                             extended_assets,
                             game_assets,
                         ) {
@@ -194,7 +171,7 @@ fn spawn_mob(
                         },
                     },
                     Sprite::default(),
-                    Name::new("Decoration"),
+                    Name::new(decoration_sprite_stem.clone()),
                 ));
             }
 

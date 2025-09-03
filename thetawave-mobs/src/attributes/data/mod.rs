@@ -48,18 +48,6 @@ const DEFAULT_PROJECTILE_DAMAGE: u32 = 5;
 const DEFAULT_HEALTH: u32 = 50;
 const DEFAULT_RANGE_SECONDS: f32 = 1.0;
 
-/// Decorations that can be attached to mobs
-/// Decorations don't have colliders, but have independent animations from the mob
-#[derive(Deserialize, Debug, Clone)]
-pub(crate) enum MobDecorationType {
-    XhitaraGruntThrusters,
-    XhitaraSpitterThrusters,
-    XhitaraPacerThrusters,
-    XhitaraMissileThrusters,
-    FreighterThrusters,
-    XhitaraLauncherThrusters,
-}
-
 /// Identifiers for mobs, mainly used for spawning
 #[derive(Deserialize, Debug, Eq, PartialEq, Hash, EnumIter, Clone, Component, Reflect)]
 pub enum MobType {
@@ -136,7 +124,7 @@ pub(crate) struct MobAttributes {
     #[serde(default = "default_friction")]
     pub friction: f32,
     #[serde(default)]
-    pub decorations: Vec<(MobDecorationType, Vec2)>,
+    pub decorations: Vec<(String, Vec2)>,
     #[serde(default)]
     pub jointed_mobs: Vec<JointedMob>,
     #[serde(default = "default_collision_layer_membership")]
