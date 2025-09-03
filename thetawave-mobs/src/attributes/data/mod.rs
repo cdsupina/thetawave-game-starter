@@ -111,6 +111,7 @@ pub(crate) struct MobAttributesComponent {
 #[derive(Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct MobAttributes {
+    pub sprite_stem: String,
     #[serde(default = "default_colliders")]
     colliders: Vec<ThetawaveCollider>,
     name: String,
@@ -256,7 +257,6 @@ pub(crate) struct MobComponentBundle {
     pub mob_attributes: MobAttributesComponent,
     pub health: HealthComponent,
 }
-
 
 impl From<&MobAttributes> for MobComponentBundle {
     fn from(value: &MobAttributes) -> Self {

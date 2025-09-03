@@ -17,7 +17,9 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_behave::prelude::BehaveTree;
-use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
+use thetawave_assets::{
+    AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials,
+};
 use thetawave_particles::{ParticleEffectType, spawn_particle_effect};
 use thetawave_projectiles::ProjectileType;
 use thetawave_states::{AppState, Cleanup};
@@ -29,44 +31,6 @@ use crate::{
     },
     behavior::{BehaviorReceiverComponent, MobBehaviorsResource},
 };
-
-/// Get the Aseprite handle from a given MobType using asset resolver
-fn get_mob_sprite(
-    mob_type: &MobType,
-    extended_assets: &ExtendedGameAssets,
-    game_assets: &GameAssets,
-) -> Result<Handle<Aseprite>, AssetError> {
-    let key = match mob_type {
-        MobType::XhitaraGrunt => "xhitara_grunt_mob",
-        MobType::XhitaraSpitter => "xhitara_spitter_mob",
-        MobType::XhitaraGyro => "xhitara_gyro_mob",
-        MobType::FreighterOne | MobType::FreighterTwo => "freighter_front_mob",
-        MobType::FreighterMiddle => "freighter_middle_mob",
-        MobType::FreighterBack => "freighter_back_mob",
-        MobType::Trizetheron => "trizetheron_mob",
-        MobType::TrizetheronLeftHead => "trizetheron_left_head_mob",
-        MobType::TrizetheronRightHead => "trizetheron_right_head_mob",
-        MobType::XhitaraTentacleShort | MobType::XhitaraTentacleLong => {
-            "xhitara_tentacle_start_mob"
-        }
-        MobType::XhitaraTentacleMiddle => "xhitara_tentacle_middle_mob",
-        MobType::XhitaraTentacleEnd => "xhitara_tentacle_end_mob",
-        MobType::XhitaraCyclusk => "xhitara_cyclusk_mob",
-        MobType::XhitaraPacer => "xhitara_pacer_mob",
-        MobType::XhitaraMissile => "xhitara_missile_mob",
-        MobType::XhitaraLauncher => "xhitara_launcher_mob",
-        MobType::Ferritharax => "ferritharax_head_mob",
-        MobType::FerritharaxBody => "ferritharax_body_mob",
-        MobType::FerritharaxRightShoulder => "ferritharax_right_shoulder_mob",
-        MobType::FerritharaxLeftShoulder => "ferritharax_left_shoulder_mob",
-        MobType::FerritharaxRightClaw => "ferritharax_right_claw_mob",
-        MobType::FerritharaxLeftClaw => "ferritharax_left_claw_mob",
-        MobType::FerritharaxLeftArm => "ferritharax_left_arm_mob",
-        MobType::FerritharaxRightArm => "ferritharax_right_arm_mob",
-    };
-
-    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
-}
 
 /// Get the Aseprite handle from a given MobDecorationType using asset resolver
 fn get_mob_decoration_sprite(
@@ -183,7 +147,11 @@ fn spawn_mob(
         mob_type.clone(),
         AseAnimation {
             animation: Animation::tag("idle"),
-            aseprite: get_mob_sprite(mob_type, extended_assets, game_assets)?,
+            aseprite: AssetResolver::get_game_sprite(
+                &mob_attributes.sprite_stem,
+                extended_assets,
+                game_assets,
+            )?,
         },
         Sprite::default(),
         Cleanup::<AppState> {
@@ -217,7 +185,10 @@ fn spawn_mob(
                         ) {
                             Ok(handle) => handle,
                             Err(e) => {
-                                warn!("Failed to load decoration sprite, skipping decoration: {}", e);
+                                warn!(
+                                    "Failed to load decoration sprite, skipping decoration: {}",
+                                    e
+                                );
                                 continue;
                             }
                         },
