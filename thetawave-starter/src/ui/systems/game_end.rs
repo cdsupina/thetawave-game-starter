@@ -1,6 +1,6 @@
 use crate::ui::{
-    data::{ButtonAction, UiChildBuilderExt},
     GameEndResultResource,
+    data::{ButtonAction, UiChildBuilderExt},
 };
 use bevy::{
     color::Color,
@@ -8,20 +8,25 @@ use bevy::{
     prelude::Name,
     text::TextFont,
     ui::{
-        widget::Text, AlignItems, BackgroundColor, Display, FlexDirection, JustifyContent, Node,
-        UiRect, Val,
+        AlignItems, BackgroundColor, Display, FlexDirection, JustifyContent, Node, UiRect, Val,
+        widget::Text,
     },
     utils::default,
 };
-use thetawave_assets::UiAssets;
+use thetawave_assets::{AssetResolver, ExtendedUiAssets, UiAssets};
 use thetawave_states::{AppState, Cleanup, GameState};
 
 /// Spawns the game over/victory ui
 pub(in crate::ui) fn spawn_game_end_system(
     mut cmds: Commands,
+    extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
     game_end_result_res: Res<GameEndResultResource>,
 ) {
+    // Pre-resolve assets - will panic on failure
+    let dank_depths_font = AssetResolver::get_ui_font("Dank-Depths", &extended_ui_assets, &ui_assets)
+        .expect("Failed to load Dank-Depths font");
+
     cmds.spawn((
         Cleanup::<GameState> {
             states: vec![GameState::End],
@@ -62,8 +67,7 @@ pub(in crate::ui) fn spawn_game_end_system(
                     .with_children(|parent| {
                         parent.spawn((
                             Text::new(game_end_result_res.result.clone()),
-                            TextFont::from_font_size(150.0)
-                                .with_font(ui_assets.dank_depths_font.clone()),
+                            TextFont::from_font_size(150.0).with_font(dank_depths_font.clone()),
                         ));
                     });
 
@@ -88,6 +92,7 @@ pub(in crate::ui) fn spawn_game_end_system(
             })
             .with_children(|parent| {
                 parent.spawn_menu_button(
+                    &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterAppState(AppState::MainMenuLoading),
                     300.0,

@@ -8,13 +8,12 @@ use bevy::{
         name::Name,
         system::{Commands, Res},
     },
-    log::info,
     math::{Quat, Vec2},
     sprite::Sprite,
     transform::components::Transform,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
-use thetawave_assets::GameAssets;
+use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
 use thetawave_core::{CollisionDamage, Faction};
 use thetawave_states::{AppState, Cleanup};
 
@@ -24,22 +23,24 @@ use crate::{
     spawn::FactionExt,
 };
 
-trait GameAssetsExt {
-    fn get_projectile_sprite(&self, projectile_type: &ProjectileType) -> Handle<Aseprite>;
-}
+/// Get the Aseprite handle from a given ProjectileType using asset resolver
+fn get_projectile_sprite(
+    projectile_type: &ProjectileType,
+    extended_assets: &ExtendedGameAssets,
+    game_assets: &GameAssets,
+) -> Result<Handle<Aseprite>, AssetError> {
+    let key = match projectile_type {
+        ProjectileType::Bullet => "bullet_projectile",
+        ProjectileType::Blast => "blast_projectile",
+    };
 
-impl GameAssetsExt for GameAssets {
-    fn get_projectile_sprite(&self, projectile_type: &ProjectileType) -> Handle<Aseprite> {
-        match projectile_type {
-            ProjectileType::Bullet => self.bullet_projectile_aseprite.clone(),
-            ProjectileType::Blast => self.blast_projectile_aseprite.clone(),
-        }
-    }
+    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
 }
 
 pub(crate) fn spawn_projectile_system(
     mut cmds: Commands,
-    assets: Res<GameAssets>,
+    game_assets: Res<GameAssets>,
+    extended_assets: Res<ExtendedGameAssets>,
     mut spawn_projectile_event_reader: EventReader<SpawnProjectileEvent>,
     attributes_res: Res<ProjectileAttributesResource>,
 ) -> Result {
@@ -52,7 +53,8 @@ pub(crate) fn spawn_projectile_system(
             event.velocity,
             event.damage,
             event.range_seconds,
-            &assets,
+            &game_assets,
+            &extended_assets,
             &attributes_res,
         )?;
     }
@@ -68,15 +70,10 @@ fn spawn_projectile(
     velocity: Vec2,
     damage: u32,
     range_seconds: f32,
-    assets: &GameAssets,
+    game_assets: &GameAssets,
+    extended_assets: &ExtendedGameAssets,
     attributes_res: &ProjectileAttributesResource,
 ) -> Result<Entity, BevyError> {
-    info!(
-        "Spawning Projectile: {:?} at {}",
-        projectile_type,
-        position.to_string()
-    );
-
     // Look up the projectiles's configuration data from resources
     let projectile_attributes = attributes_res
         .attributes
@@ -97,7 +94,7 @@ fn spawn_projectile(
         Collider::from(projectile_attributes),
         AseAnimation {
             animation: Animation::tag("idle"),
-            aseprite: assets.get_projectile_sprite(projectile_type),
+            aseprite: get_projectile_sprite(projectile_type, extended_assets, game_assets)?,
         },
         RigidBody::Dynamic,
         Cleanup::<AppState> {

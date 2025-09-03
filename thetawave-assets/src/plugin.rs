@@ -1,5 +1,10 @@
+use crate::{
+    ExtendedBackgroundAssets, ExtendedMusicAssets,
+    data::{ExtendedGameAssets, ExtendedUiAssets},
+};
+
 use super::{
-    data::{AppAudioAssets, BackgroundAssets, GameAssets, LoadingProgressEvent, UiAssets},
+    data::{BackgroundAssets, GameAssets, LoadingProgressEvent, MusicAssets, UiAssets},
     systems::{
         get_loading_progress_system, setup_particle_materials_system, unload_game_assets_system,
     },
@@ -10,22 +15,22 @@ use bevy::{
     prelude::{Condition, IntoScheduleConfigs, in_state},
     state::state::{OnEnter, OnExit},
 };
-use bevy_asset_loader::loading_state::{
-    LoadingState, LoadingStateAppExt, LoadingStateSet, config::ConfigureLoadingState,
+use bevy_asset_loader::{
+    loading_state::{
+        LoadingState, LoadingStateAppExt, LoadingStateSet, config::ConfigureLoadingState,
+    },
+    standard_dynamic_asset::StandardDynamicAssetCollection,
 };
-use bevy_embedded_assets::{EmbeddedAssetPlugin, PluginMode};
 use iyes_progress::ProgressPlugin;
 use thetawave_states::AppState;
 
 /// Plugin for managing asset loading states in Thetawave
+#[derive(Default)]
 pub struct ThetawaveAssetsPlugin;
 
 impl Plugin for ThetawaveAssetsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_plugins((
-            EmbeddedAssetPlugin {
-                mode: PluginMode::ReplaceDefault, //embeds assets into binary
-            },
             ProgressPlugin::<AppState>::new()
                 .with_state_transition(AppState::MainMenuLoading, AppState::MainMenu)
                 .with_state_transition(AppState::GameLoading, AppState::Game),
@@ -34,11 +39,34 @@ impl Plugin for ThetawaveAssetsPlugin {
         .add_event::<LoadingProgressEvent>()
         .add_loading_state(
             LoadingState::new(AppState::MainMenuLoading)
+                .with_dynamic_assets_file::<StandardDynamicAssetCollection>("ui.assets.ron")
                 .load_collection::<UiAssets>()
+                .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
+                    "extended/ui.assets.ron",
+                )
+                .load_collection::<ExtendedUiAssets>()
+                .with_dynamic_assets_file::<StandardDynamicAssetCollection>("music.assets.ron")
+                .load_collection::<MusicAssets>()
+                .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
+                    "extended/music.assets.ron",
+                )
+                .load_collection::<ExtendedMusicAssets>()
+                .with_dynamic_assets_file::<StandardDynamicAssetCollection>("background.assets.ron")
                 .load_collection::<BackgroundAssets>()
-                .load_collection::<AppAudioAssets>(),
+                .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
+                    "extended/background.assets.ron",
+                )
+                .load_collection::<ExtendedBackgroundAssets>(),
         )
-        .add_loading_state(LoadingState::new(AppState::GameLoading).load_collection::<GameAssets>())
+        .add_loading_state(
+            LoadingState::new(AppState::GameLoading)
+                .with_dynamic_assets_file::<StandardDynamicAssetCollection>("game.assets.ron")
+                .load_collection::<GameAssets>()
+                .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
+                    "extended/game.assets.ron",
+                )
+                .load_collection::<ExtendedGameAssets>(),
+        )
         .add_systems(
             Update,
             get_loading_progress_system

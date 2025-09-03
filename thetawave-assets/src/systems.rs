@@ -1,3 +1,5 @@
+use crate::ExtendedGameAssets;
+
 use super::data::ParticleMaterials;
 use super::{GameAssets, LoadingProgressEvent};
 use bevy::{
@@ -47,5 +49,6 @@ pub(super) fn setup_particle_materials_system(
 /// Should be called once when exiting the game app state
 pub(super) fn unload_game_assets_system(mut cmds: Commands) {
     cmds.remove_resource::<GameAssets>();
+    cmds.remove_resource::<ExtendedGameAssets>();
     cmds.remove_resource::<ParticleMaterials>();
 }

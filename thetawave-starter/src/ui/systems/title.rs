@@ -8,9 +8,22 @@ use bevy::{
 };
 use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
+use thetawave_assets::{AssetResolver, ExtendedUiAssets};
 
 /// Spawn ui for title menu
-pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<UiAssets>) {
+pub(in crate::ui) fn spawn_title_menu_system(
+    mut cmds: Commands,
+    extended_ui_assets: Res<ExtendedUiAssets>,
+    ui_assets: Res<UiAssets>,
+) {
+    // Pre-resolve assets - will panic on failure
+    let thetawave_logo_sprite = AssetResolver::get_ui_sprite("thetawave_logo", &extended_ui_assets, &ui_assets)
+        .expect("Failed to load thetawave_logo sprite");
+    let bluesky_logo_sprite = AssetResolver::get_ui_sprite("bluesky_logo", &extended_ui_assets, &ui_assets)
+        .expect("Failed to load bluesky_logo sprite");
+    let github_logo_sprite = AssetResolver::get_ui_sprite("github_logo", &extended_ui_assets, &ui_assets)
+        .expect("Failed to load github_logo sprite");
+
     cmds.spawn((
         Cleanup::<MainMenuState> {
             states: vec![MainMenuState::Title],
@@ -45,7 +58,7 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
                     },
                     AseAnimation {
                         animation: Animation::tag("title").with_speed(1.25),
-                        aseprite: ui_assets.thetawave_logo_aseprite.clone(),
+                        aseprite: thetawave_logo_sprite.clone(),
                     },
                 ));
             });
@@ -64,6 +77,7 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
             .with_children(|parent| {
                 // Play Button
                 parent.spawn_menu_button(
+                    &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterMainMenuState(MainMenuState::CharacterSelection),
                     300.0,
@@ -72,6 +86,7 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
                 );
                 // Options Button
                 parent.spawn_menu_button(
+                    &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterMainMenuState(MainMenuState::Options),
                     300.0,
@@ -79,7 +94,14 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
                     false,
                 );
                 // Exit Button
-                parent.spawn_menu_button(&ui_assets, ButtonAction::Exit, 300.0, false, false);
+                parent.spawn_menu_button(
+                    &extended_ui_assets,
+                    &ui_assets,
+                    ButtonAction::Exit,
+                    300.0,
+                    false,
+                    false,
+                );
             });
 
         parent
@@ -102,7 +124,7 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
                     ImageNode::default(),
                     AseAnimation {
                         animation: Animation::tag("released"),
-                        aseprite: ui_assets.bluesky_logo_aseprite.clone(),
+                        aseprite: bluesky_logo_sprite.clone(),
                     },
                     ButtonAction::OpenBlueskyWebsite,
                     Name::new("Bluesky Website Button"),
@@ -120,7 +142,7 @@ pub(in crate::ui) fn spawn_title_menu_system(mut cmds: Commands, ui_assets: Res<
                     ImageNode::default(),
                     AseAnimation {
                         animation: Animation::tag("released"),
-                        aseprite: ui_assets.github_logo_aseprite.clone(),
+                        aseprite: github_logo_sprite.clone(),
                     },
                     ButtonAction::OpenGithubWebsite,
                     Name::new("Github Website Button"),

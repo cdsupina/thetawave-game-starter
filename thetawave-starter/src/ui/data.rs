@@ -12,7 +12,7 @@ use bevy::{
 use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use strum::IntoEnumIterator;
-use thetawave_assets::UiAssets;
+use thetawave_assets::{AssetResolver, ExtendedUiAssets, UiAssets};
 use thetawave_player::{CharacterType, InputType, PlayerNum};
 use thetawave_states::{AppState, GameState, MainMenuState, PauseMenuState};
 
@@ -260,12 +260,22 @@ impl Default for ButtonActionDelayTimer {
 }
 
 pub(super) trait UiChildBuilderExt {
-    fn spawn_join_prompt(&mut self, ui_assets: &UiAssets);
+    fn spawn_join_prompt(
+        &mut self,
+        extended_ui_assets: &ExtendedUiAssets,
+        ui_assets: &UiAssets,
+    );
 
-    fn spawn_character_selection(&mut self, ui_assets: &UiAssets, player_num: PlayerNum);
+    fn spawn_character_selection(
+        &mut self,
+        extended_ui_assets: &ExtendedUiAssets,
+        ui_assets: &UiAssets,
+        player_num: PlayerNum,
+    );
 
     fn spawn_menu_button(
         &mut self,
+        extended_ui_assets: &ExtendedUiAssets,
         ui_assets: &UiAssets,
         button_action: ButtonAction,
         width: f32,
@@ -276,7 +286,19 @@ pub(super) trait UiChildBuilderExt {
 
 impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
     /// Spawn a join prompt
-    fn spawn_join_prompt(&mut self, ui_assets: &UiAssets) {
+    fn spawn_join_prompt(
+        &mut self,
+        extended_ui_assets: &ExtendedUiAssets,
+        ui_assets: &UiAssets,
+    ) {
+        // Resolve assets outside the closure, panic on failure
+        let return_button_sprite =
+            AssetResolver::get_ui_sprite("return_button", extended_ui_assets, ui_assets)
+                .expect("Failed to load return_button sprite");
+        let xbox_buttons_sprite =
+            AssetResolver::get_ui_sprite("xbox_letter_buttons", extended_ui_assets, ui_assets)
+                .expect("Failed to load xbox_letter_buttons sprite");
+
         self.spawn(Node {
             flex_direction: FlexDirection::Row,
             ..default()
@@ -285,7 +307,7 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
             parent.spawn((
                 AseAnimation {
                     animation: Animation::tag("key_return"),
-                    aseprite: ui_assets.return_button_aseprite.clone(),
+                    aseprite: return_button_sprite,
                 },
                 Node {
                     margin: UiRect::all(Val::Px(10.0)),
@@ -296,7 +318,7 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
             parent.spawn((
                 AseAnimation {
                     animation: Animation::tag("a"),
-                    aseprite: ui_assets.xbox_letter_buttons_aseprite.clone(),
+                    aseprite: xbox_buttons_sprite,
                 },
                 Node {
                     margin: UiRect::all(Val::Px(10.0)),
@@ -308,7 +330,12 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
     }
 
     /// Spawn a character selection ui for the provided character
-    fn spawn_character_selection(&mut self, ui_assets: &UiAssets, player_num: PlayerNum) {
+    fn spawn_character_selection(
+        &mut self,
+        extended_ui_assets: &ExtendedUiAssets,
+        ui_assets: &UiAssets,
+        player_num: PlayerNum,
+    ) {
         self.spawn(Node {
             height: Val::Percent(100.0),
             width: Val::Percent(50.0),
@@ -334,13 +361,14 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
             // Spawn input prompt for player 1
             if matches!(player_num, PlayerNum::One) {
                 entity_cmds.with_children(|parent| {
-                    parent.spawn_join_prompt(ui_assets);
+                    parent.spawn_join_prompt(extended_ui_assets, ui_assets);
                 });
             }
 
             // Spawn join button
             // Player 1 button is not disabled and is first
             parent.spawn_menu_button(
+                extended_ui_assets,
                 ui_assets,
                 ButtonAction::Join(player_num.clone()),
                 300.0,
@@ -353,12 +381,20 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
     /// Spawns a rectangular stylized menu button
     fn spawn_menu_button(
         &mut self,
+        extended_ui_assets: &ExtendedUiAssets,
         ui_assets: &UiAssets,
         button_action: ButtonAction,
         width: f32,
         is_first: bool,
         is_disabled: bool,
     ) -> EntityCommands<'_> {
+        // Resolve assets outside the closures, panic on failure
+        let menu_button_sprite =
+            AssetResolver::get_ui_sprite("menu_button", extended_ui_assets, ui_assets)
+                .expect("Failed to load menu_button sprite");
+        let font = AssetResolver::get_ui_font("Dank-Depths", extended_ui_assets, ui_assets)
+            .expect("Failed to load Dank-Depths font");
+
         let mut entity_cmds = self.spawn_empty();
 
         // if a button is disabled do not spawn it in focusable
@@ -407,7 +443,7 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
                             } else {
                                 "released"
                             }),
-                            aseprite: ui_assets.menu_button_aseprite.clone(),
+                            aseprite: menu_button_sprite,
                         },
                     ))
                     .with_children(|parent| {
@@ -425,8 +461,7 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
                                 if let Some(button_text) = button_action.to_string() {
                                     parent.spawn((
                                         Text::new(button_text),
-                                        TextFont::from_font_size(20.0)
-                                            .with_font(ui_assets.dank_depths_font.clone()),
+                                        TextFont::from_font_size(20.0).with_font(font),
                                     ));
                                 }
                             });

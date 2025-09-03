@@ -9,6 +9,8 @@ use bevy::{
 };
 use bevy_aseprite_ultra::AsepriteUltraPlugin;
 
+use bevy_embedded_assets::{EmbeddedAssetPlugin, PluginMode};
+
 #[cfg(feature = "debug")]
 use thetawave_debug::ThetawaveDebugPlugin;
 
@@ -32,7 +34,9 @@ pub struct ThetawaveStarterPlugin {
 impl Plugin for ThetawaveStarterPlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_plugins((
-            thetawave_assets::ThetawaveAssetsPlugin, // must be registered before AssetPlugin due to EmbeddedAssetPlugin
+            EmbeddedAssetPlugin {
+                mode: PluginMode::ReplaceDefault, //embeds assets into binary
+            },
             DefaultPlugins
                 .set(ImagePlugin::default_nearest()) // necessary for crisp pixel art
                 .set(WindowPlugin {
@@ -46,6 +50,7 @@ impl Plugin for ThetawaveStarterPlugin {
                     }),
                     ..default()
                 }),
+            thetawave_assets::ThetawaveAssetsPlugin,
             AsepriteUltraPlugin, // plugin for using Aseprite assets
             // custom plugins for Thetawave
             ui::ThetawaveUiPlugin,
@@ -59,10 +64,10 @@ impl Plugin for ThetawaveStarterPlugin {
             states::ThetawaveStatesPlugin,
             thetawave_mobs::ThetawaveMobsPlugin,
             thetawave_projectiles::ThetawaveProjectilesPlugin,
-            thetawave_core::ThetawaveCorePlugin,
         ));
 
         app.add_plugins((
+            thetawave_core::ThetawaveCorePlugin,
             collisions::ThetawaveCollisionsPlugin,
             particles::ThetawaveParticlesPlugin,
         ));

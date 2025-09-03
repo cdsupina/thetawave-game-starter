@@ -12,7 +12,7 @@ use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_persistent::Persistent;
 use leafwing_abilities::AbilitiesBundle;
 use leafwing_input_manager::prelude::InputMap;
-use thetawave_assets::GameAssets;
+use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
 use thetawave_core::HealthComponent;
 use thetawave_physics::ThetawavePhysicsLayer;
 use thetawave_player::{
@@ -21,28 +21,30 @@ use thetawave_player::{
 };
 use thetawave_states::{AppState, Cleanup};
 
-trait GameAssetsExt {
-    fn get_character_sprite(&self, character_type: &CharacterType) -> Handle<Aseprite>;
-}
+/// Get the Aseprite handle from a given CharacterType using asset resolver
+fn get_character_sprite(
+    character_type: &CharacterType,
+    extended_assets: &ExtendedGameAssets,
+    game_assets: &GameAssets,
+) -> Result<Handle<Aseprite>, AssetError> {
+    let key = match character_type {
+        CharacterType::Captain => "captain_character",
+        CharacterType::Juggernaut => "juggernaut_character",
+        CharacterType::Doomwing => "doomwing_character",
+    };
 
-impl GameAssetsExt for GameAssets {
-    fn get_character_sprite(&self, character_type: &CharacterType) -> Handle<Aseprite> {
-        match character_type {
-            CharacterType::Captain => self.captain_character_aseprite.clone(),
-            CharacterType::Juggernaut => self.juggernaut_character_aseprite.clone(),
-            CharacterType::Doomwing => self.doomwing_character_aseprite.clone(),
-        }
-    }
+    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
 }
 
 /// Spawn a player controlled entity
 pub(super) fn spawn_players_system(
     mut cmds: Commands,
-    assets: Res<GameAssets>,
+    game_assets: Res<GameAssets>,
+    extended_assets: Res<ExtendedGameAssets>,
     options_res: Res<Persistent<OptionsRes>>,
     characters_res: Res<CharactersResource>,
     chosen_characters_res: Res<ChosenCharactersResource>,
-) {
+) -> bevy::ecs::error::Result {
     // Iterate through all of the chosen characters
     for (player_num, chosen_character_data) in chosen_characters_res.players.iter() {
         // Spawn a player using the CharacterData from the character type
@@ -54,7 +56,11 @@ pub(super) fn spawn_players_system(
                 player_num.clone(),
                 AseAnimation {
                     animation: Animation::tag("idle"),
-                    aseprite: assets.get_character_sprite(&chosen_character_data.character),
+                    aseprite: get_character_sprite(
+                        &chosen_character_data.character,
+                        &extended_assets,
+                        &game_assets,
+                    )?,
                 },
                 Sprite::default(),
                 Cleanup::<AppState> {
@@ -108,4 +114,5 @@ pub(super) fn spawn_players_system(
             entity_cmds.insert(HealthComponent::new(character_data.health));
         }
     }
+    Ok(())
 }

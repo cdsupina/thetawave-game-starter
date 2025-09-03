@@ -9,8 +9,10 @@ thetawave-states = { path = "../thetawave-states" }
 thetawave-core = { path = "../thetawave-core" }
 bevy = { workspace = true, default-features = false }
 iyes_progress = { workspace = true }
-bevy_asset_loader = { workspace = true, features = ["progress_tracking"] }
-bevy_embedded_assets = { workspace = true }
+bevy_asset_loader = { workspace = true, features = [
+    "progress_tracking",
+    "standard_dynamic_assets",
+] }
 bevy_aseprite_ultra = { workspace = true }
 bevy_kira_audio = { workspace = true, features = ["mp3", "wav"] }
 rand = { workspace = true }

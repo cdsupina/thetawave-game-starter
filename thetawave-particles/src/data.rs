@@ -5,7 +5,7 @@ use bevy::{
 };
 use thetawave_core::Faction;
 
-#[derive(Reflect)]
+#[derive(Debug, Reflect)]
 pub enum ParticleEffectType {
     SpawnBlast,
     SpawnBullet,

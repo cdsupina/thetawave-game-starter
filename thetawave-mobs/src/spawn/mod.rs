@@ -1,6 +1,4 @@
-use avian2d::prelude::{
-    AngleLimit, Joint, RevoluteJoint, RigidBody,
-};
+use avian2d::prelude::{AngleLimit, Joint, RevoluteJoint, RigidBody};
 use bevy::{
     asset::Handle,
     ecs::{
@@ -10,6 +8,7 @@ use bevy::{
         resource::Resource,
         system::{Commands, Res},
     },
+    log::warn,
     math::{Quat, Vec2},
     platform::collections::HashMap,
     prelude::Name,
@@ -18,7 +17,7 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_behave::prelude::BehaveTree;
-use thetawave_assets::{GameAssets, ParticleMaterials};
+use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
 use thetawave_particles::{ParticleEffectType, spawn_particle_effect};
 use thetawave_projectiles::ProjectileType;
 use thetawave_states::{AppState, Cleanup};
@@ -26,75 +25,65 @@ use thetawave_states::{AppState, Cleanup};
 use crate::{
     MobType,
     attributes::{
-        JointedMob, JointsComponent, MobAttributesResource,
-        MobComponentBundle, MobDecorationType,
+        JointedMob, JointsComponent, MobAttributesResource, MobComponentBundle, MobDecorationType,
     },
     behavior::{BehaviorReceiverComponent, MobBehaviorsResource},
 };
 
-trait GameAssetsExt {
-    fn get_mob_sprite(&self, mob_type: &MobType) -> Handle<Aseprite>;
-    fn get_mob_decoration_sprite(&self, mob_type: &MobDecorationType) -> Handle<Aseprite>;
+/// Get the Aseprite handle from a given MobType using asset resolver
+fn get_mob_sprite(
+    mob_type: &MobType,
+    extended_assets: &ExtendedGameAssets,
+    game_assets: &GameAssets,
+) -> Result<Handle<Aseprite>, AssetError> {
+    let key = match mob_type {
+        MobType::XhitaraGrunt => "xhitara_grunt_mob",
+        MobType::XhitaraSpitter => "xhitara_spitter_mob",
+        MobType::XhitaraGyro => "xhitara_gyro_mob",
+        MobType::FreighterOne | MobType::FreighterTwo => "freighter_front_mob",
+        MobType::FreighterMiddle => "freighter_middle_mob",
+        MobType::FreighterBack => "freighter_back_mob",
+        MobType::Trizetheron => "trizetheron_mob",
+        MobType::TrizetheronLeftHead => "trizetheron_left_head_mob",
+        MobType::TrizetheronRightHead => "trizetheron_right_head_mob",
+        MobType::XhitaraTentacleShort | MobType::XhitaraTentacleLong => {
+            "xhitara_tentacle_start_mob"
+        }
+        MobType::XhitaraTentacleMiddle => "xhitara_tentacle_middle_mob",
+        MobType::XhitaraTentacleEnd => "xhitara_tentacle_end_mob",
+        MobType::XhitaraCyclusk => "xhitara_cyclusk_mob",
+        MobType::XhitaraPacer => "xhitara_pacer_mob",
+        MobType::XhitaraMissile => "xhitara_missile_mob",
+        MobType::XhitaraLauncher => "xhitara_launcher_mob",
+        MobType::Ferritharax => "ferritharax_head_mob",
+        MobType::FerritharaxBody => "ferritharax_body_mob",
+        MobType::FerritharaxRightShoulder => "ferritharax_right_shoulder_mob",
+        MobType::FerritharaxLeftShoulder => "ferritharax_left_shoulder_mob",
+        MobType::FerritharaxRightClaw => "ferritharax_right_claw_mob",
+        MobType::FerritharaxLeftClaw => "ferritharax_left_claw_mob",
+        MobType::FerritharaxLeftArm => "ferritharax_left_arm_mob",
+        MobType::FerritharaxRightArm => "ferritharax_right_arm_mob",
+    };
+
+    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
 }
 
-impl GameAssetsExt for GameAssets {
-    /// Get the Aseprite handle from from a given MobType
-    fn get_mob_sprite(&self, mob_type: &MobType) -> Handle<Aseprite> {
-        match mob_type {
-            MobType::XhitaraGrunt => self.xhitara_grunt_mob_aseprite.clone(),
-            MobType::XhitaraSpitter => self.xhitara_spitter_mob_aseprite.clone(),
-            MobType::XhitaraGyro => self.xhitara_gyro_mob_aseprite.clone(),
-            MobType::FreighterOne | MobType::FreighterTwo => {
-                self.freighter_front_mob_aseprite.clone()
-            }
-            MobType::FreighterMiddle => self.freighter_middle_mob_aseprite.clone(),
-            MobType::FreighterBack => self.freighter_back_mob_aseprite.clone(),
-            MobType::Trizetheron => self.trizetheron_mob_aseprite.clone(),
-            MobType::TrizetheronLeftHead => self.trizetheron_left_head_mob_aseprite.clone(),
-            MobType::TrizetheronRightHead => self.trizetheron_right_head_mob_aseprite.clone(),
-            MobType::XhitaraTentacleShort | MobType::XhitaraTentacleLong => {
-                self.xhitara_tentacle_start_mob_aseprite.clone()
-            }
-            MobType::XhitaraTentacleMiddle => self.xhitara_tentacle_middle_mob_aseprite.clone(),
-            MobType::XhitaraTentacleEnd => self.xhitara_tentacle_end_mob_aseprite.clone(),
-            MobType::XhitaraCyclusk => self.xhitara_cyclusk_mob_aseprite.clone(),
-            MobType::XhitaraPacer => self.xhitara_pacer_mob_aseprite.clone(),
-            MobType::XhitaraMissile => self.xhitara_missile_mob_aseprite.clone(),
-            MobType::XhitaraLauncher => self.xhitara_launcher_mob_aseprite.clone(),
-            MobType::Ferritharax => self.ferritharax_head_mob_aseprite.clone(),
-            MobType::FerritharaxBody => self.ferritharax_body_mob_aseprite.clone(),
-            MobType::FerritharaxRightShoulder => {
-                self.ferritharax_right_shoulder_mob_aseprite.clone()
-            }
-            MobType::FerritharaxLeftShoulder => self.ferritharax_left_shoulder_mob_aseprite.clone(),
-            MobType::FerritharaxRightClaw => self.ferritharax_right_claw_mob_aseprite.clone(),
-            MobType::FerritharaxLeftClaw => self.ferritharax_left_claw_mob_aseprite.clone(),
-            MobType::FerritharaxLeftArm => self.ferritharax_left_arm_mob_aseprite.clone(),
-            MobType::FerritharaxRightArm => self.ferritharax_right_arm_mob_aseprite.clone(),
-        }
-    }
+/// Get the Aseprite handle from a given MobDecorationType using asset resolver
+fn get_mob_decoration_sprite(
+    decoration_type: &MobDecorationType,
+    extended_assets: &ExtendedGameAssets,
+    game_assets: &GameAssets,
+) -> Result<Handle<Aseprite>, AssetError> {
+    let key = match decoration_type {
+        MobDecorationType::XhitaraGruntThrusters => "xhitara_grunt_thrusters",
+        MobDecorationType::XhitaraSpitterThrusters => "xhitara_spitter_thrusters",
+        MobDecorationType::XhitaraPacerThrusters => "xhitara_pacer_thrusters",
+        MobDecorationType::XhitaraMissileThrusters => "xhitara_missile_thrusters",
+        MobDecorationType::FreighterThrusters => "freighter_thrusters",
+        MobDecorationType::XhitaraLauncherThrusters => "xhitara_launcher_thrusters",
+    };
 
-    /// Get the Aseprite handle for a decoration using a given MobDecorationType
-    fn get_mob_decoration_sprite(&self, mob_type: &MobDecorationType) -> Handle<Aseprite> {
-        match mob_type {
-            MobDecorationType::XhitaraGruntThrusters => {
-                self.xhitara_grunt_thrusters_aseprite.clone()
-            }
-            MobDecorationType::XhitaraSpitterThrusters => {
-                self.xhitara_spitter_thrusters_aseprite.clone()
-            }
-            MobDecorationType::XhitaraPacerThrusters => {
-                self.xhitara_pacer_thrusters_aseprite.clone()
-            }
-            MobDecorationType::XhitaraMissileThrusters => {
-                self.xhitara_missile_thrusters_aseprite.clone()
-            }
-            MobDecorationType::FreighterThrusters => self.freighter_thrusters_aseprite.clone(),
-            MobDecorationType::XhitaraLauncherThrusters => {
-                self.xhitara_launcher_thrusters_aseprite.clone()
-            }
-        }
-    }
+    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
 }
 
 trait ParticleEffectTypeExt {
@@ -138,7 +127,8 @@ pub struct SpawnMobEvent {
 /// Reads SpawnMobEvents and spawns mobs
 pub(super) fn spawn_mob_system(
     mut cmds: Commands,
-    assets: Res<GameAssets>,
+    game_assets: Res<GameAssets>,
+    extended_assets: Res<ExtendedGameAssets>,
     materials: Res<ParticleMaterials>,
     mob_debug_settings: Res<MobDebugSettings>,
     mut spawn_mob_event_reader: EventReader<SpawnMobEvent>,
@@ -157,7 +147,8 @@ pub(super) fn spawn_mob_system(
             &mob_debug_settings,
             &attributes_res,
             &behaviors_res,
-            &assets,
+            &game_assets,
+            &extended_assets,
             &materials,
             suppress_jointed_mobs,
             transmitter_entity,
@@ -175,7 +166,8 @@ fn spawn_mob(
     mob_debug_settings: &MobDebugSettings,
     attributes_res: &MobAttributesResource,
     behaviors_res: &MobBehaviorsResource,
-    assets: &GameAssets,
+    game_assets: &GameAssets,
+    extended_assets: &ExtendedGameAssets,
     materials: &ParticleMaterials,
     suppress_jointed_mobs: bool,
     transmitter_entity: Option<Entity>, // entity that can transmit behaviors to the mob
@@ -191,7 +183,7 @@ fn spawn_mob(
         mob_type.clone(),
         AseAnimation {
             animation: Animation::tag("idle"),
-            aseprite: assets.get_mob_sprite(mob_type),
+            aseprite: get_mob_sprite(mob_type, extended_assets, game_assets)?,
         },
         Sprite::default(),
         Cleanup::<AppState> {
@@ -218,7 +210,17 @@ fn spawn_mob(
                     Transform::from_xyz(pos.x, pos.y, 0.0),
                     AseAnimation {
                         animation: Animation::tag("idle"),
-                        aseprite: assets.get_mob_decoration_sprite(decoration_type),
+                        aseprite: match get_mob_decoration_sprite(
+                            decoration_type,
+                            extended_assets,
+                            game_assets,
+                        ) {
+                            Ok(handle) => handle,
+                            Err(e) => {
+                                warn!("Failed to load decoration sprite, skipping decoration: {}", e);
+                                continue;
+                            }
+                        },
                     },
                     Sprite::default(),
                     Name::new("Decoration"),
@@ -274,7 +276,8 @@ fn spawn_mob(
                     mob_debug_settings,
                     attributes_res,
                     behaviors_res,
-                    assets,
+                    game_assets,
+                    extended_assets,
                     materials,
                     chain_index < actual_length - 1, // Suppress jointed mobs except on the last chain link
                     new_transmitter_entity,
@@ -311,7 +314,8 @@ fn spawn_mob(
                 mob_debug_settings,
                 attributes_res,
                 behaviors_res,
-                assets,
+                game_assets,
+                extended_assets,
                 materials,
                 false,
                 new_transmitter_entity,
@@ -343,11 +347,12 @@ fn spawn_mob(
                 &ParticleEffectType::from_projectile_type(&spawner.projectile_type),
                 &spawner.faction,
                 &transform,
-                assets,
+                extended_assets,
+                game_assets,
                 materials,
             );
 
-            spawner.spawn_effect_entity = Some(particle_entity);
+            spawner.spawn_effect_entity = particle_entity;
         }
 
         // Update the entity with the modified projectile spawners

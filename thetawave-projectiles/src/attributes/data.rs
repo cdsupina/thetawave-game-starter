@@ -18,6 +18,7 @@ pub enum ProjectileType {
 }
 
 /// Used for indicating which effect to spawn in the spawn effect system
+#[derive(Debug)]
 pub(crate) enum ProjectileEffectType {
     Despawn,
     Hit,

@@ -16,6 +16,8 @@ Cargo.lock
 # Ignore media assets without open liscenses
 assets/media/
 assets/data/
+assets/extended/
+assets/*.assets.ron
 
 # Ignore environment files with credentials
 scripts/pcloud/.env

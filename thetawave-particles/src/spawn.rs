@@ -1,28 +1,31 @@
 use bevy::{
     asset::Handle,
     ecs::{entity::Entity, name::Name, system::Commands},
+    log::warn,
     transform::components::Transform,
 };
 use bevy_enoki::{
     Particle2dEffect, ParticleEffectHandle, ParticleSpawner, prelude::ParticleSpawnerState,
 };
-use thetawave_assets::{GameAssets, ParticleMaterials};
+use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
 use thetawave_core::Faction;
 use thetawave_states::{AppState, Cleanup};
 
 use crate::ParticleEffectType;
 
-trait GameAssetsExt {
-    fn get_particle_effect(&self, effect_type: &ParticleEffectType) -> Handle<Particle2dEffect>;
-}
+/// Get the particle effect handle from a given ParticleEffectType using asset resolver
+fn get_particle_effect(
+    effect_type: &ParticleEffectType,
+    extended_game_assets: &ExtendedGameAssets,
+    game_assets: &GameAssets,
+) -> Result<Handle<Particle2dEffect>, AssetError> {
+    // keys are the file stem of the desired asset
+    let key = match effect_type {
+        ParticleEffectType::SpawnBlast => "spawn_blast",
+        ParticleEffectType::SpawnBullet => "spawn_bullet",
+    };
 
-impl GameAssetsExt for GameAssets {
-    fn get_particle_effect(&self, effect_type: &ParticleEffectType) -> Handle<Particle2dEffect> {
-        match effect_type {
-            ParticleEffectType::SpawnBlast => self.spawn_blast_particle_effect.clone(),
-            ParticleEffectType::SpawnBullet => self.spawn_bullet_particle_effect.clone(),
-        }
-    }
+    AssetResolver::get_game_particle_effect(key, extended_game_assets, game_assets)
 }
 
 pub fn spawn_particle_effect(
@@ -31,9 +34,18 @@ pub fn spawn_particle_effect(
     effect_type: &ParticleEffectType,
     faction: &Faction,
     transform: &Transform,
+    extended_assets: &ExtendedGameAssets,
     assets: &GameAssets,
     materials: &ParticleMaterials,
-) -> Entity {
+) -> Option<Entity> {
+    let particle_effect_handle = match get_particle_effect(effect_type, extended_assets, assets) {
+        Ok(handle) => handle,
+        Err(e) => {
+            warn!("Failed to load particle effect, skipping spawn: {}", e);
+            return None;
+        }
+    };
+
     let particle_entity = cmds
         .spawn((
             Name::new("Particle Effect"),
@@ -47,7 +59,7 @@ pub fn spawn_particle_effect(
                 active: false, // Start inactive, will be activated by behavior system when needed
                 ..Default::default()
             },
-            ParticleEffectHandle(assets.get_particle_effect(effect_type)),
+            ParticleEffectHandle(particle_effect_handle),
         ))
         .id();
 
@@ -55,5 +67,5 @@ pub fn spawn_particle_effect(
         cmds.entity(parent).add_child(particle_entity);
     }
 
-    particle_entity
+    Some(particle_entity)
 }

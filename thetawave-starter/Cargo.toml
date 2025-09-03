@@ -34,6 +34,7 @@ strum.workspace = true
 winit.workspace = true
 image.workspace = true
 itertools.workspace = true
+bevy_embedded_assets.workspace = true
 
 [features]
 dynamic_linking = [

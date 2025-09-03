@@ -1,4 +1,4 @@
-use bevy::{app::App, input::keyboard::KeyCode};
+use bevy::{app::App, input::keyboard::KeyCode, prelude::*};
 use thetawave_starter::ThetawaveStarterPlugin;
 
 fn main() {
@@ -9,5 +9,6 @@ fn main() {
         starting_resolution: (1280., 720.),
         show_debug_keycode: KeyCode::Backquote,
     },));
+
     app.run();
 }
