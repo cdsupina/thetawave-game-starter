@@ -38,7 +38,7 @@ pub(crate) enum MobBehaviorType {
     SpawnProjectile(Option<Vec<String>>),
     DoForTime(Timer),
     TransmitMobBehavior {
-        mob_type: String,
+        mob_type: &'static str,
         behaviors: Vec<MobBehaviorType>,
     },
     #[allow(dead_code)]
@@ -62,7 +62,7 @@ pub(crate) struct MobBehaviorsResource {
 #[derive(Event)]
 pub(crate) struct TransmitBehaviorEvent {
     pub source_entity: Entity,
-    pub mob_type: String,
+    pub mob_type: &'static str,
     pub behaviors: Vec<MobBehaviorType>,
 }
 
@@ -176,9 +176,9 @@ impl MobBehaviorsResource {
                         Behave::Forever => {
                             Behave::Sequence => {
                                 Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(0.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once))]  }),
-                                Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(125.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once)),  MobBehaviorType::TransmitMobBehavior { mob_type: "ferritharax_left_claw_mob".to_string(), behaviors: vec![MobBehaviorType::MoveRight] }, MobBehaviorType::TransmitMobBehavior { mob_type: "ferritharax_right_claw_mob".to_string(), behaviors: vec![MobBehaviorType::MoveLeft] }]  }),
+                                Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(125.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once)),  MobBehaviorType::TransmitMobBehavior { mob_type: "ferritharax_left_claw_mob", behaviors: vec![MobBehaviorType::MoveRight] }, MobBehaviorType::TransmitMobBehavior { mob_type: "ferritharax_right_claw_mob", behaviors: vec![MobBehaviorType::MoveLeft] }]  }),
                                 Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(0.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once))]  }),
-                                Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(-125.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once)), MobBehaviorType::TransmitMobBehavior { mob_type: "ferritharax_left_claw_mob".to_string(), behaviors: vec![MobBehaviorType::MoveRight] }, MobBehaviorType::TransmitMobBehavior { mob_type: "ferritharax_right_claw_mob".to_string(), behaviors: vec![MobBehaviorType::MoveLeft] }]  }),
+                                Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(-125.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once)), MobBehaviorType::TransmitMobBehavior { mob_type: "ferritharax_left_claw_mob", behaviors: vec![MobBehaviorType::MoveRight] }, MobBehaviorType::TransmitMobBehavior { mob_type: "ferritharax_right_claw_mob", behaviors: vec![MobBehaviorType::MoveLeft] }]  }),
                             }
                         }
                     },
