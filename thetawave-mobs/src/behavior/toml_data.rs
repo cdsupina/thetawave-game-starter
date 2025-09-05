@@ -53,7 +53,7 @@ pub enum BehaviorNodeData {
     /// Spawns a named action with behaviors (maps to spawn_named)
     Action { 
         name: String,
-        behaviors: Vec<BehaviorActionData> 
+        behaviors: Vec<MobBehaviorType> 
     },
     
     /// Executes a trigger (for future use)
@@ -62,116 +62,6 @@ pub enum BehaviorNodeData {
     },
 }
 
-/// Simple deserializable version of behavior actions that converts to MobBehaviorType
-#[derive(Deserialize, Debug, Clone)]
-#[serde(tag = "action")]
-pub enum BehaviorActionData {
-    // Movement behaviors
-    MoveDown,
-    MoveUp,
-    MoveLeft,
-    MoveRight,
-    BrakeHorizontal,
-    BrakeAngular,
-    
-    /// Move to specific position
-    MoveTo { 
-        x: f32, 
-        y: f32 
-    },
-    
-    // Targeting behaviors
-    FindPlayerTarget,
-    MoveToTarget,
-    RotateToTarget,
-    MoveForward,
-    LoseTarget,
-    
-    // Spawning behaviors
-    SpawnMob { 
-        keys: Option<Vec<String>>
-    },
-    SpawnProjectile { 
-        keys: Option<Vec<String>>
-    },
-    
-    // Timing behaviors
-    DoForTime { 
-        seconds: f32 
-    },
-    
-    // Communication behaviors
-    TransmitMobBehavior { 
-        mob_type: String,
-        behaviors: Vec<BehaviorActionData>
-    },
-    
-    // Joint behaviors (for future use)
-    RotateJointsClockwise { 
-        keys: Vec<String>
-    },
-}
 
-impl BehaviorActionData {
-    /// Convert BehaviorActionData to MobBehaviorType
-    pub fn to_mob_behavior_type(&self) -> MobBehaviorType {
-        use bevy::{math::Vec2, time::{Timer, TimerMode}};
-        
-        match self {
-            // Simple movement actions
-            BehaviorActionData::MoveDown => MobBehaviorType::MoveDown,
-            BehaviorActionData::MoveUp => MobBehaviorType::MoveUp,
-            BehaviorActionData::MoveLeft => MobBehaviorType::MoveLeft,
-            BehaviorActionData::MoveRight => MobBehaviorType::MoveRight,
-            BehaviorActionData::BrakeHorizontal => MobBehaviorType::BrakeHorizontal,
-            BehaviorActionData::BrakeAngular => MobBehaviorType::BrakeAngular,
-            
-            // Position-based movement
-            BehaviorActionData::MoveTo { x, y } => {
-                MobBehaviorType::MoveTo(Vec2::new(*x, *y))
-            }
-            
-            // Targeting actions
-            BehaviorActionData::FindPlayerTarget => MobBehaviorType::FindPlayerTarget,
-            BehaviorActionData::MoveToTarget => MobBehaviorType::MoveToTarget,
-            BehaviorActionData::RotateToTarget => MobBehaviorType::RotateToTarget,
-            BehaviorActionData::MoveForward => MobBehaviorType::MoveForward,
-            BehaviorActionData::LoseTarget => MobBehaviorType::LoseTarget,
-            
-            // Spawning actions
-            BehaviorActionData::SpawnMob { keys } => {
-                MobBehaviorType::SpawnMob { keys: keys.clone() }
-            }
-            
-            BehaviorActionData::SpawnProjectile { keys } => {
-                MobBehaviorType::SpawnProjectile { keys: keys.clone() }
-            }
-            
-            // Timing actions
-            BehaviorActionData::DoForTime { seconds } => {
-                MobBehaviorType::DoForTime(Timer::from_seconds(*seconds, TimerMode::Once))
-            }
-            
-            // Communication actions
-            BehaviorActionData::TransmitMobBehavior { mob_type, behaviors } => {
-                let converted_behaviors: Vec<MobBehaviorType> = behaviors.iter()
-                    .map(|b| b.to_mob_behavior_type())
-                    .collect();
-                
-                // Convert to &'static str by leaking - safe for behavior trees loaded once at startup
-                let static_mob_type: &'static str = Box::leak(mob_type.clone().into_boxed_str());
-                MobBehaviorType::TransmitMobBehavior {
-                    mob_type: static_mob_type,
-                    behaviors: converted_behaviors,
-                }
-            }
-            
-            // Joint actions (for future use)
-            BehaviorActionData::RotateJointsClockwise { keys } => {
-                MobBehaviorType::RotateJointsClockwise { keys: keys.clone() }
-            }
-        }
-    }
-}
 
 

@@ -1,12 +1,11 @@
 use bevy::{
     ecs::{entity::Entity, event::Event, resource::Resource},
-    math::Vec2,
     platform::collections::HashMap,
     prelude::Component,
     reflect::Reflect,
-    time::Timer,
 };
 use bevy_behave::{prelude::Tree, Behave};
+use serde::Deserialize;
 
 /// Used for receiving behaviors from another mob's TransmitMobBehavior
 /// The entity is the mob entity that behaviors can be receieved from
@@ -19,7 +18,8 @@ pub(crate) struct BehaviorReceiverComponent(pub Entity);
 pub(crate) struct TargetComponent(pub Entity);
 
 /// Mob behaviors that can be run together at a single node in the behavior tree
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, Deserialize)]
+#[serde(tag = "action")]
 pub(crate) enum MobBehaviorType {
     // Movement behaviors
     MoveDown,
@@ -31,7 +31,7 @@ pub(crate) enum MobBehaviorType {
     BrakeAngular,
     
     /// Move to specific position
-    MoveTo(Vec2),
+    MoveTo { x: f32, y: f32 },
     
     // Targeting behaviors
     FindPlayerTarget,
@@ -49,11 +49,11 @@ pub(crate) enum MobBehaviorType {
     },
     
     // Timing behaviors
-    DoForTime(Timer),
+    DoForTime { seconds: f32 },
     
     // Communication behaviors  
     TransmitMobBehavior {
-        mob_type: &'static str,
+        mob_type: String,
         behaviors: Vec<MobBehaviorType>,
     },
     
@@ -81,7 +81,7 @@ pub(crate) struct MobBehaviorsResource {
 #[derive(Event)]
 pub(crate) struct TransmitBehaviorEvent {
     pub source_entity: Entity,
-    pub mob_type: &'static str,
+    pub mob_type: String,
     pub behaviors: Vec<MobBehaviorType>,
 }
 

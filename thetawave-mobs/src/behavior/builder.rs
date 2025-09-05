@@ -2,7 +2,7 @@ use bevy_behave::{prelude::Tree, Behave, behave};
 
 use super::{
     data::MobBehaviorComponent,
-    toml_data::{BehaviorActionData, BehaviorNodeData},
+    toml_data::BehaviorNodeData,
 };
 
 /// Converts TOML behavior node data into bevy_behave Tree structures  
@@ -37,10 +37,7 @@ pub fn build_behavior_tree(node: &BehaviorNodeData) -> Tree<Behave> {
         }
         
         BehaviorNodeData::Action { name, behaviors } => {
-            let converted_behaviors: Vec<_> = behaviors.iter()
-                .map(|b| b.to_mob_behavior_type())
-                .collect();
-            let component = MobBehaviorComponent { behaviors: converted_behaviors };
+            let component = MobBehaviorComponent { behaviors: behaviors.clone() };
             // Convert name to &'static str by leaking it
             let static_name: &'static str = Box::leak(name.clone().into_boxed_str());
             behave! { Behave::spawn_named(static_name, component) }

@@ -4,10 +4,11 @@ use bevy::{
         entity::Entity,
         event::{EventReader, EventWriter},
         query::With,
-        system::{Commands, Query, Res},
+        system::{Commands, Local, Query, Res},
     },
     math::Vec2,
-    time::{Time, Timer},
+    platform::collections::HashMap,
+    time::{Time, Timer, TimerMode},
     transform::components::Transform,
 };
 use bevy_behave::prelude::BehaveCtx;
@@ -41,7 +42,7 @@ pub(super) fn transmit_system(
             {
                 transmit_event_writer.write(TransmitBehaviorEvent {
                     source_entity: ctx.target_entity(),
-                    mob_type: *mob_type,
+                    mob_type: mob_type.clone(),
                     behaviors: behaviors.clone(),
                 });
             }
@@ -173,8 +174,9 @@ pub(super) fn move_to_system(
         };
 
         for behavior in move_behavior.behaviors.iter() {
-            if let MobBehaviorType::MoveTo(target_pos) = behavior {
-                move_to(attributes, &mut lin_vel, transform, target_pos)
+            if let MobBehaviorType::MoveTo { x, y } = behavior {
+                let target_pos = Vec2::new(*x, *y);
+                move_to(attributes, &mut lin_vel, transform, &target_pos)
             }
         }
     }
@@ -747,25 +749,25 @@ fn spawn_projectile(
 /// MobBehaviorType::DoForTime
 /// Triggers success when the timer is finished to progress the behavior tree
 pub(super) fn do_for_time_system(
-    mut mob_behavior_q: Query<(&mut MobBehaviorComponent, &BehaveCtx)>,
+    mob_behavior_q: Query<(&MobBehaviorComponent, &BehaveCtx)>,
+    mut timers: Local<HashMap<Entity, Timer>>,
     mut cmds: Commands,
     time: Res<Time>,
 ) {
-    for (mut mob_behavior, ctx) in mob_behavior_q.iter_mut() {
-        for behavior in mob_behavior.behaviors.iter_mut() {
-            if let MobBehaviorType::DoForTime(timer) = behavior {
-                do_for_time(timer, &time, &mut cmds, ctx);
+    for (mob_behavior, ctx) in mob_behavior_q.iter() {
+        for behavior in mob_behavior.behaviors.iter() {
+            if let MobBehaviorType::DoForTime { seconds } = behavior {
+                let entity = ctx.target_entity();
+                let timer = timers.entry(entity).or_insert_with(|| Timer::from_seconds(*seconds, TimerMode::Once));
+                if timer.tick(time.delta()).just_finished() {
+                    cmds.trigger(ctx.success());
+                    timers.remove(&entity); // Clean up finished timer
+                }
             }
         }
     }
 }
 
-fn do_for_time(timer: &mut Timer, time: &Res<Time>, cmds: &mut Commands, ctx: &BehaveCtx) {
-    if timer.tick(time.delta()).just_finished() {
-        // Perform the action when the timer finishes
-        cmds.trigger(ctx.success());
-    }
-}
 
 /// MobBehaviorType::RotateJointsClockwise
 /// Uses joint motor to rotate joint
