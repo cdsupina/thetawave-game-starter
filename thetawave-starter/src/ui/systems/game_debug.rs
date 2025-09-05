@@ -17,7 +17,7 @@ use thetawave_core::Faction;
 #[cfg(feature = "debug")]
 use thetawave_debug::InspectorDebugSettings;
 #[cfg(feature = "debug")]
-use thetawave_mobs::{MobDebugSettings, MobType, SpawnMobEvent};
+use thetawave_mobs::{MobDebugSettings, SpawnMobEvent};
 #[cfg(feature = "debug")]
 use thetawave_physics::PhysicsDebugSettings;
 #[cfg(feature = "debug")]
@@ -94,7 +94,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                     ui.menu_button("Xhitara", |ui| {
                         if ui.button("Xhitara Grunt").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::XhitaraGrunt,
+                                mob_type: "xhitara_grunt_mob".to_string(),
                                 position: *spawn_location,
                                 rotation: 0.0,
                             });
@@ -102,7 +102,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Xhitara Spitter").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::XhitaraSpitter,
+                                mob_type: "xhitara_spitter_mob".to_string(),
                                 position: *spawn_location,
                                 rotation: 0.0,
                             });
@@ -110,7 +110,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Xhitara Gyro").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::XhitaraGyro,
+                                mob_type: "xhitara_gyro_mob".to_string(),
                                 position: *spawn_location,
                                 rotation: 0.0,
                             });
@@ -118,7 +118,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Xhitara Pacer").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::XhitaraPacer,
+                                mob_type: "xhitara_pacer_mob".to_string(),
                                 position: *spawn_location,
                                 rotation: 0.0,
                             });
@@ -126,7 +126,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Xhitara Missile").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::XhitaraMissile,
+                                mob_type: "xhitara_missile_mob".to_string(),
                                 position: *spawn_location,
                                 rotation: 0.0,
                             });
@@ -134,7 +134,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Xhitara Launcher").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::XhitaraLauncher,
+                                mob_type: "xhitara_launcher_mob".to_string(),
                                 position: *spawn_location,
                                 rotation: 0.0,
                             });
@@ -142,7 +142,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Xhitara Cyclusk").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::XhitaraCyclusk,
+                                mob_type: "xhitara_cyclusk_mob".to_string(),
                                 position: *spawn_location,
                                 rotation: 0.0,
                             });
@@ -150,7 +150,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Ferritharax").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::Ferritharax,
+                                mob_type: "ferritharax_head_mob".to_string(),
                                 position: *spawn_location,
                                 rotation: 0.0,
                             });
@@ -158,7 +158,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Trizetheron").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::Trizetheron,
+                                mob_type: "trizetheron_mob".to_string(),
                                 position: *spawn_location,
                                 rotation: 0.0,
                             });
@@ -168,7 +168,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                             ui.menu_button("Xhitara Tentacle", |ui| {
                                 if ui.button("Xhitara Tentacle Short").clicked() {
                                     spawn_mob_event_writer.write(SpawnMobEvent {
-                                        mob_type: MobType::XhitaraTentacleShort,
+                                        mob_type: "xhitara_tentacle_short_mob".to_string(),
                                         position: *spawn_location,
                                         rotation: 0.0,
                                     });
@@ -176,7 +176,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                                 if ui.button("Xhitara Tentacle Long").clicked() {
                                     spawn_mob_event_writer.write(SpawnMobEvent {
-                                        mob_type: MobType::XhitaraTentacleLong,
+                                        mob_type: "xhitara_tentacle_long_mob".to_string(),
                                         position: *spawn_location,
                                         rotation: 0.0,
                                     });
@@ -184,7 +184,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                                 if ui.button("Xhitara Tentacle Middle").clicked() {
                                     spawn_mob_event_writer.write(SpawnMobEvent {
-                                        mob_type: MobType::XhitaraTentacleMiddle,
+                                        mob_type: "xhitara_tentacle_middle_mob".to_string(),
                                         position: *spawn_location,
                                         rotation: 0.0,
                                     });
@@ -192,7 +192,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                                 if ui.button("Xhitara Tentacle End").clicked() {
                                     spawn_mob_event_writer.write(SpawnMobEvent {
-                                        mob_type: MobType::XhitaraTentacleEnd,
+                                        mob_type: "xhitara_tentacle_end_mob".to_string(),
                                         position: *spawn_location,
                                         rotation: 0.0,
                                     });
@@ -205,7 +205,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                     ui.menu_button("Ally", |ui| {
                         if ui.button("Freighter One").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::FreighterOne,
+                                mob_type: "freighter_one_mob".to_string(),
                                 position: *spawn_location,
                                 rotation: 0.0,
                             });
@@ -213,7 +213,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Freighter Two").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::FreighterTwo,
+                                mob_type: "freighter_two_mob".to_string(),
                                 position: *spawn_location,
                                 rotation: 0.0,
                             });
@@ -223,7 +223,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                             ui.menu_button("Freighter", |ui| {
                                 if ui.button("Freighter Middle").clicked() {
                                     spawn_mob_event_writer.write(SpawnMobEvent {
-                                        mob_type: MobType::FreighterMiddle,
+                                        mob_type: "freighter_middle_mob".to_string(),
                                         position: *spawn_location,
                                         rotation: 0.0,
                                     });
@@ -231,7 +231,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                                 if ui.button("Freighter Back").clicked() {
                                     spawn_mob_event_writer.write(SpawnMobEvent {
-                                        mob_type: MobType::FreighterBack,
+                                        mob_type: "freighter_back_mob".to_string(),
                                         position: *spawn_location,
                                         rotation: 0.0,
                                     });

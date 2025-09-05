@@ -2,7 +2,7 @@ mod attributes;
 mod behavior;
 mod spawn;
 
-pub use attributes::MobType;
+pub use attributes::MobMarker;
 pub use spawn::MobDebugSettings;
 
 use bevy::{

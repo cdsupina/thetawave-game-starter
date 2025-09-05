@@ -9,7 +9,6 @@ use bevy::{
     reflect::Reflect,
 };
 use serde::Deserialize;
-use strum_macros::EnumIter;
 use thetawave_core::HealthComponent;
 use thetawave_physics::{ColliderShape, ThetawaveCollider, ThetawavePhysicsLayer};
 
@@ -48,47 +47,22 @@ const DEFAULT_PROJECTILE_DAMAGE: u32 = 5;
 const DEFAULT_HEALTH: u32 = 50;
 const DEFAULT_RANGE_SECONDS: f32 = 1.0;
 
-/// Decorations that can be attached to mobs
-/// Decorations don't have colliders, but have independent animations from the mob
-#[derive(Deserialize, Debug, Clone)]
-pub(crate) enum MobDecorationType {
-    XhitaraGruntThrusters,
-    XhitaraSpitterThrusters,
-    XhitaraPacerThrusters,
-    XhitaraMissileThrusters,
-    FreighterThrusters,
-    XhitaraLauncherThrusters,
+/// Marker component for identifying mob entities in queries
+#[derive(Component, Reflect, Debug, Clone)]
+pub struct MobMarker {
+    mob_type: String,
 }
 
-/// Identifiers for mobs, mainly used for spawning
-#[derive(Deserialize, Debug, Eq, PartialEq, Hash, EnumIter, Clone, Component, Reflect)]
-pub enum MobType {
-    XhitaraGrunt,
-    XhitaraSpitter,
-    XhitaraGyro,
-    FreighterOne,
-    FreighterTwo,
-    FreighterMiddle,
-    FreighterBack,
-    XhitaraCyclusk,
-    Trizetheron,
-    TrizetheronLeftHead,
-    TrizetheronRightHead,
-    XhitaraTentacleShort,
-    XhitaraTentacleLong,
-    XhitaraTentacleMiddle,
-    XhitaraTentacleEnd,
-    XhitaraPacer,
-    XhitaraMissile,
-    XhitaraLauncher,
-    Ferritharax,
-    FerritharaxBody,
-    FerritharaxLeftShoulder,
-    FerritharaxRightShoulder,
-    FerritharaxLeftClaw,
-    FerritharaxRightClaw,
-    FerritharaxLeftArm,
-    FerritharaxRightArm,
+impl MobMarker {
+    pub fn new(mob_type: impl Into<String>) -> Self {
+        Self {
+            mob_type: mob_type.into(),
+        }
+    }
+
+    pub fn mob_type(&self) -> &str {
+        &self.mob_type
+    }
 }
 
 /// Mob attributes not directly used to make any other componnents
@@ -135,7 +109,9 @@ pub(crate) struct MobAttributes {
     #[serde(default = "default_friction")]
     pub friction: f32,
     #[serde(default)]
-    pub decorations: Vec<(MobDecorationType, Vec2)>,
+    pub decorations: Vec<(String, Vec2)>,
+    #[serde(default)]
+    pub sprite_key: Option<String>,
     #[serde(default)]
     pub jointed_mobs: Vec<JointedMob>,
     #[serde(default = "default_collision_layer_membership")]
@@ -235,11 +211,11 @@ fn default_range_seconds() -> f32 {
 }
 
 /// Resource for storing data for all mobs
-/// Used mainly for spawning mobs with a given MobType
+/// Used mainly for spawning mobs with a given mob type string
 #[derive(Deserialize, Debug, Resource)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct MobAttributesResource {
-    pub attributes: HashMap<MobType, MobAttributes>,
+    pub attributes: HashMap<String, MobAttributes>,
 }
 
 /// Bundle containing all the core components needed for a mob entity
@@ -256,7 +232,6 @@ pub(crate) struct MobComponentBundle {
     pub mob_attributes: MobAttributesComponent,
     pub health: HealthComponent,
 }
-
 
 impl From<&MobAttributes> for MobComponentBundle {
     fn from(value: &MobAttributes) -> Self {

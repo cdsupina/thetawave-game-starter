@@ -23,67 +23,21 @@ use thetawave_projectiles::ProjectileType;
 use thetawave_states::{AppState, Cleanup};
 
 use crate::{
-    MobType,
+    MobMarker,
     attributes::{
-        JointedMob, JointsComponent, MobAttributesResource, MobComponentBundle, MobDecorationType,
+        JointedMob, JointsComponent, MobAttributesResource, MobComponentBundle,
     },
     behavior::{BehaviorReceiverComponent, MobBehaviorsResource},
 };
 
-/// Get the Aseprite handle from a given MobType using asset resolver
-fn get_mob_sprite(
-    mob_type: &MobType,
-    extended_assets: &ExtendedGameAssets,
-    game_assets: &GameAssets,
-) -> Result<Handle<Aseprite>, AssetError> {
-    let key = match mob_type {
-        MobType::XhitaraGrunt => "xhitara_grunt_mob",
-        MobType::XhitaraSpitter => "xhitara_spitter_mob",
-        MobType::XhitaraGyro => "xhitara_gyro_mob",
-        MobType::FreighterOne | MobType::FreighterTwo => "freighter_front_mob",
-        MobType::FreighterMiddle => "freighter_middle_mob",
-        MobType::FreighterBack => "freighter_back_mob",
-        MobType::Trizetheron => "trizetheron_mob",
-        MobType::TrizetheronLeftHead => "trizetheron_left_head_mob",
-        MobType::TrizetheronRightHead => "trizetheron_right_head_mob",
-        MobType::XhitaraTentacleShort | MobType::XhitaraTentacleLong => {
-            "xhitara_tentacle_start_mob"
-        }
-        MobType::XhitaraTentacleMiddle => "xhitara_tentacle_middle_mob",
-        MobType::XhitaraTentacleEnd => "xhitara_tentacle_end_mob",
-        MobType::XhitaraCyclusk => "xhitara_cyclusk_mob",
-        MobType::XhitaraPacer => "xhitara_pacer_mob",
-        MobType::XhitaraMissile => "xhitara_missile_mob",
-        MobType::XhitaraLauncher => "xhitara_launcher_mob",
-        MobType::Ferritharax => "ferritharax_head_mob",
-        MobType::FerritharaxBody => "ferritharax_body_mob",
-        MobType::FerritharaxRightShoulder => "ferritharax_right_shoulder_mob",
-        MobType::FerritharaxLeftShoulder => "ferritharax_left_shoulder_mob",
-        MobType::FerritharaxRightClaw => "ferritharax_right_claw_mob",
-        MobType::FerritharaxLeftClaw => "ferritharax_left_claw_mob",
-        MobType::FerritharaxLeftArm => "ferritharax_left_arm_mob",
-        MobType::FerritharaxRightArm => "ferritharax_right_arm_mob",
-    };
 
-    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
-}
-
-/// Get the Aseprite handle from a given MobDecorationType using asset resolver
+/// Get the Aseprite handle from a decoration name string using asset resolver
 fn get_mob_decoration_sprite(
-    decoration_type: &MobDecorationType,
+    decoration_name: &str,
     extended_assets: &ExtendedGameAssets,
     game_assets: &GameAssets,
 ) -> Result<Handle<Aseprite>, AssetError> {
-    let key = match decoration_type {
-        MobDecorationType::XhitaraGruntThrusters => "xhitara_grunt_thrusters",
-        MobDecorationType::XhitaraSpitterThrusters => "xhitara_spitter_thrusters",
-        MobDecorationType::XhitaraPacerThrusters => "xhitara_pacer_thrusters",
-        MobDecorationType::XhitaraMissileThrusters => "xhitara_missile_thrusters",
-        MobDecorationType::FreighterThrusters => "freighter_thrusters",
-        MobDecorationType::XhitaraLauncherThrusters => "xhitara_launcher_thrusters",
-    };
-
-    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
+    AssetResolver::get_game_sprite(decoration_name, extended_assets, game_assets)
 }
 
 trait ParticleEffectTypeExt {
@@ -116,10 +70,10 @@ impl Default for MobDebugSettings {
     }
 }
 
-/// Event for spawning mobs using a mob type and position
+/// Event for spawning mobs using a mob type string and position
 #[derive(Event, Debug)]
 pub struct SpawnMobEvent {
-    pub mob_type: MobType,
+    pub mob_type: String,
     pub position: Vec2,
     pub rotation: f32,
 }
@@ -160,7 +114,7 @@ pub(super) fn spawn_mob_system(
 /// Spawns a mob entity with all its components, decorations, and jointed sub-mobs
 fn spawn_mob(
     cmds: &mut Commands,
-    mob_type: &MobType,
+    mob_type: &str,
     position: Vec2,
     rotation: f32,
     mob_debug_settings: &MobDebugSettings,
@@ -180,10 +134,17 @@ fn spawn_mob(
     // Spawn the main anchor entity with all core components
     let mut entity_commands = cmds.spawn((
         MobComponentBundle::from(mob_attributes),
-        mob_type.clone(),
+        MobMarker::new(mob_type),
         AseAnimation {
             animation: Animation::tag("idle"),
-            aseprite: get_mob_sprite(mob_type, extended_assets, game_assets)?,
+            aseprite: {
+                let sprite_key = if let Some(sprite_key) = &mob_attributes.sprite_key {
+                    sprite_key.as_str()
+                } else {
+                    mob_type
+                };
+                AssetResolver::get_game_sprite(sprite_key, extended_assets, game_assets)?
+            },
         },
         Sprite::default(),
         Cleanup::<AppState> {
@@ -205,25 +166,28 @@ fn spawn_mob(
     let anchor_id = entity_commands
         .with_children(|parent| {
             // Spawn visual decorations as child entities
-            for (decoration_type, pos) in &mob_attributes.decorations {
+            for (decoration_sprite_stem, pos) in &mob_attributes.decorations {
                 parent.spawn((
                     Transform::from_xyz(pos.x, pos.y, 0.0),
                     AseAnimation {
                         animation: Animation::tag("idle"),
                         aseprite: match get_mob_decoration_sprite(
-                            decoration_type,
+                            decoration_sprite_stem,
                             extended_assets,
                             game_assets,
                         ) {
                             Ok(handle) => handle,
                             Err(e) => {
-                                warn!("Failed to load decoration sprite, skipping decoration: {}", e);
+                                warn!(
+                                    "Failed to load decoration sprite, skipping decoration: {}",
+                                    e
+                                );
                                 continue;
                             }
                         },
                     },
                     Sprite::default(),
-                    Name::new("Decoration"),
+                    Name::new(decoration_sprite_stem.clone()),
                 ));
             }
 
