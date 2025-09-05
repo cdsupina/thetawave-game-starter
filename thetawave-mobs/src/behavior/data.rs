@@ -4,9 +4,9 @@ use bevy::{
     platform::collections::HashMap,
     prelude::Component,
     reflect::Reflect,
-    time::{Timer, TimerMode},
+    time::Timer,
 };
-use bevy_behave::{Behave, behave, prelude::Tree};
+use bevy_behave::{prelude::Tree, Behave};
 
 /// Used for receiving behaviors from another mob's TransmitMobBehavior
 /// The entity is the mob entity that behaviors can be receieved from
@@ -66,124 +66,4 @@ pub(crate) struct TransmitBehaviorEvent {
     pub behaviors: Vec<MobBehaviorType>,
 }
 
-impl MobBehaviorsResource {
-    pub fn new() -> Self {
-        Self {
-            behaviors: HashMap::from([
-                (
-                    "xhitara_grunt_mob".to_string(),
-                    behave! {
-                        Behave::Forever => {
-                            Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveDown, MobBehaviorType::BrakeHorizontal]  }),
-                        }
-                    },
-                ),
-                (
-                    "xhitara_spitter_mob".to_string(),
-                    behave! {
-                        Behave::Forever => {
-                            Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveDown, MobBehaviorType::BrakeHorizontal, MobBehaviorType::SpawnProjectile(Some(vec!["south".to_string()]))]  }),
-                        }
-                    },
-                ),
-                (
-                    "xhitara_gyro_mob".to_string(),
-                    behave! {
-                        Behave::Forever => {
-                            Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveDown, MobBehaviorType::BrakeHorizontal, MobBehaviorType::SpawnProjectile(Some(vec!["south".to_string(), "east".to_string(), "west".to_string()]))]  }),
-                        }
-                    },
-                ),
-                (
-                    "xhitara_pacer_mob".to_string(),
-                    behave! {
-                        Behave::Forever => {
-                            Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveDown, MobBehaviorType::BrakeHorizontal, MobBehaviorType::SpawnProjectile(Some(vec!["south".to_string()]))]  }),
-                        }
-                    },
-                ),
-                (
-                    "freighter_one_mob".to_string(),
-                    behave! {
-                        Behave::Forever => {
-                            Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveDown, MobBehaviorType::BrakeHorizontal]  }),
-
-                        }
-                    },
-                ),
-                (
-                    "freighter_two_mob".to_string(),
-                    behave! {
-                        Behave::Forever => {
-                            Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveDown, MobBehaviorType::BrakeHorizontal]  }),
-
-                        }
-                    },
-                ),
-                (
-                    "xhitara_missile_mob".to_string(),
-                    behave! {
-                        Behave::Forever => {
-                            Behave::Sequence => {
-                                Behave::spawn_named("Find Target", MobBehaviorComponent{ behaviors: vec![MobBehaviorType::FindPlayerTarget, MobBehaviorType::MoveForward, MobBehaviorType::BrakeAngular]}),
-                                Behave::spawn_named("Move To Target", MobBehaviorComponent{ behaviors: vec![MobBehaviorType::MoveForward, MobBehaviorType::RotateToTarget, MobBehaviorType::LoseTarget]})
-                            }
-                        }
-                    },
-                ),
-                (
-                    "xhitara_launcher_mob".to_string(),
-                    behave! {
-                        Behave::Forever => {
-                            Behave::spawn_named("Move and Spawn Missiles", MobBehaviorComponent{ behaviors: vec![MobBehaviorType::MoveDown, MobBehaviorType::BrakeHorizontal, MobBehaviorType::SpawnMob(Some(vec!["missiles".to_string()]))]}),
-                        }
-                    },
-                ),
-                (
-                    "xhitara_tentacle_end_mob".to_string(),
-                    behave! {
-                        Behave::Forever => {
-                            Behave::Sequence => {
-                                Behave::spawn_named("Find Target", MobBehaviorComponent{ behaviors: vec![MobBehaviorType::FindPlayerTarget, MobBehaviorType::BrakeAngular]}),
-                                Behave::spawn_named("Move To Target", MobBehaviorComponent{ behaviors: vec![MobBehaviorType::MoveForward, MobBehaviorType::RotateToTarget, MobBehaviorType::LoseTarget]})
-                            }
-                        }
-                    },
-                ),
-                (
-                    "xhitara_cyclusk_mob".to_string(),
-                    behave! {
-                        Behave::Forever => {
-                            Behave::Sequence => {
-                                Behave::spawn_named("Find Target", MobBehaviorComponent{ behaviors: vec![MobBehaviorType::FindPlayerTarget]}),
-                                Behave::spawn_named("Move To Target", MobBehaviorComponent{ behaviors: vec![MobBehaviorType::MoveToTarget, MobBehaviorType::RotateToTarget]})
-                            }
-                        }
-                    },
-                ),
-                (
-                    "trizetheron_mob".to_string(),
-                    behave! {
-                        Behave::Forever => {
-                            Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(0.0, 50.0))]  }),
-
-                        }
-                    },
-                ),
-                (
-                    "ferritharax_head_mob".to_string(),
-                    behave! {
-                        Behave::Forever => {
-                            Behave::Sequence => {
-                                Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(0.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once))]  }),
-                                Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(125.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once)),  MobBehaviorType::TransmitMobBehavior { mob_type: "ferritharax_left_claw_mob", behaviors: vec![MobBehaviorType::MoveRight] }, MobBehaviorType::TransmitMobBehavior { mob_type: "ferritharax_right_claw_mob", behaviors: vec![MobBehaviorType::MoveLeft] }]  }),
-                                Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(0.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once))]  }),
-                                Behave::spawn_named("Movement", MobBehaviorComponent { behaviors: vec![MobBehaviorType::MoveTo(Vec2::new(-125.0, 50.0)), MobBehaviorType::DoForTime(Timer::from_seconds(15.0, TimerMode::Once)), MobBehaviorType::TransmitMobBehavior { mob_type: "ferritharax_left_claw_mob", behaviors: vec![MobBehaviorType::MoveRight] }, MobBehaviorType::TransmitMobBehavior { mob_type: "ferritharax_right_claw_mob", behaviors: vec![MobBehaviorType::MoveLeft] }]  }),
-                            }
-                        }
-                    },
-                ),
-            ]),
-        }
-    }
-}
+// Behaviors are now loaded from mob_behaviors.toml via the plugin
