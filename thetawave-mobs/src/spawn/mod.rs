@@ -78,6 +78,16 @@ pub struct SpawnMobEvent {
     pub rotation: f32,
 }
 
+impl SpawnMobEvent {
+    pub fn new(mob_type: impl Into<String>, position: Vec2, rotation: f32) -> Self {
+        Self {
+            mob_type: mob_type.into(),
+            position,
+            rotation,
+        }
+    }
+}
+
 /// Reads SpawnMobEvents and spawns mobs
 pub(super) fn spawn_mob_system(
     mut cmds: Commands,
