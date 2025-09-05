@@ -4,10 +4,11 @@ use bevy::{
         entity::Entity,
         event::{EventReader, EventWriter},
         query::With,
-        system::{Commands, Query, Res},
+        system::{Commands, Local, Query, Res},
     },
     math::Vec2,
-    time::{Time, Timer},
+    platform::collections::HashMap,
+    time::{Time, Timer, TimerMode},
     transform::components::Transform,
 };
 use bevy_behave::prelude::BehaveCtx;
@@ -16,7 +17,6 @@ use thetawave_player::PlayerStats;
 use thetawave_projectiles::SpawnProjectileEvent;
 
 use crate::{
-    MobType,
     attributes::{
         JointsComponent, MobAttributesComponent, MobSpawnerComponent, ProjectileSpawnerComponent,
     },
@@ -54,15 +54,15 @@ pub(super) fn transmit_system(
 pub(super) fn receive_system(
     mut transmit_event_reader: EventReader<TransmitBehaviorEvent>,
     mut mob_q: Query<(
-        &MobType,
+        &crate::MobMarker,
         &BehaviorReceiverComponent,
         &MobAttributesComponent,
         &mut LinearVelocity,
     )>,
 ) {
     for event in transmit_event_reader.read() {
-        for (mob_type, behavior_recv, mob_attr, mut lin_vel) in mob_q.iter_mut() {
-            if *mob_type == event.mob_type && behavior_recv.0 == event.source_entity {
+        for (mob_marker, behavior_recv, mob_attr, mut lin_vel) in mob_q.iter_mut() {
+            if mob_marker.mob_type() == event.mob_type && behavior_recv.0 == event.source_entity {
                 for behavior in event.behaviors.iter() {
                     match behavior {
                         MobBehaviorType::MoveDown => apply_move_down(&mut lin_vel, mob_attr),
@@ -174,8 +174,9 @@ pub(super) fn move_to_system(
         };
 
         for behavior in move_behavior.behaviors.iter() {
-            if let MobBehaviorType::MoveTo(target_pos) = behavior {
-                move_to(attributes, &mut lin_vel, transform, target_pos)
+            if let MobBehaviorType::MoveTo { x, y } = behavior {
+                let target_pos = Vec2::new(*x, *y);
+                move_to(attributes, &mut lin_vel, transform, &target_pos)
             }
         }
     }
@@ -588,7 +589,7 @@ pub(super) fn spawn_mob_system(
         };
 
         for behavior in mob_behavior.behaviors.iter() {
-            if let MobBehaviorType::SpawnMob(Some(spawner_keys)) = behavior {
+            if let MobBehaviorType::SpawnMob { keys: Some(spawner_keys) } = behavior {
                 spawn_mob(
                     spawner_keys,
                     &mut mob_spawner,
@@ -646,7 +647,7 @@ pub(super) fn spawn_projectile_system(
         // Collect all active spawner keys from the current behavior tree
         let mut active_spawner_keys = Vec::new();
         for behavior in mob_behavior.behaviors.iter() {
-            if let MobBehaviorType::SpawnProjectile(Some(spawner_keys)) = behavior {
+            if let MobBehaviorType::SpawnProjectile { keys: Some(spawner_keys) } = behavior {
                 active_spawner_keys.extend(spawner_keys.iter().cloned());
             }
         }
@@ -748,25 +749,25 @@ fn spawn_projectile(
 /// MobBehaviorType::DoForTime
 /// Triggers success when the timer is finished to progress the behavior tree
 pub(super) fn do_for_time_system(
-    mut mob_behavior_q: Query<(&mut MobBehaviorComponent, &BehaveCtx)>,
+    mob_behavior_q: Query<(&MobBehaviorComponent, &BehaveCtx)>,
+    mut timers: Local<HashMap<Entity, Timer>>,
     mut cmds: Commands,
     time: Res<Time>,
 ) {
-    for (mut mob_behavior, ctx) in mob_behavior_q.iter_mut() {
-        for behavior in mob_behavior.behaviors.iter_mut() {
-            if let MobBehaviorType::DoForTime(timer) = behavior {
-                do_for_time(timer, &time, &mut cmds, ctx);
+    for (mob_behavior, ctx) in mob_behavior_q.iter() {
+        for behavior in mob_behavior.behaviors.iter() {
+            if let MobBehaviorType::DoForTime { seconds } = behavior {
+                let entity = ctx.target_entity();
+                let timer = timers.entry(entity).or_insert_with(|| Timer::from_seconds(*seconds, TimerMode::Once));
+                if timer.tick(time.delta()).just_finished() {
+                    cmds.trigger(ctx.success());
+                    timers.remove(&entity); // Clean up finished timer
+                }
             }
         }
     }
 }
 
-fn do_for_time(timer: &mut Timer, time: &Res<Time>, cmds: &mut Commands, ctx: &BehaveCtx) {
-    if timer.tick(time.delta()).just_finished() {
-        // Perform the action when the timer finishes
-        cmds.trigger(ctx.success());
-    }
-}
 
 /// MobBehaviorType::RotateJointsClockwise
 /// Uses joint motor to rotate joint
@@ -783,7 +784,7 @@ pub(super) fn rotate_clockwise_system(
         };
 
         for behavior in mob_behavior.behaviors.iter_mut() {
-            if let MobBehaviorType::RotateJointsClockwise(keys) = behavior {
+            if let MobBehaviorType::RotateJointsClockwise { keys } = behavior {
                 rotate_joints_clockwise(keys, joints, &mut joints_q);
             }
         }

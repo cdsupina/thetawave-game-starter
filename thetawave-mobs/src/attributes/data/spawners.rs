@@ -8,7 +8,6 @@ use bevy::{
 use serde::Deserialize;
 use thetawave_projectiles::ProjectileSpawner;
 
-use crate::MobType;
 
 /// Mob spawner component for use in spawned mobs
 /// Maps String keys to MobSpawners
@@ -32,7 +31,7 @@ pub(crate) struct MobSpawner {
     pub timer: Timer,
     pub position: Vec2,
     pub rotation: f32,
-    pub mob_type: MobType,
+    pub mob_type: String,
 }
 
 impl<'de> Deserialize<'de> for MobSpawner {
@@ -48,7 +47,7 @@ impl<'de> Deserialize<'de> for MobSpawner {
             pub timer: f32,
             pub position: Vec2,
             pub rotation: f32,
-            pub mob_type: MobType,
+            pub mob_type: String,
         }
 
         // Let serde deserialize into the Helper struct first

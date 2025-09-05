@@ -17,7 +17,7 @@ use thetawave_core::Faction;
 #[cfg(feature = "debug")]
 use thetawave_debug::InspectorDebugSettings;
 #[cfg(feature = "debug")]
-use thetawave_mobs::{MobDebugSettings, MobType, SpawnMobEvent};
+use thetawave_mobs::{MobDebugSettings, SpawnMobEvent};
 #[cfg(feature = "debug")]
 use thetawave_physics::PhysicsDebugSettings;
 #[cfg(feature = "debug")]
@@ -93,109 +93,109 @@ pub(in crate::ui) fn game_debug_menu_system(
                     // Xhitara Mobs
                     ui.menu_button("Xhitara", |ui| {
                         if ui.button("Xhitara Grunt").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::XhitaraGrunt,
-                                position: *spawn_location,
-                                rotation: 0.0,
-                            });
+                            spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                "xhitara_grunt_mob",
+                                *spawn_location,
+                                0.0,
+                            ));
                         }
 
                         if ui.button("Xhitara Spitter").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::XhitaraSpitter,
-                                position: *spawn_location,
-                                rotation: 0.0,
-                            });
+                            spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                "xhitara_spitter_mob",
+                                *spawn_location,
+                                0.0,
+                            ));
                         }
 
                         if ui.button("Xhitara Gyro").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::XhitaraGyro,
-                                position: *spawn_location,
-                                rotation: 0.0,
-                            });
+                            spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                "xhitara_gyro_mob",
+                                *spawn_location,
+                                0.0,
+                            ));
                         }
 
                         if ui.button("Xhitara Pacer").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::XhitaraPacer,
-                                position: *spawn_location,
-                                rotation: 0.0,
-                            });
+                            spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                "xhitara_pacer_mob",
+                                *spawn_location,
+                                0.0,
+                            ));
                         }
 
                         if ui.button("Xhitara Missile").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::XhitaraMissile,
-                                position: *spawn_location,
-                                rotation: 0.0,
-                            });
+                            spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                "xhitara_missile_mob",
+                                *spawn_location,
+                                0.0,
+                            ));
                         }
 
                         if ui.button("Xhitara Launcher").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::XhitaraLauncher,
-                                position: *spawn_location,
-                                rotation: 0.0,
-                            });
+                            spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                "xhitara_launcher_mob",
+                                *spawn_location,
+                                0.0,
+                            ));
                         }
 
                         if ui.button("Xhitara Cyclusk").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::XhitaraCyclusk,
-                                position: *spawn_location,
-                                rotation: 0.0,
-                            });
+                            spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                "xhitara_cyclusk_mob",
+                                *spawn_location,
+                                0.0,
+                            ));
                         }
 
                         if ui.button("Ferritharax").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::Ferritharax,
-                                position: *spawn_location,
-                                rotation: 0.0,
-                            });
+                            spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                "ferritharax_head_mob",
+                                *spawn_location,
+                                0.0,
+                            ));
                         }
 
                         if ui.button("Trizetheron").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::Trizetheron,
-                                position: *spawn_location,
-                                rotation: 0.0,
-                            });
+                            spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                "trizetheron_mob",
+                                *spawn_location,
+                                0.0,
+                            ));
                         }
 
                         ui.menu_button("Misc", |ui| {
                             ui.menu_button("Xhitara Tentacle", |ui| {
                                 if ui.button("Xhitara Tentacle Short").clicked() {
-                                    spawn_mob_event_writer.write(SpawnMobEvent {
-                                        mob_type: MobType::XhitaraTentacleShort,
-                                        position: *spawn_location,
-                                        rotation: 0.0,
-                                    });
+                                    spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                        "xhitara_tentacle_short_mob",
+                                        *spawn_location,
+                                        0.0,
+                                    ));
                                 }
 
                                 if ui.button("Xhitara Tentacle Long").clicked() {
-                                    spawn_mob_event_writer.write(SpawnMobEvent {
-                                        mob_type: MobType::XhitaraTentacleLong,
-                                        position: *spawn_location,
-                                        rotation: 0.0,
-                                    });
+                                    spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                        "xhitara_tentacle_long_mob",
+                                        *spawn_location,
+                                        0.0,
+                                    ));
                                 }
 
                                 if ui.button("Xhitara Tentacle Middle").clicked() {
-                                    spawn_mob_event_writer.write(SpawnMobEvent {
-                                        mob_type: MobType::XhitaraTentacleMiddle,
-                                        position: *spawn_location,
-                                        rotation: 0.0,
-                                    });
+                                    spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                        "xhitara_tentacle_middle_mob",
+                                        *spawn_location,
+                                        0.0,
+                                    ));
                                 }
 
                                 if ui.button("Xhitara Tentacle End").clicked() {
-                                    spawn_mob_event_writer.write(SpawnMobEvent {
-                                        mob_type: MobType::XhitaraTentacleEnd,
-                                        position: *spawn_location,
-                                        rotation: 0.0,
-                                    });
+                                    spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                        "xhitara_tentacle_end_mob",
+                                        *spawn_location,
+                                        0.0,
+                                    ));
                                 }
                             });
                         });
@@ -204,37 +204,37 @@ pub(in crate::ui) fn game_debug_menu_system(
                     // Ally Mobs
                     ui.menu_button("Ally", |ui| {
                         if ui.button("Freighter One").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::FreighterOne,
-                                position: *spawn_location,
-                                rotation: 0.0,
-                            });
+                            spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                "freighter_one_mob",
+                                *spawn_location,
+                                0.0,
+                            ));
                         }
 
                         if ui.button("Freighter Two").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent {
-                                mob_type: MobType::FreighterTwo,
-                                position: *spawn_location,
-                                rotation: 0.0,
-                            });
+                            spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                "freighter_two_mob",
+                                *spawn_location,
+                                0.0,
+                            ));
                         }
 
                         ui.menu_button("Misc", |ui| {
                             ui.menu_button("Freighter", |ui| {
                                 if ui.button("Freighter Middle").clicked() {
-                                    spawn_mob_event_writer.write(SpawnMobEvent {
-                                        mob_type: MobType::FreighterMiddle,
-                                        position: *spawn_location,
-                                        rotation: 0.0,
-                                    });
+                                    spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                        "freighter_middle_mob",
+                                        *spawn_location,
+                                        0.0,
+                                    ));
                                 }
 
                                 if ui.button("Freighter Back").clicked() {
-                                    spawn_mob_event_writer.write(SpawnMobEvent {
-                                        mob_type: MobType::FreighterBack,
-                                        position: *spawn_location,
-                                        rotation: 0.0,
-                                    });
+                                    spawn_mob_event_writer.write(SpawnMobEvent::new(
+                                        "freighter_back_mob",
+                                        *spawn_location,
+                                        0.0,
+                                    ));
                                 }
                             });
                         });

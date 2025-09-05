@@ -9,7 +9,7 @@ use bevy::{
     log::info,
 };
 use thetawave_core::{CollisionDamage, HealthComponent};
-use thetawave_mobs::MobType;
+use thetawave_mobs::MobMarker;
 use thetawave_player::{PlayerDeathEvent, PlayerStats};
 use thetawave_projectiles::ProjectileType;
 
@@ -24,8 +24,8 @@ impl Plugin for ThetawaveCollisionsPlugin {
 
 pub fn detect_collisions_system(
     mut started: EventReader<CollisionStarted>,
-    mut player_q: Query<&mut HealthComponent, (With<PlayerStats>, Without<MobType>)>,
-    mut mob_q: Query<&mut HealthComponent, (With<MobType>, Without<PlayerStats>)>,
+    mut player_q: Query<&mut HealthComponent, (With<PlayerStats>, Without<MobMarker>)>,
+    mob_q: Query<&mut HealthComponent, (With<MobMarker>, Without<PlayerStats>)>,
     projectile_q: Query<&CollisionDamage, With<ProjectileType>>,
     mut player_death_event_writer: EventWriter<PlayerDeathEvent>,
 ) {
