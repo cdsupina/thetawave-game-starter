@@ -587,7 +587,7 @@ pub(super) fn spawn_mob_system(
         };
 
         for behavior in mob_behavior.behaviors.iter() {
-            if let MobBehaviorType::SpawnMob(Some(spawner_keys)) = behavior {
+            if let MobBehaviorType::SpawnMob { keys: Some(spawner_keys) } = behavior {
                 spawn_mob(
                     spawner_keys,
                     &mut mob_spawner,
@@ -645,7 +645,7 @@ pub(super) fn spawn_projectile_system(
         // Collect all active spawner keys from the current behavior tree
         let mut active_spawner_keys = Vec::new();
         for behavior in mob_behavior.behaviors.iter() {
-            if let MobBehaviorType::SpawnProjectile(Some(spawner_keys)) = behavior {
+            if let MobBehaviorType::SpawnProjectile { keys: Some(spawner_keys) } = behavior {
                 active_spawner_keys.extend(spawner_keys.iter().cloned());
             }
         }
@@ -782,7 +782,7 @@ pub(super) fn rotate_clockwise_system(
         };
 
         for behavior in mob_behavior.behaviors.iter_mut() {
-            if let MobBehaviorType::RotateJointsClockwise(keys) = behavior {
+            if let MobBehaviorType::RotateJointsClockwise { keys } = behavior {
                 rotate_joints_clockwise(keys, joints, &mut joints_q);
             }
         }

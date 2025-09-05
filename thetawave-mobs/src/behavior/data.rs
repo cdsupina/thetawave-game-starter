@@ -19,30 +19,49 @@ pub(crate) struct BehaviorReceiverComponent(pub Entity);
 pub(crate) struct TargetComponent(pub Entity);
 
 /// Mob behaviors that can be run together at a single node in the behavior tree
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub(crate) enum MobBehaviorType {
+    // Movement behaviors
     MoveDown,
     #[allow(dead_code)] // Available for future use in behavior trees
     MoveUp,
     MoveLeft,
     MoveRight,
     BrakeHorizontal,
+    BrakeAngular,
+    
+    /// Move to specific position
     MoveTo(Vec2),
+    
+    // Targeting behaviors
     FindPlayerTarget,
     MoveToTarget,
     RotateToTarget,
     MoveForward,
     LoseTarget,
-    BrakeAngular,
-    SpawnMob(Option<Vec<String>>),
-    SpawnProjectile(Option<Vec<String>>),
+    
+    // Spawning behaviors
+    SpawnMob { 
+        keys: Option<Vec<String>>
+    },
+    SpawnProjectile { 
+        keys: Option<Vec<String>>
+    },
+    
+    // Timing behaviors
     DoForTime(Timer),
+    
+    // Communication behaviors  
     TransmitMobBehavior {
         mob_type: &'static str,
         behaviors: Vec<MobBehaviorType>,
     },
+    
+    // Joint behaviors (for future use)
     #[allow(dead_code)]
-    RotateJointsClockwise(Vec<String>),
+    RotateJointsClockwise { 
+        keys: Vec<String>
+    },
 }
 
 /// Used in behavior trees for attaching several behaviors to a node

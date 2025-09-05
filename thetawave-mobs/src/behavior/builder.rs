@@ -1,11 +1,7 @@
-use bevy::{
-    math::Vec2,
-    time::{Timer, TimerMode},
-};
 use bevy_behave::{prelude::Tree, Behave, behave};
 
 use super::{
-    data::{MobBehaviorComponent, MobBehaviorType},
+    data::MobBehaviorComponent,
     toml_data::{BehaviorActionData, BehaviorNodeData},
 };
 
@@ -41,8 +37,10 @@ pub fn build_behavior_tree(node: &BehaviorNodeData) -> Tree<Behave> {
         }
         
         BehaviorNodeData::Action { name, behaviors } => {
-            let mob_behaviors = convert_behavior_actions(behaviors);
-            let component = MobBehaviorComponent { behaviors: mob_behaviors };
+            let converted_behaviors: Vec<_> = behaviors.iter()
+                .map(|b| b.to_mob_behavior_type())
+                .collect();
+            let component = MobBehaviorComponent { behaviors: converted_behaviors };
             // Convert name to &'static str by leaking it
             let static_name: &'static str = Box::leak(name.clone().into_boxed_str());
             behave! { Behave::spawn_named(static_name, component) }
@@ -105,66 +103,5 @@ fn build_control_node(node_type: &str, children: &[BehaviorNodeData]) -> Tree<Be
 /// Build a vector of child trees from node data
 fn build_children_trees(children: &[BehaviorNodeData]) -> Vec<Tree<Behave>> {
     children.iter().map(build_behavior_tree).collect()
-}
-
-/// Convert BehaviorActionData to MobBehaviorType
-fn convert_behavior_actions(actions: &[BehaviorActionData]) -> Vec<MobBehaviorType> {
-    actions.iter().map(convert_single_action).collect()
-}
-
-/// Convert a single BehaviorActionData to MobBehaviorType
-fn convert_single_action(action: &BehaviorActionData) -> MobBehaviorType {
-    match action {
-        // Simple movement actions
-        BehaviorActionData::MoveDown => MobBehaviorType::MoveDown,
-        BehaviorActionData::MoveUp => MobBehaviorType::MoveUp,
-        BehaviorActionData::MoveLeft => MobBehaviorType::MoveLeft,
-        BehaviorActionData::MoveRight => MobBehaviorType::MoveRight,
-        BehaviorActionData::BrakeHorizontal => MobBehaviorType::BrakeHorizontal,
-        BehaviorActionData::BrakeAngular => MobBehaviorType::BrakeAngular,
-        
-        // Position-based movement
-        BehaviorActionData::MoveTo { x, y } => {
-            MobBehaviorType::MoveTo(Vec2::new(*x, *y))
-        }
-        
-        // Targeting actions
-        BehaviorActionData::FindPlayerTarget => MobBehaviorType::FindPlayerTarget,
-        BehaviorActionData::MoveToTarget => MobBehaviorType::MoveToTarget,
-        BehaviorActionData::RotateToTarget => MobBehaviorType::RotateToTarget,
-        BehaviorActionData::MoveForward => MobBehaviorType::MoveForward,
-        BehaviorActionData::LoseTarget => MobBehaviorType::LoseTarget,
-        
-        // Spawning actions
-        BehaviorActionData::SpawnMob { keys } => {
-            MobBehaviorType::SpawnMob(keys.as_ref().map(|k| k.iter().map(|s| s.clone()).collect()))
-        }
-        
-        BehaviorActionData::SpawnProjectile { keys } => {
-            MobBehaviorType::SpawnProjectile(keys.as_ref().map(|k| k.iter().map(|s| s.clone()).collect()))
-        }
-        
-        // Timing actions
-        BehaviorActionData::DoForTime { seconds } => {
-            MobBehaviorType::DoForTime(Timer::from_seconds(*seconds, TimerMode::Once))
-        }
-        
-        // Communication actions
-        BehaviorActionData::TransmitMobBehavior { mob_type, behaviors } => {
-            let converted_behaviors = convert_behavior_actions(behaviors);
-            // Need to leak the string to make it 'static since TransmitMobBehavior requires &'static str
-            // This is safe because behavior trees are typically loaded once at startup
-            let static_mob_type: &'static str = Box::leak(mob_type.clone().into_boxed_str());
-            MobBehaviorType::TransmitMobBehavior {
-                mob_type: static_mob_type,
-                behaviors: converted_behaviors,
-            }
-        }
-        
-        // Joint actions (for future use)
-        BehaviorActionData::RotateJointsClockwise { keys } => {
-            MobBehaviorType::RotateJointsClockwise(keys.clone())
-        }
-    }
 }
 
