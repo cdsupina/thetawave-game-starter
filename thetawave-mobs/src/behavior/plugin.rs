@@ -31,7 +31,7 @@ impl Plugin for ThetawaveMobBehaviorPlugin {
         app.add_event::<TransmitBehaviorEvent>();
 
         // Load behaviors from TOML file
-        let toml_data = toml::from_str::<MobBehaviorsTomlData>(include_str!(
+        let toml_data = toml::from_slice::<MobBehaviorsTomlData>(include_bytes!(
             "../../../assets/data/mob_behaviors.toml"
         ))
         .expect("Failed to parse MobBehaviorsResource from `mob_behaviors.toml`.");
