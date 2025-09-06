@@ -2,8 +2,35 @@ use serde::de::DeserializeOwned;
 use std::path::Path;
 use toml::Value;
 
+/// Recursively merge TOML values, with extended values taking precedence over base values.
+/// This handles tables, arrays, and primitive values correctly.
+fn merge_toml_values(base: &mut Value, extended: Value) {
+    match (base, extended) {
+        // Both are tables - merge recursively
+        (Value::Table(base_table), Value::Table(extended_table)) => {
+            for (key, extended_value) in extended_table {
+                match base_table.get_mut(&key) {
+                    Some(base_value) => {
+                        // Key exists in base - merge recursively
+                        merge_toml_values(base_value, extended_value);
+                    }
+                    None => {
+                        // Key doesn't exist in base - add it
+                        base_table.insert(key, extended_value);
+                    }
+                }
+            }
+        }
+        // For non-table values, extended completely replaces base
+        (base, extended) => {
+            *base = extended;
+        }
+    }
+}
+
 /// Load a resource with optional extended data field-level merging
-/// Extended data is looked for relative to the binary: "assets/data/{filename}"
+/// Extended data is looked for relative to the working directory: "assets/data/{filename}"
+/// This aligns with how media assets work via the "extended" asset source.
 /// 
 /// Field-level merging strategy:
 /// - If entry doesn't exist in base: add the entire entry from extended
@@ -27,28 +54,17 @@ where
     let mut base_value: Value = toml::from_slice(base_bytes)
         .expect("Failed to parse base data as TOML");
     
-    // Try to load extended data from assets/data/ relative to the binary's location
-    // This works for all scenarios: development, library usage, and release builds
-    let extended_path = if let Ok(exe_path) = std::env::current_exe() {
-        if let Some(exe_dir) = exe_path.parent() {
-            exe_dir.join("assets/data").join(extended_filename)
-        } else {
-            // Fallback to current working directory if parent() fails
-            Path::new("assets/data").join(extended_filename)
-        }
-    } else {
-        // Fallback to current working directory if current_exe() fails
-        Path::new("assets/data").join(extended_filename)
-    };
+    // Look for extended data in assets/data/ relative to current working directory
+    // This matches how the "extended" asset source works for media files
+    let extended_path = Path::new("assets/data").join(extended_filename);
     
     log::info!("Looking for extended data at: {:?}", extended_path);
     
     if extended_path.exists() {
         if let Ok(extended_bytes) = std::fs::read(&extended_path) {
             if let Ok(extended_value) = toml::from_slice::<Value>(&extended_bytes) {
-                // Perform field-level TOML merging
-                base_value = serde_toml_merge::merge(base_value, extended_value)
-                    .expect("Failed to merge TOML values");
+                // Perform careful TOML merging that preserves arrays correctly
+                merge_toml_values(&mut base_value, extended_value);
                 log::info!("Loaded and merged extended data from: {:?}", extended_path);
             } else {
                 log::warn!("Failed to parse extended data as TOML from: {:?}", extended_path);
