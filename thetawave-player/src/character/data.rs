@@ -2,7 +2,6 @@ use bevy::{ecs::resource::Resource, math::Vec2, platform::collections::HashMap};
 use leafwing_abilities::prelude::{Cooldown, CooldownState};
 use serde::Deserialize;
 use strum_macros::EnumIter;
-use thetawave_assets::MergeableResource;
 
 use crate::input::{InputType, PlayerAbility, PlayerNum};
 
@@ -112,9 +111,3 @@ pub struct ChosenCharacterData {
     pub input: InputType,
 }
 
-impl MergeableResource for CharactersResource {
-    fn merge(&mut self, other: Self) {
-        // Extend overwrites existing keys and adds new ones
-        self.characters.extend(other.characters);
-    }
-}

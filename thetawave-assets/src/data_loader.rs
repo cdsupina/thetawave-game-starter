@@ -1,33 +1,31 @@
 use serde::de::DeserializeOwned;
 use std::path::Path;
+use toml::Value;
 
-/// Trait for resources that can be merged with extended data
-/// Extended data takes priority and can add new entries
-pub trait MergeableResource: DeserializeOwned {
-    /// Merge another resource of the same type into this one
-    /// Extended data should override existing entries and add new ones
-    fn merge(&mut self, other: Self);
-}
-
-/// Load a resource with optional extended data override/merge
+/// Load a resource with optional extended data field-level merging
 /// Extended data is looked for relative to the binary: "assets/data/{filename}"
 /// 
+/// Field-level merging strategy:
+/// - If entry doesn't exist in base: add the entire entry from extended
+/// - If entry exists in base: merge at field level, extended fields override base fields
+/// - Fields not specified in extended retain their base values
+/// 
 /// # Arguments
-/// * `base_bytes` - The embedded base data as bytes
+/// * `base_bytes` - The embedded base data as bytes  
 /// * `extended_filename` - The filename to look for in assets/data/
 /// 
 /// # Returns
-/// The merged resource with base data + any extended overrides/additions
+/// The merged resource with base data + field-level extended overrides/additions
 pub fn load_with_extended<T>(
     base_bytes: &[u8],
     extended_filename: &str,
 ) -> T 
 where
-    T: DeserializeOwned + MergeableResource
+    T: DeserializeOwned
 {
-    // Parse base embedded data
-    let mut base = toml::from_slice::<T>(base_bytes)
-        .expect("Failed to parse base data");
+    // Parse base embedded data as TOML value for merging
+    let mut base_value: Value = toml::from_slice(base_bytes)
+        .expect("Failed to parse base data as TOML");
     
     // Try to load extended data from assets/data/ relative to the binary's location
     // This works for all scenarios: development, library usage, and release builds
@@ -47,16 +45,20 @@ where
     
     if extended_path.exists() {
         if let Ok(extended_bytes) = std::fs::read(&extended_path) {
-            if let Ok(extended) = toml::from_slice::<T>(&extended_bytes) {
-                base.merge(extended);
-                log::info!("Loaded extended data from: {:?}", extended_path);
+            if let Ok(extended_value) = toml::from_slice::<Value>(&extended_bytes) {
+                // Perform field-level TOML merging
+                base_value = serde_toml_merge::merge(base_value, extended_value)
+                    .expect("Failed to merge TOML values");
+                log::info!("Loaded and merged extended data from: {:?}", extended_path);
             } else {
-                log::warn!("Failed to parse extended data from: {:?}", extended_path);
+                log::warn!("Failed to parse extended data as TOML from: {:?}", extended_path);
             }
         } else {
             log::warn!("Failed to read extended data file: {:?}", extended_path);
         }
     }
     
-    base
+    // Deserialize the merged TOML value to the target type
+    base_value.try_into()
+        .expect("Failed to deserialize merged TOML data")
 }

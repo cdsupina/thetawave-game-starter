@@ -1,6 +1,5 @@
 use bevy::platform::collections::HashMap;
 use serde::Deserialize;
-use thetawave_assets::MergeableResource;
 
 use super::data::MobBehaviorType;
 
@@ -63,12 +62,6 @@ pub enum BehaviorNodeData {
     },
 }
 
-impl MergeableResource for MobBehaviorsTomlData {
-    fn merge(&mut self, other: Self) {
-        // Extend overwrites existing keys and adds new ones
-        self.behaviors.extend(other.behaviors);
-    }
-}
 
 
 

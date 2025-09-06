@@ -8,7 +8,6 @@ use bevy::{
     transform::components::Transform,
 };
 use serde::Deserialize;
-use thetawave_assets::MergeableResource;
 use thetawave_core::Faction;
 use thetawave_physics::ThetawaveCollider;
 
@@ -168,9 +167,3 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
     }
 }
 
-impl MergeableResource for ProjectileAttributesResource {
-    fn merge(&mut self, other: Self) {
-        // Extend overwrites existing keys and adds new ones
-        self.attributes.extend(other.attributes);
-    }
-}
