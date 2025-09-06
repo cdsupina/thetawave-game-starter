@@ -8,6 +8,7 @@ use bevy::{
     transform::components::Transform,
 };
 use serde::Deserialize;
+use thetawave_assets::MergeableResource;
 use thetawave_core::Faction;
 use thetawave_physics::ThetawaveCollider;
 
@@ -164,5 +165,12 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
             pre_spawn_animation_end_time: helper.pre_spawn_animation_end_time,
             spawn_effect_entity: None, // set to non because the entity cannot be known beforehand
         })
+    }
+}
+
+impl MergeableResource for ProjectileAttributesResource {
+    fn merge(&mut self, other: Self) {
+        // Extend overwrites existing keys and adds new ones
+        self.attributes.extend(other.attributes);
     }
 }

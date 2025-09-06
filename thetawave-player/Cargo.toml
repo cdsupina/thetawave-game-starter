@@ -6,6 +6,7 @@ edition.workspace = true
 [dependencies]
 avian2d.workspace = true
 thetawave-states = { path = "../thetawave-states" }
+thetawave-assets = { path = "../thetawave-assets" }
 bevy = { workspace = true, default-features = false }
 serde.workspace = true
 strum_macros.workspace = true

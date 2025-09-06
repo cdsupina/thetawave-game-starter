@@ -9,6 +9,7 @@ use bevy::{
     reflect::Reflect,
 };
 use serde::Deserialize;
+use thetawave_assets::MergeableResource;
 use thetawave_core::HealthComponent;
 use thetawave_physics::{ColliderShape, ThetawaveCollider, ThetawavePhysicsLayer};
 
@@ -289,5 +290,12 @@ impl From<&MobAttributes> for MobComponentBundle {
             },
             health: HealthComponent::new(value.health),
         }
+    }
+}
+
+impl MergeableResource for MobAttributesResource {
+    fn merge(&mut self, other: Self) {
+        // Extend overwrites existing keys and adds new ones
+        self.attributes.extend(other.attributes);
     }
 }

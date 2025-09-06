@@ -1,4 +1,5 @@
 mod data;
+mod data_loader;
 mod plugin;
 mod systems;
 
@@ -9,6 +10,7 @@ pub use data::{
     ExtendedMusicAssets, ExtendedUiAssets, GameAssets, LoadingProgressEvent, MusicAssets,
     ParticleMaterials, UiAssets,
 };
+pub use data_loader::{MergeableResource, load_with_extended};
 pub use plugin::ThetawaveAssetsPlugin;
 
 /// Errors that can occur during asset resolution
