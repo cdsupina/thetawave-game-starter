@@ -42,19 +42,19 @@ impl Plugin for ThetawaveAssetsPlugin {
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>("ui.assets.ron")
                 .load_collection::<UiAssets>()
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
-                    "extended/ui.assets.ron",
+                    "extended://ui.assets.ron",
                 )
                 .load_collection::<ExtendedUiAssets>()
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>("music.assets.ron")
                 .load_collection::<MusicAssets>()
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
-                    "extended/music.assets.ron",
+                    "extended://music.assets.ron",
                 )
                 .load_collection::<ExtendedMusicAssets>()
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>("background.assets.ron")
                 .load_collection::<BackgroundAssets>()
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
-                    "extended/background.assets.ron",
+                    "extended://background.assets.ron",
                 )
                 .load_collection::<ExtendedBackgroundAssets>(),
         )
@@ -63,7 +63,7 @@ impl Plugin for ThetawaveAssetsPlugin {
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>("game.assets.ron")
                 .load_collection::<GameAssets>()
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
-                    "extended/game.assets.ron",
+                    "extended://game.assets.ron",
                 )
                 .load_collection::<ExtendedGameAssets>(),
         )

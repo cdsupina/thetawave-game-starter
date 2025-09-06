@@ -1,6 +1,10 @@
 use bevy::{
     DefaultPlugins,
     app::Plugin,
+    asset::{
+        AssetApp,
+        io::{AssetSource, file::FileAssetReader},
+    },
     input::keyboard::KeyCode,
     prelude::PluginGroup,
     render::texture::ImagePlugin,
@@ -33,6 +37,11 @@ pub struct ThetawaveStarterPlugin {
 
 impl Plugin for ThetawaveStarterPlugin {
     fn build(&self, app: &mut bevy::app::App) {
+        app.register_asset_source(
+            "extended",
+            AssetSource::build().with_reader(|| Box::new(FileAssetReader::new("assets"))),
+        );
+
         app.add_plugins((
             EmbeddedAssetPlugin {
                 mode: PluginMode::ReplaceDefault, //embeds assets into binary
