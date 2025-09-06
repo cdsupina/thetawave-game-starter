@@ -1,16 +1,23 @@
 use bevy::{
     DefaultPlugins,
     app::Plugin,
-    asset::{
-        AssetApp,
-        io::{AssetSource, file::FileAssetReader},
-    },
     input::keyboard::KeyCode,
     prelude::PluginGroup,
     render::texture::ImagePlugin,
     utils::default,
     window::{Window, WindowMode, WindowPlugin, WindowResolution},
 };
+
+#[cfg(not(target_arch = "wasm32"))]
+use bevy::{
+    asset::{AssetApp, io::AssetSource, io::file::FileAssetReader},
+};
+
+#[cfg(target_arch = "wasm32")]
+use bevy::{
+    asset::{AssetApp, io::AssetSource, io::wasm::HttpWasmAssetReader},
+};
+
 use bevy_aseprite_ultra::AsepriteUltraPlugin;
 
 use bevy_embedded_assets::{EmbeddedAssetPlugin, PluginMode};
@@ -37,9 +44,16 @@ pub struct ThetawaveStarterPlugin {
 
 impl Plugin for ThetawaveStarterPlugin {
     fn build(&self, app: &mut bevy::app::App) {
+        #[cfg(not(target_arch = "wasm32"))]
         app.register_asset_source(
             "extended",
             AssetSource::build().with_reader(|| Box::new(FileAssetReader::new("assets"))),
+        );
+
+        #[cfg(target_arch = "wasm32")]
+        app.register_asset_source(
+            "extended",
+            AssetSource::build().with_reader(|| Box::new(HttpWasmAssetReader::new("assets"))),
         );
 
         app.add_plugins((

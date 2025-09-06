@@ -1,0 +1,38 @@
+[build]
+# The index HTML file to drive the bundling process.
+target = "index.html"
+# Build in release mode.
+release = true
+# The output dir for all final assets.
+dist = "dist"
+# The public URL from which assets are served.
+public_url = "/"
+
+# Copy assets directory to be served by HTTP
+[[build.hooks]]
+stage = "pre_build"
+command = "mkdir"
+command_arguments = ["-p", "dist/assets"]
+
+[[build.hooks]]
+stage = "pre_build"
+command = "cp"
+command_arguments = ["-r", "assets/.", "dist/assets/"]
+
+[serve]
+# The address to serve on.
+address = "127.0.0.1"
+# The port to serve on.
+port = 8080
+# Open a browser tab after the initial build finishes.
+open = false
+
+[clean]
+# The output dir.
+dist = "dist"
+# Optionally ignore these paths/files.
+ignore = []
+
+[tools]
+# Disable wasm-opt for faster builds
+# wasm_opt = "0.116.0"

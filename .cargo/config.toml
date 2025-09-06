@@ -20,6 +20,8 @@ rustflags = [
 [target.wasm32-unknown-unknown]
 runner = "wasm-server-runner"
 rustflags = [
+    # Enable getrandom backend for WASM
+    "--cfg", 'getrandom_backend="wasm_js"',
     # Clippy configuration to disable type complexity warnings
     "-A", "clippy::type_complexity",
     "-A", "clippy::enum_variant_names",
