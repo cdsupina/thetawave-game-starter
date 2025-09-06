@@ -33,3 +33,6 @@ scripts/pcloud/venv/
 
 # Ignore claude files
 .claude/
+
+# Ignore Trunk build output
+thetawave-test-game/dist/
