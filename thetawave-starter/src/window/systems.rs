@@ -18,12 +18,38 @@ pub(super) fn set_window_icon_system(
     // we have to use `NonSend` here
     windows: NonSend<WinitWindows>,
 ) {
+    // Try multiple possible locations for the window icon
+    let possible_paths = [
+        "assets/window_icon.png",        // When running from workspace root
+        "../assets/window_icon.png",     // When running from test-game directory
+    ];
+    
+    let mut icon_path = None;
+    for path in &possible_paths {
+        if std::path::Path::new(path).exists() {
+            icon_path = Some(path);
+            break;
+        }
+    }
+    
+    let icon_path = match icon_path {
+        Some(path) => path,
+        None => {
+            log::warn!("Window icon not found at any expected location: {:?}", possible_paths);
+            return; // Skip setting icon if not found
+        }
+    };
+
     // here we use the `image` crate to load our icon data from a png file
     // this is not a very bevy-native solution, but it will do
     let (icon_rgba, icon_width, icon_height) = {
-        let image = image::open("assets/window_icon.png")
-            .expect("Failed to open icon path")
-            .into_rgba8();
+        let image = match image::open(icon_path) {
+            Ok(img) => img,
+            Err(e) => {
+                log::warn!("Failed to open icon at {}: {}", icon_path, e);
+                return; // Skip setting icon if loading fails
+            }
+        }.into_rgba8();
         let (width, height) = image.dimensions();
         let rgba = image.into_raw();
         (rgba, width, height)

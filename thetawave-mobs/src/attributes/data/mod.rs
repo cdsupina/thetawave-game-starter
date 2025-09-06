@@ -291,3 +291,4 @@ impl From<&MobAttributes> for MobComponentBundle {
         }
     }
 }
+

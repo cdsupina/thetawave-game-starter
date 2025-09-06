@@ -23,7 +23,7 @@ pub use input::{
     PlayerNum,
 };
 pub use player::{PlayerDeathEvent, PlayerStats};
-use toml::from_slice;
+use thetawave_assets::load_with_extended;
 
 use crate::{
     character::reset_chosen_characters_resource_system,
@@ -42,10 +42,10 @@ pub struct ThetawavePlayerPlugin;
 impl Plugin for ThetawavePlayerPlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.insert_resource(
-            from_slice::<CharactersResource>(include_bytes!(
-                "../../assets/data/character_attributes.toml"
-            ))
-            .expect("Failed to parse CharactersResource from `character_attributes.toml`."),
+            load_with_extended::<CharactersResource>(
+                include_bytes!("../../assets/data/character_attributes.toml"),
+                "character_attributes.toml"
+            )
         )
         .init_resource::<ChosenCharactersResource>()
         .add_plugins(DefaultNavigationPlugins)

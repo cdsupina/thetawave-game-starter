@@ -166,3 +166,4 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
         })
     }
 }
+

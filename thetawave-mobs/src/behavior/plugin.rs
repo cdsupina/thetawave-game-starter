@@ -8,6 +8,7 @@ use bevy::{
     state::condition::in_state,
 };
 use bevy_behave::prelude::BehavePlugin;
+use thetawave_assets::load_with_extended;
 use thetawave_states::{AppState, GameState};
 
 use crate::behavior::{
@@ -31,10 +32,10 @@ impl Plugin for ThetawaveMobBehaviorPlugin {
         app.add_event::<TransmitBehaviorEvent>();
 
         // Load behaviors from TOML file
-        let toml_data = toml::from_str::<MobBehaviorsTomlData>(include_str!(
-            "../../../assets/data/mob_behaviors.toml"
-        ))
-        .expect("Failed to parse MobBehaviorsResource from `mob_behaviors.toml`.");
+        let toml_data = load_with_extended::<MobBehaviorsTomlData>(
+            include_bytes!("../../../assets/data/mob_behaviors.toml"),
+            "mob_behaviors.toml"
+        );
 
         // Build behavior trees from TOML data
         let mut behaviors = HashMap::new();

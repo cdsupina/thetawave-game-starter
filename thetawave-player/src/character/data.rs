@@ -110,3 +110,4 @@ pub struct ChosenCharacterData {
     pub character: CharacterType,
     pub input: InputType,
 }
+
