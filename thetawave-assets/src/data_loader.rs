@@ -29,19 +29,21 @@ where
     let mut base = toml::from_slice::<T>(base_bytes)
         .expect("Failed to parse base data");
     
-    // Try to load extended data from assets/data/ relative to working directory
-    // Check if we're in development workspace (has Cargo.toml) vs runtime directory
-    let in_development = Path::new("Cargo.toml").exists();
-    
-    let extended_path = if in_development {
-        // We're in development workspace - look in test-game subdirectory
-        Path::new("thetawave-test-game/assets/data").join(extended_filename)
+    // Try to load extended data from assets/data/ relative to the binary's location
+    // This works for all scenarios: development, library usage, and release builds
+    let extended_path = if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            exe_dir.join("assets/data").join(extended_filename)
+        } else {
+            // Fallback to current working directory if parent() fails
+            Path::new("assets/data").join(extended_filename)
+        }
     } else {
-        // We're in runtime directory - look in local assets
+        // Fallback to current working directory if current_exe() fails
         Path::new("assets/data").join(extended_filename)
     };
     
-    log::info!("In development: {}, Looking for extended data at: {:?}", in_development, extended_path);
+    log::info!("Looking for extended data at: {:?}", extended_path);
     
     if extended_path.exists() {
         if let Ok(extended_bytes) = std::fs::read(&extended_path) {
