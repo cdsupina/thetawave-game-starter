@@ -1,4 +1,4 @@
-use bevy::log::{info, warn};
+use bevy::log::info;
 use serde::de::DeserializeOwned;
 use std::path::Path;
 use toml::Value;
@@ -52,28 +52,47 @@ where
     let mut base_value: Value =
         toml::from_slice(base_bytes).expect("Failed to parse base data as TOML");
 
-    // Look for extended data in assets/data/ relative to current working directory
-    // This matches how the "extended" asset source works for media files
-    let extended_path = Path::new("assets/data").join(extended_filename);
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        // Native: Use filesystem access
+        let extended_path = Path::new("assets/data").join(extended_filename);
 
-    info!("Looking for extended data at: {:?}", extended_path);
-
-    info!("Extended path exists? {}", extended_path.exists());
-
-    if extended_path.exists() {
-        if let Ok(extended_bytes) = std::fs::read(&extended_path) {
-            if let Ok(extended_value) = toml::from_slice::<Value>(&extended_bytes) {
-                // Perform careful TOML merging that preserves arrays correctly
-                merge_toml_values(&mut base_value, extended_value);
-                info!("Loaded and merged extended data from: {:?}", extended_path);
-            } else {
-                warn!(
-                    "Failed to parse extended data as TOML from: {:?}",
-                    extended_path
-                );
+        if extended_path.exists() {
+            if let Ok(extended_bytes) = std::fs::read(&extended_path) {
+                if let Ok(extended_value) = toml::from_slice::<Value>(&extended_bytes) {
+                    merge_toml_values(&mut base_value, extended_value);
+                    info!("Loaded and merged extended data from: {:?}", extended_path);
+                }
             }
-        } else {
-            warn!("Failed to read extended data file: {:?}", extended_path);
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    {
+        // WASM: Use HTTP request to fetch extended data
+        let url = format!("assets/data/{}", extended_filename);
+
+        // Use synchronous XMLHttpRequest for WASM
+        use web_sys::XmlHttpRequest;
+        use wasm_bindgen::JsValue;
+
+        let xhr = XmlHttpRequest::new().unwrap();
+        xhr.open_with_async("GET", &url, false).unwrap(); // false = synchronous
+
+        match xhr.send() {
+            Ok(_) => {
+                if xhr.status().unwrap() == 200 {
+                    if let Ok(response_text) = xhr.response_text() {
+                        if let Some(text) = response_text {
+                            if let Ok(extended_value) = toml::from_str::<Value>(&text) {
+                                merge_toml_values(&mut base_value, extended_value);
+                                info!("Loaded and merged extended data from: {}", url);
+                            }
+                        }
+                    }
+                }
+            },
+            Err(_) => {}
         }
     }
 
