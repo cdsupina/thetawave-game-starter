@@ -1,6 +1,7 @@
 use bevy::{
     DefaultPlugins,
     app::Plugin,
+    asset::{AssetMetaCheck, AssetPlugin},
     input::keyboard::KeyCode,
     prelude::PluginGroup,
     render::texture::ImagePlugin,
@@ -9,14 +10,10 @@ use bevy::{
 };
 
 #[cfg(not(target_arch = "wasm32"))]
-use bevy::{
-    asset::{AssetApp, io::AssetSource, io::file::FileAssetReader},
-};
+use bevy::asset::{AssetApp, io::AssetSource, io::file::FileAssetReader};
 
 #[cfg(target_arch = "wasm32")]
-use bevy::{
-    asset::{AssetApp, io::AssetSource, io::wasm::HttpWasmAssetReader},
-};
+use bevy::asset::{AssetApp, io::AssetSource, io::wasm::HttpWasmAssetReader};
 
 use bevy_aseprite_ultra::AsepriteUltraPlugin;
 
@@ -61,6 +58,10 @@ impl Plugin for ThetawaveStarterPlugin {
                 mode: PluginMode::ReplaceDefault, //embeds assets into binary
             },
             DefaultPlugins
+                .set(AssetPlugin {
+                    meta_check: AssetMetaCheck::Never,
+                    ..default()
+                })
                 .set(ImagePlugin::default_nearest()) // necessary for crisp pixel art
                 .set(WindowPlugin {
                     primary_window: Some(Window {
