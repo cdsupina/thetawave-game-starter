@@ -13,6 +13,7 @@ use thetawave_states::{AppState, Cleanup, GameState, MainMenuState, PauseMenuSta
 use bevy::{
     app::AppExit,
     input::ButtonInput,
+    log::{info, warn},
     prelude::{
         Children, Entity, EventReader, EventWriter, Gamepad, GamepadButton, KeyCode, Local,
         MouseButton, NextState, Query, Res, ResMut, With,
@@ -22,7 +23,6 @@ use bevy::{
 };
 use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
 use bevy_aseprite_ultra::prelude::AseAnimation;
-use log::{info, warn};
 
 pub(super) mod character_selection;
 pub(super) mod egui;

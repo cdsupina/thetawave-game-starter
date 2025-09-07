@@ -20,7 +20,6 @@ bevy_platform.workspace = true
 bevy_egui.workspace = true
 bevy-alt-ui-navigation-lite.workspace = true
 bevy_asset_loader.workspace = true
-log.workspace = true
 webbrowser.workspace = true
 bevy_aseprite_ultra.workspace = true
 bevy_kira_audio.workspace = true
