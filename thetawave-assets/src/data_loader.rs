@@ -1,6 +1,5 @@
 use bevy::log::info;
 use serde::de::DeserializeOwned;
-use std::path::Path;
 use toml::Value;
 
 /// Recursively merge TOML values, with extended values taking precedence over base values.
@@ -54,6 +53,8 @@ where
 
     #[cfg(not(target_arch = "wasm32"))]
     {
+        use std::path::Path;
+
         // Native: Use filesystem access
         let extended_path = Path::new("assets/data").join(extended_filename);
 
@@ -74,7 +75,6 @@ where
 
         // Use synchronous XMLHttpRequest for WASM
         use web_sys::XmlHttpRequest;
-        use wasm_bindgen::JsValue;
 
         let xhr = XmlHttpRequest::new().unwrap();
         xhr.open_with_async("GET", &url, false).unwrap(); // false = synchronous
@@ -91,7 +91,7 @@ where
                         }
                     }
                 }
-            },
+            }
             Err(_) => {}
         }
     }

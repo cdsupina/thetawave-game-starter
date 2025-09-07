@@ -1,0 +1,686 @@
+
+# Xhitara Grunt
+# Description: The most basic mob in the game. Moves down toward the bottom of the arena.
+[attributes.xhitara_grunt_mob]
+name = "Xhitara Grunt"
+colliders = [
+    { shape = { Rectangle = [12.0, 15.0] }, position = [0.0, 0.0], rotation = 0.0 }
+]
+decorations = [
+    ["xhitara_grunt_thrusters", [0.0, 10.0]],
+]
+
+# Xhitara Spitter
+# Description: Moves down and shoots projectiles.
+[attributes.xhitara_spitter_mob]
+name = "Xhitara Spitter"
+colliders = [
+    { shape = { Rectangle = [14.0, 15.0] }, position = [0.0, 0.0], rotation = 0.0 }
+]
+max_linear_speed = [10.0, 15.0]
+projectile_speed = 130.0
+decorations = [
+    ["xhitara_spitter_thrusters", [0.0, 11.0]],
+]
+
+[attributes.xhitara_spitter_mob.projectile_spawners.spawners.south]
+timer = 1.0
+position = [0.0, -11.0]
+rotation = -90.0
+projectile_type = "Blast"
+faction = "Enemy"
+
+# Xhitara Gyro
+# Description: Moves down and shoots projectiles in a ring around it. Can be spun around when hit.
+[attributes.xhitara_gyro_mob]
+name = "Xhitara Gyro"
+rotation_locked = false
+colliders = [
+    { shape = { Rectangle = [17.0, 17.0] }, position = [0.0, 0.0], rotation = 0.0 }
+]
+linear_deceleration = [0.05, 0.08]
+max_linear_speed = [8.0, 8.0]
+
+[attributes.xhitara_gyro_mob.projectile_spawners.spawners.south]
+timer = 1.0
+position = [0.0, -14.0]
+rotation = -90.0
+range_seconds_multiplier = 0.5
+projectile_type = "Bullet"
+faction = "Enemy"
+
+[attributes.xhitara_gyro_mob.projectile_spawners.spawners.east]
+timer = 1.0
+position = [14.0, 0.0]
+rotation = 0.0
+range_seconds_multiplier = 0.5
+projectile_type = "Bullet"
+faction = "Enemy"
+
+[attributes.xhitara_gyro_mob.projectile_spawners.spawners.west]
+timer = 1.0
+position = [-14.0, 0.0]
+rotation = 180.0
+range_seconds_multiplier = 0.5
+projectile_type = "Bullet"
+faction = "Enemy"
+
+
+# Xhitara Pacer
+# Description: Moves down and to the side. Switches direction when hit. Also shoots projectiles.
+[attributes.xhitara_pacer_mob]
+name = "Xhitara Pacer"
+colliders = [
+    { shape = { Rectangle = [19.0, 8.0] }, position = [0.0, 0.0], rotation = 0.0 }
+]
+decorations = [
+    ["xhitara_pacer_thrusters", [0.0, 6.5]],
+]
+
+[attributes.xhitara_pacer_mob.projectile_spawners.spawners.south]
+timer = 1.25
+position = [0.0, -8.0]
+rotation = -90.0
+projectile_type = "Blast"
+faction = "Enemy"
+
+# Xhitara Missile
+# Description: Searches for player targets, then pursues them. Explodes on impact.
+[attributes.xhitara_missile_mob]
+name = "Xhitara Missile"
+rotation_locked = false
+max_linear_speed = [100.0, 100.0]
+linear_acceleration = [0.8, 0.8]
+angular_acceleration = 0.15
+max_angular_speed = 2.0
+targeting_range = 130.0
+colliders = [
+    { shape = { Circle = 3.0 }, position = [0.0, -4.0], rotation = 0.0 }
+]
+decorations = [
+    ["xhitara_missile_thrusters", [0.0, 10.5]],
+]
+
+# Xhitara Launcher
+# Description: Moves down and periodically spawns Xhitara Missiles.
+[attributes.xhitara_launcher_mob]
+name = "Xhitara Launcher"
+max_linear_speed = [10.0, 10.0]
+colliders = [
+    { shape = { Rectangle = [16.0, 20.0] }, position = [0.0, 2.0], rotation = 0.0 }
+]
+decorations = [
+    ["xhitara_launcher_thrusters", [0.0, 13.5]],
+]
+
+[attributes.xhitara_launcher_mob.mob_spawners.spawners.missiles]
+timer = 4.0
+position = [0.0, -18.0]
+rotation = 0.0
+mob_type = "xhitara_missile_mob"
+
+# Ferritharax
+# Description: Vulnerable in head/eye. Uses arms to protect itself.
+[attributes.ferritharax_head_mob]
+name = "Ferritharax"
+linear_acceleration = [0.3, 0.3]
+max_linear_speed = [20.0, 20.0]
+behavior_transmitter = true
+colliders = [
+    { shape = { Circle = 18.0 }, position = [0.0, -3.0], rotation = 0.0 }
+]
+
+[[attributes.ferritharax_head_mob.jointed_mobs]]
+key = "body"
+mob_type = "ferritharax_body_mob"
+offset_pos = [0.0, 37.0]
+anchor_1_pos = [0.0, 20.0]
+anchor_2_pos = [0.0, -17.0]
+compliance = 0.0000001
+
+[attributes.ferritharax_head_mob.jointed_mobs.angle_limit_range]
+min = -2.0
+max = 2.0
+torque = 0.001
+
+[attributes.ferritharax_body_mob]
+name = "Ferritharax Body"
+z_level = -1.0
+rotation_locked = false
+colliders = [
+    { shape = { Rectangle = [38.0, 10.0] }, position = [0.0, -8.0], rotation = 0.0 },
+    { shape = { Rectangle = [20.0, 11.0] }, position = [-18.0, 4.0], rotation = -60.0 },
+    { shape = { Rectangle = [20.0, 11.0] }, position = [18.0, 4.0], rotation = 60.0 }
+]
+
+[[attributes.ferritharax_body_mob.jointed_mobs]]
+key = "left_shoulder"
+mob_type = "ferritharax_left_shoulder_mob"
+offset_pos = [-50.0, -18.5]
+anchor_1_pos = [-30.0, 1.5]
+anchor_2_pos = [20.0, 20.0]
+compliance = 0.0000001
+
+[attributes.ferritharax_body_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 35.0
+torque = 0.001
+
+[[attributes.ferritharax_body_mob.jointed_mobs]]
+key = "right_shoulder"
+mob_type = "ferritharax_right_shoulder_mob"
+offset_pos = [50.0, -18.5]
+anchor_1_pos = [30.0, 1.5]
+anchor_2_pos = [-20.0, 20.0]
+compliance = 0.0000001
+
+[attributes.ferritharax_body_mob.jointed_mobs.angle_limit_range]
+min = -35.0
+max = 5.0
+torque = 0.001
+
+[attributes.ferritharax_left_shoulder_mob]
+name = "Ferritharax Left Shoulder"
+rotation_locked = false
+colliders = [
+    { shape = { Rectangle = [28.0, 20.0] }, position = [9.0, 14.0], rotation = 30.0 },
+    { shape = { Rectangle = [10.0, 44.0] }, position = [-13.0, -8.0], rotation = -20.0 }
+]
+
+[[attributes.ferritharax_left_shoulder_mob.jointed_mobs]]
+key = "arm"
+mob_type = "ferritharax_left_arm_mob"
+offset_pos = [-31.5, -57.0]
+anchor_1_pos = [-20.0, -31.0]
+anchor_2_pos = [11.5, 26.0]
+compliance = 0.0000001
+
+[attributes.ferritharax_left_shoulder_mob.jointed_mobs.angle_limit_range]
+min = -2.0
+max = 5.0
+torque = 0.001
+
+[attributes.ferritharax_right_shoulder_mob]
+name = "Ferritharax Right Shoulder"
+rotation_locked = false
+colliders = [
+    { shape = { Rectangle = [28.0, 20.0] }, position = [-9.0, 14.0], rotation = -30.0 },
+    { shape = { Rectangle = [10.0, 44.0] }, position = [13.0, -8.0], rotation = 20.0 }
+]
+
+[[attributes.ferritharax_right_shoulder_mob.jointed_mobs]]
+key = "arm"
+mob_type = "ferritharax_right_arm_mob"
+offset_pos = [31.5, -57.0]
+anchor_1_pos = [20.0, -31.0]
+anchor_2_pos = [-11.5, 26.0]
+compliance = 0.0000001
+
+[attributes.ferritharax_right_shoulder_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 2.0
+torque = 0.001
+
+[attributes.ferritharax_left_arm_mob]
+name = "Ferritharax Left Arm"
+rotation_locked = false
+colliders = [
+    { shape = { Rectangle = [10.0, 45.0] }, position = [1.0, 3.0], rotation = -25.0 },
+    { shape = { Rectangle = [22.0, 8.0] }, position = [5.0, -19.0], rotation = -30.0 },
+    { shape = { Rectangle = [7.0, 25.0] }, position = [-11.0, -6.0], rotation = -20.0 }
+]
+
+[[attributes.ferritharax_left_arm_mob.jointed_mobs]]
+key = "claw"
+mob_type = "ferritharax_left_claw_mob"
+offset_pos = [31.5, -17.5]
+anchor_1_pos = [17.0, -25.0]
+anchor_2_pos = [-14.5, -7.5]
+compliance = 0.0000001
+
+[attributes.ferritharax_left_arm_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[attributes.ferritharax_right_arm_mob]
+name = "Ferritharax Right Arm"
+rotation_locked = false
+colliders = [
+    { shape = { Rectangle = [10.0, 45.0] }, position = [-1.0, 3.0], rotation = 25.0 },
+    { shape = { Rectangle = [22.0, 8.0] }, position = [-5.0, -19.0], rotation = 30.0 },
+    { shape = { Rectangle = [7.0, 25.0] }, position = [11.0, -6.0], rotation = 20.0 }
+]
+
+[[attributes.ferritharax_right_arm_mob.jointed_mobs]]
+key = "claw"
+mob_type = "ferritharax_right_claw_mob"
+offset_pos = [-31.5, -17.5]
+anchor_1_pos = [-17.0, -25.0]
+anchor_2_pos = [14.5, -7.5]
+compliance = 0.0000001
+
+[attributes.ferritharax_right_arm_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[attributes.ferritharax_left_claw_mob]
+name = "Ferritharax Left Claw"
+rotation_locked = false
+colliders = [
+    { shape = { Rectangle = [18.0, 12.0] }, position = [-4.0, -8.0], rotation = -5.0 },
+    { shape = { Rectangle = [14.0, 10.0] }, position = [6.0, -3.0], rotation = 45.0 },
+    { shape = { Rectangle = [6.0, 6.0] }, position = [12.0, 5.0], rotation = 60.0 },
+]
+
+[attributes.ferritharax_right_claw_mob]
+name = "Ferritharax Right Claw"
+rotation_locked = false
+colliders = [
+    { shape = { Rectangle = [18.0, 12.0] }, position = [4.0, -8.0], rotation = 5.0 },
+    { shape = { Rectangle = [14.0, 10.0] }, position = [-6.0, -3.0], rotation = -45.0 },
+    { shape = { Rectangle = [6.0, 6.0] }, position = [-12.0, 5.0], rotation = -60.0 },
+]
+
+# Xhitara Cyclusk
+# Description: Moves toward player.
+[attributes.xhitara_cyclusk_mob]
+name = "Xhitara Cyclusk"
+linear_acceleration = [0.2, 0.2]
+max_linear_speed = [20.0, 20.0]
+colliders = [
+    { shape = { Rectangle = [25.0, 5.0] }, position = [0.0, -6.0], rotation = 0.0 },
+    { shape = { Rectangle = [10.0, 12.0] }, position = [0.0, 4.0], rotation = 0.0 }
+]
+
+[[attributes.xhitara_cyclusk_mob.jointed_mobs]]
+key = "middle_tentacle"
+mob_type = "xhitara_tentacle_short_mob"
+offset_pos = [0.0, -12.0]
+anchor_1_pos = [0.0, -7.5]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[attributes.xhitara_cyclusk_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[attributes.xhitara_cyclusk_mob.jointed_mobs]]
+key = "left_tentacle"
+mob_type = "xhitara_tentacle_short_mob"
+offset_pos = [-6.0, -12.0]
+anchor_1_pos = [-6.0, -7.5]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[attributes.xhitara_cyclusk_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[attributes.xhitara_cyclusk_mob.jointed_mobs]]
+key = "right_tentacle"
+mob_type = "xhitara_tentacle_short_mob"
+offset_pos = [6.0, -12.0]
+anchor_1_pos = [6.0, -7.5]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[attributes.xhitara_cyclusk_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+# Freighter One
+# Description: Spawns with one cargo attached. If its cargo makes it to the bottom of the arena, the defence bar is healed.
+[attributes.freighter_one_mob]
+name = "Freighter One"
+sprite_key = "freighter_front_mob"
+colliders = [
+    { shape = { Rectangle = [13.0, 8.0] }, position = [0.0, 0.0], rotation = 0.0 }
+]
+collision_layer_membership = [ "Ally"]
+collision_layer_filter = ["Enemy", "Ally", "Player", "Tentacle"]
+decorations = [
+    ["freighter_thrusters", [0.0, 8.5]],
+]
+
+[[attributes.freighter_one_mob.jointed_mobs]]
+key = "back"
+mob_type = "freighter_back_mob"
+offset_pos = [0.0, 16.0]
+anchor_1_pos = [0.0, 4.0]
+anchor_2_pos = [0.0, -12.0]
+compliance = 0.000001
+
+[attributes.freighter_one_mob.jointed_mobs.angle_limit_range]
+min = -10.0
+max = 10.0
+torque = 0.001
+
+# Freighter Two
+# Description: Spawns with two cargo attached. If its cargo makes it to the bottom of the arena, the defence bar is healed.
+[attributes.freighter_two_mob]
+name = "Freighter Two"
+sprite_key = "freighter_front_mob"
+colliders = [
+    { shape = { Rectangle = [13.0, 8.0] }, position = [0.0, 0.0], rotation = 0.0 }
+]
+collision_layer_membership = [ "Ally"]
+collision_layer_filter = ["Enemy", "Ally", "Player", "Tentacle"]
+decorations = [
+    ["freighter_thrusters", [0.0, 8.5]],
+]
+
+[[attributes.freighter_two_mob.jointed_mobs]]
+key = "middle"
+mob_type = "freighter_middle_mob"
+offset_pos = [0.0, 17.0]
+anchor_1_pos = [0.0, 5.0]
+anchor_2_pos = [0.0, -12.0]
+compliance = 0.000001
+
+[attributes.freighter_two_mob.jointed_mobs.angle_limit_range]
+min = -10.0
+max = 10.0
+torque = 0.001
+
+[attributes.freighter_middle_mob]
+name = "Freighter Middle"
+colliders = [
+    { shape = { Rectangle = [13.0, 18.0] }, position = [0.0, 0.0], rotation = 0.0 }
+]
+rotation_locked = false
+collision_layer_membership = [ "Ally"]
+collision_layer_filter = ["Enemy", "Ally", "Player", "Tentacle"]
+
+[[attributes.freighter_middle_mob.jointed_mobs]]
+key = "back"
+mob_type = "freighter_back_mob"
+offset_pos = [0.0, 24.0]
+anchor_1_pos = [0.0, 12.0]
+anchor_2_pos = [0.0, -12.0]
+compliance = 0.000001
+
+[attributes.freighter_middle_mob.jointed_mobs.angle_limit_range]
+min = -20.0
+max = 20.0
+torque = 0.001
+
+[attributes.freighter_back_mob]
+name = "Freighter Back"
+colliders = [
+    { shape = { Rectangle = [13.0, 18.0] }, position = [0.0, 0.0], rotation = 0.0 }
+]
+rotation_locked = false
+collision_layer_membership = [ "Ally"]
+collision_layer_filter = ["Enemy", "Ally", "Player", "Tentacle"]
+
+# Trizetheron
+# Description: Three headed and three eyed tentacled boss.
+[attributes.trizetheron_right_head_mob]
+name = "Trizetheron Right Head"
+rotation_locked = false
+z_level = 1.0
+colliders = [
+    { shape = { Rectangle = [17.0, 8.0] }, position = [1.0, 3.0], rotation = 55.0 },
+]
+
+[attributes.trizetheron_left_head_mob]
+name = "Trizetheron Left Head"
+rotation_locked = false
+z_level = 1.0
+colliders = [
+    { shape = { Rectangle = [17.0, 8.0] }, position = [-1.0, 3.0], rotation = -55.0 },
+]
+
+[attributes.trizetheron_mob]
+name = "Trizetheron"
+linear_acceleration = [0.1, 0.1]
+colliders = [
+    { shape = { Rectangle = [45.0, 18.0] }, position = [0.0, -7.0], rotation = 0.0 },
+    { shape = { Rectangle = [12.0, 20.0] }, position = [0.0, 13.0], rotation = 0.0 }
+
+]
+
+[[attributes.trizetheron_mob.jointed_mobs]]
+key = "left_head"
+mob_type = "trizetheron_left_head_mob"
+offset_pos = [-32.0, -4.5]
+anchor_1_pos = [-23.0, -10.0]
+anchor_2_pos = [9.0, -5.5]
+compliance = 0.000001
+
+[attributes.trizetheron_mob.jointed_mobs.angle_limit_range]
+min = -1.0
+max = 1.0
+torque = 1.0
+
+[[attributes.trizetheron_mob.jointed_mobs]]
+key = "right_head"
+mob_type = "trizetheron_right_head_mob"
+offset_pos = [32.0, -4.5]
+anchor_1_pos = [23.0, -10.0]
+anchor_2_pos = [-9.0, -5.5]
+compliance = 0.000001
+
+[attributes.trizetheron_mob.jointed_mobs.angle_limit_range]
+min = -1.0
+max = 1.0
+torque = 1.0
+
+[[attributes.trizetheron_mob.jointed_mobs]]
+key = "tentacle_1"
+mob_type = "xhitara_tentacle_short_mob"
+offset_pos = [-25.0, -19.5]
+anchor_1_pos = [-25.0, -15.0]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[attributes.trizetheron_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[attributes.trizetheron_mob.jointed_mobs]]
+key = "tentacle_8"
+mob_type = "xhitara_tentacle_short_mob"
+offset_pos = [25.0, -19.5]
+anchor_1_pos = [25.0, -15.0]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[attributes.trizetheron_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[attributes.trizetheron_mob.jointed_mobs]]
+key = "tentacle_2"
+mob_type = "xhitara_tentacle_short_mob"
+offset_pos = [-19.0, -19.5]
+anchor_1_pos = [-19.0, -15.0]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[attributes.trizetheron_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[attributes.trizetheron_mob.jointed_mobs]]
+key = "tentacle_7"
+mob_type = "xhitara_tentacle_short_mob"
+offset_pos = [19.0, -19.5]
+anchor_1_pos = [19.0, -15.0]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[attributes.trizetheron_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[attributes.trizetheron_mob.jointed_mobs]]
+key = "tentacle_3"
+mob_type = "xhitara_tentacle_long_mob"
+offset_pos = [-13.0, -19.5]
+anchor_1_pos = [-13.0, -15.0]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[attributes.trizetheron_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[attributes.trizetheron_mob.jointed_mobs]]
+key = "tentacle_6"
+mob_type = "xhitara_tentacle_long_mob"
+offset_pos = [13.0, -19.5]
+anchor_1_pos = [13.0, -15.0]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[attributes.trizetheron_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[attributes.trizetheron_mob.jointed_mobs]]
+key = "tentacle_4"
+mob_type = "xhitara_tentacle_long_mob"
+offset_pos = [-7.0, -19.5]
+anchor_1_pos = [-7.0, -15.0]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[attributes.trizetheron_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[attributes.trizetheron_mob.jointed_mobs]]
+key = "tentacle_5"
+mob_type = "xhitara_tentacle_long_mob"
+offset_pos = [7.0, -19.5]
+anchor_1_pos = [7.0, -15.0]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[attributes.trizetheron_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[attributes.xhitara_tentacle_short_mob]
+name = "Xhitara Tentacle Short"
+sprite_key = "xhitara_tentacle_start_mob"
+rotation_locked = false
+colliders = [
+    { shape = { Rectangle = [4.0, 3.0] }, position = [0.0, 0.0], rotation = 0.0 }
+]
+restitution = 0.0
+friction = 1.0
+z_level = -1.0
+collider_density = 0.5
+collision_layer_membership = [ "Tentacle"]
+collision_layer_filter = ["Enemy", "Ally", "Player"]
+
+[[attributes.xhitara_tentacle_short_mob.jointed_mobs]]
+key = "middle"
+mob_type = "xhitara_tentacle_middle_mob"
+offset_pos = [0.0, -5.0]
+anchor_1_pos = [0.0, -3.5]
+anchor_2_pos = [0.0, 1.5]
+compliance = 0.000001
+
+[attributes.xhitara_tentacle_short_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[attributes.xhitara_tentacle_short_mob.jointed_mobs.chain]
+length = 12
+pos_offset = [0.0, -4.0]
+anchor_offset = [0.0, 1.0]
+random_chain = { min_length = 6, end_chance = 0.15 }
+
+[attributes.xhitara_tentacle_long_mob]
+name = "Xhitara Tentacle Long"
+sprite_key = "xhitara_tentacle_start_mob"
+rotation_locked = false
+colliders = [
+    { shape = { Rectangle = [4.0, 3.0] }, position = [0.0, 0.0], rotation = 0.0 }
+]
+restitution = 0.0
+friction = 1.0
+z_level = -1.0
+collider_density = 0.5
+collision_layer_membership = [ "Tentacle"]
+collision_layer_filter = ["Enemy", "Ally", "Player"]
+
+[[attributes.xhitara_tentacle_long_mob.jointed_mobs]]
+key = "middle"
+mob_type = "xhitara_tentacle_middle_mob"
+offset_pos = [0.0, -5.0]
+anchor_1_pos = [0.0, -3.5]
+anchor_2_pos = [0.0, 1.5]
+compliance = 0.000001
+
+[attributes.xhitara_tentacle_long_mob.jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[attributes.xhitara_tentacle_long_mob.jointed_mobs.chain]
+length = 35
+pos_offset = [0.0, -4.0]
+anchor_offset = [0.0, 1.0]
+random_chain = { min_length = 17, end_chance = 0.07 }
+
+[attributes.xhitara_tentacle_middle_mob]
+name = "Xhitara Tentacle Middle"
+rotation_locked = false
+colliders = [
+    { shape = { Circle = 1.7 }, position = [0.0, 0.0], rotation = 0.0 }
+]
+restitution = 0.0
+friction = 1.0
+z_level = -1.0
+collider_density = 0.5
+collision_layer_membership = [ "Tentacle"]
+collision_layer_filter = ["Enemy", "Ally", "Player"]
+
+
+[[attributes.xhitara_tentacle_middle_mob.jointed_mobs]]
+key = "end"
+mob_type = "xhitara_tentacle_end_mob"
+offset_pos = [0.0, -8.5]
+anchor_1_pos = [0.0, -2.5]
+anchor_2_pos = [0.0, 6.0]
+compliance = 0.000001
+
+[attributes.xhitara_tentacle_middle_mob.jointed_mobs.angle_limit_range]
+min = -10.0
+max = 10.0
+torque = 0.001
+
+[attributes.xhitara_tentacle_end_mob]
+name = "Xhitara Tentacle End"
+rotation_locked = false
+colliders = [
+    { shape = { Rectangle = [4.0, 9.0] }, position = [0.0, 0.0], rotation = 0.0 }
+]
+restitution = 0.0
+friction = 1.0
+z_level = -2.0
+linear_acceleration = [0.15, 0.15]
+max_linear_speed = [25.0, 25.0]
+angular_acceleration = 0.2
+max_angular_speed = 1.5
+targeting_range = 100.0
+collision_layer_membership = [ "Tentacle"]
+collision_layer_filter = ["Enemy", "Ally", "Player"]

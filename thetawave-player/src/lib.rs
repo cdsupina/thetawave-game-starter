@@ -41,12 +41,10 @@ pub struct ThetawavePlayerPlugin;
 /// Implementation of the Plugin trait for ThetawaveInputPlugin
 impl Plugin for ThetawavePlayerPlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        app.insert_resource(
-            load_with_extended::<CharactersResource>(
-                include_bytes!("../../assets/data/character_attributes.toml"),
-                "character_attributes.toml"
-            )
-        )
+        app.insert_resource(load_with_extended::<CharactersResource>(
+            include_bytes!("../data/character_attributes.toml"),
+            "character_attributes.toml",
+        ))
         .init_resource::<ChosenCharactersResource>()
         .add_plugins(DefaultNavigationPlugins)
         .add_plugins(InputManagerPlugin::<PlayerAction>::default())

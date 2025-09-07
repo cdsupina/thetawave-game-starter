@@ -7,6 +7,7 @@ release = true
 [serve]
 port = 8080
 
+# Copies assets directory to the build (dist) directory so that they are accessible by the app
 [[hooks]]
 stage = "build"
 command = "sh"

@@ -1,0 +1,11 @@
+[attributes.Blast]
+colliders = [
+    { shape = { Circle = 2.0 }, position = [0.0, 0.0], rotation = 0.0 }
+]
+is_sensor = true
+
+[attributes.Bullet]
+colliders = [
+    { shape = { Circle = 2.6 }, position = [0.0, 0.0], rotation = 0.0 }
+]
+is_sensor = false

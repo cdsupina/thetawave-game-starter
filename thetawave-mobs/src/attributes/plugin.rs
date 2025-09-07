@@ -10,11 +10,9 @@ pub struct ThetawaveAttributesPlugin;
 impl Plugin for ThetawaveAttributesPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.register_type::<(JointsComponent, MobSpawnerComponent, MobAttributesComponent)>();
-        app.insert_resource(
-            load_with_extended::<MobAttributesResource>(
-                include_bytes!("../../../assets/data/mob_attributes.toml"),
-                "mob_attributes.toml"
-            )
-        );
+        app.insert_resource(load_with_extended::<MobAttributesResource>(
+            include_bytes!("../../data/mob_attributes.toml"),
+            "mob_attributes.toml",
+        ));
     }
 }
