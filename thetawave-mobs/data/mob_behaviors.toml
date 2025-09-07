@@ -1,0 +1,279 @@
+# Mob Behavior Trees Configuration
+# Defines AI behaviors for all mob types using hierarchical behavior trees
+
+# Simple movement pattern - moves down and brakes horizontal movement
+[behaviors.xhitara_grunt_mob]
+type = "Forever"
+
+[[behaviors.xhitara_grunt_mob.children]]
+type = "Action"
+name = "Movement"
+behaviors = [
+    { action = "MoveDown" },
+    { action = "BrakeHorizontal" }
+]
+
+# Movement with projectile spawning
+[behaviors.xhitara_spitter_mob]
+type = "Forever"
+
+[[behaviors.xhitara_spitter_mob.children]]
+type = "Action"
+name = "Movement"
+behaviors = [
+    { action = "MoveDown" },
+    { action = "BrakeHorizontal" },
+    { action = "SpawnProjectile", keys = ["south"] }
+]
+
+# Multi-directional projectile spawning
+[behaviors.xhitara_gyro_mob]
+type = "Forever"
+
+[[behaviors.xhitara_gyro_mob.children]]
+type = "Action"
+name = "Movement"
+behaviors = [
+    { action = "MoveDown" },
+    { action = "BrakeHorizontal" },
+    { action = "SpawnProjectile", keys = ["south", "east", "west"] }
+]
+
+# Same pattern as spitter but different mob type
+[behaviors.xhitara_pacer_mob]
+type = "Forever"
+
+[[behaviors.xhitara_pacer_mob.children]]
+type = "Action"
+name = "Movement"
+behaviors = [
+    { action = "MoveDown" },
+    { action = "BrakeHorizontal" },
+    { action = "SpawnProjectile", keys = ["south"] }
+]
+
+# Simple ally movement patterns
+[behaviors.freighter_one_mob]
+type = "Forever"
+
+[[behaviors.freighter_one_mob.children]]
+type = "Action"
+name = "Movement"
+behaviors = [
+    { action = "MoveDown" },
+    { action = "BrakeHorizontal" }
+]
+
+[behaviors.freighter_two_mob]
+type = "Forever"
+
+[[behaviors.freighter_two_mob.children]]
+type = "Action"
+name = "Movement"
+behaviors = [
+    { action = "MoveDown" },
+    { action = "BrakeHorizontal" }
+]
+
+# Complex sequence behavior - seek and destroy pattern
+[behaviors.xhitara_missile_mob]
+type = "Forever"
+
+[[behaviors.xhitara_missile_mob.children]]
+type = "Sequence"
+
+[[behaviors.xhitara_missile_mob.children.children]]
+type = "Action"
+name = "Find Target"
+behaviors = [
+    { action = "FindPlayerTarget" },
+    { action = "MoveForward" },
+    { action = "BrakeAngular" }
+]
+
+[[behaviors.xhitara_missile_mob.children.children]]
+type = "Action"
+name = "Move To Target"
+behaviors = [
+    { action = "MoveForward" },
+    { action = "RotateToTarget" },
+    { action = "LoseTarget" }
+]
+
+# Mob spawning behavior
+[behaviors.xhitara_launcher_mob]
+type = "Forever"
+
+[[behaviors.xhitara_launcher_mob.children]]
+type = "Action"
+name = "Move and Spawn Missiles"
+behaviors = [
+    { action = "MoveDown" },
+    { action = "BrakeHorizontal" },
+    { action = "SpawnMob", keys = ["missiles"] }
+]
+
+# Aggressive seeking behavior for tentacle end
+[behaviors.xhitara_tentacle_end_mob]
+type = "Forever"
+
+[[behaviors.xhitara_tentacle_end_mob.children]]
+type = "Sequence"
+
+[[behaviors.xhitara_tentacle_end_mob.children.children]]
+type = "Action"
+name = "Find Target"
+behaviors = [
+    { action = "FindPlayerTarget" },
+    { action = "BrakeAngular" }
+]
+
+[[behaviors.xhitara_tentacle_end_mob.children.children]]
+type = "Action"
+name = "Move To Target"
+behaviors = [
+    { action = "MoveForward" },
+    { action = "RotateToTarget" },
+    { action = "LoseTarget" }
+]
+
+# Advanced tracking behavior
+[behaviors.xhitara_cyclusk_mob]
+type = "Forever"
+
+[[behaviors.xhitara_cyclusk_mob.children]]
+type = "Sequence"
+
+[[behaviors.xhitara_cyclusk_mob.children.children]]
+type = "Action"
+name = "Find Target"
+behaviors = [
+    { action = "FindPlayerTarget" }
+]
+
+[[behaviors.xhitara_cyclusk_mob.children.children]]
+type = "Action"
+name = "Move To Target"
+behaviors = [
+    { action = "MoveToTarget" },
+    { action = "RotateToTarget" }
+]
+
+# Simple boss movement to position
+[behaviors.trizetheron_mob]
+type = "Forever"
+
+[[behaviors.trizetheron_mob.children]]
+type = "Action"
+name = "Movement"
+behaviors = [
+    { action = "MoveTo", x = 0.0, y = 50.0 }
+]
+
+# Complex boss behavior with coordinated attacks and behavior transmission
+[behaviors.ferritharax_head_mob]
+type = "Forever"
+
+[[behaviors.ferritharax_head_mob.children]]
+type = "Sequence"
+
+# Phase 1: Move to center position
+[[behaviors.ferritharax_head_mob.children.children]]
+type = "Action"
+name = "Phase 1 - Center Position"
+behaviors = [
+    { action = "MoveTo", x = 0.0, y = 50.0 },
+    { action = "DoForTime", seconds = 15.0 }
+]
+
+# Phase 2: Move right and activate claws
+[[behaviors.ferritharax_head_mob.children.children]]
+type = "Action"
+name = "Phase 2 - Right Attack"
+behaviors = [
+    { action = "MoveTo", x = 125.0, y = 50.0 },
+    { action = "DoForTime", seconds = 15.0 },
+    { action = "TransmitMobBehavior", mob_type = "ferritharax_left_claw_mob", behaviors = [{ action = "MoveRight" }] },
+    { action = "TransmitMobBehavior", mob_type = "ferritharax_right_claw_mob", behaviors = [{ action = "MoveLeft" }] }
+]
+
+# Phase 3: Return to center
+[[behaviors.ferritharax_head_mob.children.children]]
+type = "Action"
+name = "Phase 3 - Return Center"
+behaviors = [
+    { action = "MoveTo", x = 0.0, y = 50.0 },
+    { action = "DoForTime", seconds = 15.0 }
+]
+
+# Phase 4: Move left and activate claws
+[[behaviors.ferritharax_head_mob.children.children]]
+type = "Action"
+name = "Phase 4 - Left Attack"
+behaviors = [
+    { action = "MoveTo", x = -125.0, y = 50.0 },
+    { action = "DoForTime", seconds = 15.0 },
+    { action = "TransmitMobBehavior", mob_type = "ferritharax_left_claw_mob", behaviors = [{ action = "MoveRight" }] },
+    { action = "TransmitMobBehavior", mob_type = "ferritharax_right_claw_mob", behaviors = [{ action = "MoveLeft" }] }
+]
+
+# Example behaviors showing all supported node types (for reference/future use)
+
+# Example using Fallback node - tries actions until one succeeds
+[behaviors.example_fallback_mob]
+type = "Fallback"
+
+[[behaviors.example_fallback_mob.children]]
+type = "Action"
+name = "Try Attack"
+behaviors = [
+    { action = "FindPlayerTarget" }
+]
+
+[[behaviors.example_fallback_mob.children]]
+type = "Action"
+name = "Patrol"
+behaviors = [
+    { action = "MoveDown" }
+]
+
+[[behaviors.example_fallback_mob.children]]
+type = "Wait"
+seconds = 2.0
+
+# Example using While node - repeats until failure
+[behaviors.example_while_mob]
+type = "While"
+
+[behaviors.example_while_mob.child]
+type = "Action"
+name = "Keep Moving"
+behaviors = [
+    { action = "MoveForward" }
+]
+
+# Example using IfThen node - conditional behavior
+[behaviors.example_conditional_mob]
+type = "IfThen"
+
+[behaviors.example_conditional_mob.condition]
+type = "Action"
+name = "Check Condition"
+behaviors = [
+    { action = "FindPlayerTarget" }
+]
+
+[behaviors.example_conditional_mob.then_child]
+type = "Action"
+name = "Attack"
+behaviors = [
+    { action = "MoveToTarget" },
+    { action = "SpawnProjectile", keys = ["south"] }
+]
+
+[behaviors.example_conditional_mob.else_child]
+type = "Action"
+name = "Idle"
+behaviors = [
+    { action = "BrakeHorizontal" }
+]

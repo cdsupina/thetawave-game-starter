@@ -27,10 +27,10 @@ pub struct GameAssets {
 /// Additional assets used in the game state that are not built in to thetawave-assets
 #[derive(AssetCollection, Resource, Default, Clone)]
 pub struct ExtendedGameAssets {
-    #[asset(key = "extended_game_sprites", collection(typed, mapped))]
-    pub sprites: HashMap<AssetFileStem, Handle<Aseprite>>,
-    #[asset(key = "extended_game_particle_effects", collection(typed, mapped))]
-    pub particle_effects: HashMap<AssetFileStem, Handle<Particle2dEffect>>,
+    #[asset(key = "extended_game_sprites", collection(typed, mapped), optional)]
+    pub sprites: Option<HashMap<AssetFileStem, Handle<Aseprite>>>,
+    #[asset(key = "extended_game_particle_effects", collection(typed, mapped), optional)]
+    pub particle_effects: Option<HashMap<AssetFileStem, Handle<Particle2dEffect>>>,
 }
 
 /// Resource for storing faction-based particle materials
@@ -65,7 +65,8 @@ impl AssetResolver {
     ) -> Result<Handle<Aseprite>, AssetError> {
         extended_assets
             .sprites
-            .get(key)
+            .as_ref()
+            .and_then(|sprites| sprites.get(key))
             .or_else(|| assets.sprites.get(key))
             .cloned()
             .ok_or_else(|| AssetError::NotFound(key.to_string()))
@@ -79,7 +80,8 @@ impl AssetResolver {
     ) -> Result<Handle<Particle2dEffect>, AssetError> {
         extended_assets
             .particle_effects
-            .get(key)
+            .as_ref()
+            .and_then(|effects| effects.get(key))
             .or_else(|| assets.particle_effects.get(key))
             .cloned()
             .ok_or_else(|| AssetError::NotFound(key.to_string()))
@@ -92,7 +94,8 @@ impl AssetResolver {
     ) -> Result<Handle<Image>, AssetError> {
         extended_assets
             .images
-            .get(key)
+            .as_ref()
+            .and_then(|images| images.get(key))
             .or_else(|| assets.images.get(key))
             .cloned()
             .ok_or_else(|| AssetError::NotFound(key.to_string()))
@@ -105,7 +108,8 @@ impl AssetResolver {
     ) -> Result<Handle<Aseprite>, AssetError> {
         extended_assets
             .sprites
-            .get(key)
+            .as_ref()
+            .and_then(|sprites| sprites.get(key))
             .or_else(|| assets.sprites.get(key))
             .cloned()
             .ok_or_else(|| AssetError::NotFound(key.to_string()))
@@ -118,7 +122,8 @@ impl AssetResolver {
     ) -> Result<Handle<Font>, AssetError> {
         extended_assets
             .fonts
-            .get(key)
+            .as_ref()
+            .and_then(|fonts| fonts.get(key))
             .or_else(|| assets.fonts.get(key))
             .cloned()
             .ok_or_else(|| AssetError::NotFound(key.to_string()))
@@ -128,10 +133,13 @@ impl AssetResolver {
         extended_assets: &ExtendedUiAssets,
         assets: &UiAssets,
     ) -> Result<Handle<AudioSource>, AssetError> {
-        if !extended_assets.menu_button_select_effects.is_empty() {
-            let idx = rand::rng().random_range(0..extended_assets.menu_button_select_effects.len());
-            Ok(extended_assets.menu_button_select_effects[idx].clone())
-        } else if !assets.menu_button_select_effects.is_empty() {
+        if let Some(effects) = &extended_assets.menu_button_select_effects {
+            if !effects.is_empty() {
+                let idx = rand::rng().random_range(0..effects.len());
+                return Ok(effects[idx].clone());
+            }
+        }
+        if !assets.menu_button_select_effects.is_empty() {
             let idx = rand::rng().random_range(0..assets.menu_button_select_effects.len());
             Ok(assets.menu_button_select_effects[idx].clone())
         } else {
@@ -145,11 +153,13 @@ impl AssetResolver {
         extended_assets: &ExtendedUiAssets,
         assets: &UiAssets,
     ) -> Result<Handle<AudioSource>, AssetError> {
-        if !extended_assets.menu_button_release_effects.is_empty() {
-            let idx =
-                rand::rng().random_range(0..extended_assets.menu_button_release_effects.len());
-            Ok(extended_assets.menu_button_release_effects[idx].clone())
-        } else if !assets.menu_button_release_effects.is_empty() {
+        if let Some(effects) = &extended_assets.menu_button_release_effects {
+            if !effects.is_empty() {
+                let idx = rand::rng().random_range(0..effects.len());
+                return Ok(effects[idx].clone());
+            }
+        }
+        if !assets.menu_button_release_effects.is_empty() {
             let idx = rand::rng().random_range(0..assets.menu_button_release_effects.len());
             Ok(assets.menu_button_release_effects[idx].clone())
         } else {
@@ -163,11 +173,13 @@ impl AssetResolver {
         extended_assets: &ExtendedUiAssets,
         assets: &UiAssets,
     ) -> Result<Handle<AudioSource>, AssetError> {
-        if !extended_assets.menu_button_confirm_effects.is_empty() {
-            let idx =
-                rand::rng().random_range(0..extended_assets.menu_button_confirm_effects.len());
-            Ok(extended_assets.menu_button_confirm_effects[idx].clone())
-        } else if !assets.menu_button_confirm_effects.is_empty() {
+        if let Some(effects) = &extended_assets.menu_button_confirm_effects {
+            if !effects.is_empty() {
+                let idx = rand::rng().random_range(0..effects.len());
+                return Ok(effects[idx].clone());
+            }
+        }
+        if !assets.menu_button_confirm_effects.is_empty() {
             let idx = rand::rng().random_range(0..assets.menu_button_confirm_effects.len());
             Ok(assets.menu_button_confirm_effects[idx].clone())
         } else {
@@ -181,10 +193,13 @@ impl AssetResolver {
         extended_assets: &ExtendedBackgroundAssets,
         assets: &BackgroundAssets,
     ) -> Result<Handle<Image>, AssetError> {
-        if !extended_assets.space_backgrounds.is_empty() {
-            let idx = rand::rng().random_range(0..extended_assets.space_backgrounds.len());
-            Ok(extended_assets.space_backgrounds[idx].clone())
-        } else if !assets.space_backgrounds.is_empty() {
+        if let Some(backgrounds) = &extended_assets.space_backgrounds {
+            if !backgrounds.is_empty() {
+                let idx = rand::rng().random_range(0..backgrounds.len());
+                return Ok(backgrounds[idx].clone());
+            }
+        }
+        if !assets.space_backgrounds.is_empty() {
             let idx = rand::rng().random_range(0..assets.space_backgrounds.len());
             Ok(assets.space_backgrounds[idx].clone())
         } else {
@@ -198,10 +213,13 @@ impl AssetResolver {
         extended_assets: &ExtendedBackgroundAssets,
         assets: &BackgroundAssets,
     ) -> Result<Handle<Scene>, AssetError> {
-        if !extended_assets.planets.is_empty() {
-            let idx = rand::rng().random_range(0..extended_assets.planets.len());
-            Ok(extended_assets.planets[idx].clone())
-        } else if !assets.planets.is_empty() {
+        if let Some(planets) = &extended_assets.planets {
+            if !planets.is_empty() {
+                let idx = rand::rng().random_range(0..planets.len());
+                return Ok(planets[idx].clone());
+            }
+        }
+        if !assets.planets.is_empty() {
             let idx = rand::rng().random_range(0..assets.planets.len());
             Ok(assets.planets[idx].clone())
         } else {
@@ -216,7 +234,8 @@ impl AssetResolver {
     ) -> Result<Handle<AudioSource>, AssetError> {
         extended_assets
             .music
-            .get(key)
+            .as_ref()
+            .and_then(|music| music.get(key))
             .or_else(|| assets.music.get(key))
             .cloned()
             .ok_or_else(|| AssetError::NotFound(key.to_string()))
@@ -231,10 +250,10 @@ pub struct MusicAssets {
 }
 
 /// Audio assets used throughout all states of the app
-#[derive(AssetCollection, Resource)]
+#[derive(AssetCollection, Resource, Default)]
 pub struct ExtendedMusicAssets {
-    #[asset(key = "extended_music", collection(typed, mapped))]
-    pub music: HashMap<AssetFileStem, Handle<AudioSource>>,
+    #[asset(key = "extended_music", collection(typed, mapped), optional)]
+    pub music: Option<HashMap<AssetFileStem, Handle<AudioSource>>>,
 }
 
 // Assets for Bevy ui
@@ -254,20 +273,20 @@ pub struct UiAssets {
     pub menu_button_confirm_effects: Vec<Handle<AudioSource>>,
 }
 
-#[derive(AssetCollection, Resource)]
+#[derive(AssetCollection, Resource, Default)]
 pub struct ExtendedUiAssets {
-    #[asset(key = "extended_ui_sprites", collection(typed, mapped))]
-    pub sprites: HashMap<AssetFileStem, Handle<Aseprite>>,
-    #[asset(key = "extended_ui_images", collection(typed, mapped))]
-    pub images: HashMap<AssetFileStem, Handle<Image>>,
-    #[asset(key = "extended_ui_fonts", collection(typed, mapped))]
-    pub fonts: HashMap<AssetFileStem, Handle<Font>>,
-    #[asset(key = "extended_ui_button_select_audio", collection(typed))]
-    pub menu_button_select_effects: Vec<Handle<AudioSource>>,
-    #[asset(key = "extended_ui_button_release_audio", collection(typed))]
-    pub menu_button_release_effects: Vec<Handle<AudioSource>>,
-    #[asset(key = "extended_ui_button_confirm_audio", collection(typed))]
-    pub menu_button_confirm_effects: Vec<Handle<AudioSource>>,
+    #[asset(key = "extended_ui_sprites", collection(typed, mapped), optional)]
+    pub sprites: Option<HashMap<AssetFileStem, Handle<Aseprite>>>,
+    #[asset(key = "extended_ui_images", collection(typed, mapped), optional)]
+    pub images: Option<HashMap<AssetFileStem, Handle<Image>>>,
+    #[asset(key = "extended_ui_fonts", collection(typed, mapped), optional)]
+    pub fonts: Option<HashMap<AssetFileStem, Handle<Font>>>,
+    #[asset(key = "extended_ui_button_select_audio", collection(typed), optional)]
+    pub menu_button_select_effects: Option<Vec<Handle<AudioSource>>>,
+    #[asset(key = "extended_ui_button_release_audio", collection(typed), optional)]
+    pub menu_button_release_effects: Option<Vec<Handle<AudioSource>>>,
+    #[asset(key = "extended_ui_button_confirm_audio", collection(typed), optional)]
+    pub menu_button_confirm_effects: Option<Vec<Handle<AudioSource>>>,
 }
 
 // Assets for background images
@@ -282,14 +301,14 @@ pub struct BackgroundAssets {
 }
 
 // Assets for background images
-#[derive(AssetCollection, Resource)]
+#[derive(AssetCollection, Resource, Default)]
 pub struct ExtendedBackgroundAssets {
     // all space backgrounds
-    #[asset(key = "extended_space_backgrounds", collection(typed))]
-    pub space_backgrounds: Vec<Handle<Image>>,
+    #[asset(key = "extended_space_backgrounds", collection(typed), optional)]
+    pub space_backgrounds: Option<Vec<Handle<Image>>>,
     // all planets
-    #[asset(key = "extended_planets", collection(typed))]
-    pub planets: Vec<Handle<Scene>>,
+    #[asset(key = "extended_planets", collection(typed), optional)]
+    pub planets: Option<Vec<Handle<Scene>>>,
 }
 
 /// Event for sending percentage of loading progress

@@ -33,8 +33,8 @@ impl Plugin for ThetawaveMobBehaviorPlugin {
 
         // Load behaviors from TOML file
         let toml_data = load_with_extended::<MobBehaviorsTomlData>(
-            include_bytes!("../../../assets/data/mob_behaviors.toml"),
-            "mob_behaviors.toml"
+            include_bytes!("../../data/mob_behaviors.toml"),
+            "mob_behaviors.toml",
         );
 
         // Build behavior trees from TOML data

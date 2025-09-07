@@ -1,0 +1,14 @@
+[build]
+public_url = "./"
+no_default_features = true
+features = ["debug"]
+release = true
+
+[serve]
+port = 8080
+
+# Copies assets directory to the build (dist) directory so that they are accessible by the app
+[[hooks]]
+stage = "build"
+command = "sh"
+command_arguments = ["-c", "cp -r assets $TRUNK_STAGING_DIR"]

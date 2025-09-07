@@ -18,7 +18,10 @@ bevy_kira_audio = { workspace = true, features = ["mp3", "wav"] }
 rand = { workspace = true }
 serde = { workspace = true }
 toml = { workspace = true }
-log = { workspace = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { version = "0.3", features = ["XmlHttpRequest", "XmlHttpRequestResponseType"] }
+wasm-bindgen = "0.2"
 
 [features]
 dynamic_linking = ["bevy/dynamic_linking", "thetawave-states/dynamic_linking"]

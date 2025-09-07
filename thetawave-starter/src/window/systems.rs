@@ -3,6 +3,7 @@ use bevy::{
         query::With,
         system::{Query, Res, ResMut},
     },
+    log::warn,
     prelude::NonSend,
     ui::UiScale,
     window::{PrimaryWindow, Window},
@@ -35,7 +36,10 @@ pub(super) fn set_window_icon_system(
     let icon_path = match icon_path {
         Some(path) => path,
         None => {
-            log::warn!("Window icon not found at any expected location: {:?}", possible_paths);
+            warn!(
+                "Window icon not found at any expected location: {:?}",
+                possible_paths
+            );
             return; // Skip setting icon if not found
         }
     };
@@ -46,10 +50,11 @@ pub(super) fn set_window_icon_system(
         let image = match image::open(icon_path) {
             Ok(img) => img,
             Err(e) => {
-                log::warn!("Failed to open icon at {}: {}", icon_path, e);
+                warn!("Failed to open icon at {}: {}", icon_path, e);
                 return; // Skip setting icon if loading fails
             }
-        }.into_rgba8();
+        }
+        .into_rgba8();
         let (width, height) = image.dimensions();
         let rgba = image.into_raw();
         (rgba, width, height)
