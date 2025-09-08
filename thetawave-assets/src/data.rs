@@ -197,38 +197,52 @@ impl AssetResolver {
         extended_assets: &ExtendedBackgroundAssets,
         assets: &BackgroundAssets,
     ) -> Result<Handle<Image>, AssetError> {
-        if let Some(backgrounds) = &extended_assets.space_backgrounds
-            && !backgrounds.is_empty()
-        {
-            let idx = rand::rng().random_range(0..backgrounds.len());
-            return Ok(backgrounds[idx].clone());
+        // Create a combined vector of all space backgrounds
+        let mut all_backgrounds = Vec::new();
+        
+        // Add base space backgrounds
+        all_backgrounds.extend(assets.space_backgrounds.iter().cloned());
+        
+        // Add extended space backgrounds if they exist
+        if let Some(extended_backgrounds) = &extended_assets.space_backgrounds {
+            all_backgrounds.extend(extended_backgrounds.iter().cloned());
         }
-        if !assets.space_backgrounds.is_empty() {
-            let idx = rand::rng().random_range(0..assets.space_backgrounds.len());
-            Ok(assets.space_backgrounds[idx].clone())
-        } else {
-            Err(AssetError::EmptyCollections(
+        
+        // Check if we have any space backgrounds at all
+        if all_backgrounds.is_empty() {
+            return Err(AssetError::EmptyCollections(
                 "space backgrounds".to_string(),
-            ))
+            ));
         }
+        
+        // Select a random space background from the combined collection
+        let idx = rand::rng().random_range(0..all_backgrounds.len());
+        Ok(all_backgrounds[idx].clone())
     }
 
     pub fn get_random_planet(
         extended_assets: &ExtendedBackgroundAssets,
         assets: &BackgroundAssets,
     ) -> Result<Handle<Scene>, AssetError> {
-        if let Some(planets) = &extended_assets.planets
-            && !planets.is_empty()
-        {
-            let idx = rand::rng().random_range(0..planets.len());
-            return Ok(planets[idx].clone());
+        // Create a combined vector of all planets
+        let mut all_planets = Vec::new();
+        
+        // Add base planets
+        all_planets.extend(assets.planets.iter().cloned());
+        
+        // Add extended planets if they exist
+        if let Some(extended_planets) = &extended_assets.planets {
+            all_planets.extend(extended_planets.iter().cloned());
         }
-        if !assets.planets.is_empty() {
-            let idx = rand::rng().random_range(0..assets.planets.len());
-            Ok(assets.planets[idx].clone())
-        } else {
-            Err(AssetError::EmptyCollections("planets".to_string()))
+        
+        // Check if we have any planets at all
+        if all_planets.is_empty() {
+            return Err(AssetError::EmptyCollections("planets".to_string()));
         }
+        
+        // Select a random planet from the combined collection
+        let idx = rand::rng().random_range(0..all_planets.len());
+        Ok(all_planets[idx].clone())
     }
 
     pub fn get_music(
