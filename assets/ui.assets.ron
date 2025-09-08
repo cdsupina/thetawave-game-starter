@@ -1,0 +1,49 @@
+({
+    "ui_sprites": Files(
+        paths: [
+            "media/aseprite/thetawave_logo.aseprite",
+            "media/aseprite/menu_button.aseprite",
+            "media/aseprite/bluesky_logo.aseprite",
+            "media/aseprite/github_logo.aseprite",
+            "media/aseprite/arrow_button.aseprite",
+            "media/aseprite/standard_keyboard_buttons.aseprite",
+            "media/aseprite/return_button.aseprite",
+            "media/aseprite/xbox_letter_buttons.aseprite",
+        ]
+    ),
+    "ui_images": Files(
+        paths: [
+            "media/images/ui/captain_character.png",
+            "media/images/ui/juggernaut_character.png",
+            "media/images/ui/doomwing_character.png",
+        ]
+    ),
+    "ui_fonts": Files(
+        paths: [
+            "media/fonts/Dank-Depths.ttf",
+        ]
+    ),
+    "ui_button_select_audio": Files(
+        paths: [
+            "media/audio/effects/button_press_1.wav",
+            "media/audio/effects/button_press_2.wav",
+            "media/audio/effects/button_press_3.wav",
+            "media/audio/effects/button_press_4.wav",
+            "media/audio/effects/button_press_5.wav",
+        ]
+    ),
+    "ui_button_release_audio": Files(
+        paths: [
+            "media/audio/effects/button_release_1.wav",
+            "media/audio/effects/button_release_2.wav",
+            "media/audio/effects/button_release_3.wav",
+        ]
+    ),
+    "ui_button_confirm_audio": Files(
+        paths: [
+            "media/audio/effects/button_confirm_1.wav",
+            "media/audio/effects/button_confirm_2.wav",
+            "media/audio/effects/button_confirm_3.wav",
+        ]
+    ),
+})

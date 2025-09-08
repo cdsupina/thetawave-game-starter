@@ -1,0 +1,15 @@
+({
+    "space_backgrounds": Files(
+        paths: [
+            "media/images/backgrounds/blue_nebula.png",
+            "media/images/backgrounds/green_nebula.png",
+            "media/images/backgrounds/purple_nebula.png",
+            "media/images/backgrounds/starfield.png",
+        ]
+    ),
+    "planets": Files(
+        paths: [
+            "media/models/planets/planet_bb_1.glb#Scene0",
+        ]
+    ),
+})
