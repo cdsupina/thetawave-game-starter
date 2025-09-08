@@ -58,13 +58,12 @@ where
         // Native: Use filesystem access
         let extended_path = Path::new("assets/data").join(extended_filename);
 
-        if extended_path.exists() {
-            if let Ok(extended_bytes) = std::fs::read(&extended_path) {
-                if let Ok(extended_value) = toml::from_slice::<Value>(&extended_bytes) {
-                    merge_toml_values(&mut base_value, extended_value);
-                    info!("Loaded and merged extended data from: {:?}", extended_path);
-                }
-            }
+        if extended_path.exists()
+            && let Ok(extended_bytes) = std::fs::read(&extended_path)
+            && let Ok(extended_value) = toml::from_slice::<Value>(&extended_bytes)
+        {
+            merge_toml_values(&mut base_value, extended_value);
+            info!("Loaded and merged extended data from: {:?}", extended_path);
         }
     }
 

@@ -29,7 +29,11 @@ pub struct GameAssets {
 pub struct ExtendedGameAssets {
     #[asset(key = "extended_game_sprites", collection(typed, mapped), optional)]
     pub sprites: Option<HashMap<AssetFileStem, Handle<Aseprite>>>,
-    #[asset(key = "extended_game_particle_effects", collection(typed, mapped), optional)]
+    #[asset(
+        key = "extended_game_particle_effects",
+        collection(typed, mapped),
+        optional
+    )]
     pub particle_effects: Option<HashMap<AssetFileStem, Handle<Particle2dEffect>>>,
 }
 
@@ -133,11 +137,11 @@ impl AssetResolver {
         extended_assets: &ExtendedUiAssets,
         assets: &UiAssets,
     ) -> Result<Handle<AudioSource>, AssetError> {
-        if let Some(effects) = &extended_assets.menu_button_select_effects {
-            if !effects.is_empty() {
-                let idx = rand::rng().random_range(0..effects.len());
-                return Ok(effects[idx].clone());
-            }
+        if let Some(effects) = &extended_assets.menu_button_select_effects
+            && !effects.is_empty()
+        {
+            let idx = rand::rng().random_range(0..effects.len());
+            return Ok(effects[idx].clone());
         }
         if !assets.menu_button_select_effects.is_empty() {
             let idx = rand::rng().random_range(0..assets.menu_button_select_effects.len());
@@ -153,11 +157,11 @@ impl AssetResolver {
         extended_assets: &ExtendedUiAssets,
         assets: &UiAssets,
     ) -> Result<Handle<AudioSource>, AssetError> {
-        if let Some(effects) = &extended_assets.menu_button_release_effects {
-            if !effects.is_empty() {
-                let idx = rand::rng().random_range(0..effects.len());
-                return Ok(effects[idx].clone());
-            }
+        if let Some(effects) = &extended_assets.menu_button_release_effects
+            && !effects.is_empty()
+        {
+            let idx = rand::rng().random_range(0..effects.len());
+            return Ok(effects[idx].clone());
         }
         if !assets.menu_button_release_effects.is_empty() {
             let idx = rand::rng().random_range(0..assets.menu_button_release_effects.len());
@@ -173,11 +177,11 @@ impl AssetResolver {
         extended_assets: &ExtendedUiAssets,
         assets: &UiAssets,
     ) -> Result<Handle<AudioSource>, AssetError> {
-        if let Some(effects) = &extended_assets.menu_button_confirm_effects {
-            if !effects.is_empty() {
-                let idx = rand::rng().random_range(0..effects.len());
-                return Ok(effects[idx].clone());
-            }
+        if let Some(effects) = &extended_assets.menu_button_confirm_effects
+            && !effects.is_empty()
+        {
+            let idx = rand::rng().random_range(0..effects.len());
+            return Ok(effects[idx].clone());
         }
         if !assets.menu_button_confirm_effects.is_empty() {
             let idx = rand::rng().random_range(0..assets.menu_button_confirm_effects.len());
@@ -193,11 +197,11 @@ impl AssetResolver {
         extended_assets: &ExtendedBackgroundAssets,
         assets: &BackgroundAssets,
     ) -> Result<Handle<Image>, AssetError> {
-        if let Some(backgrounds) = &extended_assets.space_backgrounds {
-            if !backgrounds.is_empty() {
-                let idx = rand::rng().random_range(0..backgrounds.len());
-                return Ok(backgrounds[idx].clone());
-            }
+        if let Some(backgrounds) = &extended_assets.space_backgrounds
+            && !backgrounds.is_empty()
+        {
+            let idx = rand::rng().random_range(0..backgrounds.len());
+            return Ok(backgrounds[idx].clone());
         }
         if !assets.space_backgrounds.is_empty() {
             let idx = rand::rng().random_range(0..assets.space_backgrounds.len());
@@ -213,11 +217,11 @@ impl AssetResolver {
         extended_assets: &ExtendedBackgroundAssets,
         assets: &BackgroundAssets,
     ) -> Result<Handle<Scene>, AssetError> {
-        if let Some(planets) = &extended_assets.planets {
-            if !planets.is_empty() {
-                let idx = rand::rng().random_range(0..planets.len());
-                return Ok(planets[idx].clone());
-            }
+        if let Some(planets) = &extended_assets.planets
+            && !planets.is_empty()
+        {
+            let idx = rand::rng().random_range(0..planets.len());
+            return Ok(planets[idx].clone());
         }
         if !assets.planets.is_empty() {
             let idx = rand::rng().random_range(0..assets.planets.len());
