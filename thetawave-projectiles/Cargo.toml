@@ -4,14 +4,19 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-bevy = { workspace = true, default-features = false }
 thetawave-assets = { path = "../thetawave-assets" }
 thetawave-states = { path = "../thetawave-states" }
 thetawave-core = { path = "../thetawave-core" }
 thetawave-physics = { path = "../thetawave-physics" }
+bevy = { workspace = true, features = [
+    "bevy_sprite",
+    "animation",
+    "serialize",
+    "multi_threaded",
+    "async_executor",
+] }
 serde.workspace = true
 bevy_aseprite_ultra.workspace = true
-toml.workspace = true
 avian2d.workspace = true
 
 [features]

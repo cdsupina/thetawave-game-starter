@@ -4,7 +4,10 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-bevy = { workspace = true, default-features = false }
+bevy = { workspace = true, features = [
+    "multi_threaded",
+    "async_executor",
+] }
 
 [features]
 dynamic_linking = ["bevy/dynamic_linking"]

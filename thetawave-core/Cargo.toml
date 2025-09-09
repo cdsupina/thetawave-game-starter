@@ -4,7 +4,10 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-bevy = { workspace = true, default-features = false }
+bevy = { workspace = true, features = [
+    "bevy_color",
+    "serialize",
+] }
 serde.workspace = true
 
 [features]

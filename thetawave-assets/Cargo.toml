@@ -4,24 +4,34 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-bevy_enoki.workspace = true
 thetawave-states = { path = "../thetawave-states" }
 thetawave-core = { path = "../thetawave-core" }
-bevy = { workspace = true, default-features = false }
-iyes_progress = { workspace = true }
+bevy = { workspace = true, features = [
+    "bevy_scene",
+    "bevy_text",
+    "default_font",
+] }
+bevy_enoki.workspace = true
+iyes_progress.workspace = true
 bevy_asset_loader = { workspace = true, features = [
     "progress_tracking",
     "standard_dynamic_assets",
 ] }
-bevy_aseprite_ultra = { workspace = true }
+bevy_aseprite_ultra.workspace = true
 bevy_kira_audio = { workspace = true, features = ["mp3", "wav"] }
-rand = { workspace = true }
-serde = { workspace = true }
-toml = { workspace = true }
+rand.workspace = true
+serde.workspace = true
+toml.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-web-sys = { version = "0.3", features = ["XmlHttpRequest", "XmlHttpRequestResponseType"] }
-wasm-bindgen = "0.2"
+web-sys = { workspace = true, features = [
+    "XmlHttpRequest",
+    "XmlHttpRequestResponseType",
+] }
 
 [features]
-dynamic_linking = ["bevy/dynamic_linking", "thetawave-states/dynamic_linking"]
+dynamic_linking = [
+    "bevy/dynamic_linking",
+    "thetawave-states/dynamic_linking",
+    "thetawave-core/dynamic_linking",
+]

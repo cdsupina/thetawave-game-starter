@@ -21,39 +21,7 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace.dependencies]
-bevy = { version = "0.16.1", default-features = false, features = [
-    "animation",
-    "bevy_asset",
-    "bevy_color",
-    "bevy_core_pipeline",
-    "bevy_gilrs",
-    "bevy_gizmos",
-    "bevy_gltf",
-    "bevy_mesh_picking_backend",
-    "bevy_pbr",
-    "bevy_picking",
-    "bevy_render",
-    "bevy_scene",
-    "bevy_sprite",
-    "bevy_sprite_picking_backend",
-    "bevy_state",
-    "bevy_text",
-    "bevy_ui",
-    "bevy_ui_picking_backend",
-    "bevy_window",
-    "bevy_winit",
-    "custom_cursor",
-    "default_font",
-    "hdr",
-    "multi_threaded",
-    "png",
-    "smaa_luts",
-    "sysinfo_plugin",
-    "tonemapping_luts",
-    "webgpu",
-    "x11",
-    "serialize",
-] }
+bevy = { version = "0.16.1", default-features = false }
 bevy_platform = "0.16.1"
 bevy_egui = { version = "0.36.0", default-features = false, features = [
     "open_url",
@@ -84,6 +52,7 @@ toml = "0.9.5"
 bevy_behave = "0.3.0"
 bevy-inspector-egui = "0.33.1"
 bevy_enoki = { git = "https://github.com/Lommix/bevy_enoki.git", rev = "5a6dd95f838c9900d519a6548f0ae98edcfa1c02" }
+web-sys = "0.3.78"
 
 [profile.dev]
 opt-level = 1

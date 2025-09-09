@@ -4,17 +4,25 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-avian2d.workspace = true
 thetawave-states = { path = "../thetawave-states" }
 thetawave-assets = { path = "../thetawave-assets" }
-bevy = { workspace = true, default-features = false }
+bevy = { workspace = true, features = [
+    "bevy_gilrs",
+    "serialize",
+    "multi_threaded",
+    "async_executor",
+] }
+avian2d.workspace = true
 serde.workspace = true
 strum_macros.workspace = true
 strum.workspace = true
 leafwing_abilities.workspace = true
 leafwing-input-manager.workspace = true
 bevy-alt-ui-navigation-lite.workspace = true
-toml.workspace = true
 
 [features]
-dynamic_linking = ["bevy/dynamic_linking", "thetawave-states/dynamic_linking"]
+dynamic_linking = [
+    "bevy/dynamic_linking",
+    "thetawave-states/dynamic_linking",
+    "thetawave-assets/dynamic_linking",
+]

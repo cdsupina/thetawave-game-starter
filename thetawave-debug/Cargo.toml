@@ -4,8 +4,9 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-bevy-inspector-egui.workspace = true
-bevy = { workspace = true, default-features = false }
 thetawave-states = { path = "../thetawave-states" }
+bevy.workspace = true
+bevy-inspector-egui.workspace = true
+
 [features]
 dynamic_linking = ["bevy/dynamic_linking", "thetawave-states/dynamic_linking"]
