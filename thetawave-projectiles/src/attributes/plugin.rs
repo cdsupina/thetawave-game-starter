@@ -1,5 +1,5 @@
 use bevy::app::Plugin;
-use thetawave_assets::load_with_extended;
+use thetawave_core::load_with_extended;
 
 use crate::attributes::data::ProjectileAttributesResource;
 

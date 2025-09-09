@@ -23,7 +23,7 @@ pub use input::{
     PlayerNum,
 };
 pub use player::{PlayerDeathEvent, PlayerStats};
-use thetawave_assets::load_with_extended;
+use thetawave_core::load_with_extended;
 
 use crate::{
     character::reset_chosen_characters_resource_system,

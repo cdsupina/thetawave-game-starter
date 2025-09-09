@@ -9,6 +9,13 @@ bevy = { workspace = true, features = [
     "serialize",
 ] }
 serde.workspace = true
+toml.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { workspace = true, features = [
+    "XmlHttpRequest",
+    "XmlHttpRequestResponseType",
+] }
 
 [features]
 dynamic_linking = ["bevy/dynamic_linking"]

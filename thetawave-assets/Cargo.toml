@@ -20,14 +20,6 @@ bevy_asset_loader = { workspace = true, features = [
 bevy_aseprite_ultra.workspace = true
 bevy_kira_audio = { workspace = true, features = ["mp3", "wav"] }
 rand.workspace = true
-serde.workspace = true
-toml.workspace = true
-
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-web-sys = { workspace = true, features = [
-    "XmlHttpRequest",
-    "XmlHttpRequestResponseType",
-] }
 
 [features]
 dynamic_linking = [
