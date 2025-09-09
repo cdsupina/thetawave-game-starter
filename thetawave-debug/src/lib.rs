@@ -4,7 +4,7 @@ use bevy::{
     input::{keyboard::KeyCode, ButtonInput},
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use thetawave_states::ToggleDebugStateEvent;
+use thetawave_core::ToggleDebugStateEvent;
 
 pub struct ThetawaveDebugPlugin {
     /// The keycode to toggle debug mode on release

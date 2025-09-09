@@ -6,7 +6,7 @@ use std::time::Duration;
 use thetawave_assets::{
     AssetResolver, ExtendedMusicAssets, ExtendedUiAssets, MusicAssets, UiAssets,
 };
-use thetawave_states::AppState;
+use thetawave_core::AppState;
 
 use super::{
     MusicTransitionEvent,

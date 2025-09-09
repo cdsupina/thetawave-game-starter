@@ -5,7 +5,6 @@ edition.workspace = true
 
 [dependencies]
 thetawave-assets = { path = "../thetawave-assets" }
-thetawave-states = { path = "../thetawave-states" }
 thetawave-physics = { path = "../thetawave-physics" }
 thetawave-player = { path = "../thetawave-player" }
 thetawave-projectiles = { path = "../thetawave-projectiles" }
@@ -29,7 +28,6 @@ bevy_behave.workspace = true
 dynamic_linking = [
     "bevy/dynamic_linking",
     "thetawave-assets/dynamic_linking",
-    "thetawave-states/dynamic_linking",
     "thetawave-physics/dynamic_linking",
     "thetawave-player/dynamic_linking",
     "thetawave-projectiles/dynamic_linking",

@@ -4,7 +4,6 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-thetawave-states = { path = "../thetawave-states" }
 thetawave-physics = { path = "../thetawave-physics" }
 thetawave-assets = { path = "../thetawave-assets" }
 thetawave-backgrounds = { path = "../thetawave-backgrounds" }
@@ -66,7 +65,6 @@ dynamic_linking = [
     "thetawave-assets/dynamic_linking",
     "thetawave-backgrounds/dynamic_linking",
     "thetawave-debug/dynamic_linking",
-    "thetawave-states/dynamic_linking",
     "thetawave-mobs/dynamic_linking",
     "thetawave-projectiles/dynamic_linking",
     "thetawave-player/dynamic_linking",

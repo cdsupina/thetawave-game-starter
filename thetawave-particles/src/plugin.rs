@@ -4,7 +4,7 @@ use bevy::{
     state::condition::in_state,
 };
 use bevy_enoki::EnokiPlugin;
-use thetawave_states::{AppState, GameState};
+use thetawave_core::{AppState, GameState};
 
 use crate::{
     ParticleEffectType,

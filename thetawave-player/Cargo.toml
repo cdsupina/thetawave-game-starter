@@ -4,7 +4,6 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-thetawave-states = { path = "../thetawave-states" }
 thetawave-core = { path = "../thetawave-core" }
 bevy = { workspace = true, features = [
     "bevy_gilrs",
@@ -23,6 +22,5 @@ bevy-alt-ui-navigation-lite.workspace = true
 [features]
 dynamic_linking = [
     "bevy/dynamic_linking",
-    "thetawave-states/dynamic_linking",
     "thetawave-core/dynamic_linking",
 ]

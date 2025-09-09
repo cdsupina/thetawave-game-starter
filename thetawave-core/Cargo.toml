@@ -7,6 +7,7 @@ edition.workspace = true
 bevy = { workspace = true, features = [
     "bevy_color",
     "serialize",
+    "bevy_state",
 ] }
 serde.workspace = true
 toml.workspace = true

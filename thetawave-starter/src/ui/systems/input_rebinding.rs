@@ -28,7 +28,7 @@ use itertools::{EitherOrBoth, Itertools};
 use strum::IntoEnumIterator;
 use thetawave_assets::{ExtendedUiAssets, UiAssets};
 use thetawave_player::{DummyGamepad, InputType, PlayerAbility, PlayerAction};
-use thetawave_states::{Cleanup, MainMenuState};
+use thetawave_core::{Cleanup, MainMenuState};
 
 const LABEL_TEXT_SIZE: f32 = 12.0;
 

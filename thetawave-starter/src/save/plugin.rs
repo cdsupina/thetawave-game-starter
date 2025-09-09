@@ -3,7 +3,7 @@ use bevy::{
     app::{Plugin, Startup},
     state::state::OnEnter,
 };
-use thetawave_states::{AppState, GameState};
+use thetawave_core::{AppState, GameState};
 
 /// Plugin for managing player save files and save data
 pub(crate) struct ThetawaveSavePlugin;

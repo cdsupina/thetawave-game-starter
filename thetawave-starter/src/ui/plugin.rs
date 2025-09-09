@@ -26,7 +26,7 @@ use bevy::{
 use bevy_alt_ui_navigation_lite::NavRequestSystem;
 use bevy_asset_loader::loading_state::LoadingStateSet;
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
-use thetawave_states::{AppState, DebugState, GameState, MainMenuState, PauseMenuState};
+use thetawave_core::{AppState, DebugState, GameState, MainMenuState, PauseMenuState};
 
 // Plugin responsible for managing the Thetawave user interface components and systems
 pub(crate) struct ThetawaveUiPlugin;

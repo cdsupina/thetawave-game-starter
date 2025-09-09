@@ -22,7 +22,7 @@ use bevy_asset_loader::{
     standard_dynamic_asset::StandardDynamicAssetCollection,
 };
 use iyes_progress::ProgressPlugin;
-use thetawave_states::AppState;
+use thetawave_core::AppState;
 
 /// Plugin for managing asset loading states in Thetawave
 #[derive(Default)]

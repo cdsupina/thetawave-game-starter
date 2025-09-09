@@ -1,7 +1,6 @@
 [workspace]
 members = [
     "thetawave-starter",
-    "thetawave-states",
     "thetawave-test-game",
     "thetawave-physics",
     "thetawave-assets",

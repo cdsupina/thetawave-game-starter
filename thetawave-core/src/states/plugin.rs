@@ -3,19 +3,13 @@ use bevy::{
     prelude::{in_state, AppExtStates, IntoScheduleConfigs, OnEnter},
 };
 
-use crate::{
-    data::{DebugState, ToggleDebugStateEvent},
-    systems::toggle_debug_state_system,
-};
-
 use super::{
-    data::{AppState, GameState, MainMenuState},
+    data::{DebugState, ToggleDebugStateEvent, AppState, GameState, MainMenuState, PauseMenuState, ToggleGameStateEvent},
     systems::{
         cleanup_state_system, enter_game_end_system, enter_title_menu_state_system,
         reset_states_on_app_state_transition_system, reset_states_on_game_state_transition_system,
-        toggle_game_state_system,
+        toggle_game_state_system, toggle_debug_state_system,
     },
-    PauseMenuState, ToggleGameStateEvent,
 };
 
 /// Plugin for managing game states and their transitions

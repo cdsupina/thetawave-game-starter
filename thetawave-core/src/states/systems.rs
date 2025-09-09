@@ -1,6 +1,4 @@
-use crate::data::{DebugState, ToggleDebugStateEvent};
-
-use super::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState, ToggleGameStateEvent};
+use super::data::{DebugState, ToggleDebugStateEvent, AppState, Cleanup, GameState, MainMenuState, PauseMenuState, ToggleGameStateEvent};
 use bevy::{
     input::{keyboard::KeyCode, ButtonInput},
     prelude::{

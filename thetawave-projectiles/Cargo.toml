@@ -5,7 +5,6 @@ edition.workspace = true
 
 [dependencies]
 thetawave-assets = { path = "../thetawave-assets" }
-thetawave-states = { path = "../thetawave-states" }
 thetawave-core = { path = "../thetawave-core" }
 thetawave-physics = { path = "../thetawave-physics" }
 bevy = { workspace = true, features = [
@@ -23,7 +22,6 @@ avian2d.workspace = true
 dynamic_linking = [
     "bevy/dynamic_linking",
     "thetawave-assets/dynamic_linking",
-    "thetawave-states/dynamic_linking",
     "thetawave-physics/dynamic_linking",
     "thetawave-core/dynamic_linking",
 ]

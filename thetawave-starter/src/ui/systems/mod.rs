@@ -8,7 +8,7 @@ use crate::{
 };
 use thetawave_assets::{LoadingProgressEvent, UiAssets};
 use thetawave_player::{ChosenCharactersResource, InputType, PlayerJoinEvent, PlayerNum};
-use thetawave_states::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState};
+use thetawave_core::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState};
 
 use bevy::{
     app::AppExit,

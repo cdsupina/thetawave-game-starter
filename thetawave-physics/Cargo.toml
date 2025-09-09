@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-thetawave-states = { path = "../thetawave-states" }
+thetawave-core = { path = "../thetawave-core" }
 bevy = { workspace = true, features = [
     "bevy_gizmos",
     "multi_threaded",
@@ -16,4 +16,4 @@ avian2d.workspace = true
 
 [features]
 physics_debug = ["avian2d/diagnostic_ui"]
-dynamic_linking = ["bevy/dynamic_linking", "thetawave-states/dynamic_linking"]
+dynamic_linking = ["bevy/dynamic_linking", "thetawave-core/dynamic_linking"]

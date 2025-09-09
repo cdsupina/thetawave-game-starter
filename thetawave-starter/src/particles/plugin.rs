@@ -3,7 +3,7 @@ use bevy::{
     ecs::schedule::{Condition, IntoScheduleConfigs},
     state::condition::in_state,
 };
-use thetawave_states::{AppState, GameState};
+use thetawave_core::{AppState, GameState};
 
 use crate::particles::spawn::spawn_particle_effect_system;
 

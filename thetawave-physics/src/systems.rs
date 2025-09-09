@@ -3,7 +3,7 @@ use bevy::{
     prelude::{EventReader, ResMut, StateTransitionEvent},
     time::Time,
 };
-use thetawave_states::GameState;
+use thetawave_core::GameState;
 
 #[cfg(feature = "physics_debug")]
 use crate::PhysicsDebugSettings;

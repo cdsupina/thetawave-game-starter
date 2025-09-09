@@ -10,7 +10,7 @@ use bevy::{
 use bevy_enoki::prelude::ColorParticle2dMaterial;
 use iyes_progress::ProgressTracker;
 use thetawave_core::Faction;
-use thetawave_states::AppState;
+use thetawave_core::AppState;
 
 /// System for getting loading progress and sending the value as an event
 pub(super) fn get_loading_progress_system(

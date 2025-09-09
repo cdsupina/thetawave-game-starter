@@ -14,7 +14,7 @@ use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use strum::IntoEnumIterator;
 use thetawave_assets::{AssetResolver, ExtendedUiAssets, UiAssets};
 use thetawave_player::{CharacterType, InputType, PlayerNum};
-use thetawave_states::{AppState, GameState, MainMenuState, PauseMenuState};
+use thetawave_core::{AppState, GameState, MainMenuState, PauseMenuState};
 
 const BUTTON_ACTION_DELAY_TIME: f32 = 0.3;
 const CAROUSEL_READY_TIME: f32 = 0.5;

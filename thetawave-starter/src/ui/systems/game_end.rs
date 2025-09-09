@@ -14,7 +14,7 @@ use bevy::{
     utils::default,
 };
 use thetawave_assets::{AssetResolver, ExtendedUiAssets, UiAssets};
-use thetawave_states::{AppState, Cleanup, GameState};
+use thetawave_core::{AppState, Cleanup, GameState};
 
 /// Spawns the game over/victory ui
 pub(in crate::ui) fn spawn_game_end_system(

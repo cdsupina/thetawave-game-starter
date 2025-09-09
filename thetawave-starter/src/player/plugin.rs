@@ -1,6 +1,6 @@
 use super::systems::spawn_players_system;
 use bevy::{app::Plugin, prelude::OnEnter};
-use thetawave_states::AppState;
+use thetawave_core::AppState;
 
 /// Plugin for managing player entities
 pub(crate) struct ThetawavePlayerPlugin;

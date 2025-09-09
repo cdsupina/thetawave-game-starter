@@ -9,7 +9,7 @@ use bevy::{
 };
 use bevy_behave::prelude::BehavePlugin;
 use thetawave_core::load_with_extended;
-use thetawave_states::{AppState, GameState};
+use thetawave_core::{AppState, GameState};
 
 use crate::behavior::{
     BehaviorReceiverComponent, MobBehaviorsResource,

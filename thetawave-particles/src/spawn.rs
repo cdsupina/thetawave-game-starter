@@ -9,7 +9,7 @@ use bevy_enoki::{
 };
 use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
 use thetawave_core::Faction;
-use thetawave_states::{AppState, Cleanup};
+use thetawave_core::{AppState, Cleanup};
 
 use crate::ParticleEffectType;
 
