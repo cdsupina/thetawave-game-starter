@@ -5,22 +5,8 @@ edition.workspace = true
 
 [dependencies]
 thetawave-core = { path = "../thetawave-core" }
-thetawave-assets = { path = "../thetawave-assets" }
-rand.workspace = true
-bevy = { workspace = true, features = [
-    "bevy_pbr",
-    "bevy_scene",
-    "bevy_gltf",
-    "bevy_render",
-    "bevy_color",
-    "multi_threaded",
-    "async_executor",
-] }
+bevy = { workspace = true, features = ["multi_threaded", "async_executor"] }
 
 
 [features]
-dynamic_linking = [
-    "bevy/dynamic_linking",
-    "thetawave-core/dynamic_linking",
-    "thetawave-assets/dynamic_linking",
-]
+dynamic_linking = ["bevy/dynamic_linking", "thetawave-core/dynamic_linking"]

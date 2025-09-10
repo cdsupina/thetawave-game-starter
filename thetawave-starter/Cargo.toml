@@ -32,6 +32,7 @@ bevy = { workspace = true, features = [
     "default_font",
     "multi_threaded",
     "async_executor",
+    "bevy_gltf",
 ] }
 bevy_platform.workspace = true
 bevy_egui.workspace = true
@@ -51,6 +52,7 @@ winit.workspace = true
 image.workspace = true
 itertools.workspace = true
 bevy_embedded_assets.workspace = true
+rand.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 bevy = { workspace = true, features = ["webgpu"] }

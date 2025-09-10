@@ -23,6 +23,7 @@ use bevy_embedded_assets::{EmbeddedAssetPlugin, PluginMode};
 use thetawave_debug::ThetawaveDebugPlugin;
 
 mod audio;
+mod backgrounds;
 mod camera;
 mod collisions;
 mod options;
@@ -80,7 +81,7 @@ impl Plugin for ThetawaveStarterPlugin {
             ui::ThetawaveUiPlugin,
             options::ThetawaveOptionsPlugin,
             camera::ThetawaveCameraPlugin,
-            thetawave_backgrounds::ThetawaveBackgroundsPlugin,
+            backgrounds::ThetawaveBackgroundsPlugin,
             audio::ThetawaveAudioPlugin,
             player::ThetawavePlayerPlugin,
             thetawave_physics::ThetawavePhysicsPlugin,
