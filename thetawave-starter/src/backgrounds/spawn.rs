@@ -14,7 +14,7 @@ use bevy::{
 use rand::{Rng, rngs::ThreadRng};
 use std::ops::RangeInclusive;
 use thetawave_assets::{AssetResolver, BackgroundAssets, ExtendedBackgroundAssets};
-use thetawave_backgrounds::PlanetRotationComponent;
+use crate::backgrounds::data::PlanetRotationComponent;
 use thetawave_core::{AppState, Cleanup};
 
 // Background properties

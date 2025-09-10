@@ -4,7 +4,7 @@ use bevy::{
     transform::components::Transform,
 };
 
-use crate::data::PlanetRotationComponent;
+use crate::backgrounds::data::PlanetRotationComponent;
 
 /// System to handle planet rotation animation
 pub(super) fn rotate_planet_system(

@@ -4,7 +4,6 @@ members = [
     "thetawave-test-game",
     "thetawave-physics",
     "thetawave-assets",
-    "thetawave-backgrounds",
     "thetawave-debug",
     "thetawave-mobs",
     "thetawave-player",
