@@ -12,7 +12,7 @@ pub enum ParticleEffectType {
 }
 
 #[derive(Event)]
-pub struct SpawnParticleEffectEvent {
+pub(crate) struct SpawnParticleEffectEvent {
     /// If parent entity is some the particle effect should be spawned as a child entity of the parent
     /// The transform will be relative to the parent in this case
     pub parent_entity: Option<Entity>,
