@@ -83,3 +83,19 @@ Customize game behavior with TOML configuration files in `thetawave-test-game/as
 - `projectile_attributes.toml` - Projectile physics and collision shapes
 
 Extended files merge with base assets using field-level overrides.
+
+## Project Architecture
+
+The following dependency graph shows the modular architecture and relationships between crates:
+
+![Dependency Graph](dependency-graph.png)
+
+*The dependency graph is automatically generated during builds and shows the clean separation between game systems.*
+
+## Credits
+
+### Asset Attributions
+- **Space Backgrounds**: [Seamless Space Backgrounds](https://screamingbrainstudios.itch.io/seamless-space-backgrounds) by Screaming Brain Studios
+- **Music**: [Joel Schuman](https://joelhasa.site/)
+- **Font**: [Dank Depths Pixel Font](https://hexany-ives.itch.io/dank-depths-pixel-font) by hexany-ives
+- **Pixel Art**: [LordDeatHunter](https://github.com/LordDeatHunter)

@@ -29,7 +29,7 @@ use thetawave_player::{
     CharacterCarouselAction, CharacterType, ChosenCharacterData, ChosenCharactersResource,
     InputType,
 };
-use thetawave_states::AppState;
+use thetawave_core::AppState;
 
 /// Spawn ui for character selection
 pub(in crate::ui) fn spawn_character_selection_system(

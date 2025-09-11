@@ -1,17 +1,24 @@
 use bevy::{
     asset::Handle,
-    ecs::{entity::Entity, name::Name, system::Commands},
+    ecs::{
+        entity::Entity,
+        event::EventReader,
+        name::Name,
+        system::{Commands, Res},
+    },
     log::warn,
     transform::components::Transform,
 };
 use bevy_enoki::{
     Particle2dEffect, ParticleEffectHandle, ParticleSpawner, prelude::ParticleSpawnerState,
 };
-use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
+use thetawave_assets::{
+    AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials,
+};
 use thetawave_core::Faction;
-use thetawave_states::{AppState, Cleanup};
+use thetawave_core::{AppState, Cleanup};
 
-use crate::ParticleEffectType;
+use crate::{ParticleEffectType, data::SpawnParticleEffectEvent};
 
 /// Get the particle effect handle from a given ParticleEffectType using asset resolver
 fn get_particle_effect(
@@ -68,4 +75,25 @@ pub fn spawn_particle_effect(
     }
 
     Some(particle_entity)
+}
+
+pub(crate) fn spawn_particle_effect_system(
+    mut cmds: Commands,
+    extended_assets: Res<ExtendedGameAssets>,
+    assets: Res<GameAssets>,
+    materials: Res<ParticleMaterials>,
+    mut spawn_particle_effect_event_reader: EventReader<SpawnParticleEffectEvent>,
+) {
+    for event in spawn_particle_effect_event_reader.read() {
+        let _particle_entity = spawn_particle_effect(
+            &mut cmds,
+            event.parent_entity,
+            &event.effect_type,
+            &event.faction,
+            &event.transform,
+            &extended_assets,
+            &assets,
+            &materials,
+        );
+    }
 }

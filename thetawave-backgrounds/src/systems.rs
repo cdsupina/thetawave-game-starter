@@ -16,7 +16,7 @@ use bevy::{
 use rand::{Rng, rngs::ThreadRng};
 use std::ops::RangeInclusive;
 use thetawave_assets::{AssetResolver, BackgroundAssets, ExtendedBackgroundAssets};
-use thetawave_states::{AppState, Cleanup};
+use thetawave_core::{AppState, Cleanup};
 
 // Background properties
 const BACKGROUND_ALPHA: f32 = 0.1; // Opacity of the background

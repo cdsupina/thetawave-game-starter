@@ -9,7 +9,7 @@ use bevy::{
 use bevy_alt_ui_navigation_lite::DefaultNavigationPlugins;
 use leafwing_abilities::plugin::AbilityPlugin;
 use leafwing_input_manager::plugin::InputManagerPlugin;
-use thetawave_states::{AppState, DebugState, GameState, MainMenuState};
+use thetawave_core::{AppState, DebugState, GameState, MainMenuState};
 
 mod character;
 mod input;
@@ -23,7 +23,7 @@ pub use input::{
     PlayerNum,
 };
 pub use player::{PlayerDeathEvent, PlayerStats};
-use thetawave_assets::load_with_extended;
+use thetawave_core::load_with_extended;
 
 use crate::{
     character::reset_chosen_characters_resource_system,

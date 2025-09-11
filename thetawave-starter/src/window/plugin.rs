@@ -4,7 +4,7 @@ use bevy::{
     ecs::schedule::{Condition, IntoScheduleConfigs},
     state::condition::in_state,
 };
-use thetawave_states::{MainMenuState, PauseMenuState};
+use thetawave_core::{MainMenuState, PauseMenuState};
 
 pub(crate) struct ThetawaveWindowPlugin;
 

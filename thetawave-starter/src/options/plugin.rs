@@ -9,7 +9,7 @@ use bevy::{
     app::{Plugin, Startup, Update},
     prelude::{in_state, Condition, IntoScheduleConfigs, OnEnter},
 };
-use thetawave_states::{MainMenuState, PauseMenuState};
+use thetawave_core::{MainMenuState, PauseMenuState};
 
 // Plugin struct for handling Thetawave game options
 pub(crate) struct ThetawaveOptionsPlugin;

@@ -5,7 +5,7 @@ use bevy::{
     state::condition::in_state,
 };
 use bevy_aseprite_ultra::prelude::AnimationEvents;
-use thetawave_states::{AppState, GameState};
+use thetawave_core::{AppState, GameState};
 
 use crate::{
     SpawnProjectileEvent,

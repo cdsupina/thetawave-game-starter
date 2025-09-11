@@ -11,4 +11,4 @@ port = 8080
 [[hooks]]
 stage = "build"
 command = "sh"
-command_arguments = ["-c", "cp -r assets $TRUNK_STAGING_DIR"]
+command_arguments = ["-c", "[ -d assets ] && cp -r assets $TRUNK_STAGING_DIR || echo 'No assets folder found, skipping copy'"]

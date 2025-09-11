@@ -4,11 +4,12 @@ use bevy::{
     state::condition::in_state,
 };
 use bevy_enoki::EnokiPlugin;
-use thetawave_states::{AppState, GameState};
+use thetawave_core::{AppState, GameState};
 
 use crate::{
     ParticleEffectType,
     data::{ActivateParticleEvent, SpawnParticleEffectEvent},
+    spawn::spawn_particle_effect_system,
     systems::activate_particle_effect_system,
 };
 
@@ -25,7 +26,10 @@ impl Plugin for ThetawaveParticlesPlugin {
 
         app.add_systems(
             Update,
-            activate_particle_effect_system
+            (
+                activate_particle_effect_system,
+                spawn_particle_effect_system,
+            )
                 .run_if(in_state(AppState::Game).and(in_state(GameState::Playing))),
         );
     }

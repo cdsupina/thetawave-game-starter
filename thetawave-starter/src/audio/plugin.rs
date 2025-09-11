@@ -4,7 +4,7 @@ use bevy::{
 };
 use bevy_kira_audio::{AudioApp, AudioPlugin};
 
-use thetawave_states::{AppState, MainMenuState, PauseMenuState};
+use thetawave_core::{AppState, MainMenuState, PauseMenuState};
 
 use super::{
     data::{AudioEffectEvent, EffectsAudioChannel, MusicAudioChannel, UiAudioChannel},

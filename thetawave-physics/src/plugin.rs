@@ -5,7 +5,7 @@ use bevy::{
     math::Vec2,
     prelude::{in_state, IntoScheduleConfigs, OnEnter},
 };
-use thetawave_states::AppState;
+use thetawave_core::AppState;
 
 pub struct ThetawavePhysicsPlugin;
 

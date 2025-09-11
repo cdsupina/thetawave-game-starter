@@ -4,8 +4,19 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-bevy = { workspace = true, default-features = false }
+bevy = { workspace = true, features = [
+    "bevy_color",
+    "serialize",
+    "bevy_state",
+] }
 serde.workspace = true
+toml.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { workspace = true, features = [
+    "XmlHttpRequest",
+    "XmlHttpRequestResponseType",
+] }
 
 [features]
 dynamic_linking = ["bevy/dynamic_linking"]

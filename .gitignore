@@ -14,9 +14,6 @@ Cargo.lock
 *.pdb
 
 # Ignore media assets without open liscenses
-assets/media/
-assets/data/
-assets/*.assets.ron
 thetawave-test-game/assets/
 
 # Ignore environment files with credentials

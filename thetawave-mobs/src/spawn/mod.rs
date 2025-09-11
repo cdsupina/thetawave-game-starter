@@ -20,7 +20,7 @@ use bevy_behave::prelude::BehaveTree;
 use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
 use thetawave_particles::{ParticleEffectType, spawn_particle_effect};
 use thetawave_projectiles::ProjectileType;
-use thetawave_states::{AppState, Cleanup};
+use thetawave_core::{AppState, Cleanup};
 
 use crate::{
     MobMarker,

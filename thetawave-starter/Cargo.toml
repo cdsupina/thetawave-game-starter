@@ -4,7 +4,6 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-thetawave-states = { path = "../thetawave-states" }
 thetawave-physics = { path = "../thetawave-physics" }
 thetawave-assets = { path = "../thetawave-assets" }
 thetawave-backgrounds = { path = "../thetawave-backgrounds" }
@@ -15,7 +14,25 @@ thetawave-camera = { path = "../thetawave-camera" }
 thetawave-debug = { path = "../thetawave-debug", optional = true }
 thetawave-core = { path = "../thetawave-core" }
 thetawave-particles = { path = "../thetawave-particles" }
-bevy.workspace = true
+bevy = { workspace = true, features = [
+    "bevy_winit",
+    "tonemapping_luts",
+    "bevy_ui",
+    "bevy_text",
+    "bevy_sprite",
+    "bevy_window",
+    "bevy_gilrs",
+    "bevy_core_pipeline",
+    "bevy_render",
+    "hdr",
+    "bevy_color",
+    "animation",
+    "png",
+    "bevy_state",
+    "default_font",
+    "multi_threaded",
+    "async_executor",
+] }
 bevy_platform.workspace = true
 bevy_egui.workspace = true
 bevy-alt-ui-navigation-lite.workspace = true
@@ -35,6 +52,12 @@ image.workspace = true
 itertools.workspace = true
 bevy_embedded_assets.workspace = true
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+bevy = { workspace = true, features = ["webgpu"] }
+
+[target.'cfg(target_family = "unix")'.dependencies]
+bevy = { workspace = true, features = ["x11"] }
+
 [features]
 dynamic_linking = [
     "bevy/dynamic_linking",
@@ -42,7 +65,6 @@ dynamic_linking = [
     "thetawave-assets/dynamic_linking",
     "thetawave-backgrounds/dynamic_linking",
     "thetawave-debug/dynamic_linking",
-    "thetawave-states/dynamic_linking",
     "thetawave-mobs/dynamic_linking",
     "thetawave-projectiles/dynamic_linking",
     "thetawave-player/dynamic_linking",

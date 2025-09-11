@@ -5,13 +5,13 @@ use bevy::{
 };
 use leafwing_input_manager::prelude::ActionState;
 use thetawave_player::{PlayerAction, PlayerNum};
-use thetawave_states::{AppState, ToggleGameStateEvent};
+use thetawave_core::{AppState, ToggleGameStateEvent};
 
 pub(crate) struct ThetawaveStatesPlugin;
 
 impl Plugin for ThetawaveStatesPlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        app.add_plugins(thetawave_states::ThetawaveStatesPlugin)
+        app.add_plugins(thetawave_core::ThetawaveStatesPlugin)
             .add_systems(
                 Update,
                 toggle_game_state_system.run_if(in_state(AppState::Game)),

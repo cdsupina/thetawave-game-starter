@@ -1,0 +1,58 @@
+({
+    "game_sprites": Files(
+        paths: [
+            "media/aseprite/captain_character.aseprite",
+            "media/aseprite/juggernaut_character.aseprite",
+            "media/aseprite/doomwing_character.aseprite",
+
+            "media/aseprite/xhitara_grunt_mob.aseprite",
+            "media/aseprite/xhitara_grunt_thrusters.aseprite",
+            "media/aseprite/xhitara_spitter_mob.aseprite",
+            "media/aseprite/xhitara_spitter_thrusters.aseprite",
+            "media/aseprite/xhitara_gyro_mob.aseprite",
+            "media/aseprite/xhitara_tentacle_start_mob.aseprite",
+            "media/aseprite/xhitara_tentacle_middle_mob.aseprite",
+            "media/aseprite/xhitara_tentacle_end_mob.aseprite",
+            "media/aseprite/xhitara_cyclusk_mob.aseprite",
+            "media/aseprite/xhitara_pacer_mob.aseprite",
+            "media/aseprite/xhitara_pacer_thrusters.aseprite",
+            "media/aseprite/xhitara_missile_mob.aseprite",
+            "media/aseprite/xhitara_missile_thrusters.aseprite",
+            "media/aseprite/xhitara_launcher_mob.aseprite",
+            "media/aseprite/xhitara_launcher_thrusters.aseprite",
+
+            "media/aseprite/ferritharax_head_mob.aseprite",
+            "media/aseprite/ferritharax_body_mob.aseprite",
+            "media/aseprite/ferritharax_left_shoulder_mob.aseprite",
+            "media/aseprite/ferritharax_right_shoulder_mob.aseprite",
+            "media/aseprite/ferritharax_left_arm_mob.aseprite",
+            "media/aseprite/ferritharax_right_arm_mob.aseprite",
+            "media/aseprite/ferritharax_left_claw_mob.aseprite",
+            "media/aseprite/ferritharax_right_claw_mob.aseprite",
+
+            "media/aseprite/trizetheron_mob.aseprite",
+            "media/aseprite/trizetheron_left_head_mob.aseprite",
+            "media/aseprite/trizetheron_right_head_mob.aseprite",
+
+            "media/aseprite/freighter_front_mob.aseprite",
+            "media/aseprite/freighter_middle_mob.aseprite",
+            "media/aseprite/freighter_back_mob.aseprite",
+            "media/aseprite/freighter_thrusters.aseprite",
+
+            "media/aseprite/bullet_projectile.aseprite",
+            "media/aseprite/bullet_projectile_despawn.aseprite",
+            "media/aseprite/bullet_projectile_hit.aseprite",
+
+            "media/aseprite/blast_projectile.aseprite",
+            "media/aseprite/blast_projectile_despawn.aseprite",
+            "media/aseprite/blast_projectile_hit.aseprite",
+
+        ]
+    ),
+    "game_particle_effects": Files(
+        paths: [
+            "media/particles/spawn_blast.ron",
+            "media/particles/spawn_bullet.ron",
+        ]
+    ),
+})

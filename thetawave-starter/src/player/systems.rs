@@ -19,7 +19,7 @@ use thetawave_player::{
     CharacterType, CharactersResource, ChosenCharactersResource, InputType, PlayerAbility,
     PlayerStats,
 };
-use thetawave_states::{AppState, Cleanup};
+use thetawave_core::{AppState, Cleanup};
 
 /// Get the Aseprite handle from a given CharacterType using asset resolver
 fn get_character_sprite(

@@ -10,7 +10,7 @@ use bevy::{
     ecs::schedule::{Condition, IntoScheduleConfigs, common_conditions::on_event},
     state::condition::in_state,
 };
-use thetawave_states::{AppState, GameState};
+use thetawave_core::{AppState, GameState};
 
 use crate::{
     attributes::ThetawaveAttributesPlugin, behavior::ThetawaveMobBehaviorPlugin,

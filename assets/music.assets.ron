@@ -1,0 +1,8 @@
+({
+    "music": Files(
+        paths: [
+            "media/audio/music/game_theme.mp3",
+            "media/audio/music/main_menu_theme.mp3",
+        ]
+    )
+})

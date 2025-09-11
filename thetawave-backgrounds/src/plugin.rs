@@ -4,7 +4,7 @@ use bevy::{
     ecs::schedule::common_conditions::not,
     prelude::{in_state, Condition, IntoScheduleConfigs, OnEnter},
 };
-use thetawave_states::{AppState, GameState};
+use thetawave_core::{AppState, GameState};
 
 /// Plugin for managing background elements in Thetawave
 pub struct ThetawaveBackgroundsPlugin;
