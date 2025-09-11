@@ -12,8 +12,8 @@ use bevy::{
     transform::components::Transform,
 };
 use bevy_behave::prelude::BehaveCtx;
+use thetawave_core::PlayerTag;
 use thetawave_particles::ActivateParticleEvent;
-use thetawave_player::PlayerStats;
 use thetawave_projectiles::SpawnProjectileEvent;
 
 use crate::{
@@ -210,7 +210,7 @@ fn move_to(
 pub(super) fn find_player_target_system(
     mob_behavior_q: Query<(&MobBehaviorComponent, &BehaveCtx)>,
     mob_q: Query<(Entity, &Transform, &MobAttributesComponent), With<MobAttributesComponent>>,
-    player_q: Query<(Entity, &Transform), With<PlayerStats>>,
+    player_q: Query<(Entity, &Transform), With<PlayerTag>>,
     mut cmds: Commands,
 ) {
     for (mob_behavior, ctx) in mob_behavior_q.iter() {
@@ -238,7 +238,7 @@ fn find_player_target(
     mob_entity: Entity,
     mob_transform: &Transform,
     attributes: &MobAttributesComponent,
-    player_q: &Query<(Entity, &Transform), With<PlayerStats>>,
+    player_q: &Query<(Entity, &Transform), With<PlayerTag>>,
     cmds: &mut Commands,
     ctx: &BehaveCtx,
 ) {
@@ -589,7 +589,10 @@ pub(super) fn spawn_mob_system(
         };
 
         for behavior in mob_behavior.behaviors.iter() {
-            if let MobBehaviorType::SpawnMob { keys: Some(spawner_keys) } = behavior {
+            if let MobBehaviorType::SpawnMob {
+                keys: Some(spawner_keys),
+            } = behavior
+            {
                 spawn_mob(
                     spawner_keys,
                     &mut mob_spawner,
@@ -647,7 +650,10 @@ pub(super) fn spawn_projectile_system(
         // Collect all active spawner keys from the current behavior tree
         let mut active_spawner_keys = Vec::new();
         for behavior in mob_behavior.behaviors.iter() {
-            if let MobBehaviorType::SpawnProjectile { keys: Some(spawner_keys) } = behavior {
+            if let MobBehaviorType::SpawnProjectile {
+                keys: Some(spawner_keys),
+            } = behavior
+            {
                 active_spawner_keys.extend(spawner_keys.iter().cloned());
             }
         }
@@ -758,7 +764,9 @@ pub(super) fn do_for_time_system(
         for behavior in mob_behavior.behaviors.iter() {
             if let MobBehaviorType::DoForTime { seconds } = behavior {
                 let entity = ctx.target_entity();
-                let timer = timers.entry(entity).or_insert_with(|| Timer::from_seconds(*seconds, TimerMode::Once));
+                let timer = timers
+                    .entry(entity)
+                    .or_insert_with(|| Timer::from_seconds(*seconds, TimerMode::Once));
                 if timer.tick(time.delta()).just_finished() {
                     cmds.trigger(ctx.success());
                     timers.remove(&entity); // Clean up finished timer
@@ -767,7 +775,6 @@ pub(super) fn do_for_time_system(
         }
     }
 }
-
 
 /// MobBehaviorType::RotateJointsClockwise
 /// Uses joint motor to rotate joint
