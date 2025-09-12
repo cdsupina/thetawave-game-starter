@@ -13,13 +13,13 @@ use bevy_persistent::Persistent;
 use leafwing_abilities::AbilitiesBundle;
 use leafwing_input_manager::prelude::InputMap;
 use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
-use thetawave_core::HealthComponent;
+use thetawave_core::{AppState, Cleanup};
+use thetawave_core::{HealthComponent, PlayerTag};
 use thetawave_physics::ThetawavePhysicsLayer;
 use thetawave_player::{
     CharacterType, CharactersResource, ChosenCharactersResource, InputType, PlayerAbility,
     PlayerStats,
 };
-use thetawave_core::{AppState, Cleanup};
 
 /// Get the Aseprite handle from a given CharacterType using asset resolver
 fn get_character_sprite(
@@ -111,7 +111,7 @@ pub(super) fn spawn_players_system(
             ));
 
             // new insert because of the bundle size limit
-            entity_cmds.insert(HealthComponent::new(character_data.health));
+            entity_cmds.insert((PlayerTag, HealthComponent::new(character_data.health)));
         }
     }
     Ok(())
