@@ -17,19 +17,18 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_behave::prelude::BehaveTree;
-use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
-use thetawave_particles::{ParticleEffectType, spawn_particle_effect};
-use thetawave_projectiles::ProjectileType;
+use thetawave_assets::{
+    AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials,
+};
 use thetawave_core::{AppState, Cleanup};
+use thetawave_particles::spawn_particle_effect;
+use thetawave_projectiles::ProjectileType;
 
 use crate::{
     MobMarker,
-    attributes::{
-        JointedMob, JointsComponent, MobAttributesResource, MobComponentBundle,
-    },
+    attributes::{JointedMob, JointsComponent, MobAttributesResource, MobComponentBundle},
     behavior::{BehaviorReceiverComponent, MobBehaviorsResource},
 };
-
 
 /// Get the Aseprite handle from a decoration name string using asset resolver
 fn get_mob_decoration_sprite(
@@ -40,16 +39,10 @@ fn get_mob_decoration_sprite(
     AssetResolver::get_game_sprite(decoration_name, extended_assets, game_assets)
 }
 
-trait ParticleEffectTypeExt {
-    fn from_projectile_type(projectile_type: &ProjectileType) -> ParticleEffectType;
-}
-
-impl ParticleEffectTypeExt for ParticleEffectType {
-    fn from_projectile_type(projectile_type: &ProjectileType) -> ParticleEffectType {
-        match projectile_type {
-            ProjectileType::Bullet => Self::SpawnBullet,
-            ProjectileType::Blast => Self::SpawnBlast,
-        }
+fn get_particle_effect_str(projectile_type: &ProjectileType) -> &str {
+    match projectile_type {
+        ProjectileType::Bullet => "spawn_bullet",
+        ProjectileType::Blast => "spawn_blast",
     }
 }
 
@@ -318,7 +311,7 @@ fn spawn_mob(
             let particle_entity = spawn_particle_effect(
                 cmds,
                 Some(anchor_id),
-                &ParticleEffectType::from_projectile_type(&spawner.projectile_type),
+                get_particle_effect_str(&spawner.projectile_type),
                 &spawner.faction,
                 &transform,
                 extended_assets,
@@ -326,7 +319,7 @@ fn spawn_mob(
                 materials,
             );
 
-            spawner.spawn_effect_entity = particle_entity;
+            spawner.spawn_effect_entity = particle_entity.ok();
         }
 
         // Update the entity with the modified projectile spawners

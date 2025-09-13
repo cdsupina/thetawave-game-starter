@@ -1,22 +1,15 @@
 use bevy::{
     ecs::{entity::Entity, event::Event},
-    reflect::Reflect,
     transform::components::Transform,
 };
 use thetawave_core::Faction;
-
-#[derive(Debug, Reflect)]
-pub enum ParticleEffectType {
-    SpawnBlast,
-    SpawnBullet,
-}
 
 #[derive(Event)]
 pub(crate) struct SpawnParticleEffectEvent {
     /// If parent entity is some the particle effect should be spawned as a child entity of the parent
     /// The transform will be relative to the parent in this case
     pub parent_entity: Option<Entity>,
-    pub effect_type: ParticleEffectType,
+    pub effect_type: String,
     /// For particle effects Faction determines the color
     pub faction: Faction,
     pub transform: Transform,

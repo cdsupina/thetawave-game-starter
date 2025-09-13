@@ -7,7 +7,6 @@ use bevy_enoki::EnokiPlugin;
 use thetawave_core::{AppState, GameState};
 
 use crate::{
-    ParticleEffectType,
     data::{ActivateParticleEvent, SpawnParticleEffectEvent},
     spawn::spawn_particle_effect_system,
     systems::activate_particle_effect_system,
@@ -17,8 +16,6 @@ pub struct ThetawaveParticlesPlugin;
 
 impl Plugin for ThetawaveParticlesPlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        app.register_type::<ParticleEffectType>();
-
         app.add_event::<SpawnParticleEffectEvent>();
         app.add_event::<ActivateParticleEvent>();
 
