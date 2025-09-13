@@ -124,6 +124,7 @@ fn spawn_projectile(
         faction: faction.clone(),
         transform: Transform::default(),
         is_active: true,
+        key: None,
     });
 
     Ok(particle_entity)

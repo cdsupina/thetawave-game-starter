@@ -2,7 +2,7 @@ use bevy::{
     ecs::{
         entity::Entity,
         error::{BevyError, Result},
-        event::EventReader,
+        event::{EventReader, EventWriter},
         name::Name,
         system::{Commands, Res},
     },
@@ -13,18 +13,20 @@ use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets, ParticleMa
 use thetawave_core::Faction;
 use thetawave_core::{AppState, Cleanup};
 
-use crate::data::SpawnParticleEffectEvent;
+use crate::data::{SpawnParticleEffectEvent, SpawnerParticleEffectSpawnedEvent};
 
 pub fn spawn_particle_effect(
     cmds: &mut Commands,
     parent_entity: Option<Entity>,
     effect_type: &str,
+    key: &Option<String>,
     faction: &Faction,
     transform: &Transform,
     extended_assets: &ExtendedGameAssets,
     assets: &GameAssets,
     materials: &ParticleMaterials,
     is_active: bool,
+    particle_effect_spawned_event_writer: &mut EventWriter<SpawnerParticleEffectSpawnedEvent>,
 ) -> Result<Entity, BevyError> {
     let particle_effect_handle =
         AssetResolver::get_game_particle_effect(effect_type, extended_assets, assets)?;
@@ -48,6 +50,14 @@ pub fn spawn_particle_effect(
 
     if let Some(parent) = parent_entity {
         cmds.entity(parent).add_child(particle_entity);
+
+        if let Some(key) = key {
+            particle_effect_spawned_event_writer.write(SpawnerParticleEffectSpawnedEvent {
+                key: key.clone(),
+                effect_entity: particle_entity,
+                parent_entity: parent,
+            });
+        }
     }
 
     Ok(particle_entity)
@@ -59,18 +69,21 @@ pub(crate) fn spawn_particle_effect_system(
     assets: Res<GameAssets>,
     materials: Res<ParticleMaterials>,
     mut spawn_particle_effect_event_reader: EventReader<SpawnParticleEffectEvent>,
+    mut particle_effect_spawned_event_writer: EventWriter<SpawnerParticleEffectSpawnedEvent>,
 ) -> Result {
     for event in spawn_particle_effect_event_reader.read() {
         let _particle_entity = spawn_particle_effect(
             &mut cmds,
             event.parent_entity,
             &event.effect_type,
+            &event.key,
             &event.faction,
             &event.transform,
             &extended_assets,
             &assets,
             &materials,
             event.is_active,
+            &mut particle_effect_spawned_event_writer,
         )?;
     }
 

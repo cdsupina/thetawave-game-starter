@@ -14,6 +14,15 @@ pub struct SpawnParticleEffectEvent {
     pub faction: Faction,
     pub transform: Transform,
     pub is_active: bool,
+    pub key: Option<String>,
+}
+
+// Used for associating particle effects with spawners based on spawner keys
+#[derive(Event)]
+pub struct SpawnerParticleEffectSpawnedEvent {
+    pub key: String,
+    pub effect_entity: Entity,
+    pub parent_entity: Entity,
 }
 
 /// Event for setting the active state of a particle entity
