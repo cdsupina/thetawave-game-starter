@@ -24,6 +24,7 @@ pub fn spawn_particle_effect(
     extended_assets: &ExtendedGameAssets,
     assets: &GameAssets,
     materials: &ParticleMaterials,
+    is_active: bool,
 ) -> Result<Entity, BevyError> {
     let particle_effect_handle =
         AssetResolver::get_game_particle_effect(effect_type, extended_assets, assets)?;
@@ -38,7 +39,7 @@ pub fn spawn_particle_effect(
             *transform,
             ParticleSpawner(materials.get_material_for_faction(faction)),
             ParticleSpawnerState {
-                active: false, // Start inactive, will be activated by behavior system when needed
+                active: is_active, // Start inactive, will be activated by behavior system when needed
                 ..Default::default()
             },
             ParticleEffectHandle(particle_effect_handle),
@@ -69,6 +70,7 @@ pub(crate) fn spawn_particle_effect_system(
             &extended_assets,
             &assets,
             &materials,
+            event.is_active,
         )?;
     }
 

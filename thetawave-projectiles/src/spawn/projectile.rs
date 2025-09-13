@@ -13,9 +13,12 @@ use bevy::{
     transform::components::Transform,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
-use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
-use thetawave_core::{CollisionDamage, Faction};
+use thetawave_assets::{
+    AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials,
+};
 use thetawave_core::{AppState, Cleanup};
+use thetawave_core::{CollisionDamage, Faction};
+use thetawave_particles::spawn_particle_effect;
 
 use crate::{
     ProjectileType, SpawnProjectileEvent,
@@ -43,6 +46,7 @@ pub(crate) fn spawn_projectile_system(
     extended_assets: Res<ExtendedGameAssets>,
     mut spawn_projectile_event_reader: EventReader<SpawnProjectileEvent>,
     attributes_res: Res<ProjectileAttributesResource>,
+    materials: Res<ParticleMaterials>,
 ) -> Result {
     for event in spawn_projectile_event_reader.read() {
         spawn_projectile(
@@ -56,6 +60,7 @@ pub(crate) fn spawn_projectile_system(
             &game_assets,
             &extended_assets,
             &attributes_res,
+            &materials,
         )?;
     }
 
@@ -73,6 +78,7 @@ fn spawn_projectile(
     game_assets: &GameAssets,
     extended_assets: &ExtendedGameAssets,
     attributes_res: &ProjectileAttributesResource,
+    materials: &ParticleMaterials,
 ) -> Result<Entity, BevyError> {
     // Look up the projectiles's configuration data from resources
     let projectile_attributes = attributes_res
@@ -112,5 +118,19 @@ fn spawn_projectile(
         entity_cmds.insert(Sensor);
     }
 
-    Ok(entity_cmds.id())
+    let particle_entity = entity_cmds.id();
+
+    let _ = spawn_particle_effect(
+        cmds,
+        Some(particle_entity),
+        "projectile_trail",
+        faction,
+        &Transform::default(),
+        extended_assets,
+        game_assets,
+        materials,
+        true,
+    );
+
+    Ok(particle_entity)
 }

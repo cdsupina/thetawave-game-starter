@@ -317,6 +317,7 @@ fn spawn_mob(
                 extended_assets,
                 game_assets,
                 materials,
+                false,
             );
 
             spawner.spawn_effect_entity = particle_entity.ok();

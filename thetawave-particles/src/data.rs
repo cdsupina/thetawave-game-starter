@@ -13,6 +13,7 @@ pub(crate) struct SpawnParticleEffectEvent {
     /// For particle effects Faction determines the color
     pub faction: Faction,
     pub transform: Transform,
+    pub is_active: bool,
 }
 
 /// Event for setting the active state of a particle entity

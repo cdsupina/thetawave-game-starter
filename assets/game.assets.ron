@@ -53,6 +53,7 @@
         paths: [
             "media/particles/spawn_blast.ron",
             "media/particles/spawn_bullet.ron",
+            "media/particles/projectile_trail.ron",
         ]
     ),
 })
