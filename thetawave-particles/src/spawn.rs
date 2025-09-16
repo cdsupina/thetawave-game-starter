@@ -6,14 +6,20 @@ use bevy::{
         name::Name,
         system::{Commands, Res},
     },
+    math::Vec2,
+    render::primitives::Aabb,
     transform::components::Transform,
 };
-use bevy_enoki::{ParticleEffectHandle, ParticleSpawner, prelude::ParticleSpawnerState};
+use bevy_enoki::{
+    NoAutoAabb, ParticleEffectHandle, ParticleSpawner, prelude::ParticleSpawnerState,
+};
 use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
 use thetawave_core::Faction;
 use thetawave_core::{AppState, Cleanup};
 
 use crate::data::{SpawnParticleEffectEvent, SpawnerParticleEffectSpawnedEvent};
+
+const MANUAL_AABB_EXTENTS: f32 = 500.0;
 
 pub fn spawn_particle_effect(
     cmds: &mut Commands,
@@ -45,6 +51,13 @@ pub fn spawn_particle_effect(
                 ..Default::default()
             },
             ParticleEffectHandle(particle_effect_handle),
+            // AABB is used for determining whether something should be rendered.
+            // Manual setting  so that particles that are in view of the camera, but their spawner is out of view are still rendered.
+            NoAutoAabb,
+            Aabb::from_min_max(
+                Vec2::splat(MANUAL_AABB_EXTENTS).extend(0.0),
+                Vec2::splat(MANUAL_AABB_EXTENTS).extend(0.0),
+            ),
         ))
         .id();
 
