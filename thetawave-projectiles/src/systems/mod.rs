@@ -24,14 +24,11 @@ use crate::{
 /// Helper function to deactivate particle spawners associated with a projectile entity
 fn deactivate_projectile_particle_spawners(
     projectile_entity: Entity,
-    particle_spawner_q: &Query<Entity, With<ParticleLifeTimer>>,
-    particle_life_timer_q: &Query<&ParticleLifeTimer>,
+    particle_spawner_q: &Query<(Entity, &ParticleLifeTimer)>,
     activate_particle_event_writer: &mut EventWriter<ActivateParticleEvent>,
 ) {
-    for spawner_entity in particle_spawner_q.iter() {
-        if let Ok(life_timer) = particle_life_timer_q.get(spawner_entity)
-            && life_timer.parent_entity == Some(projectile_entity)
-        {
+    for (spawner_entity, life_timer) in particle_spawner_q.iter() {
+        if life_timer.parent_entity == Some(projectile_entity) {
             activate_particle_event_writer.write(ActivateParticleEvent {
                 entity: spawner_entity,
                 active: false,
@@ -50,8 +47,7 @@ pub(crate) fn timed_range_system(
         &Transform,
         &mut ProjectileRangeComponent,
     )>,
-    particle_spawner_q: Query<Entity, With<ParticleLifeTimer>>,
-    particle_life_timer_q: Query<&ParticleLifeTimer>,
+    particle_spawner_q: Query<(Entity, &ParticleLifeTimer)>,
     time: Res<Time>,
     mut spawn_effect_event_writer: EventWriter<SpawnProjectileEffectEvent>,
     mut activate_particle_event_writer: EventWriter<ActivateParticleEvent>,
@@ -62,7 +58,6 @@ pub(crate) fn timed_range_system(
             deactivate_projectile_particle_spawners(
                 entity,
                 &particle_spawner_q,
-                &particle_life_timer_q,
                 &mut activate_particle_event_writer,
             );
 
@@ -82,8 +77,7 @@ pub(crate) fn timed_range_system(
 pub(crate) fn projectile_hit_system(
     mut cmds: Commands,
     projectile_q: Query<(Entity, &ProjectileType, &Faction, &Transform)>,
-    particle_spawner_q: Query<Entity, With<ParticleLifeTimer>>,
-    particle_life_timer_q: Query<&ParticleLifeTimer>,
+    particle_spawner_q: Query<(Entity, &ParticleLifeTimer)>,
     mut spawn_effect_event_writer: EventWriter<SpawnProjectileEffectEvent>,
     mut activate_particle_event_writer: EventWriter<ActivateParticleEvent>,
     mut collision_start_event: EventReader<CollisionStarted>,
@@ -103,7 +97,6 @@ pub(crate) fn projectile_hit_system(
             deactivate_projectile_particle_spawners(
                 entity,
                 &particle_spawner_q,
-                &particle_life_timer_q,
                 &mut activate_particle_event_writer,
             );
 
