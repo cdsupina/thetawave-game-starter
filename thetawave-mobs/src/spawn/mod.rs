@@ -318,6 +318,7 @@ fn spawn_mob(
                 transform,
                 is_active: false,
                 key: Some(key.to_string()),
+                needs_position_tracking: false, // Spawner effects use parent-child relationship
             });
         }
 

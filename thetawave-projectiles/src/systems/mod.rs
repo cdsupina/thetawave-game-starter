@@ -11,6 +11,7 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::AnimationEvents;
 use thetawave_core::Faction;
+use thetawave_particles::{ActivateParticleEvent, ParticleLifeTimer};
 
 use crate::{
     ProjectileType,
@@ -19,6 +20,25 @@ use crate::{
         SpawnProjectileEffectEvent,
     },
 };
+
+/// Helper function to deactivate particle spawners associated with a projectile entity
+fn deactivate_projectile_particle_spawners(
+    projectile_entity: Entity,
+    particle_spawner_q: &Query<Entity, With<ParticleLifeTimer>>,
+    particle_life_timer_q: &Query<&ParticleLifeTimer>,
+    activate_particle_event_writer: &mut EventWriter<ActivateParticleEvent>,
+) {
+    for spawner_entity in particle_spawner_q.iter() {
+        if let Ok(life_timer) = particle_life_timer_q.get(spawner_entity)
+            && life_timer.parent_entity == Some(projectile_entity)
+        {
+            activate_particle_event_writer.write(ActivateParticleEvent {
+                entity: spawner_entity,
+                active: false,
+            });
+        }
+    }
+}
 
 /// Despawns projectiles after a set amount of time passes
 pub(crate) fn timed_range_system(
@@ -30,11 +50,22 @@ pub(crate) fn timed_range_system(
         &Transform,
         &mut ProjectileRangeComponent,
     )>,
+    particle_spawner_q: Query<Entity, With<ParticleLifeTimer>>,
+    particle_life_timer_q: Query<&ParticleLifeTimer>,
     time: Res<Time>,
     mut spawn_effect_event_writer: EventWriter<SpawnProjectileEffectEvent>,
+    mut activate_particle_event_writer: EventWriter<ActivateParticleEvent>,
 ) {
     for (entity, projectile_type, faction, transform, mut range) in projectile_q.iter_mut() {
         if range.timer.tick(time.delta()).just_finished() {
+            // Deactivate any particle spawners associated with this projectile
+            deactivate_projectile_particle_spawners(
+                entity,
+                &particle_spawner_q,
+                &particle_life_timer_q,
+                &mut activate_particle_event_writer,
+            );
+
             // Spawn the despawn effect
             spawn_effect_event_writer.write(SpawnProjectileEffectEvent {
                 projectile_type: projectile_type.clone(),
@@ -51,7 +82,10 @@ pub(crate) fn timed_range_system(
 pub(crate) fn projectile_hit_system(
     mut cmds: Commands,
     projectile_q: Query<(Entity, &ProjectileType, &Faction, &Transform)>,
+    particle_spawner_q: Query<Entity, With<ParticleLifeTimer>>,
+    particle_life_timer_q: Query<&ParticleLifeTimer>,
     mut spawn_effect_event_writer: EventWriter<SpawnProjectileEffectEvent>,
+    mut activate_particle_event_writer: EventWriter<ActivateParticleEvent>,
     mut collision_start_event: EventReader<CollisionStarted>,
 ) {
     for event in collision_start_event.read() {
@@ -65,6 +99,14 @@ pub(crate) fn projectile_hit_system(
             .or_else(|_| projectile_q.get(entity2));
 
         if let Ok((entity, projectile_type, faction, transform)) = projectile_data {
+            // Deactivate any particle spawners associated with this projectile
+            deactivate_projectile_particle_spawners(
+                entity,
+                &particle_spawner_q,
+                &particle_life_timer_q,
+                &mut activate_particle_event_writer,
+            );
+
             // Spawn the hit effect
             spawn_effect_event_writer.write(SpawnProjectileEffectEvent {
                 projectile_type: projectile_type.clone(),

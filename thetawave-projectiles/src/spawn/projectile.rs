@@ -125,6 +125,7 @@ fn spawn_projectile(
         transform: Transform::default(),
         is_active: true,
         key: None,
+        needs_position_tracking: true, // Projectile trails need position tracking
     });
 
     Ok(particle_entity)
