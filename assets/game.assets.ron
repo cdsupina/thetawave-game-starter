@@ -40,11 +40,9 @@
             "media/aseprite/freighter_thrusters.aseprite",
 
             "media/aseprite/bullet_projectile.aseprite",
-            "media/aseprite/bullet_projectile_despawn.aseprite",
             "media/aseprite/bullet_projectile_hit.aseprite",
 
             "media/aseprite/blast_projectile.aseprite",
-            "media/aseprite/blast_projectile_despawn.aseprite",
             "media/aseprite/blast_projectile_hit.aseprite",
 
         ]
@@ -53,6 +51,11 @@
         paths: [
             "media/particles/spawn_blast.ron",
             "media/particles/spawn_bullet.ron",
+            "media/particles/projectile_trail.ron",
+            "media/particles/despawn_blast.ron",
+            "media/particles/despawn_bullet.ron",
+            "media/particles/hit_blast.ron",
+            "media/particles/hit_bullet.ron",
         ]
     ),
 })

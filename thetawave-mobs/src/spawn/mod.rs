@@ -4,9 +4,10 @@ use bevy::{
     ecs::{
         entity::Entity,
         error::{BevyError, Result},
-        event::{Event, EventReader},
+        event::{Event, EventReader, EventWriter},
+        query::With,
         resource::Resource,
-        system::{Commands, Res},
+        system::{Commands, Query, Res},
     },
     log::warn,
     math::{Quat, Vec2},
@@ -17,19 +18,19 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_behave::prelude::BehaveTree;
-use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
-use thetawave_particles::{ParticleEffectType, spawn_particle_effect};
-use thetawave_projectiles::ProjectileType;
+use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
 use thetawave_core::{AppState, Cleanup};
+use thetawave_particles::{SpawnParticleEffectEvent, SpawnerParticleEffectSpawnedEvent};
+use thetawave_projectiles::ProjectileType;
 
 use crate::{
     MobMarker,
     attributes::{
         JointedMob, JointsComponent, MobAttributesResource, MobComponentBundle,
+        ProjectileSpawnerComponent,
     },
     behavior::{BehaviorReceiverComponent, MobBehaviorsResource},
 };
-
 
 /// Get the Aseprite handle from a decoration name string using asset resolver
 fn get_mob_decoration_sprite(
@@ -40,16 +41,10 @@ fn get_mob_decoration_sprite(
     AssetResolver::get_game_sprite(decoration_name, extended_assets, game_assets)
 }
 
-trait ParticleEffectTypeExt {
-    fn from_projectile_type(projectile_type: &ProjectileType) -> ParticleEffectType;
-}
-
-impl ParticleEffectTypeExt for ParticleEffectType {
-    fn from_projectile_type(projectile_type: &ProjectileType) -> ParticleEffectType {
-        match projectile_type {
-            ProjectileType::Bullet => Self::SpawnBullet,
-            ProjectileType::Blast => Self::SpawnBlast,
-        }
+fn get_particle_effect_str(projectile_type: &ProjectileType) -> &str {
+    match projectile_type {
+        ProjectileType::Bullet => "spawn_bullet",
+        ProjectileType::Blast => "spawn_blast",
     }
 }
 
@@ -93,11 +88,11 @@ pub(super) fn spawn_mob_system(
     mut cmds: Commands,
     game_assets: Res<GameAssets>,
     extended_assets: Res<ExtendedGameAssets>,
-    materials: Res<ParticleMaterials>,
     mob_debug_settings: Res<MobDebugSettings>,
     mut spawn_mob_event_reader: EventReader<SpawnMobEvent>,
     attributes_res: Res<MobAttributesResource>,
     behaviors_res: Res<MobBehaviorsResource>,
+    mut particle_effect_event_writer: EventWriter<SpawnParticleEffectEvent>,
 ) -> Result {
     for event in spawn_mob_event_reader.read() {
         let suppress_jointed_mobs = false;
@@ -113,9 +108,9 @@ pub(super) fn spawn_mob_system(
             &behaviors_res,
             &game_assets,
             &extended_assets,
-            &materials,
             suppress_jointed_mobs,
             transmitter_entity,
+            &mut particle_effect_event_writer,
         )?;
     }
     Ok(())
@@ -132,9 +127,9 @@ fn spawn_mob(
     behaviors_res: &MobBehaviorsResource,
     game_assets: &GameAssets,
     extended_assets: &ExtendedGameAssets,
-    materials: &ParticleMaterials,
     suppress_jointed_mobs: bool,
     transmitter_entity: Option<Entity>, // entity that can transmit behaviors to the mob
+    particle_effect_event_writer: &mut EventWriter<SpawnParticleEffectEvent>,
 ) -> Result<Entity, BevyError> {
     // Look up the mob's configuration data from resources
     let mob_attributes = attributes_res
@@ -252,9 +247,9 @@ fn spawn_mob(
                     behaviors_res,
                     game_assets,
                     extended_assets,
-                    materials,
                     chain_index < actual_length - 1, // Suppress jointed mobs except on the last chain link
                     new_transmitter_entity,
+                    particle_effect_event_writer,
                 )?;
 
                 // Create joint between current and previous mob in chain
@@ -290,9 +285,9 @@ fn spawn_mob(
                 behaviors_res,
                 game_assets,
                 extended_assets,
-                materials,
                 false,
                 new_transmitter_entity,
+                particle_effect_event_writer,
             )?;
             // Connect the jointed mob directly to the anchor with no offset
             if mob_debug_settings.joints_enabled {
@@ -312,21 +307,20 @@ fn spawn_mob(
 
     // Now spawn particle effects and update projectile spawners
     if let Some(ref mut projectile_spawners) = mob_attributes.projectile_spawners.clone() {
-        for (_, spawner) in projectile_spawners.spawners.iter_mut() {
+        for (key, spawner) in projectile_spawners.spawners.iter_mut() {
             // Spawn particle effect directly and store the entity reference
             let transform = Transform::from_translation(spawner.position.extend(0.0));
-            let particle_entity = spawn_particle_effect(
-                cmds,
-                Some(anchor_id),
-                &ParticleEffectType::from_projectile_type(&spawner.projectile_type),
-                &spawner.faction,
-                &transform,
-                extended_assets,
-                game_assets,
-                materials,
-            );
 
-            spawner.spawn_effect_entity = particle_entity;
+            particle_effect_event_writer.write(SpawnParticleEffectEvent {
+                parent_entity: Some(anchor_id),
+                effect_type: get_particle_effect_str(&spawner.projectile_type).to_string(),
+                faction: spawner.faction.clone(),
+                transform,
+                is_active: false,
+                key: Some(key.to_string()),
+                needs_position_tracking: false, // Spawner effects use parent-child relationship
+                is_one_shot: false,
+            });
         }
 
         // Update the entity with the modified projectile spawners
@@ -360,4 +354,30 @@ fn create_joint(
     }
     // Spawn the joint entity into the world
     cmds.spawn(joint).id()
+}
+
+pub(crate) fn connect_effect_to_spawner(
+    mut events: EventReader<SpawnerParticleEffectSpawnedEvent>,
+    mut mob_query: Query<&mut ProjectileSpawnerComponent, With<MobMarker>>,
+) {
+    for event in events.read() {
+        // Directly access the parent mob using the parent_entity from the event
+        if let Ok(mut projectile_spawner_component) = mob_query.get_mut(event.parent_entity) {
+            // Check if this mob has a spawner with the matching key
+            if let Some(spawner) = projectile_spawner_component.spawners.get_mut(&event.key) {
+                spawner.spawn_effect_entity = Some(event.effect_entity);
+            } else {
+                warn!(
+                    "Mob {} has no spawner with key '{}'",
+                    event.parent_entity.index(),
+                    event.key
+                );
+            }
+        } else {
+            warn!(
+                "Parent entity {} is not a valid mob with ProjectileSpawnerComponent",
+                event.parent_entity.index()
+            );
+        }
+    }
 }

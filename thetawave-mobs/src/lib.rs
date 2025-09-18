@@ -11,10 +11,12 @@ use bevy::{
     state::condition::in_state,
 };
 use thetawave_core::{AppState, GameState};
+use thetawave_particles::SpawnerParticleEffectSpawnedEvent;
 
 use crate::{
-    attributes::ThetawaveAttributesPlugin, behavior::ThetawaveMobBehaviorPlugin,
-    spawn::spawn_mob_system,
+    attributes::ThetawaveAttributesPlugin,
+    behavior::ThetawaveMobBehaviorPlugin,
+    spawn::{connect_effect_to_spawner, spawn_mob_system},
 };
 
 pub use spawn::SpawnMobEvent;
@@ -30,10 +32,11 @@ impl Plugin for ThetawaveMobsPlugin {
 
         app.add_systems(
             Update,
-            spawn_mob_system.run_if(
-                in_state(AppState::Game)
-                    .and(in_state(GameState::Playing).and(on_event::<SpawnMobEvent>)),
-            ),
+            (
+                spawn_mob_system.run_if(on_event::<SpawnMobEvent>),
+                connect_effect_to_spawner.run_if(on_event::<SpawnerParticleEffectSpawnedEvent>),
+            )
+                .run_if(in_state(AppState::Game).and(in_state(GameState::Playing))),
         )
         .add_event::<SpawnMobEvent>();
     }

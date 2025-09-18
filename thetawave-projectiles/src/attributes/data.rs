@@ -5,7 +5,6 @@ use bevy::{
     platform::collections::HashMap,
     reflect::Reflect,
     time::{Timer, TimerMode},
-    transform::components::Transform,
 };
 use serde::Deserialize;
 use thetawave_core::Faction;
@@ -15,13 +14,6 @@ use thetawave_physics::ThetawaveCollider;
 pub enum ProjectileType {
     Bullet,
     Blast,
-}
-
-/// Used for indicating which effect to spawn in the spawn effect system
-#[derive(Debug)]
-pub(crate) enum ProjectileEffectType {
-    Despawn,
-    Hit,
 }
 
 /// Enforce a range the projectile based on the time existing
@@ -46,14 +38,6 @@ pub struct SpawnProjectileEvent {
     pub velocity: Vec2,
     pub damage: u32,
     pub range_seconds: f32,
-}
-
-#[derive(Event)]
-pub(crate) struct SpawnProjectileEffectEvent {
-    pub projectile_type: ProjectileType,
-    pub effect_type: ProjectileEffectType,
-    pub faction: Faction,
-    pub transform: Transform,
 }
 
 #[derive(Component)]
@@ -166,4 +150,3 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
         })
     }
 }
-

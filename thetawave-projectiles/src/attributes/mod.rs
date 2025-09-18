@@ -2,8 +2,7 @@ mod data;
 mod plugin;
 
 pub(crate) use data::{
-    DespawnAfterAnimationComponent, ProjectileAttributesResource, ProjectileEffectType,
-    ProjectileRangeComponent, SpawnProjectileEffectEvent,
+    DespawnAfterAnimationComponent, ProjectileAttributesResource, ProjectileRangeComponent,
 };
 pub(crate) use plugin::ThetawaveAttributesPlugin;
 

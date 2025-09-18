@@ -9,8 +9,8 @@ use thetawave_core::{AppState, GameState};
 
 use crate::{
     SpawnProjectileEvent,
-    attributes::{SpawnProjectileEffectEvent, ThetawaveAttributesPlugin},
-    spawn::{spawn_effect_system, spawn_projectile_system},
+    attributes::ThetawaveAttributesPlugin,
+    spawn::spawn_projectile_system,
     systems::{despawn_after_animation_system, projectile_hit_system, timed_range_system},
 };
 
@@ -26,12 +26,10 @@ impl Plugin for ThetawaveProjectilesPlugin {
                     timed_range_system,
                     projectile_hit_system.run_if(on_event::<CollisionStarted>),
                     spawn_projectile_system.run_if(on_event::<SpawnProjectileEvent>),
-                    spawn_effect_system.run_if(on_event::<SpawnProjectileEffectEvent>),
                     despawn_after_animation_system.run_if(on_event::<AnimationEvents>),
                 )
                     .run_if(in_state(AppState::Game).and(in_state(GameState::Playing))),
             )
-            .add_event::<SpawnProjectileEvent>()
-            .add_event::<SpawnProjectileEffectEvent>();
+            .add_event::<SpawnProjectileEvent>();
     }
 }

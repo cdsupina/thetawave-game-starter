@@ -4,7 +4,7 @@ use bevy::{
     ecs::{
         entity::Entity,
         error::{BevyError, Result},
-        event::EventReader,
+        event::{EventReader, EventWriter},
         name::Name,
         system::{Commands, Res},
     },
@@ -14,8 +14,9 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
-use thetawave_core::{CollisionDamage, Faction};
 use thetawave_core::{AppState, Cleanup};
+use thetawave_core::{CollisionDamage, Faction};
+use thetawave_particles::SpawnParticleEffectEvent;
 
 use crate::{
     ProjectileType, SpawnProjectileEvent,
@@ -43,6 +44,7 @@ pub(crate) fn spawn_projectile_system(
     extended_assets: Res<ExtendedGameAssets>,
     mut spawn_projectile_event_reader: EventReader<SpawnProjectileEvent>,
     attributes_res: Res<ProjectileAttributesResource>,
+    mut particle_effect_event_writer: EventWriter<SpawnParticleEffectEvent>,
 ) -> Result {
     for event in spawn_projectile_event_reader.read() {
         spawn_projectile(
@@ -56,6 +58,7 @@ pub(crate) fn spawn_projectile_system(
             &game_assets,
             &extended_assets,
             &attributes_res,
+            &mut particle_effect_event_writer,
         )?;
     }
 
@@ -73,6 +76,7 @@ fn spawn_projectile(
     game_assets: &GameAssets,
     extended_assets: &ExtendedGameAssets,
     attributes_res: &ProjectileAttributesResource,
+    particle_effect_event_writer: &mut EventWriter<SpawnParticleEffectEvent>,
 ) -> Result<Entity, BevyError> {
     // Look up the projectiles's configuration data from resources
     let projectile_attributes = attributes_res
@@ -112,5 +116,18 @@ fn spawn_projectile(
         entity_cmds.insert(Sensor);
     }
 
-    Ok(entity_cmds.id())
+    let particle_entity = entity_cmds.id();
+
+    particle_effect_event_writer.write(SpawnParticleEffectEvent {
+        parent_entity: Some(particle_entity),
+        effect_type: "projectile_trail".to_string(),
+        faction: faction.clone(),
+        transform: Transform::default(),
+        is_active: true,
+        key: None,
+        needs_position_tracking: true, // Projectile trails need position tracking
+        is_one_shot: false,
+    });
+
+    Ok(particle_entity)
 }
