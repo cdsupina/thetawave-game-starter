@@ -14,7 +14,7 @@ use bevy::{
 };
 use bevy_enoki::{
     NoAutoAabb, Particle2dEffect, ParticleEffectHandle, ParticleSpawner,
-    prelude::ParticleSpawnerState,
+    prelude::{OneShot, ParticleSpawnerState},
 };
 use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
 use thetawave_core::Faction;
@@ -37,6 +37,7 @@ pub fn spawn_particle_effect(
     materials: &ParticleMaterials,
     particle_effects: &Assets<Particle2dEffect>,
     is_active: bool,
+    is_one_shot: bool,
     needs_position_tracking: bool,
     particle_effect_spawned_event_writer: &mut EventWriter<SpawnerParticleEffectSpawnedEvent>,
 ) -> Result<Entity, BevyError> {
@@ -64,6 +65,10 @@ pub fn spawn_particle_effect(
             Vec2::splat(MANUAL_AABB_EXTENTS).extend(0.0),
         ),
     ));
+
+    if is_one_shot {
+        entity_cmds.insert(OneShot::Despawn);
+    }
 
     let particle_entity = entity_cmds.id();
 
@@ -128,6 +133,7 @@ pub(crate) fn spawn_particle_effect_system(
             &materials,
             &particle_effects,
             event.is_active,
+            event.is_one_shot,
             event.needs_position_tracking,
             &mut particle_effect_spawned_event_writer,
         )?;

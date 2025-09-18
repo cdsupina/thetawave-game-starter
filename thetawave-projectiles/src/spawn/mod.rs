@@ -1,10 +1,9 @@
-mod effect;
 mod projectile;
 
 use bevy::color::Color;
 use bevy::prelude::Alpha;
+pub(crate) use projectile::spawn_projectile_system;
 use thetawave_core::Faction;
-pub(crate) use {effect::spawn_effect_system, projectile::spawn_projectile_system};
 
 // Projectile-specific color constants
 const ALLY_BULLET_COLOR: Color = Color::srgba(0.0, 0.0, 4.0, 1.0); // Blue with bloom for ally bullets

@@ -19,6 +19,8 @@ pub struct SpawnParticleEffectEvent {
     /// Whether this particle effect should track its parent's position (for projectile trails)
     /// If false, maintains parent-child relationship (for spawner effects)
     pub needs_position_tracking: bool,
+    /// If true, the spawner will emit once and despawn
+    pub is_one_shot: bool,
 }
 
 // Used for associating particle effects with spawners based on spawner keys

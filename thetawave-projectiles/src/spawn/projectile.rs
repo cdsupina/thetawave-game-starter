@@ -126,6 +126,7 @@ fn spawn_projectile(
         is_active: true,
         key: None,
         needs_position_tracking: true, // Projectile trails need position tracking
+        is_one_shot: false,
     });
 
     Ok(particle_entity)
