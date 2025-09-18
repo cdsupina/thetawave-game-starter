@@ -2,8 +2,8 @@ use bevy::{color::Color, ecs::component::Component, reflect::Reflect};
 use serde::Deserialize;
 
 // Faction color constants
-const ALLY_BASE_COLOR: Color = Color::srgba(5.0, 5.0, 0.0, 1.0); // Yellow with bloom
-const ENEMY_BASE_COLOR: Color = Color::srgba(5.0, 0.0, 0.0, 1.0); // Red with bloom
+const ALLY_BASE_COLOR: Color = Color::srgba(3.0, 3.0, 0.0, 1.0); // Yellow with bloom
+const ENEMY_BASE_COLOR: Color = Color::srgba(3.0, 0.0, 0.0, 1.0); // Red with bloom
 
 /// Used for designating factions for projectiles
 #[derive(Debug, Clone, Reflect, Deserialize, Component)]
