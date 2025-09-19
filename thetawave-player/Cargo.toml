@@ -20,7 +20,4 @@ leafwing-input-manager.workspace = true
 bevy-alt-ui-navigation-lite.workspace = true
 
 [features]
-dynamic_linking = [
-    "bevy/dynamic_linking",
-    "thetawave-core/dynamic_linking",
-]
+dynamic_linking = ["bevy/dynamic_linking", "thetawave-core/dynamic_linking"]

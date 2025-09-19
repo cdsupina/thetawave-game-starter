@@ -1,23 +1,14 @@
 use bevy::{ecs::resource::Resource, math::Vec2, platform::collections::HashMap};
 use leafwing_abilities::prelude::{Cooldown, CooldownState};
 use serde::Deserialize;
-use strum_macros::EnumIter;
 
 use crate::input::{InputType, PlayerAbility, PlayerNum};
-
-/// Characters that can be chosen by players to play as
-#[derive(Eq, PartialEq, Hash, Debug, EnumIter, Clone, Deserialize)]
-pub enum CharacterType {
-    Captain,
-    Juggernaut,
-    Doomwing,
-}
 
 /// Resource for storing all of the data about every character
 #[derive(Resource, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct CharactersResource {
-    pub characters: HashMap<CharacterType, CharacterAttributes>,
+    pub characters: HashMap<String, CharacterAttributes>,
 }
 
 /// Attributes of a character
@@ -107,7 +98,6 @@ impl ChosenCharactersResource {
 /// Resource for transferring character choices from character selection screen to game
 #[derive(Clone, Debug)]
 pub struct ChosenCharacterData {
-    pub character: CharacterType,
+    pub character: String,
     pub input: InputType,
 }
-

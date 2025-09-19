@@ -1,4 +1,4 @@
-[characters.Captain]
+[characters.captain_character]
 acceleration = 2.0
 deceleration_factor = 0.972
 max_speed = 100.0
@@ -6,13 +6,13 @@ collider_dimensions = [6.0, 12.0]
 restitution = 0.3
 health = 150
 
-[characters.Captain.cooldowns]
+[characters.captain_character.cooldowns]
 BasicAttack = 0.5
 SecondaryAttack = 1.5
 Utility = 2.0
 Ultimate = 10.0
 
-[characters.Juggernaut]
+[characters.juggernaut_character]
 acceleration = 1.8
 deceleration_factor = 0.988
 max_speed = 90
@@ -20,13 +20,13 @@ collider_dimensions = [12.0, 20.0]
 restitution = 0.5
 health = 300
 
-[characters.Juggernaut.cooldowns]
+[characters.juggernaut_character.cooldowns]
 BasicAttack = 0.8
 SecondaryAttack = 2.0
 Utility = 2.3
 Ultimate = 15.0
 
-[characters.Doomwing]
+[characters.doomwing_character]
 acceleration = 2.5
 deceleration_factor = 0.955
 max_speed = 165.0
@@ -34,7 +34,7 @@ collider_dimensions = [12.0, 20.0]
 restitution = 0.1
 health = 120
 
-[characters.Doomwing.cooldowns]
+[characters.doomwing_character.cooldowns]
 BasicAttack = 1.0
 SecondaryAttack = 3.0
 Utility = 1.9

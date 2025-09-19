@@ -3,38 +3,21 @@ use avian2d::prelude::{
     Collider, CollisionLayers, LayerMask, LockedAxes, MaxLinearSpeed, Restitution, RigidBody,
 };
 use bevy::{
-    asset::Handle,
     prelude::{Commands, Name, Res},
     sprite::Sprite,
     utils::default,
 };
-use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
+use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use bevy_persistent::Persistent;
 use leafwing_abilities::AbilitiesBundle;
 use leafwing_input_manager::prelude::InputMap;
-use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
+use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets};
 use thetawave_core::{AppState, Cleanup};
 use thetawave_core::{HealthComponent, PlayerTag};
 use thetawave_physics::ThetawavePhysicsLayer;
 use thetawave_player::{
-    CharacterType, CharactersResource, ChosenCharactersResource, InputType, PlayerAbility,
-    PlayerStats,
+    CharactersResource, ChosenCharactersResource, InputType, PlayerAbility, PlayerStats,
 };
-
-/// Get the Aseprite handle from a given CharacterType using asset resolver
-fn get_character_sprite(
-    character_type: &CharacterType,
-    extended_assets: &ExtendedGameAssets,
-    game_assets: &GameAssets,
-) -> Result<Handle<Aseprite>, AssetError> {
-    let key = match character_type {
-        CharacterType::Captain => "captain_character",
-        CharacterType::Juggernaut => "juggernaut_character",
-        CharacterType::Doomwing => "doomwing_character",
-    };
-
-    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
-}
 
 /// Spawn a player controlled entity
 pub(super) fn spawn_players_system(
@@ -56,7 +39,7 @@ pub(super) fn spawn_players_system(
                 player_num.clone(),
                 AseAnimation {
                     animation: Animation::tag("idle"),
-                    aseprite: get_character_sprite(
+                    aseprite: AssetResolver::get_game_sprite(
                         &chosen_character_data.character,
                         &extended_assets,
                         &game_assets,

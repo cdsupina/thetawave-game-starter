@@ -11,10 +11,9 @@ use bevy::{
 };
 use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
-use strum::IntoEnumIterator;
 use thetawave_assets::{AssetResolver, ExtendedUiAssets, UiAssets};
-use thetawave_player::{CharacterType, InputType, PlayerNum};
 use thetawave_core::{AppState, GameState, MainMenuState, PauseMenuState};
+use thetawave_player::{CharactersResource, InputType, PlayerNum};
 
 const BUTTON_ACTION_DELAY_TIME: f32 = 0.3;
 const CAROUSEL_READY_TIME: f32 = 0.5;
@@ -161,31 +160,31 @@ pub(super) struct VisibleCarouselSlot(pub CarouselSlotPosition);
 /// Component for storing the Vec which represents the rotating carousel
 #[derive(Component, Clone)]
 pub(super) struct CharacterCarousel {
-    characters: Vec<CharacterType>,
+    characters: Vec<String>,
     pub input_type: InputType,
 }
 
 impl CharacterCarousel {
     /// Create a new carousel from all character types
-    pub(super) fn new(input_type: InputType) -> Self {
+    pub(super) fn new(input_type: InputType, characters_resource: &CharactersResource) -> Self {
         Self {
-            characters: CharacterType::iter().collect(),
+            characters: characters_resource.characters.keys().cloned().collect(),
             input_type,
         }
     }
 
     /// The selected (active) character is at index 0
-    pub(super) fn get_active_character(&self) -> Option<&CharacterType> {
+    pub(super) fn get_active_character(&self) -> Option<&String> {
         self.characters.first()
     }
 
     /// The character to the right is at index 1
-    pub(super) fn get_right_character(&self) -> Option<&CharacterType> {
+    pub(super) fn get_right_character(&self) -> Option<&String> {
         self.characters.get(1)
     }
 
     /// The character to the left is at the last index of the vec
-    pub(super) fn get_left_character(&self) -> Option<&CharacterType> {
+    pub(super) fn get_left_character(&self) -> Option<&String> {
         self.characters.last()
     }
 
@@ -260,11 +259,7 @@ impl Default for ButtonActionDelayTimer {
 }
 
 pub(super) trait UiChildBuilderExt {
-    fn spawn_join_prompt(
-        &mut self,
-        extended_ui_assets: &ExtendedUiAssets,
-        ui_assets: &UiAssets,
-    );
+    fn spawn_join_prompt(&mut self, extended_ui_assets: &ExtendedUiAssets, ui_assets: &UiAssets);
 
     fn spawn_character_selection(
         &mut self,
@@ -286,11 +281,7 @@ pub(super) trait UiChildBuilderExt {
 
 impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
     /// Spawn a join prompt
-    fn spawn_join_prompt(
-        &mut self,
-        extended_ui_assets: &ExtendedUiAssets,
-        ui_assets: &UiAssets,
-    ) {
+    fn spawn_join_prompt(&mut self, extended_ui_assets: &ExtendedUiAssets, ui_assets: &UiAssets) {
         // Resolve assets outside the closure, panic on failure
         let return_button_sprite =
             AssetResolver::get_ui_sprite("return_button", extended_ui_assets, ui_assets)
