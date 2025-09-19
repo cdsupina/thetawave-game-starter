@@ -5,6 +5,8 @@ use bevy::ecs::{component::Component, entity::Entity, event::Event};
 pub struct PlayerStats {
     pub acceleration: f32,
     pub deceleration_factor: f32,
+    pub projectile_damage: u32,
+    pub projectile_speed: f32,
 }
 
 #[derive(Event)]

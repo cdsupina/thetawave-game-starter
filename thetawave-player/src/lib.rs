@@ -11,10 +11,12 @@ use leafwing_abilities::plugin::AbilityPlugin;
 use leafwing_input_manager::plugin::InputManagerPlugin;
 use thetawave_core::{AppState, DebugState, GameState, MainMenuState};
 
+mod ability;
 mod character;
 mod input;
 mod player;
 
+pub use ability::{AbilitiesResource, AbilityData};
 pub use character::{CharactersResource, ChosenCharacterData, ChosenCharactersResource};
 pub use input::{
     CharacterCarouselAction, DummyGamepad, InputType, PlayerAbility, PlayerAction, PlayerJoinEvent,
@@ -42,6 +44,10 @@ impl Plugin for ThetawavePlayerPlugin {
         app.insert_resource(load_with_extended::<CharactersResource>(
             include_bytes!("../data/character_attributes.toml"),
             "character_attributes.toml",
+        ))
+        .insert_resource(load_with_extended::<AbilitiesResource>(
+            include_bytes!("../data/abilities.toml"),
+            "abilities.toml",
         ))
         .init_resource::<ChosenCharactersResource>()
         .add_plugins(DefaultNavigationPlugins)

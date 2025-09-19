@@ -62,7 +62,7 @@ pub(crate) fn player_ability_system(
             } else {
                 let cooldown_str = if let Some(ability_cooldown) = cooldown_state.get(&ability) {
                     format!(
-                        " Cooldown: {}/{}",
+                        " Cooldown: {:.1}/{:.1}s",
                         ability_cooldown.elapsed().as_secs_f32(),
                         ability_cooldown.max_time().as_secs_f32()
                     )

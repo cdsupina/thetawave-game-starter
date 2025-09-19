@@ -1,0 +1,7 @@
+[abilities.fire_blast]
+type = "Projectile"
+projectile_type = "Blast"
+
+[abilities.fire_bullet]
+type = "Projectile"
+projectile_type = "Bullet"

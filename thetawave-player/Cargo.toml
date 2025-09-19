@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 thetawave-core = { path = "../thetawave-core" }
+thetawave-projectiles = { path = "../thetawave-projectiles" }
 bevy = { workspace = true, features = [
     "bevy_gilrs",
     "serialize",
@@ -20,4 +21,8 @@ leafwing-input-manager.workspace = true
 bevy-alt-ui-navigation-lite.workspace = true
 
 [features]
-dynamic_linking = ["bevy/dynamic_linking", "thetawave-core/dynamic_linking"]
+dynamic_linking = [
+    "bevy/dynamic_linking",
+    "thetawave-core/dynamic_linking",
+    "thetawave-projectiles/dynamic_linking",
+]

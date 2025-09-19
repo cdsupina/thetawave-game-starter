@@ -21,6 +21,9 @@ pub struct CharacterAttributes {
     pub cooldowns: CooldownState<PlayerAbility>,
     pub restitution: f32,
     pub health: u32,
+    pub projectile_damage: u32,
+    pub projectile_speed: f32,
+    pub abilities: HashMap<PlayerAbility, String>,
 }
 
 impl<'de> Deserialize<'de> for CharacterAttributes {
@@ -41,6 +44,9 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
             cooldowns: HashMap<PlayerAbility, f32>,
             restitution: f32,
             health: u32,
+            projectile_damage: u32,
+            projectile_speed: f32,
+            abilities: HashMap<PlayerAbility, String>,
         }
 
         // Let serde deserialize into the Helper struct first
@@ -63,6 +69,9 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
             cooldowns: CooldownState::new(cooldown_pairs),
             restitution: helper.restitution,
             health: helper.health,
+            projectile_damage: helper.projectile_damage,
+            projectile_speed: helper.projectile_speed,
+            abilities: helper.abilities,
         })
     }
 }

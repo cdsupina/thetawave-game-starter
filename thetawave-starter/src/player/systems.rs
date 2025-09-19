@@ -89,6 +89,8 @@ pub(super) fn spawn_players_system(
                 PlayerStats {
                     acceleration: character_data.acceleration,
                     deceleration_factor: character_data.deceleration_factor,
+                    projectile_damage: character_data.projectile_damage,
+                    projectile_speed: character_data.projectile_speed,
                 },
                 Name::new("Player"),
             ));
