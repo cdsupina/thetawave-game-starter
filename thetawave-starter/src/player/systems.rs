@@ -16,7 +16,8 @@ use thetawave_core::{AppState, Cleanup};
 use thetawave_core::{HealthComponent, PlayerTag};
 use thetawave_physics::ThetawavePhysicsLayer;
 use thetawave_player::{
-    CharactersResource, ChosenCharactersResource, InputType, PlayerAbility, PlayerStats,
+    CharactersResource, ChosenCharactersResource, EquippedAbilities, InputType, PlayerAbility,
+    PlayerStats,
 };
 
 /// Spawn a player controlled entity
@@ -96,7 +97,13 @@ pub(super) fn spawn_players_system(
             ));
 
             // new insert because of the bundle size limit
-            entity_cmds.insert((PlayerTag, HealthComponent::new(character_data.health)));
+            entity_cmds.insert((
+                PlayerTag,
+                HealthComponent::new(character_data.health),
+                EquippedAbilities {
+                    abilities: character_data.abilities.clone(),
+                },
+            ));
         }
     }
     Ok(())

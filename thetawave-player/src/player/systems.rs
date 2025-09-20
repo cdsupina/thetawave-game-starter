@@ -1,13 +1,20 @@
 use avian2d::prelude::LinearVelocity;
 use bevy::{
-    ecs::{event::EventReader, system::Query},
-    log::info,
+    ecs::{
+        entity::Entity,
+        event::{EventReader, EventWriter},
+        system::Query,
+    },
+    log::{info, warn},
     math::Vec2,
 };
 use leafwing_abilities::prelude::CooldownState;
 use leafwing_input_manager::prelude::ActionState;
 
-use crate::{PlayerAbility, PlayerAction, PlayerDeathEvent, PlayerStats};
+use crate::{
+    EquippedAbilities, ExecutePlayerAbilityEvent, PlayerAbility, PlayerAction, PlayerDeathEvent,
+    PlayerStats,
+};
 
 /// Move the player around by modifying their linear velocity
 pub(crate) fn player_move_system(
@@ -51,14 +58,31 @@ pub(crate) fn player_move_system(
 /// System for activating player abilities when ready
 pub(crate) fn player_ability_system(
     mut player_ability_q: Query<(
+        Entity,
         &mut CooldownState<PlayerAbility>,
+        &EquippedAbilities,
         &ActionState<PlayerAbility>,
     )>,
+    mut execute_ability_event_writer: EventWriter<ExecutePlayerAbilityEvent>,
 ) {
-    for (mut cooldown_state, action_state) in player_ability_q.iter_mut() {
-        for ability in action_state.get_just_released() {
+    for (entity, mut cooldown_state, equipped_abilities, action_state) in
+        player_ability_q.iter_mut()
+    {
+        for ability in action_state.get_pressed() {
             if cooldown_state.trigger(&ability).is_ok() {
-                info!("Player activated {} ability.", ability.as_ref());
+                if let Some(ability_type) = equipped_abilities.abilities.get(&ability) {
+                    let execute_ability_event = ExecutePlayerAbilityEvent {
+                        player_entity: entity,
+                        ability_type: ability_type.clone(),
+                    };
+                    info!("{:?}: {:?}", ability, execute_ability_event);
+                    execute_ability_event_writer.write(execute_ability_event);
+                } else {
+                    warn!(
+                        "Player attempted to use ability {:?} but it's not equipped",
+                        ability
+                    );
+                }
             } else {
                 let cooldown_str = if let Some(ability_cooldown) = cooldown_state.get(&ability) {
                     format!(
