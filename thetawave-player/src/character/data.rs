@@ -23,6 +23,7 @@ pub struct CharacterAttributes {
     pub health: u32,
     pub projectile_damage: u32,
     pub projectile_speed: f32,
+    pub projectile_range_seconds: f32,
     pub abilities: HashMap<PlayerAbility, String>,
 }
 
@@ -46,6 +47,7 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
             health: u32,
             projectile_damage: u32,
             projectile_speed: f32,
+            projectile_range_seconds: f32,
             abilities: HashMap<PlayerAbility, String>,
         }
 
@@ -71,6 +73,7 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
             health: helper.health,
             projectile_damage: helper.projectile_damage,
             projectile_speed: helper.projectile_speed,
+            projectile_range_seconds: helper.projectile_range_seconds,
             abilities: helper.abilities,
         })
     }

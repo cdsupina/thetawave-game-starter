@@ -22,7 +22,9 @@ mod input;
 mod player;
 
 pub use ability::{EquippedAbilities, ExecutePlayerAbilityEvent};
-pub use character::{CharactersResource, ChosenCharacterData, ChosenCharactersResource};
+pub use character::{
+    CharacterAttributes, CharactersResource, ChosenCharacterData, ChosenCharactersResource,
+};
 pub use input::{
     CharacterCarouselAction, DummyGamepad, InputType, PlayerAbility, PlayerAction, PlayerJoinEvent,
     PlayerNum,
