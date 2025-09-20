@@ -1,4 +1,7 @@
-use bevy::ecs::{component::Component, entity::Entity, event::Event};
+use bevy::{
+    ecs::{component::Component, entity::Entity, event::Event},
+    math::Vec2,
+};
 
 use crate::CharacterAttributes;
 
@@ -10,6 +13,8 @@ pub struct PlayerStats {
     pub projectile_damage: u32,
     pub projectile_speed: f32,
     pub projectile_range_seconds: f32,
+    pub inherited_velocity_multiplier: f32,
+    pub projectile_spawner_position: Vec2,
 }
 
 impl From<&CharacterAttributes> for PlayerStats {
@@ -20,6 +25,8 @@ impl From<&CharacterAttributes> for PlayerStats {
             projectile_damage: value.projectile_damage,
             projectile_speed: value.projectile_speed,
             projectile_range_seconds: value.projectile_range_seconds,
+            inherited_velocity_multiplier: value.inherited_velocity_multiplier,
+            projectile_spawner_position: value.projectile_spawner_position,
         }
     }
 }

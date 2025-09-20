@@ -4,10 +4,11 @@ deceleration_factor = 0.972
 max_speed = 100.0
 collider_dimensions = [6.0, 12.0]
 restitution = 0.3
-projectile_speed = 220.0
+projectile_speed = 300.0
 projectile_damage = 10
-projectile_range_seconds = 0.5
+projectile_range_seconds = 0.6
 health = 150
+projectile_spawner_position = [0.0, 10.0]
 
 [characters.captain_character.cooldowns]
 BasicAttack = 0.5
@@ -31,6 +32,7 @@ projectile_speed = 200.0
 projectile_damage = 10
 projectile_range_seconds = 0.3
 health = 300
+projectile_spawner_position = [0.0, 15.0]
 
 [characters.juggernaut_character.cooldowns]
 BasicAttack = 0.8
@@ -51,12 +53,13 @@ max_speed = 165.0
 collider_dimensions = [12.0, 20.0]
 restitution = 0.1
 projectile_speed = 250.0
-projectile_damage = 10
-projectile_range_seconds = 0.2
+projectile_damage = 3
+projectile_range_seconds = 0.4
 health = 120
+projectile_spawner_position = [0.0, 15.0]
 
 [characters.doomwing_character.cooldowns]
-BasicAttack = 1.0
+BasicAttack = 0.2
 SecondaryAttack = 3.0
 Utility = 1.9
 Ultimate = 18.5

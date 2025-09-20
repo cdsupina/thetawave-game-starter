@@ -11,6 +11,8 @@ pub struct CharactersResource {
     pub characters: HashMap<String, CharacterAttributes>,
 }
 
+const DEFAULT_INHERITED_VELOCITY_MULTIPLIER: f32 = 0.5;
+
 /// Attributes of a character
 #[derive(Debug)]
 pub struct CharacterAttributes {
@@ -24,6 +26,8 @@ pub struct CharacterAttributes {
     pub projectile_damage: u32,
     pub projectile_speed: f32,
     pub projectile_range_seconds: f32,
+    pub inherited_velocity_multiplier: f32,
+    pub projectile_spawner_position: Vec2,
     pub abilities: HashMap<PlayerAbility, String>,
 }
 
@@ -48,7 +52,14 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
             projectile_damage: u32,
             projectile_speed: f32,
             projectile_range_seconds: f32,
+            #[serde(default = "default_inherited_velocity_multiplier")]
+            inherited_velocity_multiplier: f32,
+            projectile_spawner_position: Vec2,
             abilities: HashMap<PlayerAbility, String>,
+        }
+
+        fn default_inherited_velocity_multiplier() -> f32 {
+            DEFAULT_INHERITED_VELOCITY_MULTIPLIER
         }
 
         // Let serde deserialize into the Helper struct first
@@ -74,6 +85,8 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
             projectile_damage: helper.projectile_damage,
             projectile_speed: helper.projectile_speed,
             projectile_range_seconds: helper.projectile_range_seconds,
+            inherited_velocity_multiplier: helper.inherited_velocity_multiplier,
+            projectile_spawner_position: helper.projectile_spawner_position,
             abilities: helper.abilities,
         })
     }

@@ -38,8 +38,9 @@ pub(crate) fn fire_blast_ability(
         spawn_projectile_event_writer.write(SpawnProjectileEvent {
             projectile_type: ProjectileType::Blast,
             faction: Faction::Ally,
-            position: transform.translation.truncate() + Vec2::new(0.0, 10.0),
-            velocity: Vec2::new(0.0, player_stats.projectile_speed + 100.0) + lin_vel.0,
+            position: transform.translation.truncate() + player_stats.projectile_spawner_position,
+            velocity: Vec2::new(0.0, player_stats.projectile_speed)
+                + (player_stats.inherited_velocity_multiplier * lin_vel.0),
             damage: player_stats.projectile_damage,
             range_seconds: player_stats.projectile_range_seconds,
         });
@@ -54,8 +55,9 @@ pub(crate) fn fire_bullet_ability(
         spawn_projectile_event_writer.write(SpawnProjectileEvent {
             projectile_type: ProjectileType::Bullet,
             faction: Faction::Ally,
-            position: transform.translation.truncate() + Vec2::new(0.0, 15.0),
-            velocity: Vec2::new(0.0, player_stats.projectile_speed) + lin_vel.0,
+            position: transform.translation.truncate() + player_stats.projectile_spawner_position,
+            velocity: Vec2::new(0.0, player_stats.projectile_speed)
+                + (player_stats.inherited_velocity_multiplier * lin_vel.0),
             damage: player_stats.projectile_damage,
             range_seconds: player_stats.projectile_range_seconds,
         });
