@@ -13,6 +13,10 @@ use thetawave_projectiles::{ProjectileType, SpawnProjectileEvent};
 
 use crate::{ExecutePlayerAbilityEvent, PlayerStats, ability::AbilityRegistry};
 
+// mega_blast ability
+const MEGA_BLAST_SCALE: f32 = 4.0;
+const MEGA_BLAST_VELOCITY_MULTIPLIER: f32 = 1.5;
+
 pub(crate) fn ability_dispatcher_system(
     mut cmds: Commands,
     ability_reg: Res<AbilityRegistry>,
@@ -75,12 +79,12 @@ pub(crate) fn mega_blast_ability(
         spawn_projectile_event_writer.write(SpawnProjectileEvent {
             projectile_type: ProjectileType::Blast,
             faction: Faction::Ally,
-            position: transform.translation.truncate()
-                + player_stats.projectile_spawner_position
-                + Vec2::new(0.0, 8.0),
-            scale: 5.0,
-            velocity: Vec2::new(0.0, player_stats.projectile_speed)
-                + (player_stats.inherited_velocity_multiplier * lin_vel.0),
+            position: transform.translation.truncate() + player_stats.projectile_spawner_position,
+            scale: MEGA_BLAST_SCALE,
+            velocity: Vec2::new(
+                0.0,
+                player_stats.projectile_speed * MEGA_BLAST_VELOCITY_MULTIPLIER,
+            ) + (player_stats.inherited_velocity_multiplier * lin_vel.0),
             damage: player_stats.projectile_damage,
             range_seconds: player_stats.projectile_range_seconds,
         });

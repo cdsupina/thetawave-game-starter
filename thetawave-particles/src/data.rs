@@ -21,6 +21,8 @@ pub struct SpawnParticleEffectEvent {
     pub needs_position_tracking: bool,
     /// If true, the spawner will emit once and despawn
     pub is_one_shot: bool,
+    /// Scale multiplier for particle effect properties (emission_shape, speeds, etc.)
+    pub scale: Option<f32>,
 }
 
 // Used for associating particle effects with spawners based on spawner keys

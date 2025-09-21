@@ -5,7 +5,7 @@ use bevy::{
         error::{BevyError, Result},
         event::{EventReader, EventWriter},
         name::Name,
-        system::{Commands, Res},
+        system::{Commands, Res, ResMut},
     },
     log::warn,
     math::Vec2,
@@ -13,7 +13,7 @@ use bevy::{
     transform::components::Transform,
 };
 use bevy_enoki::{
-    NoAutoAabb, Particle2dEffect, ParticleEffectHandle, ParticleSpawner,
+    EmissionShape, NoAutoAabb, Particle2dEffect, ParticleEffectHandle, ParticleSpawner,
     prelude::{OneShot, ParticleSpawnerState},
 };
 use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
@@ -35,14 +35,46 @@ pub fn spawn_particle_effect(
     extended_assets: &ExtendedGameAssets,
     assets: &GameAssets,
     materials: &ParticleMaterials,
-    particle_effects: &Assets<Particle2dEffect>,
+    particle_effects: &mut Assets<Particle2dEffect>,
     is_active: bool,
     is_one_shot: bool,
     needs_position_tracking: bool,
+    scale: Option<f32>,
     particle_effect_spawned_event_writer: &mut EventWriter<SpawnerParticleEffectSpawnedEvent>,
 ) -> Result<Entity, BevyError> {
-    let particle_effect_handle =
-        AssetResolver::get_game_particle_effect(effect_type, extended_assets, assets)?;
+    let particle_effect_handle = if let Some(scale_value) = scale {
+        let base_handle =
+            AssetResolver::get_game_particle_effect(effect_type, extended_assets, assets)?;
+        if let Some(base_effect) = particle_effects.get(&base_handle) {
+            let mut scaled_effect = base_effect.clone();
+
+            // Scale emission shape
+            match &mut scaled_effect.emission_shape {
+                EmissionShape::Circle(radius) => *radius *= scale_value,
+                EmissionShape::Point => {} // Point doesn't need scaling
+            }
+
+            // Scale the scale property if present
+            if let Some(ref mut scale_rval) = scaled_effect.scale {
+                scale_rval.0 *= scale_value; // Scale the base scale value
+            }
+
+            if let Some(ref mut scale_curve) = scaled_effect.scale_curve
+                && let Some(first_point) = scale_curve.points.first_mut()
+            {
+                first_point.0 *= scale_value;
+            }
+
+            scaled_effect.spawn_amount *= scale_value as u32;
+
+            // Add scaled effect to assets and return new handle
+            particle_effects.add(scaled_effect)
+        } else {
+            base_handle
+        }
+    } else {
+        AssetResolver::get_game_particle_effect(effect_type, extended_assets, assets)?
+    };
 
     let mut entity_cmds = cmds.spawn((
         Name::new("Particle Effect"),
@@ -116,7 +148,7 @@ pub(crate) fn spawn_particle_effect_system(
     extended_assets: Res<ExtendedGameAssets>,
     assets: Res<GameAssets>,
     materials: Res<ParticleMaterials>,
-    particle_effects: Res<Assets<Particle2dEffect>>,
+    mut particle_effects: ResMut<Assets<Particle2dEffect>>,
     mut spawn_particle_effect_event_reader: EventReader<SpawnParticleEffectEvent>,
     mut particle_effect_spawned_event_writer: EventWriter<SpawnerParticleEffectSpawnedEvent>,
 ) -> Result {
@@ -131,10 +163,11 @@ pub(crate) fn spawn_particle_effect_system(
             &extended_assets,
             &assets,
             &materials,
-            &particle_effects,
+            &mut particle_effects,
             event.is_active,
             event.is_one_shot,
             event.needs_position_tracking,
+            event.scale,
             &mut particle_effect_spawned_event_writer,
         )?;
     }
