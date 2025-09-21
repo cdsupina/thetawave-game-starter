@@ -15,7 +15,9 @@ mod systems;
 
 use crate::{
     PlayerAbility,
-    ability::systems::{ability_dispatcher_system, fire_blast_ability, fire_bullet_ability},
+    ability::systems::{
+        ability_dispatcher_system, fire_blast_ability, fire_bullet_ability, mega_blast_ability,
+    },
 };
 
 pub struct ThetawaveAbilitiesPlugin {
@@ -55,6 +57,11 @@ impl FromWorld for AbilityRegistry {
         abilities.insert(
             "fire_blast".to_string(),
             world.register_system(fire_blast_ability),
+        );
+
+        abilities.insert(
+            "mega_blast".to_string(),
+            world.register_system(mega_blast_ability),
         );
 
         abilities.insert(

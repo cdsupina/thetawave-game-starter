@@ -52,6 +52,7 @@ pub(crate) fn spawn_projectile_system(
             &event.projectile_type,
             &event.faction,
             event.position,
+            event.scale,
             event.velocity,
             event.damage,
             event.range_seconds,
@@ -70,6 +71,7 @@ fn spawn_projectile(
     projectile_type: &ProjectileType,
     faction: &Faction,
     position: Vec2,
+    scale: f32,
     velocity: Vec2,
     damage: u32,
     range_seconds: f32,
@@ -105,7 +107,8 @@ fn spawn_projectile(
             states: vec![AppState::Game],
         },
         Transform::from_xyz(position.x, position.y, 0.0)
-            .with_rotation(Quat::from_rotation_z(rotation)),
+            .with_rotation(Quat::from_rotation_z(rotation))
+            .with_scale(Vec2::splat(scale).extend(1.0)),
         LinearVelocity(velocity),
         CollisionEventsEnabled,
         CollisionDamage(damage),

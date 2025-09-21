@@ -740,6 +740,7 @@ fn spawn_projectile(
                 spawn_projectile_event_writer.write(SpawnProjectileEvent {
                     projectile_type: spawner.projectile_type.clone(),
                     position: world_position,
+                    scale: 1.0,
                     faction: spawner.faction.clone(),
                     velocity: final_velocity,
                     damage: (spawner.damage_multiplier * attributes.projectile_damage as f32)

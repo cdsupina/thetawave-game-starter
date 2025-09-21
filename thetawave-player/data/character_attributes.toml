@@ -18,7 +18,7 @@ Ultimate = 10.0
 
 [characters.captain_character.abilities]
 BasicAttack = "fire_blast"
-SecondaryAttack = "none"
+SecondaryAttack = "mega_blast"
 Utility = "none"
 Ultimate = "none"
 
