@@ -1,4 +1,7 @@
-use avian2d::prelude::{Collider, CollisionEventsEnabled, LinearVelocity, RigidBody, Sensor};
+use avian2d::prelude::{
+    Collider, CollisionEventsEnabled, CollisionLayers, LinearVelocity, PhysicsLayer, RigidBody,
+    Sensor,
+};
 use bevy::{
     asset::Handle,
     ecs::{
@@ -17,12 +20,34 @@ use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets
 use thetawave_core::{AppState, Cleanup};
 use thetawave_core::{CollisionDamage, Faction};
 use thetawave_particles::SpawnParticleEffectEvent;
+use thetawave_physics::ThetawavePhysicsLayer;
 
 use crate::{
     ProjectileType, SpawnProjectileEvent,
     attributes::{ProjectileAttributesResource, ProjectileRangeComponent},
     spawn::FactionExt,
 };
+
+/// Get the collision layer membership bits for projectiles of the given faction
+fn get_projectile_collision_membership(faction: &Faction) -> u32 {
+    match faction {
+        Faction::Ally => ThetawavePhysicsLayer::AllyProjectile.to_bits(),
+        Faction::Enemy => ThetawavePhysicsLayer::EnemyProjectile.to_bits(),
+    }
+}
+
+/// Get the collision layer filter bits for what projectiles of the given faction can collide with
+fn get_projectile_collision_filter(faction: &Faction) -> u32 {
+    match faction {
+        Faction::Ally => {
+            ThetawavePhysicsLayer::EnemyMob.to_bits()
+                | ThetawavePhysicsLayer::EnemyTentacle.to_bits()
+        }
+        Faction::Enemy => {
+            ThetawavePhysicsLayer::EnemyMob.to_bits() | ThetawavePhysicsLayer::Player.to_bits()
+        }
+    }
+}
 
 /// Get the Aseprite handle from a given ProjectileType using asset resolver
 fn get_projectile_sprite(
@@ -80,6 +105,11 @@ fn spawn_projectile(
     attributes_res: &ProjectileAttributesResource,
     particle_effect_event_writer: &mut EventWriter<SpawnParticleEffectEvent>,
 ) -> Result<Entity, BevyError> {
+    let collision_layers = CollisionLayers::new(
+        get_projectile_collision_membership(faction),
+        get_projectile_collision_filter(faction),
+    );
+
     // Look up the projectiles's configuration data from resources
     let projectile_attributes = attributes_res
         .attributes
@@ -103,6 +133,7 @@ fn spawn_projectile(
             aseprite: get_projectile_sprite(projectile_type, extended_assets, game_assets)?,
         },
         RigidBody::Dynamic,
+        collision_layers,
         Cleanup::<AppState> {
             states: vec![AppState::Game],
         },

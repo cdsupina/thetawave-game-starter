@@ -1,6 +1,7 @@
 use crate::options::OptionsRes;
 use avian2d::prelude::{
-    Collider, CollisionLayers, LayerMask, LockedAxes, MaxLinearSpeed, Restitution, RigidBody,
+    Collider, CollisionLayers, LayerMask, LockedAxes, MaxLinearSpeed, PhysicsLayer, Restitution,
+    RigidBody,
 };
 use bevy::{
     prelude::{Commands, Name, Res},
@@ -98,6 +99,14 @@ pub(super) fn spawn_players_system(
                 EquippedAbilities {
                     abilities: character_data.abilities.clone(),
                 },
+                CollisionLayers::new(
+                    ThetawavePhysicsLayer::Player.to_bits(),
+                    ThetawavePhysicsLayer::EnemyMob.to_bits()
+                        | ThetawavePhysicsLayer::AllyMob.to_bits()
+                        | ThetawavePhysicsLayer::Player.to_bits()
+                        | ThetawavePhysicsLayer::EnemyTentacle.to_bits()
+                        | ThetawavePhysicsLayer::EnemyProjectile.to_bits(),
+                ),
             ));
         }
     }

@@ -34,12 +34,13 @@ const DEFAULT_MAX_ANGULAR_SPEED: f32 = 1.0;
 const DEFAULT_RESTITUTION: f32 = 0.5;
 const DEFAULT_FRICTION: f32 = 0.5;
 const DEFAULT_COLLISION_LAYER_MEMBERSHIP: &[ThetawavePhysicsLayer] =
-    &[ThetawavePhysicsLayer::Enemy];
+    &[ThetawavePhysicsLayer::EnemyMob];
 const DEFAULT_COLLISION_LAYER_FILTER: &[ThetawavePhysicsLayer] = &[
-    ThetawavePhysicsLayer::Ally,
-    ThetawavePhysicsLayer::Enemy,
+    ThetawavePhysicsLayer::AllyMob,
+    ThetawavePhysicsLayer::AllyProjectile,
+    ThetawavePhysicsLayer::EnemyMob,
     ThetawavePhysicsLayer::Player,
-    ThetawavePhysicsLayer::Tentacle,
+    ThetawavePhysicsLayer::EnemyTentacle,
 ];
 const DEFAULT_COLLIDER_DENSITY: f32 = 1.0;
 const DEFAULT_PROJECTILE_SPEED: f32 = 100.0;
@@ -291,4 +292,3 @@ impl From<&MobAttributes> for MobComponentBundle {
         }
     }
 }
-

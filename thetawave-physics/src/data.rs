@@ -14,10 +14,13 @@ pub struct PhysicsDebugSettings {
 #[derive(PhysicsLayer, Default, Deserialize, Debug, Clone)]
 pub enum ThetawavePhysicsLayer {
     #[default]
-    Enemy,
+    Default,
+    EnemyMob,
+    AllyMob,
     Player,
-    Ally,
-    Tentacle,
+    EnemyProjectile,
+    AllyProjectile,
+    EnemyTentacle,
 }
 
 /// Describes a collider that can be attached to mobs
