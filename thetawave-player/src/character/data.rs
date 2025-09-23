@@ -1,6 +1,7 @@
 use bevy::{ecs::resource::Resource, math::Vec2, platform::collections::HashMap};
 use leafwing_abilities::prelude::{Cooldown, CooldownState};
 use serde::Deserialize;
+use thetawave_projectiles::ProjectileSpread;
 
 use crate::input::{InputType, PlayerAbility, PlayerNum};
 
@@ -26,6 +27,8 @@ pub struct CharacterAttributes {
     pub projectile_damage: u32,
     pub projectile_speed: f32,
     pub projectile_range_seconds: f32,
+    pub projectile_count: u8,
+    pub projectile_spread: ProjectileSpread,
     pub inherited_velocity_multiplier: f32,
     pub projectile_spawner_position: Vec2,
     pub abilities: HashMap<PlayerAbility, String>,
@@ -52,6 +55,8 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
             projectile_damage: u32,
             projectile_speed: f32,
             projectile_range_seconds: f32,
+            projectile_count: u8,
+            projectile_spread: ProjectileSpread,
             #[serde(default = "default_inherited_velocity_multiplier")]
             inherited_velocity_multiplier: f32,
             projectile_spawner_position: Vec2,
@@ -85,6 +90,8 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
             projectile_damage: helper.projectile_damage,
             projectile_speed: helper.projectile_speed,
             projectile_range_seconds: helper.projectile_range_seconds,
+            projectile_count: helper.projectile_count,
+            projectile_spread: helper.projectile_spread,
             inherited_velocity_multiplier: helper.inherited_velocity_multiplier,
             projectile_spawner_position: helper.projectile_spawner_position,
             abilities: helper.abilities,

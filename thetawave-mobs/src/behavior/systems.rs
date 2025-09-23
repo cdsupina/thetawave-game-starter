@@ -14,7 +14,7 @@ use bevy::{
 use bevy_behave::prelude::BehaveCtx;
 use thetawave_core::PlayerTag;
 use thetawave_particles::ActivateParticleEvent;
-use thetawave_projectiles::SpawnProjectileEvent;
+use thetawave_projectiles::{ProjectileSpread, SpawnProjectileEvent};
 
 use crate::{
     attributes::{
@@ -740,6 +740,9 @@ fn spawn_projectile(
                 spawn_projectile_event_writer.write(SpawnProjectileEvent {
                     projectile_type: spawner.projectile_type.clone(),
                     position: world_position,
+                    // TODO: Pass in from mob attributes
+                    projectile_spread: ProjectileSpread::Arc,
+                    count: 1,
                     scale: 1.0,
                     faction: spawner.faction.clone(),
                     velocity: final_velocity,

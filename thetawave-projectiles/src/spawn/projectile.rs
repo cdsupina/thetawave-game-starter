@@ -24,7 +24,7 @@ use thetawave_physics::ThetawavePhysicsLayer;
 
 use crate::{
     ProjectileType, SpawnProjectileEvent,
-    attributes::{ProjectileAttributesResource, ProjectileRangeComponent},
+    attributes::{ProjectileAttributesResource, ProjectileRangeComponent, ProjectileSpread},
     spawn::FactionExt,
 };
 
@@ -75,6 +75,8 @@ pub(crate) fn spawn_projectile_system(
         spawn_projectile(
             &mut cmds,
             &event.projectile_type,
+            &event.projectile_spread,
+            event.count,
             &event.faction,
             event.position,
             event.scale,
@@ -94,6 +96,8 @@ pub(crate) fn spawn_projectile_system(
 fn spawn_projectile(
     cmds: &mut Commands,
     projectile_type: &ProjectileType,
+    projectile_spread: &ProjectileSpread,
+    count: u8,
     faction: &Faction,
     position: Vec2,
     scale: f32,

@@ -6,4 +6,4 @@ pub(crate) use data::{
 };
 pub(crate) use plugin::ThetawaveAttributesPlugin;
 
-pub use data::{ProjectileSpawner, ProjectileType, SpawnProjectileEvent};
+pub use data::{ProjectileSpawner, ProjectileSpread, ProjectileType, SpawnProjectileEvent};

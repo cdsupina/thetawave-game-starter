@@ -2,6 +2,7 @@ use bevy::{
     ecs::{component::Component, entity::Entity, event::Event},
     math::Vec2,
 };
+use thetawave_projectiles::ProjectileSpread;
 
 use crate::CharacterAttributes;
 
@@ -15,6 +16,8 @@ pub struct PlayerStats {
     pub projectile_range_seconds: f32,
     pub inherited_velocity_multiplier: f32,
     pub projectile_spawner_position: Vec2,
+    pub projectile_count: u8,
+    pub projectile_spread: ProjectileSpread,
 }
 
 impl From<&CharacterAttributes> for PlayerStats {
@@ -27,6 +30,8 @@ impl From<&CharacterAttributes> for PlayerStats {
             projectile_range_seconds: value.projectile_range_seconds,
             inherited_velocity_multiplier: value.inherited_velocity_multiplier,
             projectile_spawner_position: value.projectile_spawner_position,
+            projectile_count: value.projectile_count,
+            projectile_spread: value.projectile_spread.clone(),
         }
     }
 }

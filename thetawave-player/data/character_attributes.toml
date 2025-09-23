@@ -7,6 +7,8 @@ restitution = 0.3
 projectile_speed = 300.0
 projectile_damage = 10
 projectile_range_seconds = 0.6
+projectile_count = 1
+projectile_spread = "Arc"
 health = 150
 projectile_spawner_position = [0.0, 10.0]
 
@@ -31,6 +33,8 @@ restitution = 0.5
 projectile_speed = 200.0
 projectile_damage = 10
 projectile_range_seconds = 0.3
+projectile_count = 3
+projectile_spread = "Random"
 health = 300
 projectile_spawner_position = [0.0, 15.0]
 
@@ -55,6 +59,8 @@ restitution = 0.1
 projectile_speed = 250.0
 projectile_damage = 3
 projectile_range_seconds = 0.4
+projectile_count = 1
+projectile_spread = "Arc"
 health = 120
 projectile_spawner_position = [0.0, 15.0]
 

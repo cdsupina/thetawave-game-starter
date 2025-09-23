@@ -16,6 +16,12 @@ pub enum ProjectileType {
     Blast,
 }
 
+#[derive(Debug, Deserialize, Clone)]
+pub enum ProjectileSpread {
+    Arc,
+    Random,
+}
+
 /// Enforce a range the projectile based on the time existing
 #[derive(Component)]
 pub struct ProjectileRangeComponent {
@@ -33,6 +39,8 @@ impl ProjectileRangeComponent {
 #[derive(Event)]
 pub struct SpawnProjectileEvent {
     pub projectile_type: ProjectileType,
+    pub projectile_spread: ProjectileSpread,
+    pub count: u8,
     pub faction: Faction,
     pub position: Vec2,
     pub scale: f32,

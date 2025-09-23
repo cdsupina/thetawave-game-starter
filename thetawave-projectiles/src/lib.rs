@@ -5,6 +5,6 @@ mod plugin;
 mod spawn;
 mod systems;
 
-pub use attributes::{ProjectileSpawner, ProjectileType, SpawnProjectileEvent};
+pub use attributes::{ProjectileSpawner, ProjectileSpread, ProjectileType, SpawnProjectileEvent};
 pub use plugin::ThetawaveProjectilesPlugin;
 pub use spawn::FactionExt;

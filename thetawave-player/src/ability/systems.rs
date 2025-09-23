@@ -9,7 +9,7 @@ use bevy::{
     transform::components::Transform,
 };
 use thetawave_core::Faction;
-use thetawave_projectiles::{ProjectileType, SpawnProjectileEvent};
+use thetawave_projectiles::{ProjectileSpread, ProjectileType, SpawnProjectileEvent};
 
 use crate::{ExecutePlayerAbilityEvent, PlayerStats, ability::AbilityRegistry};
 
@@ -41,6 +41,8 @@ pub(crate) fn fire_blast_ability(
     if let Ok((transform, player_stats, lin_vel)) = player_q.get(player_entity) {
         spawn_projectile_event_writer.write(SpawnProjectileEvent {
             projectile_type: ProjectileType::Blast,
+            projectile_spread: player_stats.projectile_spread.clone(),
+            count: player_stats.projectile_count,
             faction: Faction::Ally,
             position: transform.translation.truncate() + player_stats.projectile_spawner_position,
             scale: 1.0,
@@ -59,6 +61,8 @@ pub(crate) fn fire_bullet_ability(
     if let Ok((transform, player_stats, lin_vel)) = player_q.get(player_entity) {
         spawn_projectile_event_writer.write(SpawnProjectileEvent {
             projectile_type: ProjectileType::Bullet,
+            projectile_spread: player_stats.projectile_spread.clone(),
+            count: player_stats.projectile_count,
             faction: Faction::Ally,
             position: transform.translation.truncate() + player_stats.projectile_spawner_position,
             scale: 1.0,
@@ -78,6 +82,8 @@ pub(crate) fn mega_blast_ability(
     if let Ok((transform, player_stats, lin_vel)) = player_q.get(player_entity) {
         spawn_projectile_event_writer.write(SpawnProjectileEvent {
             projectile_type: ProjectileType::Blast,
+            projectile_spread: player_stats.projectile_spread.clone(),
+            count: player_stats.projectile_count,
             faction: Faction::Ally,
             position: transform.translation.truncate() + player_stats.projectile_spawner_position,
             scale: MEGA_BLAST_SCALE,
