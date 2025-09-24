@@ -83,7 +83,7 @@ pub(crate) fn mega_blast_ability(
         spawn_projectile_event_writer.write(SpawnProjectileEvent {
             projectile_type: ProjectileType::Blast,
             projectile_spread: player_stats.projectile_spread.clone(),
-            count: player_stats.projectile_count,
+            count: (player_stats.projectile_count / 2).max(1),
             faction: Faction::Ally,
             position: transform.translation.truncate() + player_stats.projectile_spawner_position,
             scale: MEGA_BLAST_SCALE,
