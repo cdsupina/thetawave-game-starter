@@ -3,7 +3,10 @@ use avian2d::prelude::{
     Rotation,
 };
 use bevy::{
-    ecs::{bundle::Bundle, component::Component, name::Name, resource::Resource},
+    ecs::{
+        bundle::Bundle, component::Component, entity::Entity, event::Event, name::Name,
+        resource::Resource,
+    },
     math::Vec2,
     platform::collections::HashMap,
     reflect::Reflect,
@@ -217,6 +220,11 @@ fn default_range_seconds() -> f32 {
 #[serde(deny_unknown_fields)]
 pub(crate) struct MobAttributesResource {
     pub attributes: HashMap<String, MobAttributes>,
+}
+
+#[derive(Event)]
+pub struct MobDeathEvent {
+    pub mob_entity: Entity,
 }
 
 /// Bundle containing all the core components needed for a mob entity
