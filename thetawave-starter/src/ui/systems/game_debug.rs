@@ -246,7 +246,11 @@ pub(in crate::ui) fn game_debug_menu_system(
                         if ui.button("Ally").clicked() {
                             spawn_projectile_event_writer.write(SpawnProjectileEvent {
                                 projectile_type: ProjectileType::Blast,
-                                projectile_spread: ProjectileSpread::Arc,
+                                projectile_spread: ProjectileSpread::Arc {
+                                    max_spread: 11.5,
+                                    projectile_gap: 5.7,
+                                    spread_weights: 1.0,
+                                },
                                 count: 1,
                                 faction: Faction::Ally,
                                 position: *spawn_location,
@@ -260,7 +264,11 @@ pub(in crate::ui) fn game_debug_menu_system(
                         if ui.button("Enemy").clicked() {
                             spawn_projectile_event_writer.write(SpawnProjectileEvent {
                                 projectile_type: ProjectileType::Blast,
-                                projectile_spread: ProjectileSpread::Arc,
+                                projectile_spread: ProjectileSpread::Arc {
+                                    max_spread: 11.5,
+                                    projectile_gap: 5.7,
+                                    spread_weights: 1.0,
+                                },
                                 count: 1,
                                 faction: Faction::Enemy,
                                 position: *spawn_location,
@@ -275,7 +283,11 @@ pub(in crate::ui) fn game_debug_menu_system(
                         if ui.button("Ally").clicked() {
                             spawn_projectile_event_writer.write(SpawnProjectileEvent {
                                 projectile_type: ProjectileType::Bullet,
-                                projectile_spread: ProjectileSpread::Arc,
+                                projectile_spread: ProjectileSpread::Arc {
+                                    max_spread: 11.5,
+                                    projectile_gap: 5.7,
+                                    spread_weights: 1.0,
+                                },
                                 count: 1,
                                 faction: Faction::Ally,
                                 position: *spawn_location,
@@ -289,7 +301,11 @@ pub(in crate::ui) fn game_debug_menu_system(
                         if ui.button("Enemy").clicked() {
                             spawn_projectile_event_writer.write(SpawnProjectileEvent {
                                 projectile_type: ProjectileType::Bullet,
-                                projectile_spread: ProjectileSpread::Arc,
+                                projectile_spread: ProjectileSpread::Arc {
+                                    max_spread: 11.5,
+                                    projectile_gap: 5.7,
+                                    spread_weights: 1.0,
+                                },
                                 count: 1,
                                 faction: Faction::Enemy,
                                 position: *spawn_location,

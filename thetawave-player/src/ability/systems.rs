@@ -9,7 +9,7 @@ use bevy::{
     transform::components::Transform,
 };
 use thetawave_core::Faction;
-use thetawave_projectiles::{ProjectileSpread, ProjectileType, SpawnProjectileEvent};
+use thetawave_projectiles::{ProjectileType, SpawnProjectileEvent};
 
 use crate::{ExecutePlayerAbilityEvent, PlayerStats, ability::AbilityRegistry};
 

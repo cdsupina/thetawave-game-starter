@@ -4,11 +4,11 @@ deceleration_factor = 0.972
 max_speed = 100.0
 collider_dimensions = [6.0, 12.0]
 restitution = 0.3
-projectile_speed = 300.0
+projectile_speed = 180.0
 projectile_damage = 10
-projectile_range_seconds = 0.6
+projectile_range_seconds = 1.0
 projectile_count = 1
-projectile_spread = "Arc"
+projectile_spread = { Arc = { max_spread = 10.0, projectile_gap = 5.0, spread_weights = 1.1 } }
 health = 150
 projectile_spawner_position = [0.0, 10.0]
 
@@ -31,10 +31,10 @@ max_speed = 90
 collider_dimensions = [12.0, 20.0]
 restitution = 0.5
 projectile_speed = 200.0
-projectile_damage = 10
+projectile_damage = 5
 projectile_range_seconds = 0.3
 projectile_count = 3
-projectile_spread = "Random"
+projectile_spread = { Random = { max_spread = 20.0, speed_variance = 0.2 } }
 health = 300
 projectile_spawner_position = [0.0, 15.0]
 
@@ -56,16 +56,16 @@ deceleration_factor = 0.955
 max_speed = 165.0
 collider_dimensions = [12.0, 20.0]
 restitution = 0.1
-projectile_speed = 250.0
+projectile_speed = 135.0
 projectile_damage = 3
-projectile_range_seconds = 0.4
-projectile_count = 1
-projectile_spread = "Arc"
+projectile_range_seconds = 0.5
+projectile_count = 2
+projectile_spread = { Arc = { max_spread = 30.0, projectile_gap = 7.0, spread_weights = 0.92 } }
 health = 120
 projectile_spawner_position = [0.0, 15.0]
 
 [characters.doomwing_character.cooldowns]
-BasicAttack = 0.2
+BasicAttack = 0.42
 SecondaryAttack = 3.0
 Utility = 1.9
 Ultimate = 18.5

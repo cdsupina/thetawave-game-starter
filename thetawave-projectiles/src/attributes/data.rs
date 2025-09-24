@@ -1,3 +1,4 @@
+
 use avian2d::prelude::{Collider, Rotation};
 use bevy::{
     ecs::{component::Component, entity::Entity, event::Event, resource::Resource},
@@ -16,10 +17,25 @@ pub enum ProjectileType {
     Blast,
 }
 
+/// Defines how multiple projectiles are spread when fired
 #[derive(Debug, Deserialize, Clone)]
 pub enum ProjectileSpread {
-    Arc,
-    Random,
+    /// Projectiles are evenly distributed in an arc pattern
+    Arc {
+        /// Maximum spread angle in degrees (how wide the arc can be, e.g., 30.0)
+        max_spread: f32,
+        /// Angle gap between projectiles in degrees (controls spacing, e.g., 5.0)
+        projectile_gap: f32,
+        /// Speed variation across the spread (1.0 = uniform speed, >1.0 = faster center/slower edges, <1.0 = slower center/faster edges)
+        spread_weights: f32,
+    },
+    /// Projectiles are randomly distributed with varying angles and speeds
+    Random {
+        /// Total spread angle in degrees (e.g., 30.0 means ±15°)
+        max_spread: f32,
+        /// Speed variation range (e.g., 0.2 means 80%-120% of base speed)
+        speed_variance: f32,
+    },
 }
 
 /// Enforce a range the projectile based on the time existing

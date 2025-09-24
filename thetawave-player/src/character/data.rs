@@ -12,7 +12,7 @@ pub struct CharactersResource {
     pub characters: HashMap<String, CharacterAttributes>,
 }
 
-const DEFAULT_INHERITED_VELOCITY_MULTIPLIER: f32 = 0.5;
+const DEFAULT_INHERITED_VELOCITY_MULTIPLIER: f32 = 0.3;
 
 /// Attributes of a character
 #[derive(Debug)]
