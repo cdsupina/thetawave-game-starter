@@ -1,4 +1,3 @@
-
 use avian2d::prelude::{Collider, Rotation};
 use bevy::{
     ecs::{component::Component, entity::Entity, event::Event, resource::Resource},
@@ -18,7 +17,7 @@ pub enum ProjectileType {
 }
 
 /// Defines how multiple projectiles are spread when fired
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, Reflect)]
 pub enum ProjectileSpread {
     /// Projectiles are evenly distributed in an arc pattern
     Arc {
@@ -115,6 +114,8 @@ pub struct ProjectileSpawner {
     pub spawn_effect_entity: Option<Entity>,
     pub pre_spawn_animation_start_time: f32,
     pub pre_spawn_animation_end_time: f32,
+    pub count: u8,
+    pub projectile_spread: ProjectileSpread,
 }
 
 impl<'de> Deserialize<'de> for ProjectileSpawner {
@@ -142,6 +143,10 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
             pub pre_spawn_animation_start_time: f32,
             #[serde(default = "default_pre_spawn_animation_end_time")]
             pub pre_spawn_animation_end_time: f32,
+            #[serde(default = "default_count")]
+            pub count: u8,
+            #[serde(default = "default_projectile_spread")]
+            pub projectile_spread: ProjectileSpread,
         }
 
         fn default_multiplier() -> f32 {
@@ -154,6 +159,18 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
 
         fn default_pre_spawn_animation_end_time() -> f32 {
             0.2
+        }
+
+        fn default_count() -> u8 {
+            1
+        }
+
+        fn default_projectile_spread() -> ProjectileSpread {
+            ProjectileSpread::Arc {
+                max_spread: 30.0,
+                projectile_gap: 5.0,
+                spread_weights: 1.0,
+            }
         }
 
         // Let serde deserialize into the Helper struct first
@@ -172,6 +189,8 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
             pre_spawn_animation_start_time: helper.pre_spawn_animation_start_time,
             pre_spawn_animation_end_time: helper.pre_spawn_animation_end_time,
             spawn_effect_entity: None, // set to non because the entity cannot be known beforehand
+            count: helper.count,
+            projectile_spread: helper.projectile_spread,
         })
     }
 }
