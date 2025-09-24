@@ -4,9 +4,9 @@ deceleration_factor = 0.972
 max_speed = 100.0
 collider_dimensions = [6.0, 12.0]
 restitution = 0.3
-projectile_speed = 180.0
+projectile_speed = 200.0
 projectile_damage = 10
-projectile_range_seconds = 1.0
+projectile_range_seconds = 0.65
 projectile_count = 1
 projectile_spread = { Arc = { max_spread = 10.0, projectile_gap = 5.0, spread_weights = 1.1 } }
 health = 150
