@@ -167,8 +167,10 @@ pub(super) struct CharacterCarousel {
 impl CharacterCarousel {
     /// Create a new carousel from all character types
     pub(super) fn new(input_type: InputType, characters_resource: &CharactersResource) -> Self {
+        let mut characters: Vec<String> = characters_resource.characters.keys().cloned().collect();
+        characters.sort(); // Ensure consistent ordering across platforms
         Self {
-            characters: characters_resource.characters.keys().cloned().collect(),
+            characters,
             input_type,
         }
     }
