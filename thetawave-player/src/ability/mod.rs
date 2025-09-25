@@ -16,7 +16,7 @@ mod systems;
 use crate::{
     PlayerAbility,
     ability::systems::{
-        ability_dispatcher_system, charge_ability, fire_blast_ability, fire_bullet_ability,
+        ability_dispatcher_system, charge_ability, charge_ability_timer_system, fire_blast_ability, fire_bullet_ability,
         mega_blast_ability,
     },
 };
@@ -31,7 +31,7 @@ impl Plugin for ThetawaveAbilitiesPlugin {
             .with_extended_abilities(self.extended_abilities.clone());
 
         app.insert_resource(ability_registry)
-            .add_systems(Update, ability_dispatcher_system);
+            .add_systems(Update, (ability_dispatcher_system, charge_ability_timer_system));
     }
 }
 
