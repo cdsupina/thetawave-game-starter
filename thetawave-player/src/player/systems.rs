@@ -83,22 +83,6 @@ pub(crate) fn player_ability_system(
                         ability
                     );
                 }
-            } else {
-                let cooldown_str = if let Some(ability_cooldown) = cooldown_state.get(&ability) {
-                    format!(
-                        " Cooldown: {:.1}/{:.1}s",
-                        ability_cooldown.elapsed().as_secs_f32(),
-                        ability_cooldown.max_time().as_secs_f32()
-                    )
-                } else {
-                    "".to_string()
-                };
-
-                info!(
-                    "Player attempted activation of {} ability, but it wasn't ready.{}",
-                    ability.as_ref(),
-                    cooldown_str
-                );
             }
         }
     }
