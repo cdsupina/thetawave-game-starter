@@ -4,6 +4,7 @@ use bevy::{
     ecs::{
         event::{EventReader, EventWriter},
         query::{With, Without},
+        schedule::{common_conditions, IntoScheduleConfigs},
         system::Query,
     },
     log::info,
@@ -11,14 +12,19 @@ use bevy::{
 use thetawave_core::{CollisionDamage, HealthComponent};
 use thetawave_mobs::{MobDeathEvent, MobMarker};
 use thetawave_player::{PlayerDeathEvent, PlayerStats};
-use thetawave_projectiles::ProjectileType;
+use thetawave_projectiles::{ProjectileSystemSet, ProjectileType};
 
 /// A plugin for managing the Thetawave game's camera systems
 pub(crate) struct ThetawaveCollisionsPlugin;
 
 impl Plugin for ThetawaveCollisionsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Update, detect_collisions_system);
+        app.add_systems(
+            Update,
+            detect_collisions_system
+                .run_if(common_conditions::on_event::<CollisionStarted>)
+                .before(ProjectileSystemSet::Despawn),
+        );
     }
 }
 

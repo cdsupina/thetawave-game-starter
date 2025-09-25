@@ -8,7 +8,7 @@ use bevy_aseprite_ultra::prelude::AnimationEvents;
 use thetawave_core::{AppState, GameState};
 
 use crate::{
-    SpawnProjectileEvent,
+    ProjectileSystemSet, SpawnProjectileEvent,
     attributes::ThetawaveAttributesPlugin,
     spawn::spawn_projectile_system,
     systems::{despawn_after_animation_system, projectile_hit_system, timed_range_system},
@@ -23,8 +23,10 @@ impl Plugin for ThetawaveProjectilesPlugin {
             .add_systems(
                 Update,
                 (
-                    timed_range_system,
-                    projectile_hit_system.run_if(on_event::<CollisionStarted>),
+                    timed_range_system.in_set(ProjectileSystemSet::Despawn),
+                    projectile_hit_system
+                        .run_if(on_event::<CollisionStarted>)
+                        .in_set(ProjectileSystemSet::Despawn),
                     spawn_projectile_system.run_if(on_event::<SpawnProjectileEvent>),
                     despawn_after_animation_system.run_if(on_event::<AnimationEvents>),
                 )

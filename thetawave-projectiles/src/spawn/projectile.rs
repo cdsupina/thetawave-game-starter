@@ -241,11 +241,12 @@ fn spawn_projectile(
             ProjectileRangeComponent::new(range_seconds),
         ));
 
+        let particle_entity = entity_cmds.id();
+
         if projectile_attributes.is_sensor {
             entity_cmds.insert(Sensor);
         }
 
-        let particle_entity = entity_cmds.id();
         spawned_entities.push(particle_entity);
 
         particle_effect_event_writer.write(SpawnParticleEffectEvent {
