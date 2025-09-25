@@ -47,10 +47,17 @@ pub(crate) fn player_move_system(
 
         // Decelerate when there is no input on a particular axis
         if dir_vec.x == 0.0 {
-            lin_vel.x *= player_stats.deceleration_factor;
+            lin_vel.x *= player_stats.deceleration;
         }
         if dir_vec.y == 0.0 {
-            lin_vel.y *= player_stats.deceleration_factor;
+            lin_vel.y *= player_stats.deceleration;
+        }
+
+        // If speed exceeds max_speed, apply deceleration to bring it back down
+        let current_speed = lin_vel.length();
+        if current_speed > player_stats.max_speed {
+            lin_vel.x *= player_stats.deceleration;
+            lin_vel.y *= player_stats.deceleration;
         }
     }
 }

@@ -18,7 +18,7 @@ const DEFAULT_INHERITED_VELOCITY_MULTIPLIER: f32 = 0.3;
 #[derive(Debug)]
 pub struct CharacterAttributes {
     pub acceleration: f32,
-    pub deceleration_factor: f32,
+    pub deceleration: f32,
     pub max_speed: f32,
     pub collider_dimensions: Vec2,
     pub cooldowns: CooldownState<PlayerAbility>,
@@ -45,7 +45,7 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
         #[serde(deny_unknown_fields)]
         struct Helper {
             acceleration: f32,
-            deceleration_factor: f32,
+            deceleration: f32,
             max_speed: f32,
             collider_dimensions: Vec2,
             // Instead of CooldownState, use a HashMap with seconds as f32
@@ -80,7 +80,7 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
         // Construct our actual struct with the transformed data
         Ok(CharacterAttributes {
             acceleration: helper.acceleration,
-            deceleration_factor: helper.deceleration_factor,
+            deceleration: helper.deceleration,
             max_speed: helper.max_speed,
             collider_dimensions: helper.collider_dimensions,
             // Create CooldownState from the transformed pairs

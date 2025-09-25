@@ -16,7 +16,8 @@ mod systems;
 use crate::{
     PlayerAbility,
     ability::systems::{
-        ability_dispatcher_system, fire_blast_ability, fire_bullet_ability, mega_blast_ability,
+        ability_dispatcher_system, charge_ability, fire_blast_ability, fire_bullet_ability,
+        mega_blast_ability,
     },
 };
 
@@ -60,14 +61,16 @@ impl FromWorld for AbilityRegistry {
         );
 
         abilities.insert(
+            "fire_bullet".to_string(),
+            world.register_system(fire_bullet_ability),
+        );
+
+        abilities.insert(
             "mega_blast".to_string(),
             world.register_system(mega_blast_ability),
         );
 
-        abilities.insert(
-            "fire_bullet".to_string(),
-            world.register_system(fire_bullet_ability),
-        );
+        abilities.insert("charge".to_string(), world.register_system(charge_ability));
 
         AbilityRegistry { abilities }
     }

@@ -1,6 +1,6 @@
 use crate::options::OptionsRes;
 use avian2d::prelude::{
-    Collider, CollisionLayers, LayerMask, LockedAxes, MaxLinearSpeed, PhysicsLayer, Restitution,
+    Collider, CollisionLayers, LayerMask, LockedAxes, PhysicsLayer, Restitution,
     RigidBody,
 };
 use bevy::{
@@ -57,7 +57,6 @@ pub(super) fn spawn_players_system(
                 ),
                 RigidBody::Dynamic,
                 LockedAxes::ROTATION_LOCKED,
-                MaxLinearSpeed(character_data.max_speed),
                 Restitution::new(character_data.restitution),
                 CollisionLayers::new([ThetawavePhysicsLayer::Player], [LayerMask::ALL]),
                 match chosen_character_data.input {

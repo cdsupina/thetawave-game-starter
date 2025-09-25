@@ -1,6 +1,6 @@
 [characters.captain_character]
 acceleration = 2.0
-deceleration_factor = 0.972
+deceleration = 0.972
 max_speed = 100.0
 collider_dimensions = [6.0, 12.0]
 restitution = 0.3
@@ -26,7 +26,7 @@ Ultimate = "none"
 
 [characters.juggernaut_character]
 acceleration = 1.8
-deceleration_factor = 0.988
+deceleration = 0.988
 max_speed = 90
 collider_dimensions = [12.0, 20.0]
 restitution = 0.5
@@ -46,13 +46,13 @@ Ultimate = 15.0
 
 [characters.juggernaut_character.abilities]
 BasicAttack = "fire_bullet"
-SecondaryAttack = "none"
+SecondaryAttack = "charge"
 Utility = "none"
 Ultimate = "none"
 
 [characters.doomwing_character]
 acceleration = 2.5
-deceleration_factor = 0.955
+deceleration = 0.955
 max_speed = 165.0
 collider_dimensions = [12.0, 20.0]
 restitution = 0.1

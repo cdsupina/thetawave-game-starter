@@ -10,7 +10,8 @@ use crate::CharacterAttributes;
 #[derive(Component)]
 pub struct PlayerStats {
     pub acceleration: f32,
-    pub deceleration_factor: f32,
+    pub deceleration: f32,
+    pub max_speed: f32,
     pub projectile_damage: u32,
     pub projectile_speed: f32,
     pub projectile_range_seconds: f32,
@@ -24,7 +25,8 @@ impl From<&CharacterAttributes> for PlayerStats {
     fn from(value: &CharacterAttributes) -> Self {
         PlayerStats {
             acceleration: value.acceleration,
-            deceleration_factor: value.deceleration_factor,
+            deceleration: value.deceleration,
+            max_speed: value.max_speed,
             projectile_damage: value.projectile_damage,
             projectile_speed: value.projectile_speed,
             projectile_range_seconds: value.projectile_range_seconds,

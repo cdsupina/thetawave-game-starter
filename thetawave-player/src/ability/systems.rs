@@ -16,6 +16,7 @@ use crate::{ExecutePlayerAbilityEvent, PlayerStats, ability::AbilityRegistry};
 // mega_blast ability
 const MEGA_BLAST_SCALE: f32 = 4.0;
 const MEGA_BLAST_VELOCITY_MULTIPLIER: f32 = 1.5;
+const MEGA_BLAST_DAMAGE_MULTIPLIER: u32 = 5;
 
 pub(crate) fn ability_dispatcher_system(
     mut cmds: Commands,
@@ -91,8 +92,19 @@ pub(crate) fn mega_blast_ability(
                 0.0,
                 player_stats.projectile_speed * MEGA_BLAST_VELOCITY_MULTIPLIER,
             ) + (player_stats.inherited_velocity_multiplier * lin_vel.0),
-            damage: player_stats.projectile_damage,
+            damage: player_stats.projectile_damage * MEGA_BLAST_DAMAGE_MULTIPLIER,
             range_seconds: player_stats.projectile_range_seconds,
         });
+    }
+}
+
+pub(crate) fn charge_ability(
+    In(player_entity): In<Entity>,
+    mut player_q: Query<(&mut PlayerStats, &mut LinearVelocity)>,
+) {
+    if let Ok((mut player_stats, mut lin_vel)) = player_q.get_mut(player_entity) {
+        // Apply a forward velocity boost that can exceed max_speed
+        player_stats.max_speed *= 2.0;
+        player_stats.acceleration *= 4.0;
     }
 }
