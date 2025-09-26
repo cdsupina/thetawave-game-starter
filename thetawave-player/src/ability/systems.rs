@@ -7,7 +7,7 @@ use bevy::{
         system::{Commands, In, Query, Res},
     },
     math::Vec2,
-    time::{Time, Timer},
+    time::{Time, Timer, TimerMode},
     transform::components::Transform,
 };
 use thetawave_core::Faction;
@@ -28,6 +28,11 @@ pub struct ChargeAbility {
 const MEGA_BLAST_SCALE: f32 = 4.0;
 const MEGA_BLAST_VELOCITY_MULTIPLIER: f32 = 1.5;
 const MEGA_BLAST_DAMAGE_MULTIPLIER: u32 = 5;
+
+// charge ability
+const CHARGE_SPEED_MULTIPLIER: f32 = 3.0;
+const CHARGE_ACCELERATION_MULTIPLIER: f32 = 3.0;
+const CHARGE_DURATION: f32 = 1.5;
 
 pub(crate) fn ability_dispatcher_system(
     mut cmds: Commands,
@@ -122,12 +127,12 @@ pub(crate) fn charge_ability(
             let original_acceleration = player_stats.acceleration;
 
             // Apply the charge boost
-            player_stats.max_speed *= 3.0;
-            player_stats.acceleration *= 3.0;
+            player_stats.max_speed *= CHARGE_SPEED_MULTIPLIER;
+            player_stats.acceleration *= CHARGE_ACCELERATION_MULTIPLIER;
 
             // Add the charge component with a 3 second timer
             commands.entity(player_entity).insert(ChargeAbility {
-                timer: Timer::from_seconds(1.5, bevy::time::TimerMode::Once),
+                timer: Timer::from_seconds(CHARGE_DURATION, TimerMode::Once),
                 original_max_speed,
                 original_acceleration,
                 ability_type: PlayerAbility::SecondaryAttack,
