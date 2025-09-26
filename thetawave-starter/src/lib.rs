@@ -23,7 +23,7 @@ use bevy_aseprite_ultra::AsepriteUltraPlugin;
 
 use bevy_embedded_assets::{EmbeddedAssetPlugin, PluginMode};
 
-use bevy_platform::collections::HashMap;
+use bevy_platform::collections::{HashMap, HashSet};
 #[cfg(feature = "debug")]
 use thetawave_debug::ThetawaveDebugPlugin;
 
@@ -42,6 +42,7 @@ pub struct ThetawaveStarterPlugin {
     pub starting_resolution: (f32, f32),
     pub show_debug_keycode: KeyCode,
     pub extended_abilities: HashMap<String, SystemId<In<Entity>>>,
+    pub extended_duration_abilities: HashSet<String>,
 }
 
 impl Plugin for ThetawaveStarterPlugin {
@@ -89,6 +90,7 @@ impl Plugin for ThetawaveStarterPlugin {
             audio::ThetawaveAudioPlugin,
             player::ThetawavePlayerPlugin {
                 extended_abilities: self.extended_abilities.clone(),
+                extended_duration_abilities: self.extended_duration_abilities.clone(),
             },
             thetawave_physics::ThetawavePhysicsPlugin,
             save::ThetawaveSavePlugin,

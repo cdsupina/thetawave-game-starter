@@ -13,14 +13,15 @@ use bevy::{
 use thetawave_core::Faction;
 use thetawave_projectiles::{ProjectileType, SpawnProjectileEvent};
 
-use crate::{ExecutePlayerAbilityEvent, PlayerStats, ability::AbilityRegistry};
+use crate::{ExecutePlayerAbilityEvent, PlayerAbility, PlayerStats, ability::AbilityRegistry};
+use leafwing_abilities::prelude::CooldownState;
 
 #[derive(Component)]
 pub struct ChargeAbility {
     pub timer: Timer,
     pub original_max_speed: f32,
     pub original_acceleration: f32,
-    pub original_deceleration: f32,
+    pub ability_type: PlayerAbility,
 }
 
 // mega_blast ability
@@ -119,19 +120,17 @@ pub(crate) fn charge_ability(
         if charge_q.get(player_entity).is_err() {
             let original_max_speed = player_stats.max_speed;
             let original_acceleration = player_stats.acceleration;
-            let original_deceleration = player_stats.deceleration;
 
             // Apply the charge boost
-            player_stats.max_speed *= 4.0;
-            player_stats.acceleration *= 4.0;
-            player_stats.deceleration = 0.96;
+            player_stats.max_speed *= 3.0;
+            player_stats.acceleration *= 3.0;
 
             // Add the charge component with a 3 second timer
             commands.entity(player_entity).insert(ChargeAbility {
-                timer: Timer::from_seconds(2.0, bevy::time::TimerMode::Once),
+                timer: Timer::from_seconds(1.5, bevy::time::TimerMode::Once),
                 original_max_speed,
                 original_acceleration,
-                original_deceleration,
+                ability_type: PlayerAbility::SecondaryAttack,
             });
         }
     }
@@ -140,15 +139,24 @@ pub(crate) fn charge_ability(
 pub(crate) fn charge_ability_timer_system(
     mut commands: Commands,
     time: Res<Time>,
-    mut charge_q: Query<(Entity, &mut ChargeAbility, &mut PlayerStats)>,
+    mut charge_q: Query<(
+        Entity,
+        &mut ChargeAbility,
+        &mut PlayerStats,
+        &mut CooldownState<PlayerAbility>,
+    )>,
 ) {
-    for (entity, mut charge_ability, mut player_stats) in charge_q.iter_mut() {
+    for (entity, mut charge_ability, mut player_stats, mut cooldown_state) in charge_q.iter_mut() {
         charge_ability.timer.tick(time.delta());
 
         if charge_ability.timer.finished() {
             // Revert to original stats
             player_stats.max_speed = charge_ability.original_max_speed;
             player_stats.acceleration = charge_ability.original_acceleration;
+
+            // Now trigger the cooldown (start the actual cooldown period)
+            // Ability triggers at the end of the ability as well as the beginning
+            let _ = cooldown_state.trigger(&charge_ability.ability_type);
 
             // Remove the charge component
             commands.entity(entity).remove::<ChargeAbility>();

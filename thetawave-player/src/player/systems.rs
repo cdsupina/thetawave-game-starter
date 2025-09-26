@@ -3,7 +3,7 @@ use bevy::{
     ecs::{
         entity::Entity,
         event::{EventReader, EventWriter},
-        system::Query,
+        system::{Query, Res},
     },
     log::{info, warn},
     math::Vec2,
@@ -12,8 +12,8 @@ use leafwing_abilities::prelude::CooldownState;
 use leafwing_input_manager::prelude::ActionState;
 
 use crate::{
-    EquippedAbilities, ExecutePlayerAbilityEvent, PlayerAbility, PlayerAction, PlayerDeathEvent,
-    PlayerStats,
+    AbilityRegistry, EquippedAbilities, ExecutePlayerAbilityEvent, PlayerAbility, PlayerAction,
+    PlayerDeathEvent, PlayerStats,
 };
 
 /// Move the player around by modifying their linear velocity
@@ -70,6 +70,7 @@ pub(crate) fn player_ability_system(
         &EquippedAbilities,
         &ActionState<PlayerAbility>,
     )>,
+    ability_registry: Res<AbilityRegistry>,
     mut execute_ability_event_writer: EventWriter<ExecutePlayerAbilityEvent>,
 ) {
     for (entity, mut cooldown_state, equipped_abilities, action_state) in
@@ -84,6 +85,13 @@ pub(crate) fn player_ability_system(
                     };
                     info!("{:?}: {:?}", ability, execute_ability_event);
                     execute_ability_event_writer.write(execute_ability_event);
+
+                    // For duration abilities, immediately refresh the cooldown to keep it ready
+                    if ability_registry.duration_abilities.contains(ability_type)
+                        && let Some(cooldown) = cooldown_state.get_mut(&ability)
+                    {
+                        cooldown.refresh();
+                    }
                 } else {
                     warn!(
                         "Player attempted to use ability {:?} but it's not equipped",

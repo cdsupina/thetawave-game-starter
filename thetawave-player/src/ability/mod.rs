@@ -8,7 +8,7 @@ use bevy::{
         system::{In, SystemId},
         world::{FromWorld, World},
     },
-    platform::collections::HashMap,
+    platform::collections::{HashMap, HashSet},
 };
 
 mod systems;
@@ -23,12 +23,13 @@ use crate::{
 
 pub struct ThetawaveAbilitiesPlugin {
     pub extended_abilities: HashMap<String, SystemId<In<Entity>>>,
+    pub extended_duration_abilities: HashSet<String>,
 }
 
 impl Plugin for ThetawaveAbilitiesPlugin {
     fn build(&self, app: &mut App) {
         let ability_registry = AbilityRegistry::from_world(app.world_mut())
-            .with_extended_abilities(self.extended_abilities.clone());
+            .with_extended_abilities(self.extended_abilities.clone(), self.extended_duration_abilities.clone());
 
         app.insert_resource(ability_registry)
             .add_systems(Update, (ability_dispatcher_system, charge_ability_timer_system));
@@ -47,8 +48,9 @@ pub struct EquippedAbilities {
 }
 
 #[derive(Resource, Debug)]
-struct AbilityRegistry {
-    abilities: HashMap<String, SystemId<In<Entity>>>,
+pub struct AbilityRegistry {
+    pub abilities: HashMap<String, SystemId<In<Entity>>>,
+    pub duration_abilities: HashSet<String>,
 }
 
 impl FromWorld for AbilityRegistry {
@@ -72,13 +74,17 @@ impl FromWorld for AbilityRegistry {
 
         abilities.insert("charge".to_string(), world.register_system(charge_ability));
 
-        AbilityRegistry { abilities }
+        let mut duration_abilities = HashSet::new();
+        duration_abilities.insert("charge".to_string());
+
+        AbilityRegistry { abilities, duration_abilities }
     }
 }
 
 impl AbilityRegistry {
-    fn with_extended_abilities(mut self, abilities: HashMap<String, SystemId<In<Entity>>>) -> Self {
+    fn with_extended_abilities(mut self, abilities: HashMap<String, SystemId<In<Entity>>>, duration_abilities: HashSet<String>) -> Self {
         self.abilities.extend(abilities);
+        self.duration_abilities.extend(duration_abilities);
 
         self
     }

@@ -40,7 +40,7 @@ projectile_spawner_position = [0.0, 15.0]
 
 [characters.juggernaut_character.cooldowns]
 BasicAttack = 0.8
-SecondaryAttack = 1.0
+SecondaryAttack = 3.0
 Utility = 2.3
 Ultimate = 15.0
 

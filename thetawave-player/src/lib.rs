@@ -5,7 +5,7 @@ use bevy::{
         schedule::{Condition, IntoScheduleConfigs, common_conditions::not},
         system::{In, SystemId},
     },
-    platform::collections::HashMap,
+    platform::collections::{HashMap, HashSet},
     state::{
         condition::in_state,
         state::{OnEnter, OnExit},
@@ -21,7 +21,7 @@ mod character;
 mod input;
 mod player;
 
-pub use ability::{EquippedAbilities, ExecutePlayerAbilityEvent};
+pub use ability::{AbilityRegistry, EquippedAbilities, ExecutePlayerAbilityEvent};
 pub use character::{
     CharacterAttributes, CharactersResource, ChosenCharacterData, ChosenCharactersResource,
 };
@@ -46,6 +46,7 @@ use crate::{
 /// Plugin structure for handling input in the Thetawave game.
 pub struct ThetawavePlayerPlugin {
     pub extended_abilities: HashMap<String, SystemId<In<Entity>>>,
+    pub extended_duration_abilities: HashSet<String>,
 }
 
 /// Implementation of the Plugin trait for ThetawaveInputPlugin
@@ -63,6 +64,7 @@ impl Plugin for ThetawavePlayerPlugin {
         .add_plugins(AbilityPlugin::<PlayerAbility>::default())
         .add_plugins(ThetawaveAbilitiesPlugin {
             extended_abilities: self.extended_abilities.clone(),
+            extended_duration_abilities: self.extended_duration_abilities.clone(),
         })
         .add_event::<PlayerJoinEvent>()
         .add_event::<PlayerDeathEvent>()
