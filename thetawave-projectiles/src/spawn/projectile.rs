@@ -27,7 +27,7 @@ use crate::{
     attributes::{ProjectileAttributesResource, ProjectileRangeComponent, ProjectileSpread},
     spawn::FactionExt,
 };
-use rand::{rng, Rng};
+use rand::{Rng, rng};
 
 /// Get the collision layer membership bits for projectiles of the given faction
 fn get_projectile_collision_membership(faction: &Faction) -> u32 {
@@ -45,7 +45,7 @@ fn get_projectile_collision_filter(faction: &Faction) -> u32 {
                 | ThetawavePhysicsLayer::EnemyTentacle.to_bits()
         }
         Faction::Enemy => {
-            ThetawavePhysicsLayer::EnemyMob.to_bits() | ThetawavePhysicsLayer::Player.to_bits()
+            ThetawavePhysicsLayer::AllyMob.to_bits() | ThetawavePhysicsLayer::Player.to_bits()
         }
     }
 }
@@ -79,7 +79,11 @@ fn calculate_spread_velocities(
     }
 
     match spread_pattern {
-        ProjectileSpread::Arc { max_spread, projectile_gap, spread_weights } => {
+        ProjectileSpread::Arc {
+            max_spread,
+            projectile_gap,
+            spread_weights,
+        } => {
             let speed = base_velocity.length();
             let base_angle = base_velocity.y.atan2(base_velocity.x);
 
@@ -88,7 +92,9 @@ fn calculate_spread_velocities(
             let projectile_gap_rad = projectile_gap.to_radians();
 
             // Calculate the angle segment between projectiles
-            let spread_angle_segment = max_spread_rad.min(projectile_gap_rad * (count as f32 - 1.0)) / (count as f32 - 1.0).max(1.0);
+            let spread_angle_segment = max_spread_rad
+                .min(projectile_gap_rad * (count as f32 - 1.0))
+                / (count as f32 - 1.0).max(1.0);
 
             let mut velocities = Vec::new();
 
@@ -124,7 +130,10 @@ fn calculate_spread_velocities(
 
             velocities
         }
-        ProjectileSpread::Random { max_spread, speed_variance } => {
+        ProjectileSpread::Random {
+            max_spread,
+            speed_variance,
+        } => {
             let mut rng = rng();
             let mut velocities = Vec::new();
 
@@ -133,7 +142,8 @@ fn calculate_spread_velocities(
                 let half_spread = max_spread / 2.0;
                 let random_angle_deg = rng.random_range(-half_spread..=half_spread);
                 // Random speed multiplier: 1.0 ± speed_variance (e.g., 1.0 ± 0.2 = 0.8 to 1.2)
-                let random_speed_multiplier = rng.random_range((1.0 - speed_variance)..=(1.0 + speed_variance));
+                let random_speed_multiplier =
+                    rng.random_range((1.0 - speed_variance)..=(1.0 + speed_variance));
 
                 let base_angle = base_velocity.y.atan2(base_velocity.x);
                 // Convert degrees to radians
