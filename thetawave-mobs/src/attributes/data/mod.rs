@@ -3,7 +3,10 @@ use avian2d::prelude::{
     Rotation,
 };
 use bevy::{
-    ecs::{bundle::Bundle, component::Component, name::Name, resource::Resource},
+    ecs::{
+        bundle::Bundle, component::Component, entity::Entity, event::Event, name::Name,
+        resource::Resource,
+    },
     math::Vec2,
     platform::collections::HashMap,
     reflect::Reflect,
@@ -34,12 +37,13 @@ const DEFAULT_MAX_ANGULAR_SPEED: f32 = 1.0;
 const DEFAULT_RESTITUTION: f32 = 0.5;
 const DEFAULT_FRICTION: f32 = 0.5;
 const DEFAULT_COLLISION_LAYER_MEMBERSHIP: &[ThetawavePhysicsLayer] =
-    &[ThetawavePhysicsLayer::Enemy];
+    &[ThetawavePhysicsLayer::EnemyMob];
 const DEFAULT_COLLISION_LAYER_FILTER: &[ThetawavePhysicsLayer] = &[
-    ThetawavePhysicsLayer::Ally,
-    ThetawavePhysicsLayer::Enemy,
+    ThetawavePhysicsLayer::AllyMob,
+    ThetawavePhysicsLayer::AllyProjectile,
+    ThetawavePhysicsLayer::EnemyMob,
     ThetawavePhysicsLayer::Player,
-    ThetawavePhysicsLayer::Tentacle,
+    ThetawavePhysicsLayer::EnemyTentacle,
 ];
 const DEFAULT_COLLIDER_DENSITY: f32 = 1.0;
 const DEFAULT_PROJECTILE_SPEED: f32 = 100.0;
@@ -218,6 +222,11 @@ pub(crate) struct MobAttributesResource {
     pub attributes: HashMap<String, MobAttributes>,
 }
 
+#[derive(Event)]
+pub struct MobDeathEvent {
+    pub mob_entity: Entity,
+}
+
 /// Bundle containing all the core components needed for a mob entity
 /// Simplifies mob spawning by grouping related components together
 #[derive(Bundle)]
@@ -291,4 +300,3 @@ impl From<&MobAttributes> for MobComponentBundle {
         }
     }
 }
-

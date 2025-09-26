@@ -16,6 +16,27 @@ pub enum ProjectileType {
     Blast,
 }
 
+/// Defines how multiple projectiles are spread when fired
+#[derive(Debug, Deserialize, Clone, Reflect)]
+pub enum ProjectileSpread {
+    /// Projectiles are evenly distributed in an arc pattern
+    Arc {
+        /// Maximum spread angle in degrees (how wide the arc can be, e.g., 30.0)
+        max_spread: f32,
+        /// Angle gap between projectiles in degrees (controls spacing, e.g., 5.0)
+        projectile_gap: f32,
+        /// Speed variation across the spread (1.0 = uniform speed, >1.0 = faster center/slower edges, <1.0 = slower center/faster edges)
+        spread_weights: f32,
+    },
+    /// Projectiles are randomly distributed with varying angles and speeds
+    Random {
+        /// Total spread angle in degrees (e.g., 30.0 means ±15°)
+        max_spread: f32,
+        /// Speed variation range (e.g., 0.2 means 80%-120% of base speed)
+        speed_variance: f32,
+    },
+}
+
 /// Enforce a range the projectile based on the time existing
 #[derive(Component)]
 pub struct ProjectileRangeComponent {
@@ -33,8 +54,11 @@ impl ProjectileRangeComponent {
 #[derive(Event)]
 pub struct SpawnProjectileEvent {
     pub projectile_type: ProjectileType,
+    pub projectile_spread: ProjectileSpread,
+    pub count: u8,
     pub faction: Faction,
     pub position: Vec2,
+    pub scale: f32,
     pub velocity: Vec2,
     pub damage: u32,
     pub range_seconds: f32,
@@ -90,6 +114,8 @@ pub struct ProjectileSpawner {
     pub spawn_effect_entity: Option<Entity>,
     pub pre_spawn_animation_start_time: f32,
     pub pre_spawn_animation_end_time: f32,
+    pub count: u8,
+    pub projectile_spread: ProjectileSpread,
 }
 
 impl<'de> Deserialize<'de> for ProjectileSpawner {
@@ -117,6 +143,10 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
             pub pre_spawn_animation_start_time: f32,
             #[serde(default = "default_pre_spawn_animation_end_time")]
             pub pre_spawn_animation_end_time: f32,
+            #[serde(default = "default_count")]
+            pub count: u8,
+            #[serde(default = "default_projectile_spread")]
+            pub projectile_spread: ProjectileSpread,
         }
 
         fn default_multiplier() -> f32 {
@@ -129,6 +159,18 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
 
         fn default_pre_spawn_animation_end_time() -> f32 {
             0.2
+        }
+
+        fn default_count() -> u8 {
+            1
+        }
+
+        fn default_projectile_spread() -> ProjectileSpread {
+            ProjectileSpread::Arc {
+                max_spread: 30.0,
+                projectile_gap: 5.0,
+                spread_weights: 1.0,
+            }
         }
 
         // Let serde deserialize into the Helper struct first
@@ -147,6 +189,8 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
             pre_spawn_animation_start_time: helper.pre_spawn_animation_start_time,
             pre_spawn_animation_end_time: helper.pre_spawn_animation_end_time,
             spawn_effect_entity: None, // set to non because the entity cannot be known beforehand
+            count: helper.count,
+            projectile_spread: helper.projectile_spread,
         })
     }
 }

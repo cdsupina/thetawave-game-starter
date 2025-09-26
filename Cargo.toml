@@ -36,7 +36,7 @@ webbrowser = "1.0.5"
 bevy_aseprite_ultra = "0.6.1"
 iyes_progress = "0.14.0"
 bevy_kira_audio = { version = "0.23.0", features = ["mp3", "wav"] }
-serde = "1.0.219"
+serde = "1.0.225"
 bevy-persistent = { version = "0.8.0", features = ["all"] }
 dirs = "6.0.0"
 leafwing-input-manager = "0.17.1"
@@ -47,11 +47,11 @@ strum_macros = "0.27.2"
 winit = "0.30.12"
 image = "0.25.8"
 itertools = "0.14.0"
-toml = "0.9.5"
+toml = "0.9.6"
 bevy_behave = "0.3.0"
 bevy-inspector-egui = "0.33.1"
 bevy_enoki = { git = "https://github.com/Lommix/bevy_enoki.git", rev = "5a6dd95f838c9900d519a6548f0ae98edcfa1c02" }
-web-sys = "0.3.78"
+web-sys = "0.3.80"
 
 [profile.dev]
 opt-level = 1

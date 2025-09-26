@@ -341,8 +341,8 @@ sprite_key = "freighter_front_mob"
 colliders = [
     { shape = { Rectangle = [13.0, 8.0] }, position = [0.0, 0.0], rotation = 0.0 }
 ]
-collision_layer_membership = [ "Ally"]
-collision_layer_filter = ["Enemy", "Ally", "Player", "Tentacle"]
+collision_layer_membership = [ "AllyMob"]
+collision_layer_filter = ["EnemyMob", "AllyMob", "Player", "EnemyTentacle", "EnemyProjectile"]
 decorations = [
     ["freighter_thrusters", [0.0, 8.5]],
 ]
@@ -368,8 +368,8 @@ sprite_key = "freighter_front_mob"
 colliders = [
     { shape = { Rectangle = [13.0, 8.0] }, position = [0.0, 0.0], rotation = 0.0 }
 ]
-collision_layer_membership = [ "Ally"]
-collision_layer_filter = ["Enemy", "Ally", "Player", "Tentacle"]
+collision_layer_membership = [ "AllyMob"]
+collision_layer_filter = ["EnemyMob", "AllyMob", "Player", "EnemyTentacle", "EnemyProjectile"]
 decorations = [
     ["freighter_thrusters", [0.0, 8.5]],
 ]
@@ -393,8 +393,8 @@ colliders = [
     { shape = { Rectangle = [13.0, 18.0] }, position = [0.0, 0.0], rotation = 0.0 }
 ]
 rotation_locked = false
-collision_layer_membership = [ "Ally"]
-collision_layer_filter = ["Enemy", "Ally", "Player", "Tentacle"]
+collision_layer_membership = [ "AllyMob"]
+collision_layer_filter = ["EnemyMob", "AllyMob", "Player", "EnemyTentacle", "EnemyProjectile"]
 
 [[attributes.freighter_middle_mob.jointed_mobs]]
 key = "back"
@@ -415,8 +415,8 @@ colliders = [
     { shape = { Rectangle = [13.0, 18.0] }, position = [0.0, 0.0], rotation = 0.0 }
 ]
 rotation_locked = false
-collision_layer_membership = [ "Ally"]
-collision_layer_filter = ["Enemy", "Ally", "Player", "Tentacle"]
+collision_layer_membership = [ "AllyMob"]
+collision_layer_filter = ["EnemyMob", "AllyMob", "Player", "EnemyTentacle", "EnemyProjectile"]
 
 # Trizetheron
 # Description: Three headed and three eyed tentacled boss.
@@ -586,8 +586,8 @@ restitution = 0.0
 friction = 1.0
 z_level = -1.0
 collider_density = 0.5
-collision_layer_membership = [ "Tentacle"]
-collision_layer_filter = ["Enemy", "Ally", "Player"]
+collision_layer_membership = [ "EnemyTentacle"]
+collision_layer_filter = ["AllyProjectile", "AllyMob", "Player", "EnemyMob"]
 
 [[attributes.xhitara_tentacle_short_mob.jointed_mobs]]
 key = "middle"
@@ -619,8 +619,8 @@ restitution = 0.0
 friction = 1.0
 z_level = -1.0
 collider_density = 0.5
-collision_layer_membership = [ "Tentacle"]
-collision_layer_filter = ["Enemy", "Ally", "Player"]
+collision_layer_membership = [ "EnemyTentacle"]
+collision_layer_filter = ["AllyProjectile", "AllyMob", "Player", "EnemyMob"]
 
 [[attributes.xhitara_tentacle_long_mob.jointed_mobs]]
 key = "middle"
@@ -651,8 +651,8 @@ restitution = 0.0
 friction = 1.0
 z_level = -1.0
 collider_density = 0.5
-collision_layer_membership = [ "Tentacle"]
-collision_layer_filter = ["Enemy", "Ally", "Player"]
+collision_layer_membership = [ "EnemyTentacle"]
+collision_layer_filter = ["AllyProjectile", "AllyMob", "Player", "EnemyMob"]
 
 
 [[attributes.xhitara_tentacle_middle_mob.jointed_mobs]]
@@ -682,5 +682,5 @@ max_linear_speed = [25.0, 25.0]
 angular_acceleration = 0.2
 max_angular_speed = 1.5
 targeting_range = 100.0
-collision_layer_membership = [ "Tentacle"]
-collision_layer_filter = ["Enemy", "Ally", "Player"]
+collision_layer_membership = [ "EnemyTentacle"]
+collision_layer_filter = ["AllyProjectile", "AllyMob", "Player", "EnemyMob"]

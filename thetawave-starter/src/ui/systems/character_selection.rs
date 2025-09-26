@@ -7,10 +7,8 @@ use crate::ui::data::{
     MenuButtonState, PlayerReadyButton, StartGameButton, UiChildBuilderExt, VisibleCarouselSlot,
 };
 use bevy::{
-    asset::Handle,
     color::{Alpha, Color},
     ecs::hierarchy::ChildOf,
-    image::Image,
     input::ButtonInput,
     prelude::{
         Changed, Children, Commands, Entity, EventReader, EventWriter, Gamepad, GamepadButton,
@@ -25,11 +23,11 @@ use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use bevy_persistent::Persistent;
 use leafwing_input_manager::prelude::{ActionState, InputMap};
 use thetawave_assets::{AssetResolver, ExtendedUiAssets};
+use thetawave_core::AppState;
 use thetawave_player::{
-    CharacterCarouselAction, CharacterType, ChosenCharacterData, ChosenCharactersResource,
+    CharacterCarouselAction, CharactersResource, ChosenCharacterData, ChosenCharactersResource,
     InputType,
 };
-use thetawave_core::AppState;
 
 /// Spawn ui for character selection
 pub(in crate::ui) fn spawn_character_selection_system(
@@ -200,24 +198,6 @@ pub(in crate::ui) fn cycle_player_one_carousel_system(
     }
 }
 
-fn get_character_image(
-    character_type: &CharacterType,
-    extended_ui_assets: &ExtendedUiAssets,
-    ui_assets: &UiAssets,
-) -> bevy::ecs::error::Result<Handle<Image>> {
-    let key = match character_type {
-        CharacterType::Captain => "captain_character",
-        CharacterType::Juggernaut => "juggernaut_character",
-        CharacterType::Doomwing => "doomwing_character",
-    };
-
-    Ok(AssetResolver::get_ui_image(
-        key,
-        extended_ui_assets,
-        ui_assets,
-    )?)
-}
-
 /// Change shown carousel character images when the character carousel changes from cycle_carousel_system
 pub(in crate::ui) fn update_carousel_ui_system(
     carousel_q: Query<(&Children, &CharacterCarousel), Changed<CharacterCarousel>>,
@@ -237,8 +217,11 @@ pub(in crate::ui) fn update_carousel_ui_system(
 
                 // Set the image of the ui node to the new character
                 if let Some(character_type) = maybe_character_type {
-                    image_node.image =
-                        get_character_image(character_type, &extended_ui_assets, &ui_assets)?;
+                    image_node.image = AssetResolver::get_ui_image(
+                        character_type,
+                        &extended_ui_assets,
+                        &ui_assets,
+                    )?;
                 }
             }
         }
@@ -272,13 +255,14 @@ pub(in crate::ui) fn spawn_carousel_system(
     extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
     options_res: Res<Persistent<OptionsRes>>,
+    characters_resource: Res<CharactersResource>,
 ) {
     for event in player_join_events.read() {
         for (entity, player_num) in character_selector_q.iter() {
             if *player_num == event.player_num {
                 cmds.entity(entity).despawn_related::<Children>();
 
-                let carousel = CharacterCarousel::new(event.input.clone());
+                let carousel = CharacterCarousel::new(event.input.clone(), &characters_resource);
 
                 // Pre-resolve assets - will panic on failure
                 let arrow_sprite =
@@ -287,18 +271,30 @@ pub(in crate::ui) fn spawn_carousel_system(
 
                 // Pre-resolve character images - will panic on failure
                 let left_image = carousel.get_left_character().map(|left_character_type| {
-                    get_character_image(left_character_type, &extended_ui_assets, &ui_assets)
-                        .expect("Failed to load left character image")
+                    AssetResolver::get_ui_image(
+                        left_character_type,
+                        &extended_ui_assets,
+                        &ui_assets,
+                    )
+                    .expect("Failed to load left character image")
                 });
                 let active_image = carousel
                     .get_active_character()
                     .map(|active_character_type| {
-                        get_character_image(active_character_type, &extended_ui_assets, &ui_assets)
-                            .expect("Failed to load active character image")
+                        AssetResolver::get_ui_image(
+                            active_character_type,
+                            &extended_ui_assets,
+                            &ui_assets,
+                        )
+                        .expect("Failed to load active character image")
                     });
                 let right_image = carousel.get_right_character().map(|right_character_type| {
-                    get_character_image(right_character_type, &extended_ui_assets, &ui_assets)
-                        .expect("Failed to load right character image")
+                    AssetResolver::get_ui_image(
+                        right_character_type,
+                        &extended_ui_assets,
+                        &ui_assets,
+                    )
+                    .expect("Failed to load right character image")
                 });
 
                 cmds.entity(entity).with_children(|parent| {

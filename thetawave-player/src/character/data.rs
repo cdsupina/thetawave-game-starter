@@ -1,35 +1,37 @@
 use bevy::{ecs::resource::Resource, math::Vec2, platform::collections::HashMap};
 use leafwing_abilities::prelude::{Cooldown, CooldownState};
 use serde::Deserialize;
-use strum_macros::EnumIter;
+use thetawave_projectiles::ProjectileSpread;
 
 use crate::input::{InputType, PlayerAbility, PlayerNum};
-
-/// Characters that can be chosen by players to play as
-#[derive(Eq, PartialEq, Hash, Debug, EnumIter, Clone, Deserialize)]
-pub enum CharacterType {
-    Captain,
-    Juggernaut,
-    Doomwing,
-}
 
 /// Resource for storing all of the data about every character
 #[derive(Resource, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct CharactersResource {
-    pub characters: HashMap<CharacterType, CharacterAttributes>,
+    pub characters: HashMap<String, CharacterAttributes>,
 }
+
+const DEFAULT_INHERITED_VELOCITY_MULTIPLIER: f32 = 0.3;
 
 /// Attributes of a character
 #[derive(Debug)]
 pub struct CharacterAttributes {
     pub acceleration: f32,
-    pub deceleration_factor: f32,
+    pub deceleration: f32,
     pub max_speed: f32,
     pub collider_dimensions: Vec2,
     pub cooldowns: CooldownState<PlayerAbility>,
     pub restitution: f32,
     pub health: u32,
+    pub projectile_damage: u32,
+    pub projectile_speed: f32,
+    pub projectile_range_seconds: f32,
+    pub projectile_count: u8,
+    pub projectile_spread: ProjectileSpread,
+    pub inherited_velocity_multiplier: f32,
+    pub projectile_spawner_position: Vec2,
+    pub abilities: HashMap<PlayerAbility, String>,
 }
 
 impl<'de> Deserialize<'de> for CharacterAttributes {
@@ -43,13 +45,26 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
         #[serde(deny_unknown_fields)]
         struct Helper {
             acceleration: f32,
-            deceleration_factor: f32,
+            deceleration: f32,
             max_speed: f32,
             collider_dimensions: Vec2,
             // Instead of CooldownState, use a HashMap with seconds as f32
             cooldowns: HashMap<PlayerAbility, f32>,
             restitution: f32,
             health: u32,
+            projectile_damage: u32,
+            projectile_speed: f32,
+            projectile_range_seconds: f32,
+            projectile_count: u8,
+            projectile_spread: ProjectileSpread,
+            #[serde(default = "default_inherited_velocity_multiplier")]
+            inherited_velocity_multiplier: f32,
+            projectile_spawner_position: Vec2,
+            abilities: HashMap<PlayerAbility, String>,
+        }
+
+        fn default_inherited_velocity_multiplier() -> f32 {
+            DEFAULT_INHERITED_VELOCITY_MULTIPLIER
         }
 
         // Let serde deserialize into the Helper struct first
@@ -65,13 +80,21 @@ impl<'de> Deserialize<'de> for CharacterAttributes {
         // Construct our actual struct with the transformed data
         Ok(CharacterAttributes {
             acceleration: helper.acceleration,
-            deceleration_factor: helper.deceleration_factor,
+            deceleration: helper.deceleration,
             max_speed: helper.max_speed,
             collider_dimensions: helper.collider_dimensions,
             // Create CooldownState from the transformed pairs
             cooldowns: CooldownState::new(cooldown_pairs),
             restitution: helper.restitution,
             health: helper.health,
+            projectile_damage: helper.projectile_damage,
+            projectile_speed: helper.projectile_speed,
+            projectile_range_seconds: helper.projectile_range_seconds,
+            projectile_count: helper.projectile_count,
+            projectile_spread: helper.projectile_spread,
+            inherited_velocity_multiplier: helper.inherited_velocity_multiplier,
+            projectile_spawner_position: helper.projectile_spawner_position,
+            abilities: helper.abilities,
         })
     }
 }
@@ -107,7 +130,6 @@ impl ChosenCharactersResource {
 /// Resource for transferring character choices from character selection screen to game
 #[derive(Clone, Debug)]
 pub struct ChosenCharacterData {
-    pub character: CharacterType,
+    pub character: String,
     pub input: InputType,
 }
-

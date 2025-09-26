@@ -1,13 +1,20 @@
 use avian2d::prelude::LinearVelocity;
 use bevy::{
-    ecs::{event::EventReader, system::Query},
-    log::info,
+    ecs::{
+        entity::Entity,
+        event::{EventReader, EventWriter},
+        system::{Query, Res},
+    },
+    log::{info, warn},
     math::Vec2,
 };
 use leafwing_abilities::prelude::CooldownState;
 use leafwing_input_manager::prelude::ActionState;
 
-use crate::{PlayerAbility, PlayerAction, PlayerDeathEvent, PlayerStats};
+use crate::{
+    AbilityRegistry, EquippedAbilities, ExecutePlayerAbilityEvent, PlayerAbility, PlayerAction,
+    PlayerDeathEvent, PlayerStats,
+};
 
 /// Move the player around by modifying their linear velocity
 pub(crate) fn player_move_system(
@@ -40,10 +47,17 @@ pub(crate) fn player_move_system(
 
         // Decelerate when there is no input on a particular axis
         if dir_vec.x == 0.0 {
-            lin_vel.x *= player_stats.deceleration_factor;
+            lin_vel.x *= player_stats.deceleration;
         }
         if dir_vec.y == 0.0 {
-            lin_vel.y *= player_stats.deceleration_factor;
+            lin_vel.y *= player_stats.deceleration;
+        }
+
+        // If speed exceeds max_speed, apply deceleration to bring it back down
+        let current_speed = lin_vel.length();
+        if current_speed > player_stats.max_speed {
+            lin_vel.x *= player_stats.deceleration;
+            lin_vel.y *= player_stats.deceleration;
         }
     }
 }
@@ -51,30 +65,39 @@ pub(crate) fn player_move_system(
 /// System for activating player abilities when ready
 pub(crate) fn player_ability_system(
     mut player_ability_q: Query<(
+        Entity,
         &mut CooldownState<PlayerAbility>,
+        &EquippedAbilities,
         &ActionState<PlayerAbility>,
     )>,
+    ability_registry: Res<AbilityRegistry>,
+    mut execute_ability_event_writer: EventWriter<ExecutePlayerAbilityEvent>,
 ) {
-    for (mut cooldown_state, action_state) in player_ability_q.iter_mut() {
-        for ability in action_state.get_just_released() {
+    for (entity, mut cooldown_state, equipped_abilities, action_state) in
+        player_ability_q.iter_mut()
+    {
+        for ability in action_state.get_pressed() {
             if cooldown_state.trigger(&ability).is_ok() {
-                info!("Player activated {} ability.", ability.as_ref());
-            } else {
-                let cooldown_str = if let Some(ability_cooldown) = cooldown_state.get(&ability) {
-                    format!(
-                        " Cooldown: {}/{}",
-                        ability_cooldown.elapsed().as_secs_f32(),
-                        ability_cooldown.max_time().as_secs_f32()
-                    )
-                } else {
-                    "".to_string()
-                };
+                if let Some(ability_type) = equipped_abilities.abilities.get(&ability) {
+                    let execute_ability_event = ExecutePlayerAbilityEvent {
+                        player_entity: entity,
+                        ability_type: ability_type.clone(),
+                    };
+                    info!("{:?}: {:?}", ability, execute_ability_event);
+                    execute_ability_event_writer.write(execute_ability_event);
 
-                info!(
-                    "Player attempted activation of {} ability, but it wasn't ready.{}",
-                    ability.as_ref(),
-                    cooldown_str
-                );
+                    // For duration abilities, immediately refresh the cooldown to keep it ready
+                    if ability_registry.duration_abilities.contains(ability_type)
+                        && let Some(cooldown) = cooldown_state.get_mut(&ability)
+                    {
+                        cooldown.refresh();
+                    }
+                } else {
+                    warn!(
+                        "Player attempted to use ability {:?} but it's not equipped",
+                        ability
+                    );
+                }
             }
         }
     }

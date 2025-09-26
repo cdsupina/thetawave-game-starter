@@ -83,6 +83,11 @@ pub(crate) fn timed_range_system(
                 key: None,
                 needs_position_tracking: false,
                 is_one_shot: true,
+                scale: if transform.scale.x != 1.0 {
+                    Some(transform.scale.x)
+                } else {
+                    None
+                },
             });
 
             cmds.entity(entity).despawn();
@@ -125,6 +130,11 @@ pub(crate) fn projectile_hit_system(
                 key: None,
                 needs_position_tracking: false,
                 is_one_shot: true,
+                scale: if transform.scale.x != 1.0 {
+                    Some(transform.scale.x)
+                } else {
+                    None
+                },
             });
 
             cmds.entity(entity).despawn();

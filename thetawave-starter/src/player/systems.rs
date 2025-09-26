@@ -1,40 +1,25 @@
 use crate::options::OptionsRes;
 use avian2d::prelude::{
-    Collider, CollisionLayers, LayerMask, LockedAxes, MaxLinearSpeed, Restitution, RigidBody,
+    Collider, CollisionLayers, LayerMask, LockedAxes, PhysicsLayer, Restitution,
+    RigidBody,
 };
 use bevy::{
-    asset::Handle,
     prelude::{Commands, Name, Res},
     sprite::Sprite,
     utils::default,
 };
-use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
+use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use bevy_persistent::Persistent;
 use leafwing_abilities::AbilitiesBundle;
 use leafwing_input_manager::prelude::InputMap;
-use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
+use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets};
 use thetawave_core::{AppState, Cleanup};
 use thetawave_core::{HealthComponent, PlayerTag};
 use thetawave_physics::ThetawavePhysicsLayer;
 use thetawave_player::{
-    CharacterType, CharactersResource, ChosenCharactersResource, InputType, PlayerAbility,
+    CharactersResource, ChosenCharactersResource, EquippedAbilities, InputType, PlayerAbility,
     PlayerStats,
 };
-
-/// Get the Aseprite handle from a given CharacterType using asset resolver
-fn get_character_sprite(
-    character_type: &CharacterType,
-    extended_assets: &ExtendedGameAssets,
-    game_assets: &GameAssets,
-) -> Result<Handle<Aseprite>, AssetError> {
-    let key = match character_type {
-        CharacterType::Captain => "captain_character",
-        CharacterType::Juggernaut => "juggernaut_character",
-        CharacterType::Doomwing => "doomwing_character",
-    };
-
-    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
-}
 
 /// Spawn a player controlled entity
 pub(super) fn spawn_players_system(
@@ -56,7 +41,7 @@ pub(super) fn spawn_players_system(
                 player_num.clone(),
                 AseAnimation {
                     animation: Animation::tag("idle"),
-                    aseprite: get_character_sprite(
+                    aseprite: AssetResolver::get_game_sprite(
                         &chosen_character_data.character,
                         &extended_assets,
                         &game_assets,
@@ -72,7 +57,6 @@ pub(super) fn spawn_players_system(
                 ),
                 RigidBody::Dynamic,
                 LockedAxes::ROTATION_LOCKED,
-                MaxLinearSpeed(character_data.max_speed),
                 Restitution::new(character_data.restitution),
                 CollisionLayers::new([ThetawavePhysicsLayer::Player], [LayerMask::ALL]),
                 match chosen_character_data.input {
@@ -103,15 +87,26 @@ pub(super) fn spawn_players_system(
                     cooldowns: character_data.cooldowns.clone(),
                     ..default()
                 },
-                PlayerStats {
-                    acceleration: character_data.acceleration,
-                    deceleration_factor: character_data.deceleration_factor,
-                },
+                PlayerStats::from(character_data),
                 Name::new("Player"),
             ));
 
             // new insert because of the bundle size limit
-            entity_cmds.insert((PlayerTag, HealthComponent::new(character_data.health)));
+            entity_cmds.insert((
+                PlayerTag,
+                HealthComponent::new(character_data.health),
+                EquippedAbilities {
+                    abilities: character_data.abilities.clone(),
+                },
+                CollisionLayers::new(
+                    ThetawavePhysicsLayer::Player.to_bits(),
+                    ThetawavePhysicsLayer::EnemyMob.to_bits()
+                        | ThetawavePhysicsLayer::AllyMob.to_bits()
+                        | ThetawavePhysicsLayer::Player.to_bits()
+                        | ThetawavePhysicsLayer::EnemyTentacle.to_bits()
+                        | ThetawavePhysicsLayer::EnemyProjectile.to_bits(),
+                ),
+            ));
         }
     }
     Ok(())

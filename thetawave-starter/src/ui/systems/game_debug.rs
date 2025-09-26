@@ -21,7 +21,7 @@ use thetawave_mobs::{MobDebugSettings, SpawnMobEvent};
 #[cfg(feature = "debug")]
 use thetawave_physics::PhysicsDebugSettings;
 #[cfg(feature = "debug")]
-use thetawave_projectiles::{ProjectileType, SpawnProjectileEvent};
+use thetawave_projectiles::{ProjectileSpread, ProjectileType, SpawnProjectileEvent};
 
 /// System that handles the egui debug menu
 #[cfg(feature = "debug")]
@@ -246,8 +246,15 @@ pub(in crate::ui) fn game_debug_menu_system(
                         if ui.button("Ally").clicked() {
                             spawn_projectile_event_writer.write(SpawnProjectileEvent {
                                 projectile_type: ProjectileType::Blast,
+                                projectile_spread: ProjectileSpread::Arc {
+                                    max_spread: 11.5,
+                                    projectile_gap: 5.7,
+                                    spread_weights: 1.0,
+                                },
+                                count: 1,
                                 faction: Faction::Ally,
                                 position: *spawn_location,
+                                scale: 1.0,
                                 velocity: Vec2::ZERO,
                                 damage: 5,
                                 range_seconds: 10.0,
@@ -257,8 +264,15 @@ pub(in crate::ui) fn game_debug_menu_system(
                         if ui.button("Enemy").clicked() {
                             spawn_projectile_event_writer.write(SpawnProjectileEvent {
                                 projectile_type: ProjectileType::Blast,
+                                projectile_spread: ProjectileSpread::Arc {
+                                    max_spread: 11.5,
+                                    projectile_gap: 5.7,
+                                    spread_weights: 1.0,
+                                },
+                                count: 1,
                                 faction: Faction::Enemy,
                                 position: *spawn_location,
+                                scale: 1.0,
                                 velocity: Vec2::ZERO,
                                 damage: 5,
                                 range_seconds: 10.0,
@@ -269,8 +283,15 @@ pub(in crate::ui) fn game_debug_menu_system(
                         if ui.button("Ally").clicked() {
                             spawn_projectile_event_writer.write(SpawnProjectileEvent {
                                 projectile_type: ProjectileType::Bullet,
+                                projectile_spread: ProjectileSpread::Arc {
+                                    max_spread: 11.5,
+                                    projectile_gap: 5.7,
+                                    spread_weights: 1.0,
+                                },
+                                count: 1,
                                 faction: Faction::Ally,
                                 position: *spawn_location,
+                                scale: 1.0,
                                 velocity: Vec2::ZERO,
                                 damage: 5,
                                 range_seconds: 10.0,
@@ -280,8 +301,15 @@ pub(in crate::ui) fn game_debug_menu_system(
                         if ui.button("Enemy").clicked() {
                             spawn_projectile_event_writer.write(SpawnProjectileEvent {
                                 projectile_type: ProjectileType::Bullet,
+                                projectile_spread: ProjectileSpread::Arc {
+                                    max_spread: 11.5,
+                                    projectile_gap: 5.7,
+                                    spread_weights: 1.0,
+                                },
+                                count: 1,
                                 faction: Faction::Enemy,
                                 position: *spawn_location,
+                                scale: 1.0,
                                 velocity: Vec2::ZERO,
                                 damage: 5,
                                 range_seconds: 10.0,

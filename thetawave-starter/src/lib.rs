@@ -2,6 +2,10 @@ use bevy::{
     DefaultPlugins,
     app::Plugin,
     asset::{AssetMetaCheck, AssetPlugin},
+    ecs::{
+        entity::Entity,
+        system::{In, SystemId},
+    },
     input::keyboard::KeyCode,
     prelude::PluginGroup,
     render::texture::ImagePlugin,
@@ -19,6 +23,7 @@ use bevy_aseprite_ultra::AsepriteUltraPlugin;
 
 use bevy_embedded_assets::{EmbeddedAssetPlugin, PluginMode};
 
+use bevy_platform::collections::{HashMap, HashSet};
 #[cfg(feature = "debug")]
 use thetawave_debug::ThetawaveDebugPlugin;
 
@@ -36,6 +41,8 @@ pub struct ThetawaveStarterPlugin {
     pub window_title: String,
     pub starting_resolution: (f32, f32),
     pub show_debug_keycode: KeyCode,
+    pub extended_abilities: HashMap<String, SystemId<In<Entity>>>,
+    pub extended_duration_abilities: HashSet<String>,
 }
 
 impl Plugin for ThetawaveStarterPlugin {
@@ -81,7 +88,10 @@ impl Plugin for ThetawaveStarterPlugin {
             camera::ThetawaveCameraPlugin,
             thetawave_backgrounds::ThetawaveBackgroundsPlugin,
             audio::ThetawaveAudioPlugin,
-            player::ThetawavePlayerPlugin,
+            player::ThetawavePlayerPlugin {
+                extended_abilities: self.extended_abilities.clone(),
+                extended_duration_abilities: self.extended_duration_abilities.clone(),
+            },
             thetawave_physics::ThetawavePhysicsPlugin,
             save::ThetawaveSavePlugin,
             states::ThetawaveStatesPlugin,

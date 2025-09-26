@@ -1,6 +1,11 @@
 use bevy::{
     app::{Plugin, Startup, Update},
-    ecs::schedule::{Condition, IntoScheduleConfigs, common_conditions::not},
+    ecs::{
+        entity::Entity,
+        schedule::{Condition, IntoScheduleConfigs, common_conditions::not},
+        system::{In, SystemId},
+    },
+    platform::collections::{HashMap, HashSet},
     state::{
         condition::in_state,
         state::{OnEnter, OnExit},
@@ -11,12 +16,14 @@ use leafwing_abilities::plugin::AbilityPlugin;
 use leafwing_input_manager::plugin::InputManagerPlugin;
 use thetawave_core::{AppState, DebugState, GameState, MainMenuState};
 
+mod ability;
 mod character;
 mod input;
 mod player;
 
+pub use ability::{AbilityRegistry, EquippedAbilities, ExecutePlayerAbilityEvent};
 pub use character::{
-    CharacterType, CharactersResource, ChosenCharacterData, ChosenCharactersResource,
+    CharacterAttributes, CharactersResource, ChosenCharacterData, ChosenCharactersResource,
 };
 pub use input::{
     CharacterCarouselAction, DummyGamepad, InputType, PlayerAbility, PlayerAction, PlayerJoinEvent,
@@ -26,6 +33,7 @@ pub use player::{PlayerDeathEvent, PlayerStats};
 use thetawave_core::load_with_extended;
 
 use crate::{
+    ability::ThetawaveAbilitiesPlugin,
     character::reset_chosen_characters_resource_system,
     input::{
         disable_additional_players_navigation_system, disable_horizontal_navigation_system,
@@ -36,7 +44,10 @@ use crate::{
 };
 
 /// Plugin structure for handling input in the Thetawave game.
-pub struct ThetawavePlayerPlugin;
+pub struct ThetawavePlayerPlugin {
+    pub extended_abilities: HashMap<String, SystemId<In<Entity>>>,
+    pub extended_duration_abilities: HashSet<String>,
+}
 
 /// Implementation of the Plugin trait for ThetawaveInputPlugin
 impl Plugin for ThetawavePlayerPlugin {
@@ -51,8 +62,13 @@ impl Plugin for ThetawavePlayerPlugin {
         .add_plugins(InputManagerPlugin::<PlayerAbility>::default())
         .add_plugins(InputManagerPlugin::<CharacterCarouselAction>::default())
         .add_plugins(AbilityPlugin::<PlayerAbility>::default())
+        .add_plugins(ThetawaveAbilitiesPlugin {
+            extended_abilities: self.extended_abilities.clone(),
+            extended_duration_abilities: self.extended_duration_abilities.clone(),
+        })
         .add_event::<PlayerJoinEvent>()
         .add_event::<PlayerDeathEvent>()
+        .add_event::<ExecutePlayerAbilityEvent>()
         .add_systems(Startup, setup_input_system)
         .add_systems(
             OnEnter(MainMenuState::Title),

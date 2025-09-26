@@ -1,41 +1,77 @@
-[characters.Captain]
+[characters.captain_character]
 acceleration = 2.0
-deceleration_factor = 0.972
+deceleration = 0.972
 max_speed = 100.0
 collider_dimensions = [6.0, 12.0]
 restitution = 0.3
+projectile_speed = 200.0
+projectile_damage = 10
+projectile_range_seconds = 0.65
+projectile_count = 1
+projectile_spread = { Arc = { max_spread = 10.0, projectile_gap = 5.0, spread_weights = 1.1 } }
 health = 150
+projectile_spawner_position = [0.0, 10.0]
 
-[characters.Captain.cooldowns]
+[characters.captain_character.cooldowns]
 BasicAttack = 0.5
 SecondaryAttack = 1.5
 Utility = 2.0
 Ultimate = 10.0
 
-[characters.Juggernaut]
+[characters.captain_character.abilities]
+BasicAttack = "fire_blast"
+SecondaryAttack = "mega_blast"
+Utility = "none"
+Ultimate = "none"
+
+[characters.juggernaut_character]
 acceleration = 1.8
-deceleration_factor = 0.988
+deceleration = 0.988
 max_speed = 90
 collider_dimensions = [12.0, 20.0]
 restitution = 0.5
+projectile_speed = 200.0
+projectile_damage = 5
+projectile_range_seconds = 0.3
+projectile_count = 3
+projectile_spread = { Random = { max_spread = 20.0, speed_variance = 0.2 } }
 health = 300
+projectile_spawner_position = [0.0, 15.0]
 
-[characters.Juggernaut.cooldowns]
+[characters.juggernaut_character.cooldowns]
 BasicAttack = 0.8
-SecondaryAttack = 2.0
+SecondaryAttack = 3.0
 Utility = 2.3
 Ultimate = 15.0
 
-[characters.Doomwing]
+[characters.juggernaut_character.abilities]
+BasicAttack = "fire_bullet"
+SecondaryAttack = "charge"
+Utility = "none"
+Ultimate = "none"
+
+[characters.doomwing_character]
 acceleration = 2.5
-deceleration_factor = 0.955
+deceleration = 0.955
 max_speed = 165.0
 collider_dimensions = [12.0, 20.0]
 restitution = 0.1
+projectile_speed = 135.0
+projectile_damage = 3
+projectile_range_seconds = 0.5
+projectile_count = 2
+projectile_spread = { Arc = { max_spread = 30.0, projectile_gap = 7.0, spread_weights = 0.92 } }
 health = 120
+projectile_spawner_position = [0.0, 15.0]
 
-[characters.Doomwing.cooldowns]
-BasicAttack = 1.0
+[characters.doomwing_character.cooldowns]
+BasicAttack = 0.42
 SecondaryAttack = 3.0
 Utility = 1.9
 Ultimate = 18.5
+
+[characters.doomwing_character.abilities]
+BasicAttack = "fire_blast"
+SecondaryAttack = "none"
+Utility = "none"
+Ultimate = "none"
