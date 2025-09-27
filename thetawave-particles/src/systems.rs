@@ -6,6 +6,7 @@ use bevy::{
         query::Without,
         system::{Commands, Query, Res},
     },
+    log::info,
     time::Time,
     transform::components::Transform,
 };
@@ -45,10 +46,20 @@ pub(crate) fn particle_position_tracking_system(
 /// Ticks the timer and despawns spawners after all particles have completed their lifecycle
 pub(crate) fn particle_lifetime_management_system(
     mut cmds: Commands,
-    mut particle_q: Query<(Entity, &mut ParticleLifeTimer, &ParticleSpawnerState)>,
+    mut particle_q: Query<(Entity, &mut ParticleLifeTimer, &mut ParticleSpawnerState)>,
+    parent_q: Query<Entity, (Without<ParticleLifeTimer>,)>,
     time: Res<Time>,
 ) {
-    for (entity, mut life_timer, spawner_state) in particle_q.iter_mut() {
+    for (entity, mut life_timer, mut spawner_state) in particle_q.iter_mut() {
+        // Check if parent still exists - if not, deactivate this orphaned effect
+        if let Some(parent_entity) = life_timer.parent_entity {
+            if parent_q.get(parent_entity).is_err() && spawner_state.active {
+                // Parent is gone and spawner is still active - deactivate it
+                spawner_state.active = false;
+                info!("🩸 Deactivated orphaned blood effect - parent {:?} no longer exists", parent_entity);
+            }
+        }
+
         // Only tick timer for inactive spawners (those that have been deactivated)
         if !spawner_state.active && life_timer.timer.tick(time.delta()).just_finished() {
             // Timer expired, despawn the spawner entity
