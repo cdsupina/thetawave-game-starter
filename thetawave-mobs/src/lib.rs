@@ -18,7 +18,7 @@ use crate::{
     attributes::ThetawaveAttributesPlugin,
     behavior::ThetawaveMobBehaviorPlugin,
     spawn::{connect_effect_to_spawner, spawn_mob_system},
-    systems::mob_death_system,
+    systems::{mob_death_system, detect_destroyed_joints},
 };
 
 pub use spawn::SpawnMobEvent;
@@ -37,6 +37,7 @@ impl Plugin for ThetawaveMobsPlugin {
             (
                 spawn_mob_system.run_if(on_event::<SpawnMobEvent>),
                 connect_effect_to_spawner.run_if(on_event::<SpawnerParticleEffectSpawnedEvent>),
+                detect_destroyed_joints.run_if(on_event::<MobDeathEvent>).before(mob_death_system),
                 mob_death_system.run_if(on_event::<MobDeathEvent>),
             )
                 .run_if(in_state(AppState::Game).and(in_state(GameState::Playing))),
