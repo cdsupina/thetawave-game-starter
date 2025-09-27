@@ -52,6 +52,15 @@ pub struct ParticleLifeTimer {
     pub offset: Vec3, // Offset from parent position
 }
 
+/// Component for blood effects that need random pulsing behavior
+#[derive(Component)]
+pub struct BloodEffectManager {
+    pub next_toggle_time: f32,
+    pub min_interval: f32,
+    pub max_interval: f32,
+}
+
+
 impl ParticleLifeTimer {
     /// Create a new ParticleLifeTimer with the given lifetime in seconds
     /// Uses the maximum particle lifetime to ensure all particles can complete
@@ -64,7 +73,11 @@ impl ParticleLifeTimer {
     }
 
     /// Create a new ParticleLifeTimer with an offset from the parent position
-    pub fn new_with_offset(lifetime_seconds: f32, parent_entity: Option<Entity>, offset: Vec3) -> Self {
+    pub fn new_with_offset(
+        lifetime_seconds: f32,
+        parent_entity: Option<Entity>,
+        offset: Vec3,
+    ) -> Self {
         Self {
             timer: Timer::from_seconds(lifetime_seconds, TimerMode::Once),
             parent_entity,

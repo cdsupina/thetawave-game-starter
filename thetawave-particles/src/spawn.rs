@@ -78,7 +78,10 @@ pub fn spawn_particle_effect(
                     current_direction.0 = direction_vec; // Update base value only
                 } else {
                     // For now, log that we're trying to set direction - we'll handle this differently
-                    warn!("Trying to set direction on effect without existing direction: {:?}", direction_vec);
+                    warn!(
+                        "Trying to set direction on effect without existing direction: {:?}",
+                        direction_vec
+                    );
                 }
             }
 
@@ -137,7 +140,11 @@ pub fn spawn_particle_effect(
             MAX_LIFETIME_FALLBACK
         };
 
-        entity_cmds.insert(ParticleLifeTimer::new_with_offset(max_lifetime, parent_entity, transform.translation));
+        entity_cmds.insert(ParticleLifeTimer::new_with_offset(
+            max_lifetime,
+            parent_entity,
+            transform.translation,
+        ));
     } else {
         // For spawner effects (spawn_bullet, spawn_blast), maintain parent-child relationship
         // For projectile trails, keep them independent for lifetime management

@@ -1,6 +1,5 @@
 use avian2d::prelude::RevoluteJoint;
 use bevy::{
-    color::Color,
     ecs::{
         entity::Entity,
         event::{EventReader, EventWriter},
@@ -8,8 +7,6 @@ use bevy::{
         system::{Commands, Query},
     },
     log::info,
-    prelude::Name,
-    sprite::Sprite,
     transform::components::Transform,
 };
 
@@ -67,9 +64,8 @@ pub(crate) fn mob_death_system(
     }
 }
 
-/// Detects when mobs with joints are destroyed and spawns green markers and blood effects at joint locations
+/// Detects when mobs with joints are destroyed and spawns blood effects at joint locations
 pub(crate) fn detect_destroyed_joints(
-    mut cmds: Commands,
     mut mob_death_event_reader: EventReader<MobDeathEvent>,
     mut particle_effect_event_writer: EventWriter<thetawave_particles::SpawnParticleEffectEvent>,
     joint_entities_q: Query<Entity, With<RevoluteJoint>>,
@@ -108,38 +104,11 @@ pub(crate) fn detect_destroyed_joints(
                             joint.local_anchor1
                         };
 
-                        let marker_position = remaining_transform.translation
-                            + (remaining_transform.rotation * anchor_pos.extend(0.0));
-
-                        info!(
-                            "🩸 Joint destroyed - anchor_pos: {:?}, remaining_transform.translation: {:?}, marker_position: {:?}",
-                            anchor_pos, remaining_transform.translation, marker_position
-                        );
-
-                        // Spawn a green debug marker as a child of the remaining entity
-                        cmds.entity(remaining_entity).with_children(|parent| {
-                            parent.spawn((
-                                Transform::from_translation(anchor_pos.extend(0.0)),
-                                Name::new(format!("JointMarker_{}", joint_entity.index())),
-                                Sprite {
-                                    color: Color::srgb(0.0, 1.0, 0.0), // Green color
-                                    custom_size: Some(bevy::math::Vec2::new(6.0, 6.0)),
-                                    ..Default::default()
-                                },
-                            ));
-                        });
-
                         // Calculate direction from joint to mob center for particle spray direction
                         // Joint world position = mob center + (mob rotation * anchor offset)
                         let joint_world_pos = remaining_transform.translation.truncate() + remaining_transform.rotation.mul_vec3(anchor_pos.extend(0.0)).truncate();
                         let direction_to_center = remaining_transform.translation.truncate() - joint_world_pos;
                         let spray_direction = -direction_to_center.normalize(); // Opposite direction (away from center)
-                        let spray_angle = spray_direction.y.atan2(spray_direction.x);
-
-                        info!(
-                            "🎯 Blood spray - joint_world_pos: {:?}, direction_to_center: {:?}, spray_direction: {:?}, spray_angle: {:.2}°",
-                            joint_world_pos, direction_to_center, spray_direction, spray_angle.to_degrees()
-                        );
 
                         // Spawn blood particle effect at the joint location
                         // Set parent to remaining entity and use local anchor position for offset tracking
@@ -159,10 +128,6 @@ pub(crate) fn detect_destroyed_joints(
                             },
                         );
 
-                        info!(
-                            "  📍 Spawned joint marker at {:?} on remaining entity {:?}",
-                            marker_position, remaining_entity
-                        );
                     }
 
                     is_jointed_mob = true;
