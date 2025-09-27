@@ -14,15 +14,41 @@ use bevy::{
 };
 
 use crate::MobDeathEvent;
+use thetawave_particles::{ActivateParticleEvent, ParticleLifeTimer};
+
+/// Helper function to deactivate particle spawners associated with a mob entity
+fn deactivate_mob_particle_spawners(
+    mob_entity: Entity,
+    particle_spawner_q: &Query<(Entity, &ParticleLifeTimer)>,
+    activate_particle_event_writer: &mut EventWriter<ActivateParticleEvent>,
+) {
+    for (spawner_entity, life_timer) in particle_spawner_q.iter() {
+        if life_timer.parent_entity == Some(mob_entity) {
+            activate_particle_event_writer.write(ActivateParticleEvent {
+                entity: spawner_entity,
+                active: false,
+            });
+        }
+    }
+}
 
 /// Checks for mob death events, despawns the entity and spawns an explosion
 pub(crate) fn mob_death_system(
     mut cmds: Commands,
     mut mob_death_event_reader: EventReader<MobDeathEvent>,
     mut particle_effect_event_writer: EventWriter<thetawave_particles::SpawnParticleEffectEvent>,
+    mut activate_particle_event_writer: EventWriter<ActivateParticleEvent>,
+    particle_spawner_q: Query<(Entity, &ParticleLifeTimer)>,
     mob_q: Query<&Transform>,
 ) {
     for event in mob_death_event_reader.read() {
+        // Deactivate any particle spawners associated with this mob
+        deactivate_mob_particle_spawners(
+            event.mob_entity,
+            &particle_spawner_q,
+            &mut activate_particle_event_writer,
+        );
+
         cmds.entity(event.mob_entity).despawn();
         if let Ok(mob_transform) = mob_q.get(event.mob_entity) {
             particle_effect_event_writer.write(thetawave_particles::SpawnParticleEffectEvent {
