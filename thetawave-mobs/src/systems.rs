@@ -61,6 +61,7 @@ pub(crate) fn mob_death_system(
                 needs_position_tracking: false,
                 is_one_shot: true,
                 scale: None,
+                direction: None,
             });
         }
     }
@@ -128,8 +129,21 @@ pub(crate) fn detect_destroyed_joints(
                             ));
                         });
 
+                        // Calculate direction from joint to mob center for particle spray direction
+                        // Joint world position = mob center + (mob rotation * anchor offset)
+                        let joint_world_pos = remaining_transform.translation.truncate() + remaining_transform.rotation.mul_vec3(anchor_pos.extend(0.0)).truncate();
+                        let direction_to_center = remaining_transform.translation.truncate() - joint_world_pos;
+                        let spray_direction = -direction_to_center.normalize(); // Opposite direction (away from center)
+                        let spray_angle = spray_direction.y.atan2(spray_direction.x);
+
+                        info!(
+                            "🎯 Blood spray - joint_world_pos: {:?}, direction_to_center: {:?}, spray_direction: {:?}, spray_angle: {:.2}°",
+                            joint_world_pos, direction_to_center, spray_direction, spray_angle.to_degrees()
+                        );
+
                         // Spawn blood particle effect at the joint location
                         // Set parent to remaining entity and use local anchor position for offset tracking
+                        // Rotate the effect to spray away from the mob center
                         particle_effect_event_writer.write(
                             thetawave_particles::SpawnParticleEffectEvent {
                                 parent_entity: Some(remaining_entity),
@@ -141,6 +155,7 @@ pub(crate) fn detect_destroyed_joints(
                                 needs_position_tracking: true,
                                 is_one_shot: false,
                                 scale: None,
+                                direction: Some(spray_direction),
                             },
                         );
 

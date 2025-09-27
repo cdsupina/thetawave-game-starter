@@ -88,6 +88,7 @@ pub(crate) fn timed_range_system(
                 } else {
                     None
                 },
+                direction: None,
             });
 
             cmds.entity(entity).despawn();
@@ -135,6 +136,7 @@ pub(crate) fn projectile_hit_system(
                 } else {
                     None
                 },
+                direction: None,
             });
 
             cmds.entity(entity).despawn();

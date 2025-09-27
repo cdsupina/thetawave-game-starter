@@ -40,35 +40,50 @@ pub fn spawn_particle_effect(
     is_one_shot: bool,
     needs_position_tracking: bool,
     scale: Option<f32>,
+    direction: Option<Vec2>,
     particle_effect_spawned_event_writer: &mut EventWriter<SpawnerParticleEffectSpawnedEvent>,
 ) -> Result<Entity, BevyError> {
-    let particle_effect_handle = if let Some(scale_value) = scale {
+    let particle_effect_handle = if scale.is_some() || direction.is_some() {
         let base_handle =
             AssetResolver::get_game_particle_effect(effect_type, extended_assets, assets)?;
         if let Some(base_effect) = particle_effects.get(&base_handle) {
-            let mut scaled_effect = base_effect.clone();
+            let mut modified_effect = base_effect.clone();
 
-            // Scale emission shape
-            match &mut scaled_effect.emission_shape {
-                EmissionShape::Circle(radius) => *radius *= scale_value,
-                EmissionShape::Point => {} // Point doesn't need scaling
+            // Apply scaling if provided
+            if let Some(scale_value) = scale {
+                // Scale emission shape
+                match &mut modified_effect.emission_shape {
+                    EmissionShape::Circle(radius) => *radius *= scale_value,
+                    EmissionShape::Point => {} // Point doesn't need scaling
+                }
+
+                // Scale the scale property if present
+                if let Some(ref mut scale_rval) = modified_effect.scale {
+                    scale_rval.0 *= scale_value; // Scale the base scale value
+                }
+
+                if let Some(ref mut scale_curve) = modified_effect.scale_curve
+                    && let Some(first_point) = scale_curve.points.first_mut()
+                {
+                    first_point.0 *= scale_value;
+                }
+
+                modified_effect.spawn_amount *= scale_value as u32;
             }
 
-            // Scale the scale property if present
-            if let Some(ref mut scale_rval) = scaled_effect.scale {
-                scale_rval.0 *= scale_value; // Scale the base scale value
+            // Apply direction override if provided
+            if let Some(direction_vec) = direction {
+                // Try to create the Rval structure manually or find alternative approach
+                if let Some(ref mut current_direction) = modified_effect.direction {
+                    current_direction.0 = direction_vec; // Update base value only
+                } else {
+                    // For now, log that we're trying to set direction - we'll handle this differently
+                    warn!("Trying to set direction on effect without existing direction: {:?}", direction_vec);
+                }
             }
 
-            if let Some(ref mut scale_curve) = scaled_effect.scale_curve
-                && let Some(first_point) = scale_curve.points.first_mut()
-            {
-                first_point.0 *= scale_value;
-            }
-
-            scaled_effect.spawn_amount *= scale_value as u32;
-
-            // Add scaled effect to assets and return new handle
-            particle_effects.add(scaled_effect)
+            // Add modified effect to assets and return new handle
+            particle_effects.add(modified_effect)
         } else {
             base_handle
         }
@@ -168,6 +183,7 @@ pub(crate) fn spawn_particle_effect_system(
             event.is_one_shot,
             event.needs_position_tracking,
             event.scale,
+            event.direction,
             &mut particle_effect_spawned_event_writer,
         )?;
     }

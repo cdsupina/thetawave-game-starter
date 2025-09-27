@@ -1,6 +1,6 @@
 use bevy::{
     ecs::{component::Component, entity::Entity, event::Event},
-    math::Vec3,
+    math::{Vec2, Vec3},
     time::{Timer, TimerMode},
     transform::components::Transform,
 };
@@ -24,6 +24,8 @@ pub struct SpawnParticleEffectEvent {
     pub is_one_shot: bool,
     /// Scale multiplier for particle effect properties (emission_shape, speeds, etc.)
     pub scale: Option<f32>,
+    /// Override the particle direction vector (replaces the direction from the asset)
+    pub direction: Option<Vec2>,
 }
 
 // Used for associating particle effects with spawners based on spawner keys

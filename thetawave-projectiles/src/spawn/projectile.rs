@@ -269,6 +269,7 @@ fn spawn_projectile(
             needs_position_tracking: true, // Projectile trails need position tracking
             is_one_shot: false,
             scale: Some(scale),
+            direction: None,
         });
     }
 

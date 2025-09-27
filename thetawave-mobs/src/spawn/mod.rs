@@ -321,6 +321,7 @@ fn spawn_mob(
                 needs_position_tracking: false, // Spawner effects use parent-child relationship
                 is_one_shot: false,
                 scale: None,
+                direction: None,
             });
         }
 
