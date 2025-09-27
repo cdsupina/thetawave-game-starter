@@ -1,16 +1,16 @@
 use avian2d::prelude::RevoluteJoint;
 use bevy::{
-    ecs::{
-        event::{EventReader, EventWriter},
-        system::{Commands, Query},
-        query::With,
-        entity::Entity,
-    },
-    transform::components::Transform,
-    log::info,
-    prelude::{Name},
-    sprite::Sprite,
     color::Color,
+    ecs::{
+        entity::Entity,
+        event::{EventReader, EventWriter},
+        query::With,
+        system::{Commands, Query},
+    },
+    log::info,
+    prelude::Name,
+    sprite::Sprite,
+    transform::components::Transform,
 };
 
 use crate::{MobDeathEvent, attributes::JointsComponent};
@@ -40,16 +40,20 @@ pub(crate) fn mob_death_system(
     }
 }
 
-/// Detects when mobs with joints are destroyed and spawns green markers at joint locations
+/// Detects when mobs with joints are destroyed and spawns green markers and blood effects at joint locations
 pub(crate) fn detect_destroyed_joints(
     mut cmds: Commands,
     mut mob_death_event_reader: EventReader<MobDeathEvent>,
+    mut particle_effect_event_writer: EventWriter<thetawave_particles::SpawnParticleEffectEvent>,
     joint_entities_q: Query<Entity, With<RevoluteJoint>>,
     all_joints_q: Query<&RevoluteJoint>,
     transform_q: Query<&Transform>,
 ) {
     for event in mob_death_event_reader.read() {
-        info!("🔍 Checking mob death event for Entity: {:?}", event.mob_entity);
+        info!(
+            "🔍 Checking mob death event for Entity: {:?}",
+            event.mob_entity
+        );
 
         let mut is_jointed_mob = false;
 
@@ -59,8 +63,7 @@ pub(crate) fn detect_destroyed_joints(
                 if joint.entity1 == event.mob_entity || joint.entity2 == event.mob_entity {
                     info!(
                         "🔗 JOINTED MOB DESTROYED! Entity: {:?} was connected via joint {:?}",
-                        event.mob_entity,
-                        joint_entity
+                        event.mob_entity, joint_entity
                     );
 
                     // Spawn marker on the remaining entity
@@ -78,8 +81,8 @@ pub(crate) fn detect_destroyed_joints(
                             joint.local_anchor1
                         };
 
-                        let marker_position = remaining_transform.translation +
-                            (remaining_transform.rotation * anchor_pos.extend(0.0));
+                        let marker_position = remaining_transform.translation
+                            + (remaining_transform.rotation * anchor_pos.extend(0.0));
 
                         // Spawn a green debug marker as a child of the remaining entity
                         cmds.entity(remaining_entity).with_children(|parent| {
@@ -94,10 +97,24 @@ pub(crate) fn detect_destroyed_joints(
                             ));
                         });
 
+                        // Spawn blood particle effect at the joint location using world position
+                        particle_effect_event_writer.write(
+                            thetawave_particles::SpawnParticleEffectEvent {
+                                parent_entity: Some(remaining_entity),
+                                effect_type: "blood".to_string(),
+                                faction: thetawave_core::Faction::Enemy,
+                                transform: Transform::from_translation(anchor_pos.extend(0.0)),
+                                is_active: true,
+                                key: Some(format!("joint_blood_{}", joint_entity.index())),
+                                needs_position_tracking: false,
+                                is_one_shot: false,
+                                scale: None,
+                            },
+                        );
+
                         info!(
                             "  📍 Spawned joint marker at {:?} on remaining entity {:?}",
-                            marker_position,
-                            remaining_entity
+                            marker_position, remaining_entity
                         );
                     }
 
@@ -108,7 +125,10 @@ pub(crate) fn detect_destroyed_joints(
         }
 
         if !is_jointed_mob {
-            info!("📝 Mob {:?} was not part of any joint relationship", event.mob_entity);
+            info!(
+                "📝 Mob {:?} was not part of any joint relationship",
+                event.mob_entity
+            );
         }
     }
 }
