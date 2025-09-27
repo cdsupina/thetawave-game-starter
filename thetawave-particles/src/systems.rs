@@ -33,8 +33,8 @@ pub(crate) fn particle_position_tracking_system(
         if let Some(parent_entity) = life_timer.parent_entity
             && let Ok(parent_transform) = parent_q.get(parent_entity)
         {
-            // Update particle spawner position to match parent
-            particle_transform.translation = parent_transform.translation;
+            // Update particle spawner position to match parent + offset
+            particle_transform.translation = parent_transform.translation + (parent_transform.rotation * life_timer.offset);
             particle_transform.rotation = parent_transform.rotation;
         }
         // If parent doesn't exist anymore, the spawner keeps its last known position

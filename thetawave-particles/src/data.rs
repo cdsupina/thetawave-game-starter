@@ -1,5 +1,6 @@
 use bevy::{
     ecs::{component::Component, entity::Entity, event::Event},
+    math::Vec3,
     time::{Timer, TimerMode},
     transform::components::Transform,
 };
@@ -46,6 +47,7 @@ pub struct ActivateParticleEvent {
 pub struct ParticleLifeTimer {
     pub timer: Timer,
     pub parent_entity: Option<Entity>,
+    pub offset: Vec3, // Offset from parent position
 }
 
 impl ParticleLifeTimer {
@@ -55,6 +57,16 @@ impl ParticleLifeTimer {
         Self {
             timer: Timer::from_seconds(lifetime_seconds, TimerMode::Once),
             parent_entity,
+            offset: Vec3::ZERO,
+        }
+    }
+
+    /// Create a new ParticleLifeTimer with an offset from the parent position
+    pub fn new_with_offset(lifetime_seconds: f32, parent_entity: Option<Entity>, offset: Vec3) -> Self {
+        Self {
+            timer: Timer::from_seconds(lifetime_seconds, TimerMode::Once),
+            parent_entity,
+            offset,
         }
     }
 }

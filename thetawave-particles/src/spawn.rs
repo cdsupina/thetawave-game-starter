@@ -122,7 +122,7 @@ pub fn spawn_particle_effect(
             MAX_LIFETIME_FALLBACK
         };
 
-        entity_cmds.insert(ParticleLifeTimer::new(max_lifetime, parent_entity));
+        entity_cmds.insert(ParticleLifeTimer::new_with_offset(max_lifetime, parent_entity, transform.translation));
     } else {
         // For spawner effects (spawn_bullet, spawn_blast), maintain parent-child relationship
         // For projectile trails, keep them independent for lifetime management

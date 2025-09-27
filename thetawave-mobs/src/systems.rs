@@ -13,7 +13,7 @@ use bevy::{
     transform::components::Transform,
 };
 
-use crate::{MobDeathEvent, attributes::JointsComponent};
+use crate::MobDeathEvent;
 
 /// Checks for mob death events, despawns the entity and spawns an explosion
 pub(crate) fn mob_death_system(
@@ -84,6 +84,11 @@ pub(crate) fn detect_destroyed_joints(
                         let marker_position = remaining_transform.translation
                             + (remaining_transform.rotation * anchor_pos.extend(0.0));
 
+                        info!(
+                            "🩸 Joint destroyed - anchor_pos: {:?}, remaining_transform.translation: {:?}, marker_position: {:?}",
+                            anchor_pos, remaining_transform.translation, marker_position
+                        );
+
                         // Spawn a green debug marker as a child of the remaining entity
                         cmds.entity(remaining_entity).with_children(|parent| {
                             parent.spawn((
@@ -97,7 +102,8 @@ pub(crate) fn detect_destroyed_joints(
                             ));
                         });
 
-                        // Spawn blood particle effect at the joint location using world position
+                        // Spawn blood particle effect at the joint location
+                        // Set parent to remaining entity and use local anchor position for offset tracking
                         particle_effect_event_writer.write(
                             thetawave_particles::SpawnParticleEffectEvent {
                                 parent_entity: Some(remaining_entity),
@@ -106,7 +112,7 @@ pub(crate) fn detect_destroyed_joints(
                                 transform: Transform::from_translation(anchor_pos.extend(0.0)),
                                 is_active: true,
                                 key: Some(format!("joint_blood_{}", joint_entity.index())),
-                                needs_position_tracking: false,
+                                needs_position_tracking: true,
                                 is_one_shot: false,
                                 scale: None,
                             },
