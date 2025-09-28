@@ -160,7 +160,7 @@ pub fn spawn_particle_effect(
     // Add blood effect manager for blood effects to enable random pulsing
     if effect_type == "blood" {
         cmds.entity(particle_entity)
-            .insert(BloodEffectManager::new(0.8, 1.2));
+            .insert(BloodEffectManager::new(1.0));
     }
 
     // Send spawned event if key is provided (for associating with spawners)

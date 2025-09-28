@@ -90,7 +90,6 @@ pub(crate) fn particle_lifetime_management_system(
 pub(crate) fn blood_effect_management_system(
     mut blood_effects_q: Query<(Entity, &mut BloodEffectManager, &ParticleLifeTimer)>,
     parent_q: Query<Entity, (Without<ParticleLifeTimer>,)>,
-    mut toggle_active_particle_event_writer: EventWriter<ToggleActiveParticleEvent>,
     mut active_particle_event_writer: EventWriter<ActivateParticleEvent>,
     time: Res<Time>,
 ) {
@@ -104,14 +103,19 @@ pub(crate) fn blood_effect_management_system(
                     active: false,
                 });
             } else if blood_manager.timer.tick(time.delta()).just_finished() {
-                // Toggle the particle effect and decrease the pulses remaining if the timer finished
-                toggle_active_particle_event_writer.write(ToggleActiveParticleEvent { entity });
+                // Decrease pulses remaining before switching states
                 blood_manager.pulses_remaining -= 1;
 
-                // If there are remaining pulses reset the timer to a random value
+                // If there are remaining pulses reset the timer to alternate interval
                 if blood_manager.pulses_remaining > 0 {
                     blood_manager.reset_timer_to_random();
                 }
+
+                // Set particle effect state based on BloodEffectManager's NEW state (after toggle)
+                active_particle_event_writer.write(ActivateParticleEvent {
+                    entity,
+                    active: blood_manager.is_active,
+                });
             }
         } else {
             warn!("No parent entity found for blood effect: {:?}", entity);

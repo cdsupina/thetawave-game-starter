@@ -7,6 +7,20 @@ use bevy::{
 use rand::Rng;
 use thetawave_core::Faction;
 
+const MAX_BLOOD_ACTIVE_INTERVAL: f32 = 3.0;
+const MIN_BLOOD_INACTIVE_INTERVAL: f32 = 0.1;
+const BLOOD_RANDOM_RANGE: f32 = 0.5;
+const MAX_PULSES: u8 = 100;
+
+// BloodEffectManager tuning constants
+const BLOOD_MIN_AMOUNT: f32 = 0.1;
+const BLOOD_MIN_PULSES: f32 = 5.0;
+const BLOOD_BASE_DECREASE_FACTOR: f32 = 0.85;
+const BLOOD_AMOUNT_DECREASE_FACTOR: f32 = 0.1;
+const BLOOD_MIN_TIMER_INTERVAL: f32 = 0.1;
+const BLOOD_INACTIVE_RANDOM_FACTOR: f32 = 0.3;
+const BLOOD_MIN_INACTIVE_TIMER_INTERVAL: f32 = 0.05;
+
 #[derive(Event)]
 pub struct SpawnParticleEffectEvent {
     /// If parent entity is some the particle effect should be spawned as a child entity of the parent
@@ -61,22 +75,39 @@ pub struct ParticleLifeTimer {
 /// Component for blood effects that need random pulsing behavior
 #[derive(Component, Debug)]
 pub struct BloodEffectManager {
-    pub min_interval: f32,
-    pub max_interval: f32,
+    pub max_active_interval: f32,
+    pub min_inactive_interval: f32,
     pub timer: Timer,
     pub pulses_remaining: u8,
     pub decrease_factor: f32,
+    pub is_active: bool,
 }
 
 impl BloodEffectManager {
-    /// Create a new BloodEffectManager with specified interval range
-    pub fn new(min_interval: f32, max_interval: f32) -> Self {
+    /// Create a new BloodEffectManager with specified blood amount
+    /// 0.0 is minimal blood, 1.0 is maximum blood intensity
+    pub fn new(amount: f32) -> Self {
+        let amount = amount.clamp(0.0, 1.0);
+
+        // Scale active interval based on amount (more blood = longer spurts)
+        let max_active_interval = MAX_BLOOD_ACTIVE_INTERVAL * amount.max(BLOOD_MIN_AMOUNT);
+
+        // Scale pulses based on amount (more blood = more spurts)
+        let pulses_remaining = (MAX_PULSES as f32 * amount).max(BLOOD_MIN_PULSES) as u8;
+
+        // Faster decay for smaller amounts (small wounds heal faster)
+        let decrease_factor = BLOOD_BASE_DECREASE_FACTOR + (amount * BLOOD_AMOUNT_DECREASE_FACTOR);
+
         Self {
-            timer: Self::reset_timer(min_interval, max_interval),
-            min_interval,
-            max_interval,
-            pulses_remaining: 50,
-            decrease_factor: 0.9,
+            timer: Self::reset_timer(
+                (max_active_interval - BLOOD_RANDOM_RANGE).max(BLOOD_MIN_TIMER_INTERVAL),
+                max_active_interval + BLOOD_RANDOM_RANGE,
+            ),
+            max_active_interval,
+            min_inactive_interval: MIN_BLOOD_INACTIVE_INTERVAL,
+            pulses_remaining,
+            decrease_factor,
+            is_active: true,
         }
     }
 
@@ -85,15 +116,35 @@ impl BloodEffectManager {
         Timer::from_seconds(random_duration, TimerMode::Once)
     }
 
-    /// Reset the timer with a new random interval
+    /// Reset the timer with a new random interval based on current state
     pub fn reset_timer_to_random(&mut self) {
-        self.update_intervals();
-        self.timer = Self::reset_timer(self.min_interval, self.max_interval);
+        // Toggle to next state
+        self.is_active = !self.is_active;
+
+        if self.is_active {
+            // Use active interval (blood spurting) with random variation
+            self.timer = Self::reset_timer(
+                (self.max_active_interval - BLOOD_RANDOM_RANGE).max(BLOOD_MIN_TIMER_INTERVAL),
+                self.max_active_interval + BLOOD_RANDOM_RANGE,
+            );
+        } else {
+            // Use inactive interval (pause between spurts) with random variation
+            // Use a smaller random range for inactive intervals to allow growth
+            let inactive_random_range = (self.min_inactive_interval * BLOOD_INACTIVE_RANDOM_FACTOR).min(BLOOD_RANDOM_RANGE);
+            self.timer = Self::reset_timer(
+                (self.min_inactive_interval - inactive_random_range).max(BLOOD_MIN_INACTIVE_TIMER_INTERVAL),
+                self.min_inactive_interval + inactive_random_range,
+            );
+            // Apply decay only after inactive period (blood spurts get weaker over time)
+            self.update_intervals();
+        }
     }
 
     fn update_intervals(&mut self) {
-        self.min_interval *= self.decrease_factor;
-        self.max_interval *= self.decrease_factor;
+        // Active intervals get shorter (blood spurts get weaker)
+        self.max_active_interval *= self.decrease_factor;
+        // Inactive intervals get longer (longer pauses between spurts)
+        self.min_inactive_interval /= self.decrease_factor;
     }
 }
 
