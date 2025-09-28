@@ -1,5 +1,6 @@
 use avian2d::prelude::RevoluteJoint;
 use bevy::{
+    color::Color,
     ecs::{
         entity::Entity,
         event::{EventReader, EventWriter},
@@ -12,6 +13,8 @@ use bevy::{
 
 use crate::MobDeathEvent;
 use thetawave_particles::{ActivateParticleEvent, ParticleLifeTimer};
+
+const XHITARA_BLOOD_COLOR: Color = Color::srgba(0.376, 0.820, 0.737, 1.0);
 
 /// Helper function to deactivate particle spawners associated with a mob entity
 fn deactivate_mob_particle_spawners(
@@ -51,7 +54,7 @@ pub(crate) fn mob_death_system(
             particle_effect_event_writer.write(thetawave_particles::SpawnParticleEffectEvent {
                 parent_entity: None,
                 effect_type: "explosion".to_string(),
-                faction: thetawave_core::Faction::Enemy,
+                color: thetawave_core::Faction::Enemy.get_color(),
                 transform: Transform::from_translation(mob_transform.translation),
                 is_active: true,
                 key: None,
@@ -106,8 +109,13 @@ pub(crate) fn detect_destroyed_joints(
 
                         // Calculate direction from joint to mob center for particle spray direction
                         // Joint world position = mob center + (mob rotation * anchor offset)
-                        let joint_world_pos = remaining_transform.translation.truncate() + remaining_transform.rotation.mul_vec3(anchor_pos.extend(0.0)).truncate();
-                        let direction_to_center = remaining_transform.translation.truncate() - joint_world_pos;
+                        let joint_world_pos = remaining_transform.translation.truncate()
+                            + remaining_transform
+                                .rotation
+                                .mul_vec3(anchor_pos.extend(0.0))
+                                .truncate();
+                        let direction_to_center =
+                            remaining_transform.translation.truncate() - joint_world_pos;
                         let spray_direction = -direction_to_center.normalize(); // Opposite direction (away from center)
 
                         // Spawn blood particle effect at the joint location
@@ -117,7 +125,7 @@ pub(crate) fn detect_destroyed_joints(
                             thetawave_particles::SpawnParticleEffectEvent {
                                 parent_entity: Some(remaining_entity),
                                 effect_type: "blood".to_string(),
-                                faction: thetawave_core::Faction::Enemy,
+                                color: XHITARA_BLOOD_COLOR,
                                 transform: Transform::from_translation(anchor_pos.extend(0.0)),
                                 is_active: true,
                                 key: Some(format!("joint_blood_{}", joint_entity.index())),
@@ -127,7 +135,6 @@ pub(crate) fn detect_destroyed_joints(
                                 direction: Some(spray_direction),
                             },
                         );
-
                     }
 
                     is_jointed_mob = true;

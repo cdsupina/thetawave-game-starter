@@ -262,7 +262,7 @@ fn spawn_projectile(
         particle_effect_event_writer.write(SpawnParticleEffectEvent {
             parent_entity: Some(particle_entity),
             effect_type: "projectile_trail".to_string(),
-            faction: faction.clone(),
+            color: faction.get_color(),
             transform: Transform::default(),
             is_active: true,
             key: None,

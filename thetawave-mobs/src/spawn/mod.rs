@@ -314,7 +314,7 @@ fn spawn_mob(
             particle_effect_event_writer.write(SpawnParticleEffectEvent {
                 parent_entity: Some(anchor_id),
                 effect_type: get_particle_effect_str(&spawner.projectile_type).to_string(),
-                faction: spawner.faction.clone(),
+                color: spawner.faction.get_color(),
                 transform,
                 is_active: false,
                 key: Some(key.to_string()),

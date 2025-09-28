@@ -1,5 +1,6 @@
 use bevy::{
     asset::Assets,
+    color::Color,
     ecs::{
         entity::Entity,
         error::{BevyError, Result},
@@ -14,10 +15,9 @@ use bevy::{
 };
 use bevy_enoki::{
     EmissionShape, NoAutoAabb, Particle2dEffect, ParticleEffectHandle, ParticleSpawner,
-    prelude::{OneShot, ParticleSpawnerState},
+    prelude::{ColorParticle2dMaterial, OneShot, ParticleSpawnerState},
 };
 use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
-use thetawave_core::Faction;
 use thetawave_core::{AppState, Cleanup};
 
 use crate::data::{
@@ -33,12 +33,13 @@ pub fn spawn_particle_effect(
     parent_entity: Option<Entity>,
     effect_type: &str,
     key: &Option<String>,
-    faction: &Faction,
+    color: &Color,
     transform: &Transform,
     extended_assets: &ExtendedGameAssets,
     assets: &GameAssets,
     materials: &ParticleMaterials,
     particle_effects: &mut Assets<Particle2dEffect>,
+    color_materials: &mut Assets<ColorParticle2dMaterial>,
     is_active: bool,
     is_one_shot: bool,
     needs_position_tracking: bool,
@@ -99,12 +100,11 @@ pub fn spawn_particle_effect(
 
     let mut entity_cmds = cmds.spawn((
         Name::new("Particle Effect"),
-        faction.clone(),
         Cleanup::<AppState> {
             states: vec![AppState::Game],
         },
         *transform,
-        ParticleSpawner(materials.get_material_for_faction(faction)),
+        ParticleSpawner(materials.get_material_for_color(color, color_materials)),
         ParticleSpawnerState {
             active: is_active, // Start inactive, will be activated by behavior system when needed
             ..Default::default()
@@ -160,7 +160,7 @@ pub fn spawn_particle_effect(
     // Add blood effect manager for blood effects to enable random pulsing
     if effect_type == "blood" {
         cmds.entity(particle_entity)
-            .insert(BloodEffectManager::new(1.0));
+            .insert(BloodEffectManager::new(0.5));
     }
 
     // Send spawned event if key is provided (for associating with spawners)
@@ -181,6 +181,7 @@ pub(crate) fn spawn_particle_effect_system(
     assets: Res<GameAssets>,
     materials: Res<ParticleMaterials>,
     mut particle_effects: ResMut<Assets<Particle2dEffect>>,
+    mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
     mut spawn_particle_effect_event_reader: EventReader<SpawnParticleEffectEvent>,
     mut particle_effect_spawned_event_writer: EventWriter<SpawnerParticleEffectSpawnedEvent>,
 ) -> Result {
@@ -190,12 +191,13 @@ pub(crate) fn spawn_particle_effect_system(
             event.parent_entity,
             &event.effect_type,
             &event.key,
-            &event.faction,
+            &event.color,
             &event.transform,
             &extended_assets,
             &assets,
             &materials,
             &mut particle_effects,
+            &mut color_materials,
             event.is_active,
             event.is_one_shot,
             event.needs_position_tracking,

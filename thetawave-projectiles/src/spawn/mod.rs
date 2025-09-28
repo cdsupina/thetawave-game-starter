@@ -23,7 +23,7 @@ impl FactionExt for Faction {
                 Faction::Ally => ALLY_BULLET_COLOR,
                 Faction::Enemy => ENEMY_BULLET_COLOR,
             },
-            ProjectileType::Blast => self.get_base_color().with_alpha(BLAST_ALPHA),
+            ProjectileType::Blast => self.get_color().with_alpha(BLAST_ALPHA),
         }
     }
 }

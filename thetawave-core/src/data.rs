@@ -13,8 +13,8 @@ pub enum Faction {
 }
 
 impl Faction {
-    /// Get basic faction color for simple use cases
-    pub fn get_base_color(&self) -> Color {
+    /// Get faction color
+    pub fn get_color(&self) -> Color {
         match self {
             Faction::Ally => ALLY_BASE_COLOR,
             Faction::Enemy => ENEMY_BASE_COLOR,

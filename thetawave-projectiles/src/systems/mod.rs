@@ -77,7 +77,7 @@ pub(crate) fn timed_range_system(
             spawn_particle_effect_event_writer.write(SpawnParticleEffectEvent {
                 parent_entity: None,
                 effect_type: get_despawn_particle_effect(projectile_type).to_string(),
-                faction: faction.clone(),
+                color: faction.get_color(),
                 transform: *transform,
                 is_active: true,
                 key: None,
@@ -125,7 +125,7 @@ pub(crate) fn projectile_hit_system(
             spawn_particle_effect_event_writer.write(SpawnParticleEffectEvent {
                 parent_entity: None,
                 effect_type: get_hit_particle_effect(projectile_type).to_string(),
-                faction: faction.clone(),
+                color: faction.get_color(),
                 transform: *transform,
                 is_active: true,
                 key: None,

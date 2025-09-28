@@ -1,11 +1,11 @@
 use bevy::{
+    color::Color,
     ecs::{component::Component, entity::Entity, event::Event},
     math::{Vec2, Vec3},
     time::{Timer, TimerMode},
     transform::components::Transform,
 };
 use rand::Rng;
-use thetawave_core::Faction;
 
 const MAX_BLOOD_ACTIVE_INTERVAL: f32 = 3.0;
 const MIN_BLOOD_INACTIVE_INTERVAL: f32 = 0.1;
@@ -27,8 +27,8 @@ pub struct SpawnParticleEffectEvent {
     /// The transform will be relative to the parent in this case
     pub parent_entity: Option<Entity>,
     pub effect_type: String,
-    /// For particle effects Faction determines the color
-    pub faction: Faction,
+    /// Color for the particle effect
+    pub color: Color,
     pub transform: Transform,
     pub is_active: bool,
     pub key: Option<String>,
