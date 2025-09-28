@@ -20,10 +20,13 @@ use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets, ParticleMa
 use thetawave_core::Faction;
 use thetawave_core::{AppState, Cleanup};
 
-use crate::data::{ParticleLifeTimer, SpawnParticleEffectEvent, SpawnerParticleEffectSpawnedEvent};
+use crate::data::{
+    BloodEffectManager, ParticleLifeTimer, SpawnParticleEffectEvent,
+    SpawnerParticleEffectSpawnedEvent,
+};
 
 const MANUAL_AABB_EXTENTS: f32 = 500.0;
-const MAX_LIFETIME_FALLBACK: f32 = 5.0;
+const MAX_LIFETIME_FALLBACK: f32 = 3.0;
 
 pub fn spawn_particle_effect(
     cmds: &mut Commands,
@@ -124,9 +127,10 @@ pub fn spawn_particle_effect(
 
     // Only add ParticleLifeTimer for effects that need position tracking (projectile trails)
     if needs_position_tracking {
-        let max_lifetime = if let Some(particle_effect) =
-            particle_effects.get(&particle_effect_handle)
-        {
+        // blood effect needs the fallback lifetime so it doesn't despawn after a single pulse
+        let max_lifetime = if effect_type == "blood" {
+            MAX_LIFETIME_FALLBACK
+        } else if let Some(particle_effect) = particle_effects.get(&particle_effect_handle) {
             // Calculate max possible lifetime: base_value + (base_value * randomness)
             let base_lifetime = particle_effect.lifetime.0;
             let randomness = particle_effect.lifetime.1;
@@ -151,6 +155,12 @@ pub fn spawn_particle_effect(
         if let Some(parent) = parent_entity {
             cmds.entity(parent).add_child(particle_entity);
         }
+    }
+
+    // Add blood effect manager for blood effects to enable random pulsing
+    if effect_type == "blood" {
+        cmds.entity(particle_entity)
+            .insert(BloodEffectManager::new(0.8, 1.2));
     }
 
     // Send spawned event if key is provided (for associating with spawners)

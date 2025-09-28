@@ -4,6 +4,7 @@ use bevy::{
     time::{Timer, TimerMode},
     transform::components::Transform,
 };
+use rand::Rng;
 use thetawave_core::Faction;
 
 #[derive(Event)]
@@ -43,6 +44,11 @@ pub struct ActivateParticleEvent {
     pub active: bool,
 }
 
+#[derive(Event)]
+pub struct ToggleActiveParticleEvent {
+    pub entity: Entity,
+}
+
 /// Component for managing particle spawner lifetime after parent despawn
 /// Allows particles to finish their natural lifetime before despawning the spawner
 #[derive(Component)]
@@ -53,13 +59,43 @@ pub struct ParticleLifeTimer {
 }
 
 /// Component for blood effects that need random pulsing behavior
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct BloodEffectManager {
-    pub next_toggle_time: f32,
     pub min_interval: f32,
     pub max_interval: f32,
+    pub timer: Timer,
+    pub pulses_remaining: u8,
+    pub decrease_factor: f32,
 }
 
+impl BloodEffectManager {
+    /// Create a new BloodEffectManager with specified interval range
+    pub fn new(min_interval: f32, max_interval: f32) -> Self {
+        Self {
+            timer: Self::reset_timer(min_interval, max_interval),
+            min_interval,
+            max_interval,
+            pulses_remaining: 50,
+            decrease_factor: 0.9,
+        }
+    }
+
+    fn reset_timer(min_interval: f32, max_interval: f32) -> Timer {
+        let random_duration = rand::rng().random_range(min_interval..=max_interval);
+        Timer::from_seconds(random_duration, TimerMode::Once)
+    }
+
+    /// Reset the timer with a new random interval
+    pub fn reset_timer_to_random(&mut self) {
+        self.update_intervals();
+        self.timer = Self::reset_timer(self.min_interval, self.max_interval);
+    }
+
+    fn update_intervals(&mut self) {
+        self.min_interval *= self.decrease_factor;
+        self.max_interval *= self.decrease_factor;
+    }
+}
 
 impl ParticleLifeTimer {
     /// Create a new ParticleLifeTimer with the given lifetime in seconds

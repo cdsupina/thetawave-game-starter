@@ -1,12 +1,14 @@
-use crate::data::{ActivateParticleEvent, ParticleLifeTimer};
+use crate::data::{
+    ActivateParticleEvent, BloodEffectManager, ParticleLifeTimer, ToggleActiveParticleEvent,
+};
 use bevy::{
     ecs::{
         entity::Entity,
-        event::EventReader,
+        event::{EventReader, EventWriter},
         query::Without,
         system::{Commands, Query, Res},
     },
-    log::info,
+    log::warn,
     time::Time,
     transform::components::Transform,
 };
@@ -24,6 +26,18 @@ pub(crate) fn activate_particle_effect_system(
     }
 }
 
+/// Listens for events to toggle particles active
+pub(crate) fn toggle_particle_effect_system(
+    mut particle_spawner_state_q: Query<&mut ParticleSpawnerState>,
+    mut toggle_active_particle_event_reader: EventReader<ToggleActiveParticleEvent>,
+) {
+    for event in toggle_active_particle_event_reader.read() {
+        if let Ok(mut spawner_state) = particle_spawner_state_q.get_mut(event.entity) {
+            spawner_state.active = !spawner_state.active;
+        }
+    }
+}
+
 /// Updates particle spawner positions to match their parent entity positions
 /// This maintains visual consistency while keeping spawners as independent entities
 pub(crate) fn particle_position_tracking_system(
@@ -35,7 +49,8 @@ pub(crate) fn particle_position_tracking_system(
             && let Ok(parent_transform) = parent_q.get(parent_entity)
         {
             // Update particle spawner position to match parent + offset
-            particle_transform.translation = parent_transform.translation + (parent_transform.rotation * life_timer.offset);
+            particle_transform.translation =
+                parent_transform.translation + (parent_transform.rotation * life_timer.offset);
             particle_transform.rotation = parent_transform.rotation;
         }
         // If parent doesn't exist anymore, the spawner keeps its last known position
@@ -52,19 +67,54 @@ pub(crate) fn particle_lifetime_management_system(
 ) {
     for (entity, mut life_timer, mut spawner_state) in particle_q.iter_mut() {
         // Check if parent still exists - if not, deactivate this orphaned effect
-        if let Some(parent_entity) = life_timer.parent_entity {
-            if parent_q.get(parent_entity).is_err() && spawner_state.active {
-                // Parent is gone and spawner is still active - deactivate it
-                spawner_state.active = false;
-                info!("🩸 Deactivated orphaned blood effect - parent {:?} no longer exists", parent_entity);
-            }
+        if let Some(parent_entity) = life_timer.parent_entity
+            && parent_q.get(parent_entity).is_err()
+            && spawner_state.active
+        {
+            // Parent is gone and spawner is still active - deactivate it
+            spawner_state.active = false;
         }
 
         // Only tick timer for inactive spawners (those that have been deactivated)
+        // Reset the timer if the effect activates again, good for effects like the blood effect that toggle active and inactive
         if !spawner_state.active && life_timer.timer.tick(time.delta()).just_finished() {
             // Timer expired, despawn the spawner entity
             cmds.entity(entity).despawn();
+        } else if spawner_state.active {
+            life_timer.timer.reset();
         }
     }
 }
 
+/// Manages blood effects with random activation/deactivation intervals for realistic pulsing
+pub(crate) fn blood_effect_management_system(
+    mut blood_effects_q: Query<(Entity, &mut BloodEffectManager, &ParticleLifeTimer)>,
+    parent_q: Query<Entity, (Without<ParticleLifeTimer>,)>,
+    mut toggle_active_particle_event_writer: EventWriter<ToggleActiveParticleEvent>,
+    mut active_particle_event_writer: EventWriter<ActivateParticleEvent>,
+    time: Res<Time>,
+) {
+    for (entity, mut blood_manager, life_timer) in blood_effects_q.iter_mut() {
+        // Every blood entity should have a parent entity specified due to it spawning from a joint
+        if let Some(parent_entity) = life_timer.parent_entity {
+            // Deactivate the blood effect if the pulses remaining is 0 or the parent no longer exists
+            if blood_manager.pulses_remaining == 0 || parent_q.get(parent_entity).is_err() {
+                active_particle_event_writer.write(ActivateParticleEvent {
+                    entity,
+                    active: false,
+                });
+            } else if blood_manager.timer.tick(time.delta()).just_finished() {
+                // Toggle the particle effect and decrease the pulses remaining if the timer finished
+                toggle_active_particle_event_writer.write(ToggleActiveParticleEvent { entity });
+                blood_manager.pulses_remaining -= 1;
+
+                // If there are remaining pulses reset the timer to a random value
+                if blood_manager.pulses_remaining > 0 {
+                    blood_manager.reset_timer_to_random();
+                }
+            }
+        } else {
+            warn!("No parent entity found for blood effect: {:?}", entity);
+        }
+    }
+}

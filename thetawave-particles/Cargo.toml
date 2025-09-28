@@ -11,6 +11,7 @@ bevy = { workspace = true, features = [
     "async_executor",
 ] }
 bevy_enoki.workspace = true
+rand.workspace = true
 
 
 [features]
