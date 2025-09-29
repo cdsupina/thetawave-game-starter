@@ -7,11 +7,12 @@ use bevy_enoki::EnokiPlugin;
 use thetawave_core::{AppState, GameState};
 
 use crate::{
+    SpawnBloodEffectEvent,
     data::{
         ActivateParticleEvent, SpawnParticleEffectEvent, SpawnerParticleEffectSpawnedEvent,
         ToggleActiveParticleEvent,
     },
-    spawn::spawn_particle_effect_system,
+    spawn::{spawn_blood_effect_system, spawn_particle_effect_system},
     systems::{
         activate_particle_effect_system, blood_effect_management_system,
         particle_lifetime_management_system, particle_position_tracking_system,
@@ -27,6 +28,7 @@ impl Plugin for ThetawaveParticlesPlugin {
         app.add_event::<SpawnerParticleEffectSpawnedEvent>();
         app.add_event::<ActivateParticleEvent>();
         app.add_event::<ToggleActiveParticleEvent>();
+        app.add_event::<SpawnBloodEffectEvent>();
 
         app.add_plugins(EnokiPlugin);
 
@@ -37,6 +39,7 @@ impl Plugin for ThetawaveParticlesPlugin {
                 activate_particle_effect_system,
                 toggle_particle_effect_system,
                 spawn_particle_effect_system,
+                spawn_blood_effect_system,
                 particle_lifetime_management_system,
                 blood_effect_management_system,
             )

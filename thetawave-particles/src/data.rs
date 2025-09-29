@@ -7,12 +7,11 @@ use bevy::{
 };
 use rand::Rng;
 
-const MAX_BLOOD_ACTIVE_INTERVAL: f32 = 3.0;
-const MIN_BLOOD_INACTIVE_INTERVAL: f32 = 0.1;
-const BLOOD_RANDOM_RANGE: f32 = 0.5;
-const MAX_PULSES: u8 = 100;
-
 // BloodEffectManager tuning constants
+const BLOOD_MAX_ACTIVE_INTERVAL: f32 = 3.0;
+const BLOOD_MIN_INACTIVE_INTERVAL: f32 = 0.1;
+const BLOOD_RANDOM_RANGE: f32 = 0.5;
+const BLOOD_MAX_PULSES: u8 = 100;
 const BLOOD_MIN_AMOUNT: f32 = 0.1;
 const BLOOD_MIN_PULSES: f32 = 5.0;
 const BLOOD_BASE_DECREASE_FACTOR: f32 = 0.85;
@@ -43,7 +42,22 @@ pub struct SpawnParticleEffectEvent {
     pub direction: Option<Vec2>,
 }
 
-// Used for associating particle effects with spawners based on spawner keys
+/// Event for spawning blood particle effects
+#[derive(Event)]
+pub struct SpawnBloodEffectEvent {
+    // A value that determines the intensity, amount, and length of the effect
+    pub amount: f32,
+    // Color of the blood,
+    pub color: Color,
+    // Entity that is bleeding
+    pub parent_entity: Entity,
+    // Position of the bleeding relative to the parent
+    pub position: Vec2,
+    // Direction for the blood spray
+    pub direction: Vec2,
+}
+
+/// Used for associating particle effects with spawners based on spawner keys
 #[derive(Event)]
 pub struct SpawnerParticleEffectSpawnedEvent {
     pub key: String,
@@ -90,10 +104,10 @@ impl BloodEffectManager {
         let amount = amount.clamp(0.0, 1.0);
 
         // Scale active interval based on amount (more blood = longer spurts)
-        let max_active_interval = MAX_BLOOD_ACTIVE_INTERVAL * amount.max(BLOOD_MIN_AMOUNT);
+        let max_active_interval = BLOOD_MAX_ACTIVE_INTERVAL * amount.max(BLOOD_MIN_AMOUNT);
 
         // Scale pulses based on amount (more blood = more spurts)
-        let pulses_remaining = (MAX_PULSES as f32 * amount).max(BLOOD_MIN_PULSES) as u8;
+        let pulses_remaining = (BLOOD_MAX_PULSES as f32 * amount).max(BLOOD_MIN_PULSES) as u8;
 
         // Faster decay for smaller amounts (small wounds heal faster)
         let decrease_factor = BLOOD_BASE_DECREASE_FACTOR + (amount * BLOOD_AMOUNT_DECREASE_FACTOR);
@@ -104,7 +118,7 @@ impl BloodEffectManager {
                 max_active_interval + BLOOD_RANDOM_RANGE,
             ),
             max_active_interval,
-            min_inactive_interval: MIN_BLOOD_INACTIVE_INTERVAL,
+            min_inactive_interval: BLOOD_MIN_INACTIVE_INTERVAL,
             pulses_remaining,
             decrease_factor,
             is_active: true,
@@ -130,9 +144,11 @@ impl BloodEffectManager {
         } else {
             // Use inactive interval (pause between spurts) with random variation
             // Use a smaller random range for inactive intervals to allow growth
-            let inactive_random_range = (self.min_inactive_interval * BLOOD_INACTIVE_RANDOM_FACTOR).min(BLOOD_RANDOM_RANGE);
+            let inactive_random_range =
+                (self.min_inactive_interval * BLOOD_INACTIVE_RANDOM_FACTOR).min(BLOOD_RANDOM_RANGE);
             self.timer = Self::reset_timer(
-                (self.min_inactive_interval - inactive_random_range).max(BLOOD_MIN_INACTIVE_TIMER_INTERVAL),
+                (self.min_inactive_interval - inactive_random_range)
+                    .max(BLOOD_MIN_INACTIVE_TIMER_INTERVAL),
                 self.min_inactive_interval + inactive_random_range,
             );
             // Apply decay only after inactive period (blood spurts get weaker over time)
