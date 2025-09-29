@@ -57,6 +57,17 @@ pub struct SpawnBloodEffectEvent {
     pub direction: Vec2,
 }
 
+/// Event for spawning projectile trail particle effects
+#[derive(Event)]
+pub struct SpawnProjectileTrailEffectEvent {
+    // Color of the trail
+    pub color: Color,
+    // Entity that the trail follows (projectile)
+    pub parent_entity: Entity,
+    // Scale factor for the trail effect
+    pub scale: f32,
+}
+
 /// Used for associating particle effects with spawners based on spawner keys
 #[derive(Event)]
 pub struct SpawnerParticleEffectSpawnedEvent {

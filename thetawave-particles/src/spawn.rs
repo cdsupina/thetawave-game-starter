@@ -9,7 +9,7 @@ use bevy::{
         system::{Commands, Res, ResMut},
     },
     log::warn,
-    math::Vec2,
+    math::{Vec2, Vec3},
     render::primitives::Aabb,
     transform::components::Transform,
 };
@@ -21,7 +21,7 @@ use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets, ParticleMa
 use thetawave_core::{AppState, Cleanup};
 
 use crate::{
-    SpawnBloodEffectEvent,
+    SpawnBloodEffectEvent, SpawnProjectileTrailEffectEvent,
     data::{
         BloodEffectManager, ParticleLifeTimer, SpawnParticleEffectEvent,
         SpawnerParticleEffectSpawnedEvent,
@@ -131,6 +131,92 @@ pub fn spawn_blood_effect(
     // Add blood effect manager with the specified amount
     cmds.entity(particle_entity)
         .insert(BloodEffectManager::new(amount));
+
+    Ok(particle_entity)
+}
+
+/// Dedicated function for spawning projectile trail effects
+pub fn spawn_projectile_trail(
+    cmds: &mut Commands,
+    parent_entity: Entity,
+    color: &Color,
+    scale: f32,
+    extended_assets: &ExtendedGameAssets,
+    assets: &GameAssets,
+    materials: &ParticleMaterials,
+    particle_effects: &mut Assets<Particle2dEffect>,
+    color_materials: &mut Assets<ColorParticle2dMaterial>,
+) -> Result<Entity, BevyError> {
+    // Get the projectile trail effect handle and apply scaling
+    let particle_effect_handle = {
+        let base_handle =
+            AssetResolver::get_game_particle_effect("projectile_trail", extended_assets, assets)?;
+        if let Some(base_effect) = particle_effects.get(&base_handle) {
+            let mut modified_effect = base_effect.clone();
+
+            // Apply scaling
+            // Scale emission shape
+            match &mut modified_effect.emission_shape {
+                EmissionShape::Circle(radius) => *radius *= scale,
+                EmissionShape::Point => {} // Point doesn't need scaling
+            }
+
+            // Scale the scale property if present
+            if let Some(ref mut scale_rval) = modified_effect.scale {
+                scale_rval.0 *= scale; // Scale the base scale value
+            }
+
+            if let Some(ref mut scale_curve) = modified_effect.scale_curve
+                && let Some(first_point) = scale_curve.points.first_mut()
+            {
+                first_point.0 *= scale;
+            }
+
+            modified_effect.spawn_amount *= scale as u32;
+
+            // Add modified effect to assets and return new handle
+            particle_effects.add(modified_effect)
+        } else {
+            base_handle
+        }
+    };
+
+    // Use default transform (origin) - position tracking will handle positioning
+    let transform = Transform::default();
+
+    // Spawn the particle entity with projectile trail specific defaults
+    let particle_entity = spawn_particle_entity(
+        cmds,
+        ParticleEffectHandle(particle_effect_handle.clone()),
+        transform,
+        color,
+        materials,
+        color_materials,
+        true,  // Projectile trails start active
+        false, // Projectile trails are not one-shot
+    );
+
+    // Calculate lifetime from the particle effect
+    let max_lifetime = if let Some(particle_effect) = particle_effects.get(&particle_effect_handle) {
+        let base_lifetime = particle_effect.lifetime.0;
+        let randomness = particle_effect.lifetime.1;
+        base_lifetime + (base_lifetime * randomness)
+    } else {
+        warn!(
+            "Projectile trail effect not loaded yet, using fallback lifetime: {}",
+            MAX_LIFETIME_FALLBACK
+        );
+        MAX_LIFETIME_FALLBACK
+    };
+
+    // Add ParticleLifeTimer for position tracking (following the projectile)
+    // Use Vec3::ZERO offset so trail follows projectile exactly
+    cmds.entity(particle_entity)
+        .insert(ParticleLifeTimer::new_with_offset(
+            max_lifetime,
+            Some(parent_entity),
+            Vec3::ZERO,
+        ));
 
     Ok(particle_entity)
 }
@@ -313,6 +399,32 @@ pub(crate) fn spawn_blood_effect_system(
             &event.color,
             event.position,
             event.direction,
+            &extended_assets,
+            &assets,
+            &materials,
+            &mut particle_effects,
+            &mut color_materials,
+        )?;
+    }
+
+    Ok(())
+}
+
+pub(crate) fn spawn_projectile_trail_system(
+    mut cmds: Commands,
+    extended_assets: Res<ExtendedGameAssets>,
+    assets: Res<GameAssets>,
+    materials: Res<ParticleMaterials>,
+    mut particle_effects: ResMut<Assets<Particle2dEffect>>,
+    mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
+    mut projectile_trail_event_reader: EventReader<SpawnProjectileTrailEffectEvent>,
+) -> Result {
+    for event in projectile_trail_event_reader.read() {
+        let _particle_entity = spawn_projectile_trail(
+            &mut cmds,
+            event.parent_entity,
+            &event.color,
+            event.scale,
             &extended_assets,
             &assets,
             &materials,

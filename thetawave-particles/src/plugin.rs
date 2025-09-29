@@ -9,10 +9,10 @@ use thetawave_core::{AppState, GameState};
 use crate::{
     SpawnBloodEffectEvent,
     data::{
-        ActivateParticleEvent, SpawnParticleEffectEvent, SpawnerParticleEffectSpawnedEvent,
-        ToggleActiveParticleEvent,
+        ActivateParticleEvent, SpawnParticleEffectEvent, SpawnProjectileTrailEffectEvent,
+        SpawnerParticleEffectSpawnedEvent, ToggleActiveParticleEvent,
     },
-    spawn::{spawn_blood_effect_system, spawn_particle_effect_system},
+    spawn::{spawn_blood_effect_system, spawn_particle_effect_system, spawn_projectile_trail_system},
     systems::{
         activate_particle_effect_system, blood_effect_management_system,
         particle_lifetime_management_system, particle_position_tracking_system,
@@ -29,6 +29,7 @@ impl Plugin for ThetawaveParticlesPlugin {
         app.add_event::<ActivateParticleEvent>();
         app.add_event::<ToggleActiveParticleEvent>();
         app.add_event::<SpawnBloodEffectEvent>();
+        app.add_event::<SpawnProjectileTrailEffectEvent>();
 
         app.add_plugins(EnokiPlugin);
 
@@ -40,6 +41,14 @@ impl Plugin for ThetawaveParticlesPlugin {
                 toggle_particle_effect_system,
                 spawn_particle_effect_system,
                 spawn_blood_effect_system,
+                spawn_projectile_trail_system,
+            )
+                .run_if(in_state(AppState::Game).and(in_state(GameState::Playing))),
+        );
+
+        app.add_systems(
+            Update,
+            (
                 particle_lifetime_management_system,
                 blood_effect_management_system,
             )
