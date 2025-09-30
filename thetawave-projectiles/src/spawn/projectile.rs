@@ -19,7 +19,7 @@ use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
 use thetawave_core::{AppState, Cleanup};
 use thetawave_core::{CollisionDamage, Faction};
-use thetawave_particles::{SpawnParticleEffectEvent, SpawnProjectileTrailEffectEvent};
+use thetawave_particles::SpawnProjectileTrailEffectEvent;
 use thetawave_physics::ThetawavePhysicsLayer;
 
 use crate::{
@@ -165,7 +165,6 @@ pub(crate) fn spawn_projectile_system(
     extended_assets: Res<ExtendedGameAssets>,
     mut spawn_projectile_event_reader: EventReader<SpawnProjectileEvent>,
     attributes_res: Res<ProjectileAttributesResource>,
-    mut particle_effect_event_writer: EventWriter<SpawnParticleEffectEvent>,
     mut projectile_trail_effect_event_writer: EventWriter<SpawnProjectileTrailEffectEvent>,
 ) -> Result {
     for event in spawn_projectile_event_reader.read() {
@@ -183,7 +182,6 @@ pub(crate) fn spawn_projectile_system(
             &game_assets,
             &extended_assets,
             &attributes_res,
-            &mut particle_effect_event_writer,
             &mut projectile_trail_effect_event_writer,
         )?;
     }
@@ -205,7 +203,6 @@ fn spawn_projectile(
     game_assets: &GameAssets,
     extended_assets: &ExtendedGameAssets,
     attributes_res: &ProjectileAttributesResource,
-    _particle_effect_event_writer: &mut EventWriter<SpawnParticleEffectEvent>,
     projectile_trail_effect_event_writer: &mut EventWriter<SpawnProjectileTrailEffectEvent>,
 ) -> Result<Vec<Entity>, BevyError> {
     let collision_layers = CollisionLayers::new(

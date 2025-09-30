@@ -9,13 +9,12 @@ use thetawave_core::{AppState, GameState};
 use crate::{
     SpawnBloodEffectEvent,
     data::{
-        ActivateParticleEvent, SpawnExplosionEffectEvent, SpawnParticleEffectEvent,
-        SpawnProjectileDespawnEffectEvent, SpawnProjectileHitEffectEvent,
-        SpawnProjectileTrailEffectEvent, SpawnSpawnerEffectEvent,
+        ActivateParticleEvent, SpawnExplosionEffectEvent, SpawnProjectileDespawnEffectEvent,
+        SpawnProjectileHitEffectEvent, SpawnProjectileTrailEffectEvent, SpawnSpawnerEffectEvent,
         SpawnerParticleEffectSpawnedEvent, ToggleActiveParticleEvent,
     },
     spawn::{
-        spawn_blood_effect_system, spawn_explosion_system, spawn_particle_effect_system,
+        spawn_blood_effect_system, spawn_explosion_system,
         spawn_projectile_despawn_effect_system, spawn_projectile_hit_effect_system,
         spawn_projectile_trail_system, spawn_spawner_effect_system,
     },
@@ -30,7 +29,6 @@ pub struct ThetawaveParticlesPlugin;
 
 impl Plugin for ThetawaveParticlesPlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        app.add_event::<SpawnParticleEffectEvent>();
         app.add_event::<SpawnerParticleEffectSpawnedEvent>();
         app.add_event::<ActivateParticleEvent>();
         app.add_event::<ToggleActiveParticleEvent>();
@@ -49,7 +47,6 @@ impl Plugin for ThetawaveParticlesPlugin {
                 particle_position_tracking_system,
                 activate_particle_effect_system,
                 toggle_particle_effect_system,
-                spawn_particle_effect_system,
                 spawn_blood_effect_system,
                 spawn_projectile_trail_system,
                 spawn_explosion_system,
