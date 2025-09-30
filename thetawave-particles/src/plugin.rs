@@ -10,12 +10,14 @@ use crate::{
     SpawnBloodEffectEvent,
     data::{
         ActivateParticleEvent, SpawnExplosionEffectEvent, SpawnParticleEffectEvent,
-        SpawnProjectileDespawnEffectEvent, SpawnProjectileTrailEffectEvent,
-        SpawnerParticleEffectSpawnedEvent, ToggleActiveParticleEvent,
+        SpawnProjectileDespawnEffectEvent, SpawnProjectileHitEffectEvent,
+        SpawnProjectileTrailEffectEvent, SpawnerParticleEffectSpawnedEvent,
+        ToggleActiveParticleEvent,
     },
     spawn::{
         spawn_blood_effect_system, spawn_explosion_system, spawn_particle_effect_system,
-        spawn_projectile_despawn_effect_system, spawn_projectile_trail_system,
+        spawn_projectile_despawn_effect_system, spawn_projectile_hit_effect_system,
+        spawn_projectile_trail_system,
     },
     systems::{
         activate_particle_effect_system, blood_effect_management_system,
@@ -36,6 +38,7 @@ impl Plugin for ThetawaveParticlesPlugin {
         app.add_event::<SpawnProjectileTrailEffectEvent>();
         app.add_event::<SpawnExplosionEffectEvent>();
         app.add_event::<SpawnProjectileDespawnEffectEvent>();
+        app.add_event::<SpawnProjectileHitEffectEvent>();
 
         app.add_plugins(EnokiPlugin);
 
@@ -50,6 +53,7 @@ impl Plugin for ThetawaveParticlesPlugin {
                 spawn_projectile_trail_system,
                 spawn_explosion_system,
                 spawn_projectile_despawn_effect_system,
+                spawn_projectile_hit_effect_system,
             )
                 .run_if(in_state(AppState::Game).and(in_state(GameState::Playing))),
         );

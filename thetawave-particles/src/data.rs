@@ -92,6 +92,19 @@ pub struct SpawnProjectileDespawnEffectEvent {
     pub scale: f32,
 }
 
+/// Event for spawning projectile hit particle effects
+#[derive(Event)]
+pub struct SpawnProjectileHitEffectEvent {
+    // Effect type (e.g., "hit_bullet" or "hit_blast")
+    pub effect_type: String,
+    // Color of the hit effect
+    pub color: Color,
+    // Position where the hit effect occurs
+    pub position: Vec2,
+    // Scale multiplier for the hit effect size
+    pub scale: f32,
+}
+
 /// Used for associating particle effects with spawners based on spawner keys
 #[derive(Event)]
 pub struct SpawnerParticleEffectSpawnedEvent {
