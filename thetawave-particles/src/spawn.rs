@@ -23,7 +23,8 @@ use thetawave_core::{AppState, Cleanup};
 use crate::{
     SpawnBloodEffectEvent, SpawnProjectileTrailEffectEvent,
     data::{
-        BloodEffectManager, ParticleLifeTimer, SpawnExplosionEffectEvent, SpawnParticleEffectEvent,
+        BloodEffectManager, ParticleLifeTimer, SpawnExplosionEffectEvent,
+        SpawnParticleEffectEvent, SpawnProjectileDespawnEffectEvent,
         SpawnerParticleEffectSpawnedEvent,
     },
 };
@@ -264,6 +265,60 @@ pub fn spawn_explosion(
     Ok(particle_entity)
 }
 
+/// Dedicated function for spawning projectile despawn effects
+pub fn spawn_projectile_despawn_effect(
+    cmds: &mut Commands,
+    effect_type: &str,
+    color: &Color,
+    position: Vec2,
+    scale: f32,
+    extended_assets: &ExtendedGameAssets,
+    assets: &GameAssets,
+    materials: &ParticleMaterials,
+    particle_effects: &mut Assets<Particle2dEffect>,
+    color_materials: &mut Assets<ColorParticle2dMaterial>,
+) -> Result<Entity, BevyError> {
+    // Get the despawn effect handle and apply scaling
+    let particle_effect_handle = {
+        let base_handle =
+            AssetResolver::get_game_particle_effect(effect_type, extended_assets, assets)?;
+        if let Some(base_effect) = particle_effects.get(&base_handle) {
+            let mut modified_effect = base_effect.clone();
+
+            // Apply scaling
+            // Scale emission shape
+            match &mut modified_effect.emission_shape {
+                EmissionShape::Circle(radius) => *radius *= scale,
+                EmissionShape::Point => {} // Point doesn't need scaling
+            }
+
+            modified_effect.spawn_amount *= scale as u32;
+
+            // Add modified effect to assets and return new handle
+            particle_effects.add(modified_effect)
+        } else {
+            base_handle
+        }
+    };
+
+    // Create transform from Vec2 position
+    let transform = Transform::from_translation(position.extend(0.0));
+
+    // Spawn the particle entity with despawn-specific defaults
+    let particle_entity = spawn_particle_entity(
+        cmds,
+        ParticleEffectHandle(particle_effect_handle.clone()),
+        transform,
+        color,
+        materials,
+        color_materials,
+        true, // Despawn effects start active
+        true, // Despawn effects are one-shot effects
+    );
+
+    Ok(particle_entity)
+}
+
 pub fn spawn_particle_effect(
     cmds: &mut Commands,
     parent_entity: Option<Entity>,
@@ -491,6 +546,33 @@ pub(crate) fn spawn_explosion_system(
     for event in explosion_event_reader.read() {
         let _particle_entity = spawn_explosion(
             &mut cmds,
+            &event.color,
+            event.position,
+            event.scale,
+            &extended_assets,
+            &assets,
+            &materials,
+            &mut particle_effects,
+            &mut color_materials,
+        )?;
+    }
+
+    Ok(())
+}
+
+pub(crate) fn spawn_projectile_despawn_effect_system(
+    mut cmds: Commands,
+    extended_assets: Res<ExtendedGameAssets>,
+    assets: Res<GameAssets>,
+    materials: Res<ParticleMaterials>,
+    mut particle_effects: ResMut<Assets<Particle2dEffect>>,
+    mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
+    mut despawn_event_reader: EventReader<SpawnProjectileDespawnEffectEvent>,
+) -> Result {
+    for event in despawn_event_reader.read() {
+        let _particle_entity = spawn_projectile_despawn_effect(
+            &mut cmds,
+            &event.effect_type,
             &event.color,
             event.position,
             event.scale,

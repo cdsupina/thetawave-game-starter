@@ -11,7 +11,10 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::AnimationEvents;
 use thetawave_core::Faction;
-use thetawave_particles::{ActivateParticleEvent, ParticleLifeTimer, SpawnParticleEffectEvent};
+use thetawave_particles::{
+    ActivateParticleEvent, ParticleLifeTimer, SpawnParticleEffectEvent,
+    SpawnProjectileDespawnEffectEvent,
+};
 
 use crate::{
     ProjectileType,
@@ -63,7 +66,7 @@ pub(crate) fn timed_range_system(
     particle_spawner_q: Query<(Entity, &ParticleLifeTimer)>,
     time: Res<Time>,
     mut activate_particle_event_writer: EventWriter<ActivateParticleEvent>,
-    mut spawn_particle_effect_event_writer: EventWriter<SpawnParticleEffectEvent>,
+    mut spawn_despawn_effect_event_writer: EventWriter<SpawnProjectileDespawnEffectEvent>,
 ) {
     for (entity, projectile_type, faction, transform, mut range) in projectile_q.iter_mut() {
         if range.timer.tick(time.delta()).just_finished() {
@@ -74,21 +77,11 @@ pub(crate) fn timed_range_system(
                 &mut activate_particle_event_writer,
             );
 
-            spawn_particle_effect_event_writer.write(SpawnParticleEffectEvent {
-                parent_entity: None,
+            spawn_despawn_effect_event_writer.write(SpawnProjectileDespawnEffectEvent {
                 effect_type: get_despawn_particle_effect(projectile_type).to_string(),
                 color: faction.get_color(),
-                transform: *transform,
-                is_active: true,
-                key: None,
-                needs_position_tracking: false,
-                is_one_shot: true,
-                scale: if transform.scale.x != 1.0 {
-                    Some(transform.scale.x)
-                } else {
-                    None
-                },
-                direction: None,
+                position: transform.translation.truncate(),
+                scale: transform.scale.x,
             });
 
             cmds.entity(entity).despawn();
