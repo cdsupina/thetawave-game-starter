@@ -68,6 +68,17 @@ pub struct SpawnProjectileTrailEffectEvent {
     pub scale: f32,
 }
 
+/// Event for spawning explosion particle effects
+#[derive(Event)]
+pub struct SpawnExplosionEffectEvent {
+    // Color of the explosion
+    pub color: Color,
+    // Position where the explosion occurs
+    pub position: Vec2,
+    // Scale multiplier for the explosion size
+    pub scale: f32,
+}
+
 /// Used for associating particle effects with spawners based on spawner keys
 #[derive(Event)]
 pub struct SpawnerParticleEffectSpawnedEvent {

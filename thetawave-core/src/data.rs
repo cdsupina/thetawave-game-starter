@@ -6,6 +6,17 @@ pub const ALLY_BASE_COLOR: Color = Color::srgba(3.0, 3.0, 0.0, 1.0); // Yellow w
 pub const ENEMY_BASE_COLOR: Color = Color::srgba(3.0, 0.0, 0.0, 1.0); // Red with bloom
 pub const XHITARA_BLOOD_COLOR: Color = Color::srgba(0.376, 0.820, 0.737, 1.0);
 
+/// Apply bloom to a color by multiplying RGB values by a factor
+pub fn with_bloom(color: Color, bloom: f32) -> Color {
+    let rgba = color.to_srgba();
+    Color::srgba(
+        rgba.red * bloom,
+        rgba.green * bloom,
+        rgba.blue * bloom,
+        rgba.alpha,
+    )
+}
+
 /// Used for designating factions for projectiles
 #[derive(Debug, Clone, Reflect, Deserialize, Component)]
 pub enum Faction {

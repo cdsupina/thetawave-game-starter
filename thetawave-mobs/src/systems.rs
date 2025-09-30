@@ -8,10 +8,12 @@ use bevy::{
     },
     transform::components::Transform,
 };
-use thetawave_core::XHITARA_BLOOD_COLOR;
+use thetawave_core::{XHITARA_BLOOD_COLOR, with_bloom};
 
 use crate::MobDeathEvent;
-use thetawave_particles::{ActivateParticleEvent, ParticleLifeTimer, SpawnBloodEffectEvent};
+use thetawave_particles::{
+    ActivateParticleEvent, ParticleLifeTimer, SpawnBloodEffectEvent, SpawnExplosionEffectEvent,
+};
 
 /// Helper function to deactivate particle spawners associated with a mob entity
 fn deactivate_mob_particle_spawners(
@@ -33,7 +35,7 @@ fn deactivate_mob_particle_spawners(
 pub(crate) fn mob_death_system(
     mut cmds: Commands,
     mut mob_death_event_reader: EventReader<MobDeathEvent>,
-    mut particle_effect_event_writer: EventWriter<thetawave_particles::SpawnParticleEffectEvent>,
+    mut explosion_event_writer: EventWriter<SpawnExplosionEffectEvent>,
     mut activate_particle_event_writer: EventWriter<ActivateParticleEvent>,
     particle_spawner_q: Query<(Entity, &ParticleLifeTimer)>,
     mob_q: Query<&Transform>,
@@ -46,19 +48,15 @@ pub(crate) fn mob_death_system(
             &mut activate_particle_event_writer,
         );
 
+        // Despawn the mob
         cmds.entity(event.mob_entity).despawn();
+
+        // Spawn an explosion particle effect
         if let Ok(mob_transform) = mob_q.get(event.mob_entity) {
-            particle_effect_event_writer.write(thetawave_particles::SpawnParticleEffectEvent {
-                parent_entity: None,
-                effect_type: "explosion".to_string(),
-                color: thetawave_core::Faction::Enemy.get_color(),
-                transform: Transform::from_translation(mob_transform.translation),
-                is_active: true,
-                key: None,
-                needs_position_tracking: false,
-                is_one_shot: true,
-                scale: None,
-                direction: None,
+            explosion_event_writer.write(SpawnExplosionEffectEvent {
+                color: with_bloom(XHITARA_BLOOD_COLOR, 2.0),
+                position: mob_transform.translation.truncate(),
+                scale: 1.0,
             });
         }
     }

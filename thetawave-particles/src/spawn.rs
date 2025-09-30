@@ -23,7 +23,7 @@ use thetawave_core::{AppState, Cleanup};
 use crate::{
     SpawnBloodEffectEvent, SpawnProjectileTrailEffectEvent,
     data::{
-        BloodEffectManager, ParticleLifeTimer, SpawnParticleEffectEvent,
+        BloodEffectManager, ParticleLifeTimer, SpawnExplosionEffectEvent, SpawnParticleEffectEvent,
         SpawnerParticleEffectSpawnedEvent,
     },
 };
@@ -161,17 +161,6 @@ pub fn spawn_projectile_trail(
                 EmissionShape::Point => {} // Point doesn't need scaling
             }
 
-            // Scale the scale property if present
-            if let Some(ref mut scale_rval) = modified_effect.scale {
-                scale_rval.0 *= scale; // Scale the base scale value
-            }
-
-            if let Some(ref mut scale_curve) = modified_effect.scale_curve
-                && let Some(first_point) = scale_curve.points.first_mut()
-            {
-                first_point.0 *= scale;
-            }
-
             modified_effect.spawn_amount *= scale as u32;
 
             // Add modified effect to assets and return new handle
@@ -197,7 +186,8 @@ pub fn spawn_projectile_trail(
     );
 
     // Calculate lifetime from the particle effect
-    let max_lifetime = if let Some(particle_effect) = particle_effects.get(&particle_effect_handle) {
+    let max_lifetime = if let Some(particle_effect) = particle_effects.get(&particle_effect_handle)
+    {
         let base_lifetime = particle_effect.lifetime.0;
         let randomness = particle_effect.lifetime.1;
         base_lifetime + (base_lifetime * randomness)
@@ -217,6 +207,59 @@ pub fn spawn_projectile_trail(
             Some(parent_entity),
             Vec3::ZERO,
         ));
+
+    Ok(particle_entity)
+}
+
+/// Dedicated function for spawning explosion effects
+pub fn spawn_explosion(
+    cmds: &mut Commands,
+    color: &Color,
+    position: Vec2,
+    scale: f32,
+    extended_assets: &ExtendedGameAssets,
+    assets: &GameAssets,
+    materials: &ParticleMaterials,
+    particle_effects: &mut Assets<Particle2dEffect>,
+    color_materials: &mut Assets<ColorParticle2dMaterial>,
+) -> Result<Entity, BevyError> {
+    // Get the explosion effect handle and apply scaling
+    let particle_effect_handle = {
+        let base_handle =
+            AssetResolver::get_game_particle_effect("explosion", extended_assets, assets)?;
+        if let Some(base_effect) = particle_effects.get(&base_handle) {
+            let mut modified_effect = base_effect.clone();
+
+            // Apply scaling
+            // Scale emission shape
+            match &mut modified_effect.emission_shape {
+                EmissionShape::Circle(radius) => *radius *= scale,
+                EmissionShape::Point => {} // Point doesn't need scaling
+            }
+
+            modified_effect.spawn_amount *= scale as u32;
+
+            // Add modified effect to assets and return new handle
+            particle_effects.add(modified_effect)
+        } else {
+            base_handle
+        }
+    };
+
+    // Create transform from Vec2 position
+    let transform = Transform::from_translation(position.extend(0.0));
+
+    // Spawn the particle entity with explosion-specific defaults
+    let particle_entity = spawn_particle_entity(
+        cmds,
+        ParticleEffectHandle(particle_effect_handle.clone()),
+        transform,
+        color,
+        materials,
+        color_materials,
+        true, // Explosions start active
+        true, // Explosions are one-shot effects
+    );
 
     Ok(particle_entity)
 }
@@ -424,6 +467,32 @@ pub(crate) fn spawn_projectile_trail_system(
             &mut cmds,
             event.parent_entity,
             &event.color,
+            event.scale,
+            &extended_assets,
+            &assets,
+            &materials,
+            &mut particle_effects,
+            &mut color_materials,
+        )?;
+    }
+
+    Ok(())
+}
+
+pub(crate) fn spawn_explosion_system(
+    mut cmds: Commands,
+    extended_assets: Res<ExtendedGameAssets>,
+    assets: Res<GameAssets>,
+    materials: Res<ParticleMaterials>,
+    mut particle_effects: ResMut<Assets<Particle2dEffect>>,
+    mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
+    mut explosion_event_reader: EventReader<SpawnExplosionEffectEvent>,
+) -> Result {
+    for event in explosion_event_reader.read() {
+        let _particle_entity = spawn_explosion(
+            &mut cmds,
+            &event.color,
+            event.position,
             event.scale,
             &extended_assets,
             &assets,
