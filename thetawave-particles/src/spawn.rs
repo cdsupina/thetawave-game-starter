@@ -25,7 +25,8 @@ use crate::{
     data::{
         BloodEffectManager, ParticleLifeTimer, SpawnExplosionEffectEvent,
         SpawnParticleEffectEvent, SpawnProjectileDespawnEffectEvent,
-        SpawnProjectileHitEffectEvent, SpawnerParticleEffectSpawnedEvent,
+        SpawnProjectileHitEffectEvent, SpawnSpawnerEffectEvent,
+        SpawnerParticleEffectSpawnedEvent,
     },
 };
 
@@ -373,6 +374,53 @@ pub fn spawn_projectile_hit_effect(
     Ok(particle_entity)
 }
 
+/// Dedicated function for spawning projectile spawner effects on mobs
+pub fn spawn_spawner_effect(
+    cmds: &mut Commands,
+    parent_entity: Entity,
+    effect_type: &str,
+    color: &Color,
+    position: Vec2,
+    key: &str,
+    extended_assets: &ExtendedGameAssets,
+    assets: &GameAssets,
+    materials: &ParticleMaterials,
+    _particle_effects: &mut Assets<Particle2dEffect>,
+    color_materials: &mut Assets<ColorParticle2dMaterial>,
+    spawner_event_writer: &mut EventWriter<SpawnerParticleEffectSpawnedEvent>,
+) -> Result<Entity, BevyError> {
+    // Get the spawner effect handle (no scaling needed)
+    let particle_effect_handle =
+        AssetResolver::get_game_particle_effect(effect_type, extended_assets, assets)?;
+
+    // Create transform from Vec2 position
+    let transform = Transform::from_translation(position.extend(0.0));
+
+    // Spawn the particle entity with spawner-specific defaults
+    let particle_entity = spawn_particle_entity(
+        cmds,
+        ParticleEffectHandle(particle_effect_handle.clone()),
+        transform,
+        color,
+        materials,
+        color_materials,
+        false, // Spawner effects start inactive
+        false, // Spawner effects are not one-shot
+    );
+
+    // Add particle as child of parent entity (uses parent-child relationship, not position tracking)
+    cmds.entity(parent_entity).add_child(particle_entity);
+
+    // Emit event to associate this particle effect with the spawner
+    spawner_event_writer.write(SpawnerParticleEffectSpawnedEvent {
+        key: key.to_string(),
+        effect_entity: particle_entity,
+        parent_entity,
+    });
+
+    Ok(particle_entity)
+}
+
 pub fn spawn_particle_effect(
     cmds: &mut Commands,
     parent_entity: Option<Entity>,
@@ -662,6 +710,36 @@ pub(crate) fn spawn_projectile_hit_effect_system(
             &materials,
             &mut particle_effects,
             &mut color_materials,
+        )?;
+    }
+
+    Ok(())
+}
+
+pub(crate) fn spawn_spawner_effect_system(
+    mut cmds: Commands,
+    extended_assets: Res<ExtendedGameAssets>,
+    assets: Res<GameAssets>,
+    materials: Res<ParticleMaterials>,
+    mut particle_effects: ResMut<Assets<Particle2dEffect>>,
+    mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
+    mut spawner_event_reader: EventReader<SpawnSpawnerEffectEvent>,
+    mut spawner_particle_event_writer: EventWriter<SpawnerParticleEffectSpawnedEvent>,
+) -> Result {
+    for event in spawner_event_reader.read() {
+        let _particle_entity = spawn_spawner_effect(
+            &mut cmds,
+            event.parent_entity,
+            &event.effect_type,
+            &event.color,
+            event.position,
+            &event.key,
+            &extended_assets,
+            &assets,
+            &materials,
+            &mut particle_effects,
+            &mut color_materials,
+            &mut spawner_particle_event_writer,
         )?;
     }
 

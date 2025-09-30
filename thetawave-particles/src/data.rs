@@ -105,6 +105,21 @@ pub struct SpawnProjectileHitEffectEvent {
     pub scale: f32,
 }
 
+/// Event for spawning projectile spawner particle effects on mobs
+#[derive(Event)]
+pub struct SpawnSpawnerEffectEvent {
+    // Parent entity (the mob that owns this spawner)
+    pub parent_entity: Entity,
+    // Effect type (e.g., "spawn_bullet" or "spawn_blast")
+    pub effect_type: String,
+    // Color of the spawner effect
+    pub color: Color,
+    // Position relative to the parent entity
+    pub position: Vec2,
+    // Key for associating this effect with a specific spawner
+    pub key: String,
+}
+
 /// Used for associating particle effects with spawners based on spawner keys
 #[derive(Event)]
 pub struct SpawnerParticleEffectSpawnedEvent {
