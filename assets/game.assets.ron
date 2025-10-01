@@ -56,7 +56,8 @@
             "media/particles/despawn_bullet.ron",
             "media/particles/hit_blast.ron",
             "media/particles/hit_bullet.ron",
-            "media/particles/explosion.ron"
+            "media/particles/explosion.ron",
+            "media/particles/blood.ron",
         ]
     ),
 })

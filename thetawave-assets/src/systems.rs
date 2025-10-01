@@ -31,11 +31,11 @@ pub(super) fn setup_particle_materials_system(
 ) {
     // Create faction-specific color materials
     let ally_material = materials.add(ColorParticle2dMaterial::new(
-        Faction::Ally.get_base_color().into(),
+        Faction::Ally.get_color().into(),
     ));
 
     let enemy_material = materials.add(ColorParticle2dMaterial::new(
-        Faction::Enemy.get_base_color().into(),
+        Faction::Enemy.get_color().into(),
     ));
 
     // Insert the ParticleMaterials resource

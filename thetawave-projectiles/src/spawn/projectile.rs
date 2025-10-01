@@ -19,7 +19,7 @@ use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
 use thetawave_core::{AppState, Cleanup};
 use thetawave_core::{CollisionDamage, Faction};
-use thetawave_particles::SpawnParticleEffectEvent;
+use thetawave_particles::SpawnProjectileTrailEffectEvent;
 use thetawave_physics::ThetawavePhysicsLayer;
 
 use crate::{
@@ -165,7 +165,7 @@ pub(crate) fn spawn_projectile_system(
     extended_assets: Res<ExtendedGameAssets>,
     mut spawn_projectile_event_reader: EventReader<SpawnProjectileEvent>,
     attributes_res: Res<ProjectileAttributesResource>,
-    mut particle_effect_event_writer: EventWriter<SpawnParticleEffectEvent>,
+    mut projectile_trail_effect_event_writer: EventWriter<SpawnProjectileTrailEffectEvent>,
 ) -> Result {
     for event in spawn_projectile_event_reader.read() {
         let _spawned_entities = spawn_projectile(
@@ -182,7 +182,7 @@ pub(crate) fn spawn_projectile_system(
             &game_assets,
             &extended_assets,
             &attributes_res,
-            &mut particle_effect_event_writer,
+            &mut projectile_trail_effect_event_writer,
         )?;
     }
 
@@ -203,7 +203,7 @@ fn spawn_projectile(
     game_assets: &GameAssets,
     extended_assets: &ExtendedGameAssets,
     attributes_res: &ProjectileAttributesResource,
-    particle_effect_event_writer: &mut EventWriter<SpawnParticleEffectEvent>,
+    projectile_trail_effect_event_writer: &mut EventWriter<SpawnProjectileTrailEffectEvent>,
 ) -> Result<Vec<Entity>, BevyError> {
     let collision_layers = CollisionLayers::new(
         get_projectile_collision_membership(faction),
@@ -224,6 +224,7 @@ fn spawn_projectile(
         // Calculate the projectile's rotation from its velocity vector
         let rotation = projectile_velocity.y.atan2(projectile_velocity.x);
 
+        // Spawn the projectile
         let mut entity_cmds = cmds.spawn((
             Name::new("Projectile"),
             projectile_type.clone(),
@@ -251,24 +252,20 @@ fn spawn_projectile(
             ProjectileRangeComponent::new(range_seconds),
         ));
 
-        let particle_entity = entity_cmds.id();
-
+        // Add the sensor component for projectiles tha are not "physical"
         if projectile_attributes.is_sensor {
             entity_cmds.insert(Sensor);
         }
 
+        let particle_entity = entity_cmds.id();
+
         spawned_entities.push(particle_entity);
 
-        particle_effect_event_writer.write(SpawnParticleEffectEvent {
-            parent_entity: Some(particle_entity),
-            effect_type: "projectile_trail".to_string(),
-            faction: faction.clone(),
-            transform: Transform::default(),
-            is_active: true,
-            key: None,
-            needs_position_tracking: true, // Projectile trails need position tracking
-            is_one_shot: false,
-            scale: Some(scale),
+        // Spawn the particle trail effect
+        projectile_trail_effect_event_writer.write(SpawnProjectileTrailEffectEvent {
+            color: faction.get_color(),
+            parent_entity: particle_entity,
+            scale,
         });
     }
 

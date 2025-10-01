@@ -1,5 +1,6 @@
 use bevy::{
-    asset::Handle,
+    asset::{Assets, Handle},
+    color::Color,
     image::Image,
     platform::collections::HashMap,
     prelude::{Event, Res, Resource},
@@ -37,7 +38,7 @@ pub struct ExtendedGameAssets {
     pub particle_effects: Option<HashMap<AssetFileStem, Handle<Particle2dEffect>>>,
 }
 
-/// Resource for storing faction-based particle materials
+/// Resource for storing particle materials
 #[derive(Resource)]
 pub struct ParticleMaterials {
     pub ally_material: Handle<ColorParticle2dMaterial>,
@@ -50,6 +51,23 @@ impl ParticleMaterials {
             Faction::Ally => self.ally_material.clone(),
             Faction::Enemy => self.enemy_material.clone(),
         }
+    }
+
+    pub fn get_material_for_color(
+        &self,
+        color: &Color,
+        materials: &mut Assets<ColorParticle2dMaterial>,
+    ) -> Handle<ColorParticle2dMaterial> {
+        // Check if this is a faction color first
+        if *color == Faction::Ally.get_color() {
+            return self.ally_material.clone();
+        }
+        if *color == Faction::Enemy.get_color() {
+            return self.enemy_material.clone();
+        }
+
+        // Create a new material for the custom color
+        materials.add(ColorParticle2dMaterial::new((*color).into()))
     }
 }
 

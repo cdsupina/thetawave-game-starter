@@ -4,6 +4,8 @@ mod spawn;
 mod systems;
 
 pub use data::{
-    ActivateParticleEvent, ParticleLifeTimer, SpawnParticleEffectEvent, SpawnerParticleEffectSpawnedEvent,
+    ActivateParticleEvent, BloodEffectManager, ParticleLifeTimer, SpawnBloodEffectEvent,
+    SpawnExplosionEffectEvent, SpawnProjectileDespawnEffectEvent, SpawnProjectileHitEffectEvent,
+    SpawnProjectileTrailEffectEvent, SpawnSpawnerEffectEvent, SpawnerParticleEffectSpawnedEvent,
 };
 pub use plugin::ThetawaveParticlesPlugin;
