@@ -29,7 +29,8 @@ scripts/pcloud/venv/
 .zed/
 
 # Ignore claude files
-.claude/
+.claude/settings.local.json
+.serena/
 
 # Ignore Trunk build output
 thetawave-test-game/dist/
