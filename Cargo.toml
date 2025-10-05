@@ -20,28 +20,32 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace.dependencies]
-bevy = { version = "0.17.1", default-features = false }
-bevy_platform = "0.17.1"
+bevy = { version = "0.17.2", default-features = false }
+bevy_platform = "0.17.2"
 bevy_egui = { version = "0.37.0", default-features = false, features = [
     "open_url",
     "default_fonts",
     "render",
 ] }
 bevy-alt-ui-navigation-lite = "0.5.0"
-bevy_asset_loader = { version = "0.23.0", features = ["progress_tracking"] } # subscribed to pr
-bevy_embedded_assets = "0.13.0" # subscribed to pr
-bevy_state_macros = "0.17.1"
+bevy_asset_loader = { version = "0.23.0", features = [
+    "progress_tracking",
+] } # subscribed to pr
+bevy_embedded_assets = "0.14.0"
+bevy_state_macros = "0.17.2"
 rand = "0.9.2"
 webbrowser = "1.0.5"
-bevy_aseprite_ultra = "0.6.1" # pr not created
+bevy_aseprite_ultra = "0.7.0"
 iyes_progress = "0.14.0" # subscribed to pr
-bevy_kira_audio = { version = "0.23.0", features = ["mp3", "wav"] } # subscribed to pr
+bevy_kira_audio = { version = "0.24.0", features = ["mp3", "wav"] }
 serde = "1.0.225"
 bevy-persistent = { version = "0.8.0", features = ["all"] } # subscribed to pr
 dirs = "6.0.0"
 leafwing-input-manager = "0.18.0"
 leafwing_abilities = "0.11.0" # pr not created
-avian2d = { version = "0.3.1", features = ["debug-plugin"] } # pr not created, recommending main branch
+avian2d = { version = "0.3.1", features = [
+    "debug-plugin",
+] } # pr not created, recommending main branch
 strum = "0.27.2"
 strum_macros = "0.27.2"
 winit = "0.30.12"
@@ -50,7 +54,7 @@ itertools = "0.14.0"
 toml = "0.9.6"
 bevy_behave = "0.3.0" # pr not created
 bevy-inspector-egui = "0.34.0"
-bevy_enoki = { git = "https://github.com/Lommix/bevy_enoki.git", rev = "5a6dd95f838c9900d519a6548f0ae98edcfa1c02" } # subscribed to pr
+bevy_enoki = "0.5"
 web-sys = "0.3.80"
 
 [profile.dev]
