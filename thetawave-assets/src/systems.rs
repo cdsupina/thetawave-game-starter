@@ -1,23 +1,36 @@
+//! Systems for asset management in Thetawave.
+
 use crate::ExtendedGameAssets;
 
-use super::data::ParticleMaterials;
-use super::{GameAssets, LoadingProgressEvent};
+use super::data::{GameAssets, ParticleMaterials};
 use bevy::{
     asset::Assets,
     ecs::system::Commands,
-    prelude::{EventWriter, Res, ResMut},
+    prelude::ResMut,
 };
 use bevy_enoki::prelude::ColorParticle2dMaterial;
-use iyes_progress::ProgressTracker;
 use thetawave_core::Faction;
+
+#[cfg(feature = "asset_loader")]
+use bevy::prelude::{MessageWriter, Res};
+
+#[cfg(feature = "asset_loader")]
+use super::data::LoadingProgressEvent;
+
+#[cfg(feature = "asset_loader")]
+use iyes_progress::ProgressTracker;
+
+#[cfg(feature = "asset_loader")]
 use thetawave_core::AppState;
 
-/// System for getting loading progress and sending the value as an event
+/// System for getting loading progress and sending the value as a message
+/// Only available when asset_loader feature is enabled
+#[cfg(feature = "asset_loader")]
 pub(super) fn get_loading_progress_system(
     progress: Res<ProgressTracker<AppState>>,
-    mut loading_event_writer: EventWriter<LoadingProgressEvent>,
+    mut loading_event_writer: MessageWriter<LoadingProgressEvent>,
 ) {
-    let progress = progress.get_global_progress();
+    let progress = progress.global_progress();
     loading_event_writer.write(LoadingProgressEvent(
         progress.done as f32 / progress.total as f32,
     ));

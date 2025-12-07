@@ -2,7 +2,7 @@ use avian2d::prelude::{AngularVelocity, LinearVelocity, RevoluteJoint};
 use bevy::{
     ecs::{
         entity::Entity,
-        event::{EventReader, EventWriter},
+        message::{MessageReader, MessageWriter},
         query::With,
         system::{Commands, Local, Query, Res},
     },
@@ -31,7 +31,7 @@ use crate::{
 /// Sends TransmitBehaviorEvents
 pub(super) fn transmit_system(
     mob_behavior_q: Query<(&MobBehaviorComponent, &BehaveCtx)>,
-    mut transmit_event_writer: EventWriter<TransmitBehaviorEvent>,
+    mut transmit_event_writer: MessageWriter<TransmitBehaviorEvent>,
 ) {
     for (mob_behavior, ctx) in mob_behavior_q.iter() {
         for behavior in mob_behavior.behaviors.iter() {
@@ -52,7 +52,7 @@ pub(super) fn transmit_system(
 
 /// Reads TransmitBehaviorEvents and runs the sent behaviors for the designated mobs with matching BehaviorReceiverComponents
 pub(super) fn receive_system(
-    mut transmit_event_reader: EventReader<TransmitBehaviorEvent>,
+    mut transmit_event_reader: MessageReader<TransmitBehaviorEvent>,
     mut mob_q: Query<(
         &crate::MobMarker,
         &BehaviorReceiverComponent,
@@ -580,7 +580,7 @@ fn move_forward(
 pub(super) fn spawn_mob_system(
     mob_behavior_q: Query<(&MobBehaviorComponent, &BehaveCtx)>,
     mut mob_q: Query<(&mut MobSpawnerComponent, &Transform)>,
-    mut spawn_mob_event_writer: EventWriter<SpawnMobEvent>,
+    mut spawn_mob_event_writer: MessageWriter<SpawnMobEvent>,
     time: Res<Time>,
 ) {
     for (mob_behavior, ctx) in mob_behavior_q.iter() {
@@ -609,7 +609,7 @@ fn spawn_mob(
     spawner_keys: &[String],
     mob_spawner: &mut MobSpawnerComponent,
     transform: &Transform,
-    spawn_mob_event_writer: &mut EventWriter<SpawnMobEvent>,
+    spawn_mob_event_writer: &mut MessageWriter<SpawnMobEvent>,
     time: &Res<Time>,
 ) {
     for key in spawner_keys.iter() {
@@ -636,8 +636,8 @@ pub(super) fn spawn_projectile_system(
         &LinearVelocity,
         &AngularVelocity,
     )>,
-    mut spawn_projectile_event_writer: EventWriter<SpawnProjectileEvent>,
-    mut activate_particle_event_writer: EventWriter<ActivateParticleEvent>,
+    mut spawn_projectile_event_writer: MessageWriter<SpawnProjectileEvent>,
+    mut activate_particle_event_writer: MessageWriter<ActivateParticleEvent>,
     time: Res<Time>,
 ) {
     for (mob_behavior, ctx) in mob_behavior_q.iter() {
@@ -682,8 +682,8 @@ fn spawn_projectile(
     attributes: &MobAttributesComponent,
     velocity: &LinearVelocity,
     angular_velocity: &AngularVelocity,
-    spawn_projectile_event_writer: &mut EventWriter<SpawnProjectileEvent>,
-    activate_particle_event_writer: &mut EventWriter<ActivateParticleEvent>,
+    spawn_projectile_event_writer: &mut MessageWriter<SpawnProjectileEvent>,
+    activate_particle_event_writer: &mut MessageWriter<ActivateParticleEvent>,
     time: &Res<Time>,
 ) {
     for key in spawner_keys.iter() {

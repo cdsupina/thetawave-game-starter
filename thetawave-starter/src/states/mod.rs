@@ -1,6 +1,6 @@
 use bevy::{
     app::{Plugin, Update},
-    ecs::{event::EventWriter, schedule::IntoScheduleConfigs, system::Query},
+    ecs::{message::MessageWriter, schedule::IntoScheduleConfigs, system::Query},
     state::condition::in_state,
 };
 use leafwing_input_manager::prelude::ActionState;
@@ -22,7 +22,7 @@ impl Plugin for ThetawaveStatesPlugin {
 /// System for toggling the paused state only for player
 fn toggle_game_state_system(
     player_action_q: Query<(&PlayerNum, &ActionState<PlayerAction>)>,
-    mut toggle_game_state_event: EventWriter<ToggleGameStateEvent>,
+    mut toggle_game_state_event: MessageWriter<ToggleGameStateEvent>,
 ) {
     for (player_num, player_action) in player_action_q.iter() {
         if matches!(player_num, PlayerNum::One) && player_action.just_released(&PlayerAction::Pause)

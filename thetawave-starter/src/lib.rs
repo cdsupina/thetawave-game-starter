@@ -8,7 +8,7 @@ use bevy::{
     },
     input::keyboard::KeyCode,
     prelude::PluginGroup,
-    render::texture::ImagePlugin,
+    image::ImagePlugin,
     utils::default,
     window::{Window, WindowMode, WindowPlugin, WindowResolution},
 };
@@ -39,7 +39,7 @@ mod window;
 
 pub struct ThetawaveStarterPlugin {
     pub window_title: String,
-    pub starting_resolution: (f32, f32),
+    pub starting_resolution: (u32, u32),
     pub show_debug_keycode: KeyCode,
     pub extended_abilities: HashMap<String, SystemId<In<Entity>>>,
     pub extended_duration_abilities: HashSet<String>,
@@ -72,8 +72,11 @@ impl Plugin for ThetawaveStarterPlugin {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         mode: WindowMode::Windowed,
-                        resolution: WindowResolution::from(self.starting_resolution)
-                            .with_scale_factor_override(1.0),
+                        resolution: WindowResolution::new(
+                            self.starting_resolution.0,
+                            self.starting_resolution.1,
+                        )
+                        .with_scale_factor_override(1.0),
                         resizable: false,
                         title: self.window_title.clone(),
                         ..default()

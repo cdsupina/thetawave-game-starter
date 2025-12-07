@@ -4,7 +4,7 @@ use avian2d::prelude::{
 };
 use bevy::{
     ecs::{
-        bundle::Bundle, component::Component, entity::Entity, event::Event, name::Name,
+        bundle::Bundle, component::Component, entity::Entity, message::Message, name::Name,
         resource::Resource,
     },
     math::Vec2,
@@ -222,7 +222,7 @@ pub(crate) struct MobAttributesResource {
     pub attributes: HashMap<String, MobAttributes>,
 }
 
-#[derive(Event)]
+#[derive(Message)]
 pub struct MobDeathEvent {
     pub mob_entity: Entity,
 }

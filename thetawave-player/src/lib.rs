@@ -2,7 +2,7 @@ use bevy::{
     app::{Plugin, Startup, Update},
     ecs::{
         entity::Entity,
-        schedule::{Condition, IntoScheduleConfigs, common_conditions::not},
+        schedule::{IntoScheduleConfigs, SystemCondition, common_conditions::not},
         system::{In, SystemId},
     },
     platform::collections::{HashMap, HashSet},
@@ -12,12 +12,12 @@ use bevy::{
     },
 };
 use bevy_alt_ui_navigation_lite::DefaultNavigationPlugins;
-use leafwing_abilities::plugin::AbilityPlugin;
 use leafwing_input_manager::plugin::InputManagerPlugin;
 use thetawave_core::{AppState, DebugState, GameState, MainMenuState};
 
 mod ability;
 mod character;
+pub mod cooldown;
 mod input;
 mod player;
 
@@ -61,14 +61,13 @@ impl Plugin for ThetawavePlayerPlugin {
         .add_plugins(InputManagerPlugin::<PlayerAction>::default())
         .add_plugins(InputManagerPlugin::<PlayerAbility>::default())
         .add_plugins(InputManagerPlugin::<CharacterCarouselAction>::default())
-        .add_plugins(AbilityPlugin::<PlayerAbility>::default())
         .add_plugins(ThetawaveAbilitiesPlugin {
             extended_abilities: self.extended_abilities.clone(),
             extended_duration_abilities: self.extended_duration_abilities.clone(),
         })
-        .add_event::<PlayerJoinEvent>()
-        .add_event::<PlayerDeathEvent>()
-        .add_event::<ExecutePlayerAbilityEvent>()
+        .add_message::<PlayerJoinEvent>()
+        .add_message::<PlayerDeathEvent>()
+        .add_message::<ExecutePlayerAbilityEvent>()
         .add_systems(Startup, setup_input_system)
         .add_systems(
             OnEnter(MainMenuState::Title),

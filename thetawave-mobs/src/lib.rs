@@ -8,7 +8,7 @@ pub use spawn::MobDebugSettings;
 
 use bevy::{
     app::{Plugin, Update},
-    ecs::schedule::{Condition, IntoScheduleConfigs, common_conditions::on_event},
+    ecs::schedule::{IntoScheduleConfigs, SystemCondition, common_conditions::on_message},
     state::condition::in_state,
 };
 use thetawave_core::{AppState, GameState};
@@ -35,14 +35,14 @@ impl Plugin for ThetawaveMobsPlugin {
         app.add_systems(
             Update,
             (
-                spawn_mob_system.run_if(on_event::<SpawnMobEvent>),
-                connect_effect_to_spawner.run_if(on_event::<SpawnerParticleEffectSpawnedEvent>),
+                spawn_mob_system.run_if(on_message::<SpawnMobEvent>),
+                connect_effect_to_spawner.run_if(on_message::<SpawnerParticleEffectSpawnedEvent>),
                 (joint_bleed_system, mob_death_system)
                     .chain()
-                    .run_if(on_event::<MobDeathEvent>),
+                    .run_if(on_message::<MobDeathEvent>),
             )
                 .run_if(in_state(AppState::Game).and(in_state(GameState::Playing))),
         )
-        .add_event::<SpawnMobEvent>();
+        .add_message::<SpawnMobEvent>();
     }
 }

@@ -1,6 +1,6 @@
 use bevy::{
     app::{Plugin, Update},
-    ecs::schedule::{Condition, IntoScheduleConfigs},
+    ecs::schedule::{IntoScheduleConfigs, SystemCondition},
     state::condition::in_state,
 };
 use bevy_enoki::EnokiPlugin;
@@ -29,15 +29,15 @@ pub struct ThetawaveParticlesPlugin;
 
 impl Plugin for ThetawaveParticlesPlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        app.add_event::<SpawnerParticleEffectSpawnedEvent>();
-        app.add_event::<ActivateParticleEvent>();
-        app.add_event::<ToggleActiveParticleEvent>();
-        app.add_event::<SpawnBloodEffectEvent>();
-        app.add_event::<SpawnProjectileTrailEffectEvent>();
-        app.add_event::<SpawnExplosionEffectEvent>();
-        app.add_event::<SpawnProjectileDespawnEffectEvent>();
-        app.add_event::<SpawnProjectileHitEffectEvent>();
-        app.add_event::<SpawnSpawnerEffectEvent>();
+        app.add_message::<SpawnerParticleEffectSpawnedEvent>();
+        app.add_message::<ActivateParticleEvent>();
+        app.add_message::<ToggleActiveParticleEvent>();
+        app.add_message::<SpawnBloodEffectEvent>();
+        app.add_message::<SpawnProjectileTrailEffectEvent>();
+        app.add_message::<SpawnExplosionEffectEvent>();
+        app.add_message::<SpawnProjectileDespawnEffectEvent>();
+        app.add_message::<SpawnProjectileHitEffectEvent>();
+        app.add_message::<SpawnSpawnerEffectEvent>();
 
         app.add_plugins(EnokiPlugin);
 

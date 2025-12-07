@@ -3,8 +3,9 @@ use bevy::{
     asset::Assets,
     color::{Alpha, Color},
     ecs::error::Result,
+    light::PointLight,
     math::Vec3,
-    pbr::{MeshMaterial3d, PointLight, StandardMaterial},
+    pbr::{MeshMaterial3d, StandardMaterial},
     prelude::{
         AlphaMode, ChildSpawnerCommands, Commands, Mesh, Mesh3d, Meshable, Name, Query, Rectangle,
         Res, ResMut, Sphere, Transform, Visibility,

@@ -1,43 +1,34 @@
-use crate::options::OptionsRes;
 use bevy::{
+    camera::ScalingMode,
     color::Color,
-    core_pipeline::{bloom::Bloom, tonemapping::Tonemapping},
-    ecs::system::Res,
+    core_pipeline::tonemapping::Tonemapping,
     math::Vec3,
+    post_process::bloom::Bloom,
     prelude::{
         Camera, Camera2d, Camera3d, ClearColorConfig, Commands, Name, OrthographicProjection,
         PerspectiveProjection, Projection, Transform,
     },
-    render::camera::ScalingMode,
+    render::view::Hdr,
     utils::default,
 };
 use bevy_egui::PrimaryEguiContext;
-use bevy_persistent::Persistent;
 
 const VIEWPORT_HEIGHT: f32 = 250.0;
 
 // Setup function that spawns a 2D camera
-pub(super) fn setup_cameras_system(mut cmd: Commands, options_res: Res<Persistent<OptionsRes>>) {
+pub(super) fn setup_cameras_system(mut cmd: Commands) {
     // Necessary for viewing 2d sprites
     cmd.spawn((
         Camera2d,
         PrimaryEguiContext,
         Camera {
             order: 1,
-            hdr: true,
             clear_color: ClearColorConfig::Custom(Color::NONE),
             ..default()
         },
+        Hdr,
         Tonemapping::TonyMcMapface,
-        Bloom {
-            intensity: if options_res.bloom_enabled {
-                Bloom::OLD_SCHOOL.intensity
-            } else {
-                0.0
-            },
-            ..Bloom::OLD_SCHOOL
-        },
-        // Change OrthographicProjection component to Projection component
+        Bloom::default(),
         Projection::Orthographic(OrthographicProjection {
             scaling_mode: ScalingMode::FixedVertical {
                 viewport_height: VIEWPORT_HEIGHT,
@@ -51,24 +42,17 @@ pub(super) fn setup_cameras_system(mut cmd: Commands, options_res: Res<Persisten
         Camera3d::default(),
         Camera {
             order: 0,
-            hdr: true,
             clear_color: ClearColorConfig::Custom(Color::BLACK),
             ..default()
         },
+        Hdr,
         Tonemapping::BlenderFilmic,
+        Bloom::default(),
         Transform::from_xyz(0.0, 0.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
         Projection::Perspective(PerspectiveProjection {
             far: 10000.0,
             ..Default::default()
         }),
-        Bloom {
-            intensity: if options_res.bloom_enabled {
-                Bloom::OLD_SCHOOL.intensity
-            } else {
-                0.0
-            },
-            ..Bloom::OLD_SCHOOL
-        },
         Name::new("3D Camera"),
     ));
 }

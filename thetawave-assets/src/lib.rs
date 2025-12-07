@@ -1,14 +1,35 @@
+//! Asset management for Thetawave.
+//!
+//! When `asset_loader` feature is enabled, uses bevy_asset_loader for managed loading.
+//! When disabled, uses manual loading via AssetServer.
+
 mod data;
 mod plugin;
 mod systems;
 
+#[cfg(not(feature = "asset_loader"))]
+pub(crate) mod manual_loader;
+
 use std::fmt;
 
+// Re-export asset types
 pub use data::{
     AssetResolver, BackgroundAssets, ExtendedBackgroundAssets, ExtendedGameAssets,
-    ExtendedMusicAssets, ExtendedUiAssets, GameAssets, LoadingProgressEvent, MusicAssets,
-    ParticleMaterials, UiAssets,
+    ExtendedMusicAssets, ExtendedUiAssets, GameAssets, MusicAssets, ParticleMaterials, UiAssets,
 };
+
+// AssetFileStem is only needed externally when asset_loader is enabled
+#[cfg(feature = "asset_loader")]
+pub use bevy_asset_loader::mapped::AssetFileStem;
+
+// When asset_loader is disabled, export our String alias
+#[cfg(not(feature = "asset_loader"))]
+pub use data::AssetFileStem;
+
+// Only export LoadingProgressEvent when asset_loader is enabled
+#[cfg(feature = "asset_loader")]
+pub use data::LoadingProgressEvent;
+
 pub use plugin::ThetawaveAssetsPlugin;
 
 /// Errors that can occur during asset resolution

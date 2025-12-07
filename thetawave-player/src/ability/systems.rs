@@ -3,7 +3,7 @@ use bevy::{
     ecs::{
         component::Component,
         entity::Entity,
-        event::{EventReader, EventWriter},
+        message::{MessageReader, MessageWriter},
         system::{Commands, In, Query, Res},
     },
     math::Vec2,
@@ -14,7 +14,7 @@ use thetawave_core::Faction;
 use thetawave_projectiles::{ProjectileType, SpawnProjectileEvent};
 
 use crate::{ExecutePlayerAbilityEvent, PlayerAbility, PlayerStats, ability::AbilityRegistry};
-use leafwing_abilities::prelude::CooldownState;
+use crate::cooldown::CooldownState;
 
 #[derive(Component)]
 pub struct ChargeAbility {
@@ -37,7 +37,7 @@ const CHARGE_DURATION: f32 = 1.5;
 pub(crate) fn ability_dispatcher_system(
     mut cmds: Commands,
     ability_reg: Res<AbilityRegistry>,
-    mut player_ability_event_reader: EventReader<ExecutePlayerAbilityEvent>,
+    mut player_ability_event_reader: MessageReader<ExecutePlayerAbilityEvent>,
 ) {
     for ExecutePlayerAbilityEvent {
         ability_type,
@@ -53,7 +53,7 @@ pub(crate) fn ability_dispatcher_system(
 pub(crate) fn fire_blast_ability(
     In(player_entity): In<Entity>,
     player_q: Query<(&Transform, &PlayerStats, &LinearVelocity)>,
-    mut spawn_projectile_event_writer: EventWriter<SpawnProjectileEvent>,
+    mut spawn_projectile_event_writer: MessageWriter<SpawnProjectileEvent>,
 ) {
     if let Ok((transform, player_stats, lin_vel)) = player_q.get(player_entity) {
         spawn_projectile_event_writer.write(SpawnProjectileEvent {
@@ -73,7 +73,7 @@ pub(crate) fn fire_blast_ability(
 pub(crate) fn fire_bullet_ability(
     In(player_entity): In<Entity>,
     player_q: Query<(&Transform, &PlayerStats, &LinearVelocity)>,
-    mut spawn_projectile_event_writer: EventWriter<SpawnProjectileEvent>,
+    mut spawn_projectile_event_writer: MessageWriter<SpawnProjectileEvent>,
 ) {
     if let Ok((transform, player_stats, lin_vel)) = player_q.get(player_entity) {
         spawn_projectile_event_writer.write(SpawnProjectileEvent {
@@ -94,7 +94,7 @@ pub(crate) fn fire_bullet_ability(
 pub(crate) fn mega_blast_ability(
     In(player_entity): In<Entity>,
     player_q: Query<(&Transform, &PlayerStats, &LinearVelocity)>,
-    mut spawn_projectile_event_writer: EventWriter<SpawnProjectileEvent>,
+    mut spawn_projectile_event_writer: MessageWriter<SpawnProjectileEvent>,
 ) {
     if let Ok((transform, player_stats, lin_vel)) = player_q.get(player_entity) {
         spawn_projectile_event_writer.write(SpawnProjectileEvent {
@@ -154,7 +154,7 @@ pub(crate) fn charge_ability_timer_system(
     for (entity, mut charge_ability, mut player_stats, mut cooldown_state) in charge_q.iter_mut() {
         charge_ability.timer.tick(time.delta());
 
-        if charge_ability.timer.finished() {
+        if charge_ability.timer.is_finished() {
             // Revert to original stats
             player_stats.max_speed = charge_ability.original_max_speed;
             player_stats.acceleration = charge_ability.original_acceleration;
@@ -166,5 +166,16 @@ pub(crate) fn charge_ability_timer_system(
             // Remove the charge component
             commands.entity(entity).remove::<ChargeAbility>();
         }
+    }
+}
+
+/// System to tick all cooldowns each frame.
+/// This replaces the functionality of AbilityPlugin from leafwing_abilities.
+pub(crate) fn tick_cooldowns_system(
+    time: Res<Time>,
+    mut cooldown_q: Query<&mut CooldownState<PlayerAbility>>,
+) {
+    for mut cooldown_state in cooldown_q.iter_mut() {
+        cooldown_state.tick_all(time.delta());
     }
 }

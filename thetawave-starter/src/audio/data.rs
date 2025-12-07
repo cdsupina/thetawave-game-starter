@@ -1,6 +1,6 @@
 use bevy::{
     asset::Handle,
-    prelude::{Component, Event, Resource},
+    prelude::{Component, Message, Resource},
 };
 use bevy_kira_audio::AudioSource;
 
@@ -16,22 +16,22 @@ pub(super) struct EffectsAudioChannel;
 #[derive(Resource, Component, Default, Clone)]
 pub(super) struct UiAudioChannel;
 
-/// Event for triggering background music transitions
-#[derive(Event)]
+/// Message for triggering background music transitions
+#[derive(Message)]
 pub(crate) struct MusicTransitionEvent {
     pub music: Handle<AudioSource>,
 }
 
-/// Event for changing volumes
-#[derive(Event)]
+/// Message for changing volumes
+#[derive(Message)]
 pub(crate) struct ChangeVolumeEvent {
     pub music_volume: f64,
     pub effects_volume: f64,
     pub ui_volume: f64,
 }
 
-/// Event for playing ui and effect evens
-#[derive(Event)]
+/// Message for playing ui and effect events
+#[derive(Message)]
 pub(crate) enum AudioEffectEvent {
     MenuButtonSelected, // ui channel
     MenuButtonReleased, // ui channel

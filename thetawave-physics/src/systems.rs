@@ -1,6 +1,6 @@
 use avian2d::prelude::{Physics, PhysicsTime};
 use bevy::{
-    prelude::{EventReader, ResMut, StateTransitionEvent},
+    prelude::{MessageReader, ResMut, StateTransitionEvent},
     time::Time,
 };
 use thetawave_core::GameState;
@@ -17,7 +17,7 @@ use bevy::{ecs::system::Res, gizmos::config::GizmoConfigStore};
 /// Pause and resume physics on GameState change
 pub(super) fn pause_physics_system(
     mut physics_time: ResMut<Time<Physics>>,
-    mut game_state_trans: EventReader<StateTransitionEvent<GameState>>,
+    mut game_state_trans: MessageReader<StateTransitionEvent<GameState>>,
 ) {
     for event in game_state_trans.read() {
         if let Some(entered_state) = event.entered {

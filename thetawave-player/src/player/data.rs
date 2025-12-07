@@ -1,5 +1,5 @@
 use bevy::{
-    ecs::{component::Component, entity::Entity, event::Event},
+    ecs::{component::Component, entity::Entity, message::Message},
     math::Vec2,
 };
 use thetawave_projectiles::ProjectileSpread;
@@ -38,7 +38,7 @@ impl From<&CharacterAttributes> for PlayerStats {
     }
 }
 
-#[derive(Event)]
+#[derive(Message)]
 pub struct PlayerDeathEvent {
     pub player_entity: Entity,
 }

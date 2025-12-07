@@ -11,16 +11,21 @@ bevy = { workspace = true, features = [
     "default_font",
 ] }
 bevy_enoki.workspace = true
-iyes_progress.workspace = true
-bevy_asset_loader = { workspace = true, features = [
-    "progress_tracking",
-    "standard_dynamic_assets",
-] }
 bevy_aseprite_ultra.workspace = true
 bevy_kira_audio = { workspace = true, features = ["mp3", "wav"] }
 rand.workspace = true
+ron = "0.10"
+
+# Optional dependencies for asset_loader feature
+iyes_progress = { workspace = true, optional = true }
+bevy_asset_loader = { workspace = true, features = [
+    "progress_tracking",
+    "standard_dynamic_assets",
+], optional = true }
 
 [features]
+default = ["asset_loader"]
+asset_loader = ["dep:bevy_asset_loader", "dep:iyes_progress"]
 dynamic_linking = [
     "bevy/dynamic_linking",
     "thetawave-core/dynamic_linking",

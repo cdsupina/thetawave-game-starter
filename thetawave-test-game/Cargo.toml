@@ -5,9 +5,10 @@ edition.workspace = true
 
 [dependencies]
 bevy = { workspace = true, features = [] }
-thetawave-starter = { path = "../thetawave-starter" }
+thetawave-starter = { path = "../thetawave-starter", default-features = false }
 
 [features]
 dynamic_linking = ["bevy/dynamic_linking", "thetawave-starter/dynamic_linking"]
-default = ["debug", "dynamic_linking"]
+default = ["debug", "dynamic_linking", "asset_loader"]
 debug = ["thetawave-starter/debug"]
+asset_loader = ["thetawave-starter/asset_loader"]

@@ -2,7 +2,7 @@ use super::data::{DebugState, ToggleDebugStateEvent, AppState, Cleanup, GameStat
 use bevy::{
     input::{keyboard::KeyCode, ButtonInput},
     prelude::{
-        Commands, Entity, EventReader, NextState, Query, Res, ResMut, State, StateTransitionEvent,
+        Commands, Entity, MessageReader, NextState, Query, Res, ResMut, State, StateTransitionEvent,
         States,
     },
 };
@@ -10,7 +10,7 @@ use bevy::{
 /// A system that cleans up entities after exiting states
 pub(super) fn cleanup_state_system<S: States>(
     mut cmds: Commands,
-    mut state_trans_event: EventReader<StateTransitionEvent<S>>,
+    mut state_trans_event: MessageReader<StateTransitionEvent<S>>,
     cleanup_entities_q: Query<(Entity, &Cleanup<S>)>,
 ) {
     for event in state_trans_event.read() {
@@ -26,7 +26,7 @@ pub(super) fn cleanup_state_system<S: States>(
 
 /// A system that resets other states when changing the AppState
 pub(super) fn reset_states_on_app_state_transition_system(
-    mut state_trans_event: EventReader<StateTransitionEvent<AppState>>,
+    mut state_trans_event: MessageReader<StateTransitionEvent<AppState>>,
     mut next_main_menu_state: ResMut<NextState<MainMenuState>>,
     mut next_game_state: ResMut<NextState<GameState>>,
 ) {
@@ -47,7 +47,7 @@ pub(super) fn reset_states_on_app_state_transition_system(
 
 /// A system that resets other states when changing the GameState
 pub(super) fn reset_states_on_game_state_transition_system(
-    mut state_trans_event: EventReader<StateTransitionEvent<GameState>>,
+    mut state_trans_event: MessageReader<StateTransitionEvent<GameState>>,
     mut next_pause_menu_state: ResMut<NextState<PauseMenuState>>,
 ) {
     for event in state_trans_event.read() {
@@ -74,7 +74,7 @@ pub(super) fn toggle_game_state_system(
     mut next_game_state: ResMut<NextState<GameState>>,
     mut next_pause_state: ResMut<NextState<PauseMenuState>>,
     current_state: Res<State<GameState>>,
-    mut toggle_game_state_event: EventReader<ToggleGameStateEvent>,
+    mut toggle_game_state_event: MessageReader<ToggleGameStateEvent>,
 ) {
     if toggle_game_state_event.read().next().is_some() {
         match **current_state {
@@ -105,7 +105,7 @@ pub(super) fn enter_game_end_system(
 pub(super) fn toggle_debug_state_system(
     mut next_debug_state: ResMut<NextState<DebugState>>,
     current_state: Res<State<DebugState>>,
-    mut toggle_debug_state_event: EventReader<ToggleDebugStateEvent>,
+    mut toggle_debug_state_event: MessageReader<ToggleDebugStateEvent>,
 ) {
     if toggle_debug_state_event.read().next().is_some() {
         match **current_state {

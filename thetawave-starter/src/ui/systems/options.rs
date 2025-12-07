@@ -4,7 +4,7 @@ use super::{ApplyOptionsEvent, Cleanup, MainMenuState, OptionsRes, UiAssets};
 use bevy::{
     ecs::error::Result,
     log::info,
-    prelude::{Commands, EventReader, Name, Res, ResMut},
+    prelude::{Commands, MessageReader, Name, Res, ResMut},
     ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
     window::{MonitorSelection, VideoModeSelection, WindowMode, WindowResolution},
@@ -186,7 +186,7 @@ fn window_resolution_to_string(resolution: &WindowResolution) -> String {
 /// Save options to file when options applied
 pub(in crate::ui) fn persist_options_system(
     options_res: Res<Persistent<OptionsRes>>,
-    mut apply_options_events: EventReader<ApplyOptionsEvent>,
+    mut apply_options_events: MessageReader<ApplyOptionsEvent>,
 ) {
     for _event in apply_options_events.read() {
         info!("Persisting options");

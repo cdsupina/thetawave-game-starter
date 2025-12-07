@@ -11,7 +11,7 @@ use bevy::{
     ecs::hierarchy::ChildOf,
     input::ButtonInput,
     prelude::{
-        Changed, Children, Commands, Entity, EventReader, EventWriter, Gamepad, GamepadButton,
+        Changed, Children, Commands, Entity, MessageReader, MessageWriter, Gamepad, GamepadButton,
         ImageNode, KeyCode, Name, Query, Res, ResMut, With, Without,
     },
     time::Time,
@@ -146,7 +146,7 @@ pub(in crate::ui) fn cycle_player_one_carousel_system(
     mut carousel_q: Query<(&mut CharacterCarousel, &PlayerNum)>,
     ready_button_q: Query<&ButtonAction, With<PlayerReadyButton>>,
     chosen_characters_res: Res<ChosenCharactersResource>,
-    mut effect_events: EventWriter<AudioEffectEvent>,
+    mut effect_events: MessageWriter<AudioEffectEvent>,
 ) {
     if let Some(character_data) = chosen_characters_res.players.get(&PlayerNum::One) {
         for (mut carousel, player_num) in carousel_q.iter_mut() {
@@ -249,7 +249,7 @@ pub(in crate::ui) fn set_characters_system(
 
 /// Spawn character carousel when PlayerJoinEvent is read
 pub(in crate::ui) fn spawn_carousel_system(
-    mut player_join_events: EventReader<PlayerJoinEvent>,
+    mut player_join_events: MessageReader<PlayerJoinEvent>,
     character_selector_q: Query<(Entity, &PlayerNum), With<CharacterSelector>>,
     mut cmds: Commands,
     extended_ui_assets: Res<ExtendedUiAssets>,
@@ -419,7 +419,7 @@ pub(in crate::ui) fn spawn_carousel_system(
 
 /// Replaces the join button with a ready button when player joins
 pub(in crate::ui) fn spawn_ready_button_system(
-    mut player_join_events: EventReader<PlayerJoinEvent>,
+    mut player_join_events: MessageReader<PlayerJoinEvent>,
     button_q: Query<(&ButtonAction, Entity, &ChildOf)>,
     extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
@@ -461,7 +461,7 @@ pub(in crate::ui) fn spawn_ready_button_system(
 pub(in crate::ui) fn lock_in_player_button_system(
     mut button_q: Query<(&mut MenuButtonState, &mut ButtonAction, &Children)>,
     mut button_sprite_q: Query<&mut AseAnimation>,
-    mut player_ready_events: EventReader<PlayerReadyEvent>,
+    mut player_ready_events: MessageReader<PlayerReadyEvent>,
 ) {
     for event in player_ready_events.read() {
         for (mut button_state, mut action, children) in button_q.iter_mut() {
@@ -545,7 +545,7 @@ pub(in crate::ui) fn enable_start_game_button_system(
 
 /// Enables the join button for the next player after a player joins
 pub(in crate::ui) fn enable_join_button_system(
-    mut player_join_events: EventReader<PlayerJoinEvent>,
+    mut player_join_events: MessageReader<PlayerJoinEvent>,
     mut join_button_q: Query<(&ButtonAction, &mut MenuButtonState, &Children)>,
     mut button_sprite_q: Query<&mut AseAnimation>,
 ) {
@@ -569,7 +569,7 @@ pub(in crate::ui) fn enable_join_button_system(
 
 /// Spawns the input prompt for the next player after a player joins
 pub(in crate::ui) fn spawn_join_prompt_system(
-    mut player_join_events: EventReader<PlayerJoinEvent>,
+    mut player_join_events: MessageReader<PlayerJoinEvent>,
     character_selector_q: Query<(Entity, &PlayerNum), With<CharacterSelector>>,
     extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
@@ -593,8 +593,8 @@ pub(in crate::ui) fn additional_players_join_system(
     keys: Res<ButtonInput<KeyCode>>,
     gamepads_q: Query<(Entity, &Gamepad)>,
     chosen_characters_res: Res<ChosenCharactersResource>,
-    mut player_join_events: EventWriter<PlayerJoinEvent>,
-    mut effect_events: EventWriter<AudioEffectEvent>,
+    mut player_join_events: MessageWriter<PlayerJoinEvent>,
+    mut effect_events: MessageWriter<AudioEffectEvent>,
 ) {
     // Set the join input to keyboard if input pressed and input is not yet used
     let mut join_input = if keys.just_pressed(KeyCode::Enter)
@@ -634,9 +634,9 @@ pub(in crate::ui) fn carousel_input_system(
         &PlayerNum,
         &mut CarouselReadyTimer,
     )>,
-    mut player_ready_events: EventWriter<PlayerReadyEvent>,
+    mut player_ready_events: MessageWriter<PlayerReadyEvent>,
     time: Res<Time>,
-    mut effect_events: EventWriter<AudioEffectEvent>,
+    mut effect_events: MessageWriter<AudioEffectEvent>,
     ready_button_q: Query<&ButtonAction, With<PlayerReadyButton>>,
 ) {
     for (mut carousel, carousel_action, player_num, mut ready_timer) in carousel_q.iter_mut() {
@@ -670,7 +670,7 @@ pub(in crate::ui) fn carousel_input_system(
                 }
                 CharacterCarouselAction::Ready => {
                     // Only let player ready after a the timer is complete
-                    if ready_timer.0.finished() {
+                    if ready_timer.0.is_finished() {
                         player_ready_events.write(PlayerReadyEvent {
                             player_num: player_num.clone(),
                             is_ready: true,

@@ -1,6 +1,12 @@
+//! Loading UI systems.
+//!
+//! Only available when the `asset_loader` feature is enabled.
+
+#![cfg(feature = "asset_loader")]
+
 use bevy::{
     color::Color,
-    prelude::{Commands, EventReader, Query, With},
+    prelude::{Commands, MessageReader, Query, With},
     ui::{BackgroundColor, Node, Val},
     utils::default,
 };
@@ -28,7 +34,7 @@ pub(in crate::ui) fn setup_loading_ui_system(mut cmds: Commands) {
 /// Update the loading bars based on the loading bar progress
 pub(in crate::ui) fn update_loading_bar_system(
     mut loading_bar_q: Query<&mut Node, With<LoadingBar>>,
-    mut loading_event_reader: EventReader<LoadingProgressEvent>,
+    mut loading_event_reader: MessageReader<LoadingProgressEvent>,
 ) {
     for event in loading_event_reader.read() {
         for mut node in loading_bar_q.iter_mut() {

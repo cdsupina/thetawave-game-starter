@@ -1,7 +1,7 @@
 use bevy::{
     ecs::{
         entity::Entity,
-        event::EventReader,
+        message::MessageReader,
         query::With,
         system::{Commands, Query, ResMut},
     },
@@ -72,7 +72,7 @@ pub(crate) fn enable_horizontal_navigation_system(mut input_mapping: ResMut<Inpu
 /// Disable other inputs for menu navigation once a player joins
 pub(crate) fn disable_additional_players_navigation_system(
     mut input_mapping: ResMut<InputMapping>,
-    mut player_join_events: EventReader<PlayerJoinEvent>,
+    mut player_join_events: MessageReader<PlayerJoinEvent>,
     dummy_gamepad_q: Query<Entity, With<DummyGamepad>>,
 ) {
     for event in player_join_events.read() {

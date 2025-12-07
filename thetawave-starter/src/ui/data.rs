@@ -1,6 +1,6 @@
 use bevy::{
     ecs::{resource::Resource, system::EntityCommands},
-    prelude::{ChildSpawnerCommands, Component, Entity, Event, Name},
+    prelude::{ChildSpawnerCommands, Component, Entity, Message, Name},
     text::TextFont,
     time::{Timer, TimerMode},
     ui::{
@@ -212,8 +212,8 @@ impl CharacterCarousel {
 #[derive(Component)]
 pub(super) struct CharacterSelector;
 
-/// Event for sending when player ready or unreadys on the character selection screen
-#[derive(Event)]
+/// Message for sending when player readys or unreadys on the character selection screen
+#[derive(Message)]
 pub(super) struct PlayerReadyEvent {
     pub player_num: PlayerNum,
     pub is_ready: bool,
@@ -241,8 +241,8 @@ impl CarouselReadyTimer {
     }
 }
 
-/// Event for passing ButtonActions to an event for a delayed action
-#[derive(Event, Clone)]
+/// Message for passing ButtonActions for a delayed action
+#[derive(Message, Clone)]
 pub(super) struct DelayedButtonPressEvent {
     pub button_action: ButtonAction,
     pub button_entity: Entity,

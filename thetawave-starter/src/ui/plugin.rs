@@ -12,7 +12,6 @@ use super::{
         egui::{setup_egui_system, update_egui_scale_system},
         game_end::{reset_game_end_result_resource_system, spawn_game_end_system},
         input_rebinding::{input_rebinding_menu_system, spawn_input_rebinding_menu_system},
-        loading::{setup_loading_ui_system, update_loading_bar_system},
         menu_button_action_system, menu_button_delayed_action_system, menu_button_focus_system,
         options::{options_menu_system, persist_options_system, spawn_options_menu_system},
         pause::{spawn_pause_menu_system, spawn_pause_options_system},
@@ -21,12 +20,18 @@ use super::{
 };
 use bevy::{
     app::{Plugin, Update},
-    prelude::{Condition, IntoScheduleConfigs, OnEnter, in_state},
+    ecs::schedule::SystemCondition,
+    prelude::{IntoScheduleConfigs, OnEnter, in_state},
 };
 use bevy_alt_ui_navigation_lite::NavRequestSystem;
-use bevy_asset_loader::loading_state::LoadingStateSet;
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
 use thetawave_core::{AppState, DebugState, GameState, MainMenuState, PauseMenuState};
+
+#[cfg(feature = "asset_loader")]
+use super::systems::loading::{setup_loading_ui_system, update_loading_bar_system};
+
+#[cfg(feature = "asset_loader")]
+use bevy_asset_loader::loading_state::LoadingStateSet;
 
 // Plugin responsible for managing the Thetawave user interface components and systems
 pub(crate) struct ThetawaveUiPlugin;
@@ -36,9 +41,14 @@ impl Plugin for ThetawaveUiPlugin {
         // Initialize required UI plugins - HuiPlugin for UI components and EguiPlugin for immediate mode GUI
         app.add_plugins(EguiPlugin::default())
             .init_resource::<GameEndResultResource>()
-            .add_event::<PlayerReadyEvent>()
-            .add_event::<DelayedButtonPressEvent>()
-            .add_systems(OnEnter(AppState::MainMenuLoading), setup_loading_ui_system)
+            .add_message::<PlayerReadyEvent>()
+            .add_message::<DelayedButtonPressEvent>();
+
+        // Only add loading UI systems when asset_loader is enabled
+        #[cfg(feature = "asset_loader")]
+        app.add_systems(OnEnter(AppState::MainMenuLoading), setup_loading_ui_system);
+
+        app
             // Setup core UI components and main menu systems when entering the MainMenu state
             .add_systems(OnEnter(AppState::MainMenu), setup_egui_system)
             // Initialize and setup the title menu UI components when entering Title state
@@ -61,23 +71,30 @@ impl Plugin for ThetawaveUiPlugin {
             // Initialize and setup the pause menu ui components when entering the paused state
             .add_systems(OnEnter(PauseMenuState::Main), spawn_pause_menu_system)
             // Initialize and setup the options pause menu when inetering the paused options state
-            .add_systems(OnEnter(PauseMenuState::Options), spawn_pause_options_system)
-            // Add update systems that run every frame:
-            .add_systems(
-                Update,
-                (
-                    menu_button_action_system.after(NavRequestSystem),
-                    menu_button_focus_system.after(NavRequestSystem),
-                    website_footer_button_focus_system.after(NavRequestSystem),
-                    menu_button_delayed_action_system,
-                    update_loading_bar_system
-                        .run_if(
-                            in_state(AppState::MainMenuLoading).or(in_state(AppState::GameLoading)),
-                        )
-                        .after(LoadingStateSet(AppState::MainMenuLoading))
-                        .after(LoadingStateSet(AppState::GameLoading)),
-                ),
-            )
+            .add_systems(OnEnter(PauseMenuState::Options), spawn_pause_options_system);
+
+        // Add update systems that run every frame (non-loading related)
+        app.add_systems(
+            Update,
+            (
+                menu_button_action_system.after(NavRequestSystem),
+                menu_button_focus_system.after(NavRequestSystem),
+                website_footer_button_focus_system.after(NavRequestSystem),
+                menu_button_delayed_action_system,
+            ),
+        );
+
+        // Only add loading bar update system when asset_loader is enabled
+        #[cfg(feature = "asset_loader")]
+        app.add_systems(
+            Update,
+            update_loading_bar_system
+                .run_if(in_state(AppState::MainMenuLoading).or(in_state(AppState::GameLoading)))
+                .after(LoadingStateSet(AppState::MainMenuLoading))
+                .after(LoadingStateSet(AppState::GameLoading)),
+        );
+
+        app
             // Run options systems in main menu and pause menu options states
             .add_systems(
                 EguiPrimaryContextPass,

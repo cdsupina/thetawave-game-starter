@@ -6,11 +6,9 @@ use avian2d::prelude::{
 use bevy::{
     prelude::{Commands, Name, Res},
     sprite::Sprite,
-    utils::default,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use bevy_persistent::Persistent;
-use leafwing_abilities::AbilitiesBundle;
 use leafwing_input_manager::prelude::InputMap;
 use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets};
 use thetawave_core::{AppState, Cleanup};
@@ -18,7 +16,7 @@ use thetawave_core::{HealthComponent, PlayerTag};
 use thetawave_physics::ThetawavePhysicsLayer;
 use thetawave_player::{
     CharactersResource, ChosenCharactersResource, EquippedAbilities, InputType, PlayerAbility,
-    PlayerStats,
+    PlayerStats, cooldown::CooldownState,
 };
 
 /// Spawn a player controlled entity
@@ -83,10 +81,7 @@ pub(super) fn spawn_players_system(
                             .with_gamepad(entity)
                     }
                 },
-                AbilitiesBundle::<PlayerAbility> {
-                    cooldowns: character_data.cooldowns.clone(),
-                    ..default()
-                },
+                character_data.cooldowns.clone(),
                 PlayerStats::from(character_data),
                 Name::new("Player"),
             ));

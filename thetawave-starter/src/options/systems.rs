@@ -1,9 +1,10 @@
 use super::{data::ApplyOptionsEvent, OptionsRes};
 use crate::audio::ChangeVolumeEvent;
 use bevy::{
-    core_pipeline::{bloom::Bloom, core_2d::Camera2d, core_3d::Camera3d},
+    camera::{Camera2d, Camera3d},
     ecs::query::Without,
-    prelude::{Commands, EventReader, EventWriter, Local, Query, Res, ResMut, With},
+    post_process::bloom::Bloom,
+    prelude::{Commands, Local, MessageReader, MessageWriter, Query, Res, ResMut, With},
     window::{PrimaryWindow, Window, WindowMode},
 };
 use bevy_persistent::{Persistent, StorageFormat};
@@ -40,7 +41,7 @@ pub(super) fn sync_options_res_system(
 
 /// Applies window options when an ApplyOptionsEvent is received
 pub(super) fn apply_options_system(
-    mut apply_options_events: EventReader<ApplyOptionsEvent>,
+    mut apply_options_events: MessageReader<ApplyOptionsEvent>,
     mut options_res: ResMut<Persistent<OptionsRes>>,
     mut camera_2d_q: Query<&mut Bloom, (With<Camera2d>, Without<Camera3d>)>,
     mut camera_3d_q: Query<&mut Bloom, (With<Camera3d>, Without<Camera2d>)>,
@@ -91,7 +92,7 @@ pub(super) fn apply_options_system(
 /// Applies instantly when changed rather than, when the apply button is pressed
 pub(super) fn apply_volume_options_system(
     options_res: Res<Persistent<OptionsRes>>,
-    mut event_writer: EventWriter<ChangeVolumeEvent>,
+    mut event_writer: MessageWriter<ChangeVolumeEvent>,
     mut previous_options_res: Local<OptionsRes>,
 ) {
     // Check if any of the volume options have changed since the previous frame

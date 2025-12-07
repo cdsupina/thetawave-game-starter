@@ -16,7 +16,6 @@ avian2d.workspace = true
 serde.workspace = true
 strum_macros.workspace = true
 strum.workspace = true
-leafwing_abilities.workspace = true
 leafwing-input-manager.workspace = true
 bevy-alt-ui-navigation-lite.workspace = true
 
