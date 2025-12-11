@@ -142,3 +142,212 @@ impl<A: Hash + Eq> Default for CooldownState<A> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ==================== Cooldown Tests ====================
+
+    #[test]
+    fn new_cooldown_starts_ready() {
+        let cooldown = Cooldown::from_secs(2.0);
+        assert!(cooldown.ready());
+        assert_eq!(cooldown.remaining(), 0.0);
+    }
+
+    #[test]
+    fn cooldown_reports_correct_duration() {
+        let cooldown = Cooldown::from_secs(5.0);
+        assert_eq!(cooldown.duration(), 5.0);
+    }
+
+    #[test]
+    fn trigger_starts_cooldown() {
+        let mut cooldown = Cooldown::from_secs(1.0);
+        assert!(cooldown.trigger().is_ok());
+        assert!(!cooldown.ready());
+        assert_eq!(cooldown.remaining(), 1.0);
+    }
+
+    #[test]
+    fn trigger_fails_when_on_cooldown() {
+        let mut cooldown = Cooldown::from_secs(1.0);
+        cooldown.trigger().unwrap();
+        assert_eq!(cooldown.trigger(), Err(CooldownNotReady));
+    }
+
+    #[test]
+    fn tick_reduces_remaining_time() {
+        let mut cooldown = Cooldown::from_secs(1.0);
+        cooldown.trigger().unwrap();
+        cooldown.tick(Duration::from_secs_f32(0.3));
+        assert!((cooldown.remaining() - 0.7).abs() < 0.001);
+    }
+
+    #[test]
+    fn tick_does_not_go_negative() {
+        let mut cooldown = Cooldown::from_secs(1.0);
+        cooldown.trigger().unwrap();
+        cooldown.tick(Duration::from_secs_f32(5.0)); // Way over
+        assert_eq!(cooldown.remaining(), 0.0);
+        assert!(cooldown.ready());
+    }
+
+    #[test]
+    fn tick_on_ready_cooldown_stays_at_zero() {
+        let mut cooldown = Cooldown::from_secs(1.0);
+        cooldown.tick(Duration::from_secs_f32(0.5));
+        assert_eq!(cooldown.remaining(), 0.0);
+        assert!(cooldown.ready());
+    }
+
+    #[test]
+    fn progress_is_1_when_ready() {
+        let cooldown = Cooldown::from_secs(1.0);
+        assert_eq!(cooldown.progress(), 1.0);
+    }
+
+    #[test]
+    fn progress_is_0_when_just_triggered() {
+        let mut cooldown = Cooldown::from_secs(1.0);
+        cooldown.trigger().unwrap();
+        assert_eq!(cooldown.progress(), 0.0);
+    }
+
+    #[test]
+    fn progress_is_half_when_halfway() {
+        let mut cooldown = Cooldown::from_secs(2.0);
+        cooldown.trigger().unwrap();
+        cooldown.tick(Duration::from_secs_f32(1.0));
+        assert!((cooldown.progress() - 0.5).abs() < 0.001);
+    }
+
+    #[test]
+    fn zero_duration_cooldown_is_always_ready() {
+        let mut cooldown = Cooldown::from_secs(0.0);
+        // Should be ready initially
+        assert!(cooldown.ready());
+        // Trigger sets remaining to 0.0 (the duration)
+        cooldown.trigger().unwrap();
+        // Should still be ready since duration is 0
+        assert!(cooldown.ready());
+        // Progress should be 1.0 (handles division by zero case)
+        assert_eq!(cooldown.progress(), 1.0);
+    }
+
+    #[test]
+    fn refresh_resets_to_ready() {
+        let mut cooldown = Cooldown::from_secs(10.0);
+        cooldown.trigger().unwrap();
+        assert!(!cooldown.ready());
+        cooldown.refresh();
+        assert!(cooldown.ready());
+        assert_eq!(cooldown.remaining(), 0.0);
+    }
+
+    #[test]
+    fn multiple_trigger_cycles() {
+        let mut cooldown = Cooldown::from_secs(1.0);
+
+        // First cycle
+        assert!(cooldown.trigger().is_ok());
+        cooldown.tick(Duration::from_secs_f32(1.0));
+        assert!(cooldown.ready());
+
+        // Second cycle
+        assert!(cooldown.trigger().is_ok());
+        cooldown.tick(Duration::from_secs_f32(1.0));
+        assert!(cooldown.ready());
+    }
+
+    // ==================== CooldownState Tests ====================
+
+    #[derive(Hash, Eq, PartialEq, Debug, Clone, Copy)]
+    enum TestAbility {
+        Attack,
+        Defend,
+        Special,
+    }
+
+    #[test]
+    fn cooldown_state_new_from_pairs() {
+        let state = CooldownState::new([
+            (TestAbility::Attack, Cooldown::from_secs(1.0)),
+            (TestAbility::Defend, Cooldown::from_secs(2.0)),
+        ]);
+
+        assert!(state.get(&TestAbility::Attack).is_some());
+        assert!(state.get(&TestAbility::Defend).is_some());
+        assert!(state.get(&TestAbility::Special).is_none());
+    }
+
+    #[test]
+    fn cooldown_state_default_is_empty() {
+        let state: CooldownState<TestAbility> = CooldownState::default();
+        assert!(state.get(&TestAbility::Attack).is_none());
+    }
+
+    #[test]
+    fn cooldown_state_tracks_abilities_independently() {
+        let mut state = CooldownState::new([
+            (TestAbility::Attack, Cooldown::from_secs(1.0)),
+            (TestAbility::Defend, Cooldown::from_secs(2.0)),
+        ]);
+
+        // Trigger only Attack
+        state.trigger(&TestAbility::Attack).unwrap();
+
+        // Attack should be on cooldown, Defend should be ready
+        assert!(!state.ready(&TestAbility::Attack));
+        assert!(state.ready(&TestAbility::Defend));
+    }
+
+    #[test]
+    fn cooldown_state_trigger_unknown_ability_fails() {
+        let mut state = CooldownState::new([(TestAbility::Attack, Cooldown::from_secs(1.0))]);
+
+        // Special was never added
+        assert_eq!(state.trigger(&TestAbility::Special), Err(CooldownNotReady));
+    }
+
+    #[test]
+    fn cooldown_state_ready_returns_false_for_unknown_ability() {
+        let state = CooldownState::new([(TestAbility::Attack, Cooldown::from_secs(1.0))]);
+
+        // Special was never added, should return false (not panic)
+        assert!(!state.ready(&TestAbility::Special));
+    }
+
+    #[test]
+    fn tick_all_updates_all_cooldowns() {
+        let mut state = CooldownState::new([
+            (TestAbility::Attack, Cooldown::from_secs(1.0)),
+            (TestAbility::Defend, Cooldown::from_secs(2.0)),
+        ]);
+
+        state.trigger(&TestAbility::Attack).unwrap();
+        state.trigger(&TestAbility::Defend).unwrap();
+
+        // Tick by 1 second
+        state.tick_all(Duration::from_secs_f32(1.0));
+
+        // Attack (1s cooldown) should be ready
+        assert!(state.ready(&TestAbility::Attack));
+        // Defend (2s cooldown) should still have 1s remaining
+        assert!(!state.ready(&TestAbility::Defend));
+        assert!((state.get(&TestAbility::Defend).unwrap().remaining() - 1.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn get_mut_allows_direct_modification() {
+        let mut state = CooldownState::new([(TestAbility::Attack, Cooldown::from_secs(1.0))]);
+
+        state.trigger(&TestAbility::Attack).unwrap();
+        assert!(!state.ready(&TestAbility::Attack));
+
+        // Use get_mut to refresh directly
+        state.get_mut(&TestAbility::Attack).unwrap().refresh();
+        assert!(state.ready(&TestAbility::Attack));
+    }
+}
