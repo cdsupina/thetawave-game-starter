@@ -336,7 +336,7 @@ fn create_joint(
     let mut joint = RevoluteJoint::new(anchor, jointed)
         .with_local_anchor1(jointed_mob.anchor_1_pos + anchor_offset)
         .with_local_anchor2(jointed_mob.anchor_2_pos)
-        .with_compliance(jointed_mob.compliance);
+        .with_point_compliance(jointed_mob.compliance);
 
     // Apply angle limits if specified (constrains how far the joint can rotate)
     if let Some(angle_limit_range) = &jointed_mob.angle_limit_range {

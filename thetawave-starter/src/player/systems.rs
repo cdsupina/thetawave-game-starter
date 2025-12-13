@@ -15,8 +15,7 @@ use thetawave_core::{AppState, Cleanup};
 use thetawave_core::{HealthComponent, PlayerTag};
 use thetawave_physics::ThetawavePhysicsLayer;
 use thetawave_player::{
-    CharactersResource, ChosenCharactersResource, EquippedAbilities, InputType, PlayerAbility,
-    PlayerStats, cooldown::CooldownState,
+    CharactersResource, ChosenCharactersResource, EquippedAbilities, InputType, PlayerStats,
 };
 
 /// Spawn a player controlled entity

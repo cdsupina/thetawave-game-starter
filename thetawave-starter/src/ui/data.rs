@@ -143,6 +143,7 @@ impl TryFrom<&String> for MenuButtonState {
 }
 
 /// Loading bar tag component
+#[cfg(feature = "progress_tracking")]
 #[derive(Component)]
 pub(super) struct LoadingBar;
 
