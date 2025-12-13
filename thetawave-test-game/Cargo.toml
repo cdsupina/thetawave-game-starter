@@ -9,6 +9,6 @@ thetawave-starter = { path = "../thetawave-starter", default-features = false }
 
 [features]
 dynamic_linking = ["bevy/dynamic_linking", "thetawave-starter/dynamic_linking"]
-default = ["debug", "dynamic_linking", "asset_loader"]
+default = ["debug", "dynamic_linking"]
 debug = ["thetawave-starter/debug"]
-asset_loader = ["thetawave-starter/asset_loader"]
+progress_tracking = ["thetawave-starter/progress_tracking"]

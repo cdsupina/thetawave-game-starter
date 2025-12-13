@@ -3,29 +3,25 @@
 use crate::ExtendedGameAssets;
 
 use super::data::{GameAssets, ParticleMaterials};
-use bevy::{
-    asset::Assets,
-    ecs::system::Commands,
-    prelude::ResMut,
-};
+use bevy::{asset::Assets, ecs::system::Commands, prelude::ResMut};
 use bevy_enoki::prelude::ColorParticle2dMaterial;
 use thetawave_core::Faction;
 
-#[cfg(feature = "asset_loader")]
+#[cfg(feature = "progress_tracking")]
 use bevy::prelude::{MessageWriter, Res};
 
-#[cfg(feature = "asset_loader")]
+#[cfg(feature = "progress_tracking")]
 use super::data::LoadingProgressEvent;
 
-#[cfg(feature = "asset_loader")]
+#[cfg(feature = "progress_tracking")]
 use iyes_progress::ProgressTracker;
 
-#[cfg(feature = "asset_loader")]
+#[cfg(feature = "progress_tracking")]
 use thetawave_core::AppState;
 
 /// System for getting loading progress and sending the value as a message
-/// Only available when asset_loader feature is enabled
-#[cfg(feature = "asset_loader")]
+/// Only available when progress_tracking feature is enabled
+#[cfg(feature = "progress_tracking")]
 pub(super) fn get_loading_progress_system(
     progress: Res<ProgressTracker<AppState>>,
     mut loading_event_writer: MessageWriter<LoadingProgressEvent>,

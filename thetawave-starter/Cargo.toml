@@ -5,7 +5,7 @@ edition.workspace = true
 
 [dependencies]
 thetawave-physics = { path = "../thetawave-physics" }
-thetawave-assets = { path = "../thetawave-assets", default-features = false }
+thetawave-assets = { path = "../thetawave-assets" }
 thetawave-backgrounds = { path = "../thetawave-backgrounds" }
 thetawave-mobs = { path = "../thetawave-mobs" }
 thetawave-projectiles = { path = "../thetawave-projectiles" }
@@ -53,8 +53,7 @@ image.workspace = true
 itertools.workspace = true
 bevy_embedded_assets.workspace = true
 
-# Optional dependencies for asset_loader feature
-bevy_asset_loader = { workspace = true, optional = true }
+bevy_asset_loader = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 bevy = { workspace = true, features = ["webgpu"] }
@@ -63,8 +62,8 @@ bevy = { workspace = true, features = ["webgpu"] }
 bevy = { workspace = true, features = ["x11"] }
 
 [features]
-default = ["asset_loader"]
-asset_loader = ["dep:bevy_asset_loader", "thetawave-assets/asset_loader"]
+default = []
+progress_tracking = ["thetawave-assets/progress_tracking"]
 dynamic_linking = [
     "bevy/dynamic_linking",
     "thetawave-physics/dynamic_linking",

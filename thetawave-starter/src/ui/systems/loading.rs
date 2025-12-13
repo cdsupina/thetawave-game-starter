@@ -1,8 +1,8 @@
 //! Loading UI systems.
 //!
-//! Only available when the `asset_loader` feature is enabled.
+//! Only available when the `progress_tracking` feature is enabled.
 
-#![cfg(feature = "asset_loader")]
+#![cfg(feature = "progress_tracking")]
 
 use bevy::{
     color::Color,

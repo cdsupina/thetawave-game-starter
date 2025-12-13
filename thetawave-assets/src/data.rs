@@ -1,18 +1,18 @@
 //! Asset data structures for Thetawave.
 //!
-//! When `asset_loader` feature is enabled, uses bevy_asset_loader's AssetCollection derive.
-//! When disabled, same struct fields but populated manually.
+//! Uses bevy_asset_loader's AssetCollection derive for managed asset loading.
 
 use bevy::{
     asset::{Assets, Handle},
     color::Color,
     image::Image,
     platform::collections::HashMap,
-    prelude::Resource,
+    prelude::{Res, Resource},
     scene::Scene,
     text::Font,
 };
 use bevy_aseprite_ultra::prelude::Aseprite;
+use bevy_asset_loader::{asset_collection::AssetCollection, mapped::AssetFileStem};
 use bevy_enoki::{Particle2dEffect, prelude::ColorParticle2dMaterial};
 use bevy_kira_audio::AudioSource;
 use rand::Rng;
@@ -20,51 +20,28 @@ use thetawave_core::Faction;
 
 use crate::AssetError;
 
-// ============================================================================
-// Feature-gated imports and type aliases
-// ============================================================================
-
-#[cfg(feature = "asset_loader")]
+#[cfg(feature = "progress_tracking")]
 use bevy::prelude::Message;
-
-#[cfg(feature = "asset_loader")]
-use bevy_asset_loader::{asset_collection::AssetCollection, mapped::AssetFileStem};
-
-/// When asset_loader is disabled, use String as the key type
-#[cfg(not(feature = "asset_loader"))]
-pub type AssetFileStem = String;
 
 // ============================================================================
 // Game Assets
 // ============================================================================
 
 /// Assets used in the game state
-#[derive(Resource)]
-#[cfg_attr(feature = "asset_loader", derive(AssetCollection))]
+#[derive(Resource, AssetCollection)]
 pub struct GameAssets {
-    #[cfg_attr(feature = "asset_loader", asset(key = "game_sprites", collection(typed, mapped)))]
+    #[asset(key = "game_sprites", collection(typed, mapped))]
     pub sprites: HashMap<AssetFileStem, Handle<Aseprite>>,
-    #[cfg_attr(feature = "asset_loader", asset(key = "game_particle_effects", collection(typed, mapped)))]
+    #[asset(key = "game_particle_effects", collection(typed, mapped))]
     pub particle_effects: HashMap<AssetFileStem, Handle<Particle2dEffect>>,
 }
 
-#[cfg(not(feature = "asset_loader"))]
-impl Default for GameAssets {
-    fn default() -> Self {
-        Self {
-            sprites: HashMap::default(),
-            particle_effects: HashMap::default(),
-        }
-    }
-}
-
 /// Additional assets used in the game state that are not built in to thetawave-assets
-#[derive(Resource, Default, Clone)]
-#[cfg_attr(feature = "asset_loader", derive(AssetCollection))]
+#[derive(Resource, Default, Clone, AssetCollection)]
 pub struct ExtendedGameAssets {
-    #[cfg_attr(feature = "asset_loader", asset(key = "extended_game_sprites", collection(typed, mapped), optional))]
+    #[asset(key = "extended_game_sprites", collection(typed, mapped), optional)]
     pub sprites: Option<HashMap<AssetFileStem, Handle<Aseprite>>>,
-    #[cfg_attr(feature = "asset_loader", asset(key = "extended_game_particle_effects", collection(typed, mapped), optional))]
+    #[asset(key = "extended_game_particle_effects", collection(typed, mapped), optional)]
     pub particle_effects: Option<HashMap<AssetFileStem, Handle<Particle2dEffect>>>,
 }
 
@@ -107,27 +84,16 @@ impl ParticleMaterials {
 // ============================================================================
 
 /// Audio assets used throughout all states of the app
-#[derive(Resource)]
-#[cfg_attr(feature = "asset_loader", derive(AssetCollection))]
+#[derive(Resource, AssetCollection)]
 pub struct MusicAssets {
-    #[cfg_attr(feature = "asset_loader", asset(key = "music", collection(typed, mapped)))]
+    #[asset(key = "music", collection(typed, mapped))]
     pub music: HashMap<AssetFileStem, Handle<AudioSource>>,
 }
 
-#[cfg(not(feature = "asset_loader"))]
-impl Default for MusicAssets {
-    fn default() -> Self {
-        Self {
-            music: HashMap::default(),
-        }
-    }
-}
-
 /// Extended audio assets
-#[derive(Resource, Default)]
-#[cfg_attr(feature = "asset_loader", derive(AssetCollection))]
+#[derive(Resource, Default, AssetCollection)]
 pub struct ExtendedMusicAssets {
-    #[cfg_attr(feature = "asset_loader", asset(key = "extended_music", collection(typed, mapped), optional))]
+    #[asset(key = "extended_music", collection(typed, mapped), optional)]
     pub music: Option<HashMap<AssetFileStem, Handle<AudioSource>>>,
 }
 
@@ -136,52 +102,36 @@ pub struct ExtendedMusicAssets {
 // ============================================================================
 
 /// Assets for Bevy UI
-#[derive(Resource)]
-#[cfg_attr(feature = "asset_loader", derive(AssetCollection))]
+#[derive(Resource, AssetCollection)]
 pub struct UiAssets {
-    #[cfg_attr(feature = "asset_loader", asset(key = "ui_sprites", collection(typed, mapped)))]
+    #[asset(key = "ui_sprites", collection(typed, mapped))]
     pub sprites: HashMap<AssetFileStem, Handle<Aseprite>>,
-    #[cfg_attr(feature = "asset_loader", asset(key = "ui_images", collection(typed, mapped)))]
+    #[asset(key = "ui_images", collection(typed, mapped))]
     pub images: HashMap<AssetFileStem, Handle<Image>>,
-    #[cfg_attr(feature = "asset_loader", asset(key = "ui_fonts", collection(typed, mapped)))]
+    #[asset(key = "ui_fonts", collection(typed, mapped))]
     pub fonts: HashMap<AssetFileStem, Handle<Font>>,
-    #[cfg_attr(feature = "asset_loader", asset(key = "ui_button_select_audio", collection(typed)))]
+    #[asset(key = "ui_button_select_audio", collection(typed))]
     pub menu_button_select_effects: Vec<Handle<AudioSource>>,
-    #[cfg_attr(feature = "asset_loader", asset(key = "ui_button_release_audio", collection(typed)))]
+    #[asset(key = "ui_button_release_audio", collection(typed))]
     pub menu_button_release_effects: Vec<Handle<AudioSource>>,
-    #[cfg_attr(feature = "asset_loader", asset(key = "ui_button_confirm_audio", collection(typed)))]
+    #[asset(key = "ui_button_confirm_audio", collection(typed))]
     pub menu_button_confirm_effects: Vec<Handle<AudioSource>>,
 }
 
-#[cfg(not(feature = "asset_loader"))]
-impl Default for UiAssets {
-    fn default() -> Self {
-        Self {
-            sprites: HashMap::default(),
-            images: HashMap::default(),
-            fonts: HashMap::default(),
-            menu_button_select_effects: Vec::default(),
-            menu_button_release_effects: Vec::default(),
-            menu_button_confirm_effects: Vec::default(),
-        }
-    }
-}
-
 /// Extended UI assets
-#[derive(Resource, Default)]
-#[cfg_attr(feature = "asset_loader", derive(AssetCollection))]
+#[derive(Resource, Default, AssetCollection)]
 pub struct ExtendedUiAssets {
-    #[cfg_attr(feature = "asset_loader", asset(key = "extended_ui_sprites", collection(typed, mapped), optional))]
+    #[asset(key = "extended_ui_sprites", collection(typed, mapped), optional)]
     pub sprites: Option<HashMap<AssetFileStem, Handle<Aseprite>>>,
-    #[cfg_attr(feature = "asset_loader", asset(key = "extended_ui_images", collection(typed, mapped), optional))]
+    #[asset(key = "extended_ui_images", collection(typed, mapped), optional)]
     pub images: Option<HashMap<AssetFileStem, Handle<Image>>>,
-    #[cfg_attr(feature = "asset_loader", asset(key = "extended_ui_fonts", collection(typed, mapped), optional))]
+    #[asset(key = "extended_ui_fonts", collection(typed, mapped), optional)]
     pub fonts: Option<HashMap<AssetFileStem, Handle<Font>>>,
-    #[cfg_attr(feature = "asset_loader", asset(key = "extended_ui_button_select_audio", collection(typed), optional))]
+    #[asset(key = "extended_ui_button_select_audio", collection(typed), optional)]
     pub menu_button_select_effects: Option<Vec<Handle<AudioSource>>>,
-    #[cfg_attr(feature = "asset_loader", asset(key = "extended_ui_button_release_audio", collection(typed), optional))]
+    #[asset(key = "extended_ui_button_release_audio", collection(typed), optional)]
     pub menu_button_release_effects: Option<Vec<Handle<AudioSource>>>,
-    #[cfg_attr(feature = "asset_loader", asset(key = "extended_ui_button_confirm_audio", collection(typed), optional))]
+    #[asset(key = "extended_ui_button_confirm_audio", collection(typed), optional)]
     pub menu_button_confirm_effects: Option<Vec<Handle<AudioSource>>>,
 }
 
@@ -190,41 +140,29 @@ pub struct ExtendedUiAssets {
 // ============================================================================
 
 /// Assets for background images
-#[derive(Resource)]
-#[cfg_attr(feature = "asset_loader", derive(AssetCollection))]
+#[derive(Resource, AssetCollection)]
 pub struct BackgroundAssets {
-    #[cfg_attr(feature = "asset_loader", asset(key = "space_backgrounds", collection(typed)))]
+    #[asset(key = "space_backgrounds", collection(typed))]
     pub space_backgrounds: Vec<Handle<Image>>,
-    #[cfg_attr(feature = "asset_loader", asset(key = "planets", collection(typed)))]
+    #[asset(key = "planets", collection(typed))]
     pub planets: Vec<Handle<Scene>>,
 }
 
-#[cfg(not(feature = "asset_loader"))]
-impl Default for BackgroundAssets {
-    fn default() -> Self {
-        Self {
-            space_backgrounds: Vec::default(),
-            planets: Vec::default(),
-        }
-    }
-}
-
 /// Extended background assets
-#[derive(Resource, Default)]
-#[cfg_attr(feature = "asset_loader", derive(AssetCollection))]
+#[derive(Resource, Default, AssetCollection)]
 pub struct ExtendedBackgroundAssets {
-    #[cfg_attr(feature = "asset_loader", asset(key = "extended_space_backgrounds", collection(typed), optional))]
+    #[asset(key = "extended_space_backgrounds", collection(typed), optional)]
     pub space_backgrounds: Option<Vec<Handle<Image>>>,
-    #[cfg_attr(feature = "asset_loader", asset(key = "extended_planets", collection(typed), optional))]
+    #[asset(key = "extended_planets", collection(typed), optional)]
     pub planets: Option<Vec<Handle<Scene>>>,
 }
 
 // ============================================================================
-// Loading Progress Event (only with asset_loader feature)
+// Loading Progress Event (only with progress_tracking feature)
 // ============================================================================
 
 /// Message for sending percentage of loading progress
-#[cfg(feature = "asset_loader")]
+#[cfg(feature = "progress_tracking")]
 #[derive(Message)]
 pub struct LoadingProgressEvent(pub f32);
 
@@ -234,9 +172,8 @@ pub struct LoadingProgressEvent(pub f32);
 
 /// Utility for resolving assets with Extended*Assets priority and base assets fallback
 ///
-/// Note: With bevy_asset_loader's `Files(paths: [...])` format and `collection(typed, mapped)`,
-/// assets are keyed by their full file path as specified in the paths array.
-/// For example, "media/aseprite/bullet_projectile.aseprite" gets key "media/aseprite/bullet_projectile.aseprite".
+/// Note: With `collection(typed, mapped)`, assets are keyed by their file stem.
+/// For example, "media/aseprite/bullet_projectile.aseprite" gets key "bullet_projectile".
 pub struct AssetResolver;
 
 impl AssetResolver {

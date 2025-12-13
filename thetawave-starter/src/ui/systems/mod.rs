@@ -10,7 +10,7 @@ use thetawave_assets::UiAssets;
 use thetawave_player::{ChosenCharactersResource, InputType, PlayerJoinEvent, PlayerNum};
 use thetawave_core::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState};
 
-#[cfg(feature = "asset_loader")]
+#[cfg(feature = "progress_tracking")]
 use thetawave_assets::LoadingProgressEvent;
 
 use bevy::{
@@ -32,7 +32,7 @@ pub(super) mod egui;
 pub(super) mod game_debug;
 pub(super) mod game_end;
 pub(super) mod input_rebinding;
-#[cfg(feature = "asset_loader")]
+#[cfg(feature = "progress_tracking")]
 pub(super) mod loading;
 pub(super) mod options;
 pub(super) mod pause;

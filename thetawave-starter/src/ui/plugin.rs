@@ -27,10 +27,10 @@ use bevy_alt_ui_navigation_lite::NavRequestSystem;
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
 use thetawave_core::{AppState, DebugState, GameState, MainMenuState, PauseMenuState};
 
-#[cfg(feature = "asset_loader")]
+#[cfg(feature = "progress_tracking")]
 use super::systems::loading::{setup_loading_ui_system, update_loading_bar_system};
 
-#[cfg(feature = "asset_loader")]
+#[cfg(feature = "progress_tracking")]
 use bevy_asset_loader::loading_state::LoadingStateSet;
 
 // Plugin responsible for managing the Thetawave user interface components and systems
@@ -44,8 +44,8 @@ impl Plugin for ThetawaveUiPlugin {
             .add_message::<PlayerReadyEvent>()
             .add_message::<DelayedButtonPressEvent>();
 
-        // Only add loading UI systems when asset_loader is enabled
-        #[cfg(feature = "asset_loader")]
+        // Only add loading UI systems when progress_tracking is enabled
+        #[cfg(feature = "progress_tracking")]
         app.add_systems(OnEnter(AppState::MainMenuLoading), setup_loading_ui_system);
 
         app
@@ -84,8 +84,8 @@ impl Plugin for ThetawaveUiPlugin {
             ),
         );
 
-        // Only add loading bar update system when asset_loader is enabled
-        #[cfg(feature = "asset_loader")]
+        // Only add loading bar update system when progress_tracking is enabled
+        #[cfg(feature = "progress_tracking")]
         app.add_systems(
             Update,
             update_loading_bar_system
