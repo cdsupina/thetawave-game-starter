@@ -62,8 +62,9 @@ pub(crate) fn mob_death_system(
     }
 }
 
-/// Detects when mobs with joints are destroyed and spawns blood effects at joint locations
+/// Detects when mobs with joints are destroyed, despawns the joint, and spawns blood effects
 pub(crate) fn joint_bleed_system(
+    mut cmds: Commands,
     mut mob_death_event_reader: MessageReader<MobDeathEvent>,
     mut blood_effect_event_writer: MessageWriter<SpawnBloodEffectEvent>,
     joint_entities_q: Query<Entity, With<RevoluteJoint>>,
@@ -118,6 +119,10 @@ pub(crate) fn joint_bleed_system(
                         direction: spray_direction,
                     });
                 }
+
+                // Despawn the joint entity to prevent orphaned joints from affecting remaining mobs
+                // This is required in avian2d 0.4+ as joints are not automatically cleaned up
+                cmds.entity(joint_entity).try_despawn();
             }
         }
     }
