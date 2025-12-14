@@ -84,7 +84,7 @@ pub(crate) fn timed_range_system(
                 scale: transform.scale.x,
             });
 
-            cmds.entity(entity).despawn();
+            cmds.entity(entity).try_despawn();
         }
     }
 }
@@ -126,7 +126,7 @@ pub(crate) fn projectile_hit_system(
                 scale: transform.scale.x,
             });
 
-            cmds.entity(entity).despawn();
+            cmds.entity(entity).try_despawn();
         }
     }
 }
@@ -142,7 +142,7 @@ pub(crate) fn despawn_after_animation_system(
         if let AnimationEvents::LoopCycleFinished(event_entity) = event
             && let Ok(entity) = despawn_q.get(*event_entity)
         {
-            cmds.entity(entity).despawn();
+            cmds.entity(entity).try_despawn();
         }
     }
 }

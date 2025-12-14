@@ -79,7 +79,7 @@ pub(crate) fn particle_lifetime_management_system(
         // Reset the timer if the effect activates again, good for effects like the blood effect that toggle active and inactive
         if !spawner_state.active && life_timer.timer.tick(time.delta()).just_finished() {
             // Timer expired, despawn the spawner entity
-            cmds.entity(entity).despawn();
+            cmds.entity(entity).try_despawn();
         } else if spawner_state.active {
             life_timer.timer.reset();
         }

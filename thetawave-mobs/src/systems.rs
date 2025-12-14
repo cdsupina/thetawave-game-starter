@@ -48,8 +48,8 @@ pub(crate) fn mob_death_system(
             &mut activate_particle_event_writer,
         );
 
-        // Despawn the mob
-        cmds.entity(event.mob_entity).despawn();
+        // Despawn the mob (use try_despawn to handle multiple death events for same entity)
+        cmds.entity(event.mob_entity).try_despawn();
 
         // Spawn an explosion particle effect
         if let Ok(mob_transform) = mob_q.get(event.mob_entity) {

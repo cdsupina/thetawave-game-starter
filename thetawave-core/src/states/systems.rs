@@ -17,7 +17,7 @@ pub(super) fn cleanup_state_system<S: States>(
         if let Some(exited_state) = &event.exited {
             for (entity, cleanup) in cleanup_entities_q.iter() {
                 if cleanup.states.contains(exited_state) {
-                    cmds.entity(entity).despawn();
+                    cmds.entity(entity).try_despawn();
                 }
             }
         }

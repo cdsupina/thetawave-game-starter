@@ -430,7 +430,7 @@ pub(in crate::ui) fn spawn_ready_button_system(
             if let ButtonAction::Join(player_num) = action
                 && event.player_num == *player_num
             {
-                cmds.entity(entity).despawn();
+                cmds.entity(entity).try_despawn();
 
                 let parent_entity = childof.parent();
                 let mut menu_button_cmds = cmds.entity(parent_entity);
