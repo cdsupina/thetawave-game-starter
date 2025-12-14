@@ -1,6 +1,6 @@
 use avian2d::prelude::{
-    Collider, CollisionEventsEnabled, CollisionLayers, LinearVelocity, PhysicsLayer, RigidBody,
-    Sensor,
+    Collider, CollisionEventsEnabled, CollisionLayers, LinearVelocity, MassPropertiesBundle,
+    PhysicsLayer, RigidBody, Sensor,
 };
 use bevy::{
     asset::Handle,
@@ -252,9 +252,13 @@ fn spawn_projectile(
             ProjectileRangeComponent::new(range_seconds),
         ));
 
-        // Add the sensor component for projectiles tha are not "physical"
+        // Add the sensor component for projectiles that are not "physical"
+        // Sensors don't contribute mass in avian2d 0.4+, so we add MassPropertiesBundle explicitly
         if projectile_attributes.is_sensor {
-            entity_cmds.insert(Sensor);
+            entity_cmds.insert((
+                Sensor,
+                MassPropertiesBundle::from_shape(&Collider::from(projectile_attributes), 1.0),
+            ));
         }
 
         let particle_entity = entity_cmds.id();
