@@ -156,7 +156,6 @@ type = "Action"
 name = "Move To Target"
 behaviors = [
     { action = "MoveToTarget" },
-    { action = "RotateToTarget" }
 ]
 
 # Simple boss movement to position
