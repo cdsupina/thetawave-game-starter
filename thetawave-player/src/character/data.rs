@@ -1,8 +1,8 @@
 use bevy::{ecs::resource::Resource, math::Vec2, platform::collections::HashMap};
-use leafwing_abilities::prelude::{Cooldown, CooldownState};
 use serde::Deserialize;
 use thetawave_projectiles::ProjectileSpread;
 
+use crate::cooldown::{Cooldown, CooldownState};
 use crate::input::{InputType, PlayerAbility, PlayerNum};
 
 /// Resource for storing all of the data about every character

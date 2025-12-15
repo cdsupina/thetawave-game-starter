@@ -7,7 +7,8 @@ use super::{
 };
 use bevy::{
     app::{Plugin, Startup, Update},
-    prelude::{in_state, Condition, IntoScheduleConfigs, OnEnter},
+    ecs::schedule::SystemCondition,
+    prelude::{in_state, IntoScheduleConfigs, OnEnter},
 };
 use thetawave_core::{MainMenuState, PauseMenuState};
 
@@ -17,7 +18,7 @@ pub(crate) struct ThetawaveOptionsPlugin;
 impl Plugin for ThetawaveOptionsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         // Add event for applying options changes
-        app.add_event::<ApplyOptionsEvent>()
+        app.add_message::<ApplyOptionsEvent>()
             // Add system to apply options changes, but only when in Options menu state
             .add_systems(Startup, setup_options_res)
             // Init the options menu to track the current options on startup

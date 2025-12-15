@@ -5,7 +5,7 @@ edition.workspace = true
 
 [dependencies]
 thetawave-core = { path = "../thetawave-core" }
-thetawave-assets = { path = "../thetawave-assets" }
+thetawave-assets = { path = "../thetawave-assets", default-features = false }
 rand.workspace = true
 bevy = { workspace = true, features = [
     "bevy_pbr",

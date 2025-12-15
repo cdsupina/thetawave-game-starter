@@ -1,7 +1,8 @@
 use bevy::{
     app::{Plugin, Update},
-    ecs::{event::EventWriter, resource::Resource, system::Res},
+    ecs::{resource::Resource, system::Res},
     input::{keyboard::KeyCode, ButtonInput},
+    prelude::MessageWriter,
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use thetawave_core::ToggleDebugStateEvent;
@@ -29,7 +30,7 @@ struct DebugKeycode(KeyCode);
 // Toggle debug mode on keycode release specified in plugin
 fn toggle_debug_mode(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut toggle_debug_event_writer: EventWriter<ToggleDebugStateEvent>,
+    mut toggle_debug_event_writer: MessageWriter<ToggleDebugStateEvent>,
     debug_keycode: Res<DebugKeycode>,
 ) {
     if keyboard_input.just_released(debug_keycode.0) {

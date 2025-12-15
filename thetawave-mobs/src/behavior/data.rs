@@ -1,5 +1,5 @@
 use bevy::{
-    ecs::{entity::Entity, event::Event, resource::Resource},
+    ecs::{entity::Entity, message::Message, resource::Resource},
     platform::collections::HashMap,
     prelude::Component,
     reflect::Reflect,
@@ -78,7 +78,7 @@ pub(crate) struct MobBehaviorsResource {
 }
 
 /// Used for transmitting behaviors to other mobs
-#[derive(Event)]
+#[derive(Message)]
 pub(crate) struct TransmitBehaviorEvent {
     pub source_entity: Entity,
     pub mob_type: String,

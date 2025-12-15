@@ -1,9 +1,6 @@
 use bevy::{
     app::{Plugin, Update},
-    ecs::{
-        schedule::{Condition, IntoScheduleConfigs},
-        system::Res,
-    },
+    ecs::schedule::{IntoScheduleConfigs, SystemCondition},
     platform::collections::HashMap,
     state::condition::in_state,
 };
@@ -29,7 +26,7 @@ pub(crate) struct ThetawaveMobBehaviorPlugin;
 impl Plugin for ThetawaveMobBehaviorPlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_plugins(BehavePlugin::default());
-        app.add_event::<TransmitBehaviorEvent>();
+        app.add_message::<TransmitBehaviorEvent>();
 
         // Load behaviors from TOML file
         let toml_data = load_with_extended::<MobBehaviorsTomlData>(
@@ -68,6 +65,7 @@ impl Plugin for ThetawaveMobBehaviorPlugin {
                 .run_if({
                     #[cfg(feature = "debug")]
                     {
+                        use bevy::ecs::system::Res;
                         use crate::MobDebugSettings;
                         in_state(AppState::Game)
                             .and(in_state(GameState::Playing))

@@ -12,8 +12,8 @@ pub struct ThetawaveCameraPlugin;
 
 impl Plugin for ThetawaveCameraPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_event::<Camera2DZoomEvent>()
-            .add_event::<Camera3DZoomEvent>();
+        app.add_message::<Camera2DZoomEvent>()
+            .add_message::<Camera3DZoomEvent>();
 
         app.add_systems(
             Update,

@@ -1,10 +1,10 @@
-use avian2d::prelude::{AngleLimit, Joint, RevoluteJoint, RigidBody};
+use avian2d::prelude::{AngleLimit, RevoluteJoint, RigidBody};
 use bevy::{
     asset::Handle,
     ecs::{
         entity::Entity,
         error::{BevyError, Result},
-        event::{Event, EventReader, EventWriter},
+        message::{Message, MessageReader, MessageWriter},
         query::With,
         resource::Resource,
         system::{Commands, Query, Res},
@@ -66,7 +66,7 @@ impl Default for MobDebugSettings {
 }
 
 /// Event for spawning mobs using a mob type string and position
-#[derive(Event, Debug)]
+#[derive(Message, Debug)]
 pub struct SpawnMobEvent {
     pub mob_type: String,
     pub position: Vec2,
@@ -89,10 +89,10 @@ pub(super) fn spawn_mob_system(
     game_assets: Res<GameAssets>,
     extended_assets: Res<ExtendedGameAssets>,
     mob_debug_settings: Res<MobDebugSettings>,
-    mut spawn_mob_event_reader: EventReader<SpawnMobEvent>,
+    mut spawn_mob_event_reader: MessageReader<SpawnMobEvent>,
     attributes_res: Res<MobAttributesResource>,
     behaviors_res: Res<MobBehaviorsResource>,
-    mut spawner_effect_event_writer: EventWriter<SpawnSpawnerEffectEvent>,
+    mut spawner_effect_event_writer: MessageWriter<SpawnSpawnerEffectEvent>,
 ) -> Result {
     for event in spawn_mob_event_reader.read() {
         let suppress_jointed_mobs = false;
@@ -129,7 +129,7 @@ fn spawn_mob(
     extended_assets: &ExtendedGameAssets,
     suppress_jointed_mobs: bool,
     transmitter_entity: Option<Entity>, // entity that can transmit behaviors to the mob
-    spawner_effect_event_writer: &mut EventWriter<SpawnSpawnerEffectEvent>,
+    spawner_effect_event_writer: &mut MessageWriter<SpawnSpawnerEffectEvent>,
 ) -> Result<Entity, BevyError> {
     // Look up the mob's configuration data from resources
     let mob_attributes = attributes_res
@@ -334,9 +334,9 @@ fn create_joint(
 ) -> Entity {
     // Create the revolute joint with anchor positions and compliance settings
     let mut joint = RevoluteJoint::new(anchor, jointed)
-        .with_local_anchor_1(jointed_mob.anchor_1_pos + anchor_offset)
-        .with_local_anchor_2(jointed_mob.anchor_2_pos)
-        .with_compliance(jointed_mob.compliance);
+        .with_local_anchor1(jointed_mob.anchor_1_pos + anchor_offset)
+        .with_local_anchor2(jointed_mob.anchor_2_pos)
+        .with_point_compliance(jointed_mob.compliance);
 
     // Apply angle limits if specified (constrains how far the joint can rotate)
     if let Some(angle_limit_range) = &jointed_mob.angle_limit_range {
@@ -344,14 +344,14 @@ fn create_joint(
             angle_limit_range.min.to_radians(),
             angle_limit_range.max.to_radians(),
         ));
-        joint.angle_limit_torque = angle_limit_range.torque;
+        // Note: angle_limit_torque was removed in newer avian2d - torque is now set via compliance
     }
     // Spawn the joint entity into the world
     cmds.spawn(joint).id()
 }
 
 pub(crate) fn connect_effect_to_spawner(
-    mut events: EventReader<SpawnerParticleEffectSpawnedEvent>,
+    mut events: MessageReader<SpawnerParticleEffectSpawnedEvent>,
     mut mob_query: Query<&mut ProjectileSpawnerComponent, With<MobMarker>>,
 ) {
     for event in events.read() {

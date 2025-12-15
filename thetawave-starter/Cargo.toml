@@ -23,7 +23,9 @@ bevy = { workspace = true, features = [
     "bevy_window",
     "bevy_gilrs",
     "bevy_core_pipeline",
+    "bevy_post_process",
     "bevy_render",
+    "bevy_pbr",
     "hdr",
     "bevy_color",
     "animation",
@@ -32,11 +34,11 @@ bevy = { workspace = true, features = [
     "default_font",
     "multi_threaded",
     "async_executor",
+    "reflect_auto_register",
 ] }
 bevy_platform.workspace = true
 bevy_egui.workspace = true
 bevy-alt-ui-navigation-lite.workspace = true
-bevy_asset_loader.workspace = true
 webbrowser.workspace = true
 bevy_aseprite_ultra.workspace = true
 bevy_kira_audio.workspace = true
@@ -44,13 +46,14 @@ serde.workspace = true
 bevy-persistent.workspace = true
 dirs.workspace = true
 leafwing-input-manager.workspace = true
-leafwing_abilities.workspace = true
 avian2d.workspace = true
 strum.workspace = true
 winit.workspace = true
 image.workspace = true
 itertools.workspace = true
 bevy_embedded_assets.workspace = true
+
+bevy_asset_loader = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 bevy = { workspace = true, features = ["webgpu"] }
@@ -59,6 +62,8 @@ bevy = { workspace = true, features = ["webgpu"] }
 bevy = { workspace = true, features = ["x11"] }
 
 [features]
+default = []
+progress_tracking = ["thetawave-assets/progress_tracking"]
 dynamic_linking = [
     "bevy/dynamic_linking",
     "thetawave-physics/dynamic_linking",

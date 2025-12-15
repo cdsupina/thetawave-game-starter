@@ -1,13 +1,13 @@
 use avian2d::prelude::{
-    Collider, CollisionEventsEnabled, CollisionLayers, LinearVelocity, PhysicsLayer, RigidBody,
-    Sensor,
+    Collider, CollisionEventsEnabled, CollisionLayers, LinearVelocity, MassPropertiesBundle,
+    PhysicsLayer, RigidBody, Sensor,
 };
 use bevy::{
     asset::Handle,
     ecs::{
         entity::Entity,
         error::{BevyError, Result},
-        event::{EventReader, EventWriter},
+        message::{MessageReader, MessageWriter},
         name::Name,
         system::{Commands, Res},
     },
@@ -163,9 +163,9 @@ pub(crate) fn spawn_projectile_system(
     mut cmds: Commands,
     game_assets: Res<GameAssets>,
     extended_assets: Res<ExtendedGameAssets>,
-    mut spawn_projectile_event_reader: EventReader<SpawnProjectileEvent>,
+    mut spawn_projectile_event_reader: MessageReader<SpawnProjectileEvent>,
     attributes_res: Res<ProjectileAttributesResource>,
-    mut projectile_trail_effect_event_writer: EventWriter<SpawnProjectileTrailEffectEvent>,
+    mut projectile_trail_effect_event_writer: MessageWriter<SpawnProjectileTrailEffectEvent>,
 ) -> Result {
     for event in spawn_projectile_event_reader.read() {
         let _spawned_entities = spawn_projectile(
@@ -203,7 +203,7 @@ fn spawn_projectile(
     game_assets: &GameAssets,
     extended_assets: &ExtendedGameAssets,
     attributes_res: &ProjectileAttributesResource,
-    projectile_trail_effect_event_writer: &mut EventWriter<SpawnProjectileTrailEffectEvent>,
+    projectile_trail_effect_event_writer: &mut MessageWriter<SpawnProjectileTrailEffectEvent>,
 ) -> Result<Vec<Entity>, BevyError> {
     let collision_layers = CollisionLayers::new(
         get_projectile_collision_membership(faction),
@@ -252,9 +252,13 @@ fn spawn_projectile(
             ProjectileRangeComponent::new(range_seconds),
         ));
 
-        // Add the sensor component for projectiles tha are not "physical"
+        // Add the sensor component for projectiles that are not "physical"
+        // Sensors don't contribute mass in avian2d 0.4+, so we add MassPropertiesBundle explicitly
         if projectile_attributes.is_sensor {
-            entity_cmds.insert(Sensor);
+            entity_cmds.insert((
+                Sensor,
+                MassPropertiesBundle::from_shape(&Collider::from(projectile_attributes), 1.0),
+            ));
         }
 
         let particle_entity = entity_cmds.id();

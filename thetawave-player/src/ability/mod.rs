@@ -3,7 +3,7 @@ use bevy::{
     ecs::{
         component::Component,
         entity::Entity,
-        event::Event,
+        message::Message,
         resource::Resource,
         system::{In, SystemId},
         world::{FromWorld, World},
@@ -16,8 +16,8 @@ mod systems;
 use crate::{
     PlayerAbility,
     ability::systems::{
-        ability_dispatcher_system, charge_ability, charge_ability_timer_system, fire_blast_ability, fire_bullet_ability,
-        mega_blast_ability,
+        ability_dispatcher_system, charge_ability, charge_ability_timer_system, fire_blast_ability,
+        fire_bullet_ability, mega_blast_ability, tick_cooldowns_system,
     },
 };
 
@@ -32,11 +32,15 @@ impl Plugin for ThetawaveAbilitiesPlugin {
             .with_extended_abilities(self.extended_abilities.clone(), self.extended_duration_abilities.clone());
 
         app.insert_resource(ability_registry)
-            .add_systems(Update, (ability_dispatcher_system, charge_ability_timer_system));
+            .add_systems(Update, (
+                tick_cooldowns_system,
+                ability_dispatcher_system,
+                charge_ability_timer_system,
+            ));
     }
 }
 
-#[derive(Event, Debug)]
+#[derive(Message, Debug)]
 pub struct ExecutePlayerAbilityEvent {
     pub ability_type: String,
     pub player_entity: Entity,

@@ -4,13 +4,13 @@ use bevy::{
     ecs::{
         entity::Entity,
         error::{BevyError, Result},
-        event::{EventReader, EventWriter},
+        message::{MessageReader, MessageWriter},
         name::Name,
         system::{Commands, Res, ResMut},
     },
     log::warn,
     math::{Vec2, Vec3},
-    render::primitives::Aabb,
+    camera::primitives::Aabb,
     transform::components::Transform,
 };
 use bevy_enoki::{
@@ -386,7 +386,7 @@ pub fn spawn_spawner_effect(
     materials: &ParticleMaterials,
     _particle_effects: &mut Assets<Particle2dEffect>,
     color_materials: &mut Assets<ColorParticle2dMaterial>,
-    spawner_event_writer: &mut EventWriter<SpawnerParticleEffectSpawnedEvent>,
+    spawner_event_writer: &mut MessageWriter<SpawnerParticleEffectSpawnedEvent>,
 ) -> Result<Entity, BevyError> {
     // Get the spawner effect handle (no scaling needed)
     let particle_effect_handle =
@@ -427,7 +427,7 @@ pub(crate) fn spawn_blood_effect_system(
     materials: Res<ParticleMaterials>,
     mut particle_effects: ResMut<Assets<Particle2dEffect>>,
     mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
-    mut blood_effect_event_reader: EventReader<SpawnBloodEffectEvent>,
+    mut blood_effect_event_reader: MessageReader<SpawnBloodEffectEvent>,
 ) -> Result {
     for event in blood_effect_event_reader.read() {
         let _particle_entity = spawn_blood_effect(
@@ -455,7 +455,7 @@ pub(crate) fn spawn_projectile_trail_system(
     materials: Res<ParticleMaterials>,
     mut particle_effects: ResMut<Assets<Particle2dEffect>>,
     mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
-    mut projectile_trail_event_reader: EventReader<SpawnProjectileTrailEffectEvent>,
+    mut projectile_trail_event_reader: MessageReader<SpawnProjectileTrailEffectEvent>,
 ) -> Result {
     for event in projectile_trail_event_reader.read() {
         let _particle_entity = spawn_projectile_trail(
@@ -481,7 +481,7 @@ pub(crate) fn spawn_explosion_system(
     materials: Res<ParticleMaterials>,
     mut particle_effects: ResMut<Assets<Particle2dEffect>>,
     mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
-    mut explosion_event_reader: EventReader<SpawnExplosionEffectEvent>,
+    mut explosion_event_reader: MessageReader<SpawnExplosionEffectEvent>,
 ) -> Result {
     for event in explosion_event_reader.read() {
         let _particle_entity = spawn_explosion(
@@ -507,7 +507,7 @@ pub(crate) fn spawn_projectile_despawn_effect_system(
     materials: Res<ParticleMaterials>,
     mut particle_effects: ResMut<Assets<Particle2dEffect>>,
     mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
-    mut despawn_event_reader: EventReader<SpawnProjectileDespawnEffectEvent>,
+    mut despawn_event_reader: MessageReader<SpawnProjectileDespawnEffectEvent>,
 ) -> Result {
     for event in despawn_event_reader.read() {
         let _particle_entity = spawn_projectile_despawn_effect(
@@ -534,7 +534,7 @@ pub(crate) fn spawn_projectile_hit_effect_system(
     materials: Res<ParticleMaterials>,
     mut particle_effects: ResMut<Assets<Particle2dEffect>>,
     mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
-    mut hit_event_reader: EventReader<SpawnProjectileHitEffectEvent>,
+    mut hit_event_reader: MessageReader<SpawnProjectileHitEffectEvent>,
 ) -> Result {
     for event in hit_event_reader.read() {
         let _particle_entity = spawn_projectile_hit_effect(
@@ -561,8 +561,8 @@ pub(crate) fn spawn_spawner_effect_system(
     materials: Res<ParticleMaterials>,
     mut particle_effects: ResMut<Assets<Particle2dEffect>>,
     mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
-    mut spawner_event_reader: EventReader<SpawnSpawnerEffectEvent>,
-    mut spawner_particle_event_writer: EventWriter<SpawnerParticleEffectSpawnedEvent>,
+    mut spawner_event_reader: MessageReader<SpawnSpawnerEffectEvent>,
+    mut spawner_particle_event_writer: MessageWriter<SpawnerParticleEffectSpawnedEvent>,
 ) -> Result {
     for event in spawner_event_reader.read() {
         let _particle_entity = spawn_spawner_effect(

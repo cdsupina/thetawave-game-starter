@@ -22,8 +22,8 @@ impl Plugin for ThetawaveStatesPlugin {
             .init_state::<MainMenuState>() // start the game in the None state
             .init_state::<PauseMenuState>() // start the game in the pause menu
             .init_state::<DebugState>() // start the game in the None state
-            .add_event::<ToggleGameStateEvent>()
-            .add_event::<ToggleDebugStateEvent>()
+            .add_message::<ToggleGameStateEvent>()
+            .add_message::<ToggleDebugStateEvent>()
             .add_systems(OnEnter(AppState::MainMenu), enter_title_menu_state_system)
             // Toggle whether the game is paused
             .add_systems(

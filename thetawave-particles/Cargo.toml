@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-thetawave-assets = { path = "../thetawave-assets" }
+thetawave-assets = { path = "../thetawave-assets", default-features = false }
 thetawave-core = { path = "../thetawave-core" }
 bevy = { workspace = true, features = [
     "multi_threaded",

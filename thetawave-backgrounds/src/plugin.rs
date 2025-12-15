@@ -1,8 +1,8 @@
 use super::systems::{rotate_planet_system, spawn_bg_system};
 use bevy::{
     app::{Plugin, Update},
-    ecs::schedule::common_conditions::not,
-    prelude::{in_state, Condition, IntoScheduleConfigs, OnEnter},
+    ecs::schedule::{common_conditions::not, SystemCondition},
+    prelude::{in_state, IntoScheduleConfigs, OnEnter},
 };
 use thetawave_core::{AppState, GameState};
 

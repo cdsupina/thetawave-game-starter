@@ -5,9 +5,14 @@ edition.workspace = true
 
 [dependencies]
 bevy = { workspace = true, features = [] }
-thetawave-starter = { path = "../thetawave-starter" }
+thetawave-starter = { path = "../thetawave-starter", default-features = false }
+
+# getrandom 0.2 (pulled in by bevy_enoki -> rand 0.8 -> rand_core) requires the "js" feature for wasm
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["js"] }
 
 [features]
 dynamic_linking = ["bevy/dynamic_linking", "thetawave-starter/dynamic_linking"]
 default = ["debug", "dynamic_linking"]
 debug = ["thetawave-starter/debug"]
+progress_tracking = ["thetawave-starter/progress_tracking"]

@@ -1,6 +1,6 @@
 use avian2d::prelude::{Collider, Rotation};
 use bevy::{
-    ecs::{component::Component, entity::Entity, event::Event, resource::Resource},
+    ecs::{component::Component, entity::Entity, message::Message, resource::Resource},
     math::Vec2,
     platform::collections::HashMap,
     reflect::Reflect,
@@ -51,7 +51,7 @@ impl ProjectileRangeComponent {
     }
 }
 
-#[derive(Event)]
+#[derive(Message)]
 pub struct SpawnProjectileEvent {
     pub projectile_type: ProjectileType,
     pub projectile_spread: ProjectileSpread,

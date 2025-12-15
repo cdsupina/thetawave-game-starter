@@ -2,7 +2,7 @@ use avian2d::prelude::RevoluteJoint;
 use bevy::{
     ecs::{
         entity::Entity,
-        event::{EventReader, EventWriter},
+        message::{MessageReader, MessageWriter},
         query::With,
         system::{Commands, Query},
     },
@@ -19,7 +19,7 @@ use thetawave_particles::{
 fn deactivate_mob_particle_spawners(
     mob_entity: Entity,
     particle_spawner_q: &Query<(Entity, &ParticleLifeTimer)>,
-    activate_particle_event_writer: &mut EventWriter<ActivateParticleEvent>,
+    activate_particle_event_writer: &mut MessageWriter<ActivateParticleEvent>,
 ) {
     for (spawner_entity, life_timer) in particle_spawner_q.iter() {
         if life_timer.parent_entity == Some(mob_entity) {
@@ -34,9 +34,9 @@ fn deactivate_mob_particle_spawners(
 /// Checks for mob death events, despawns the entity and spawns an explosion
 pub(crate) fn mob_death_system(
     mut cmds: Commands,
-    mut mob_death_event_reader: EventReader<MobDeathEvent>,
-    mut explosion_event_writer: EventWriter<SpawnExplosionEffectEvent>,
-    mut activate_particle_event_writer: EventWriter<ActivateParticleEvent>,
+    mut mob_death_event_reader: MessageReader<MobDeathEvent>,
+    mut explosion_event_writer: MessageWriter<SpawnExplosionEffectEvent>,
+    mut activate_particle_event_writer: MessageWriter<ActivateParticleEvent>,
     particle_spawner_q: Query<(Entity, &ParticleLifeTimer)>,
     mob_q: Query<&Transform>,
 ) {
@@ -48,8 +48,8 @@ pub(crate) fn mob_death_system(
             &mut activate_particle_event_writer,
         );
 
-        // Despawn the mob
-        cmds.entity(event.mob_entity).despawn();
+        // Despawn the mob (use try_despawn to handle multiple death events for same entity)
+        cmds.entity(event.mob_entity).try_despawn();
 
         // Spawn an explosion particle effect
         if let Ok(mob_transform) = mob_q.get(event.mob_entity) {
@@ -62,10 +62,11 @@ pub(crate) fn mob_death_system(
     }
 }
 
-/// Detects when mobs with joints are destroyed and spawns blood effects at joint locations
+/// Detects when mobs with joints are destroyed, despawns the joint, and spawns blood effects
 pub(crate) fn joint_bleed_system(
-    mut mob_death_event_reader: EventReader<MobDeathEvent>,
-    mut blood_effect_event_writer: EventWriter<SpawnBloodEffectEvent>,
+    mut cmds: Commands,
+    mut mob_death_event_reader: MessageReader<MobDeathEvent>,
+    mut blood_effect_event_writer: MessageWriter<SpawnBloodEffectEvent>,
     joint_entities_q: Query<Entity, With<RevoluteJoint>>,
     all_joints_q: Query<&RevoluteJoint>,
     transform_q: Query<&Transform>,
@@ -74,21 +75,26 @@ pub(crate) fn joint_bleed_system(
         // Check if this entity is referenced in any existing joints
         for joint_entity in joint_entities_q.iter() {
             if let Ok(joint) = all_joints_q.get(joint_entity)
-                && (joint.entity1 == event.mob_entity || joint.entity2 == event.mob_entity)
+                && (joint.body1 == event.mob_entity || joint.body2 == event.mob_entity)
             {
                 // Spawn blood on the remaining entity
-                let remaining_entity = if joint.entity1 == event.mob_entity {
-                    joint.entity2
+                let remaining_entity = if joint.body1 == event.mob_entity {
+                    joint.body2
                 } else {
-                    joint.entity1
+                    joint.body1
                 };
 
                 if let Ok(remaining_transform) = transform_q.get(remaining_entity) {
                     // Calculate the blood position based on joint anchor
-                    let anchor_pos = if joint.entity1 == event.mob_entity {
-                        joint.local_anchor2
+                    let anchor_pos = if joint.body1 == event.mob_entity {
+                        joint.local_anchor2()
                     } else {
-                        joint.local_anchor1
+                        joint.local_anchor1()
+                    };
+
+                    // Skip if anchor position is not set
+                    let Some(anchor_pos) = anchor_pos else {
+                        continue;
                     };
 
                     // Calculate direction from joint to mob center for particle spray direction
@@ -113,6 +119,10 @@ pub(crate) fn joint_bleed_system(
                         direction: spray_direction,
                     });
                 }
+
+                // Despawn the joint entity to prevent orphaned joints from affecting remaining mobs
+                // This is required in avian2d 0.4+ as joints are not automatically cleaned up
+                cmds.entity(joint_entity).try_despawn();
             }
         }
     }

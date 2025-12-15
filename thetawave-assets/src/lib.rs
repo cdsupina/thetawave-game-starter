@@ -1,14 +1,26 @@
+//! Asset management for Thetawave.
+//!
+//! Uses bevy_asset_loader for managed asset loading with loading states.
+//! When `progress_tracking` feature is enabled, adds iyes_progress for loading progress UI.
+
 mod data;
 mod plugin;
 mod systems;
 
 use std::fmt;
 
+// Re-export asset types
 pub use data::{
     AssetResolver, BackgroundAssets, ExtendedBackgroundAssets, ExtendedGameAssets,
-    ExtendedMusicAssets, ExtendedUiAssets, GameAssets, LoadingProgressEvent, MusicAssets,
-    ParticleMaterials, UiAssets,
+    ExtendedMusicAssets, ExtendedUiAssets, GameAssets, MusicAssets, ParticleMaterials, UiAssets,
 };
+
+pub use bevy_asset_loader::mapped::AssetFileStem;
+
+// Only export LoadingProgressEvent when progress_tracking is enabled
+#[cfg(feature = "progress_tracking")]
+pub use data::LoadingProgressEvent;
+
 pub use plugin::ThetawaveAssetsPlugin;
 
 /// Errors that can occur during asset resolution

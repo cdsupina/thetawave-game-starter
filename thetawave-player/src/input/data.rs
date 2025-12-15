@@ -1,8 +1,7 @@
 use bevy::{
-    ecs::{component::Component, entity::Entity, event::Event},
+    ecs::{component::Component, entity::Entity, message::Message},
     reflect::Reflect,
 };
-use leafwing_abilities::Abilitylike;
 use leafwing_input_manager::Actionlike;
 use serde::{Deserialize, Serialize};
 use strum_macros::{AsRefStr, EnumIter};
@@ -32,7 +31,6 @@ pub enum PlayerAction {
 /// Abilities for player entities
 #[derive(
     Actionlike,
-    Abilitylike,
     Clone,
     Debug,
     Eq,
@@ -105,7 +103,7 @@ impl TryFrom<&String> for PlayerNum {
 }
 
 /// Event for when a player presses a join button on character selection screen
-#[derive(Event, Debug)]
+#[derive(Message, Debug)]
 pub struct PlayerJoinEvent {
     pub player_num: PlayerNum,
     pub input: InputType,

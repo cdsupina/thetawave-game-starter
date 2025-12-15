@@ -1,6 +1,7 @@
 use bevy::{
     app::{Plugin, Update},
-    prelude::{in_state, not, Condition, IntoScheduleConfigs},
+    ecs::schedule::SystemCondition,
+    prelude::{in_state, not, IntoScheduleConfigs},
 };
 use bevy_kira_audio::{AudioApp, AudioPlugin};
 
@@ -19,9 +20,9 @@ pub(crate) struct ThetawaveAudioPlugin;
 impl Plugin for ThetawaveAudioPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_plugins(AudioPlugin)
-            .add_event::<MusicTransitionEvent>()
-            .add_event::<ChangeVolumeEvent>()
-            .add_event::<AudioEffectEvent>()
+            .add_message::<MusicTransitionEvent>()
+            .add_message::<ChangeVolumeEvent>()
+            .add_message::<AudioEffectEvent>()
             .add_audio_channel::<MusicAudioChannel>()
             .add_audio_channel::<EffectsAudioChannel>()
             .add_audio_channel::<UiAudioChannel>()

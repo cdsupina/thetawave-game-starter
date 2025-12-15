@@ -1,8 +1,8 @@
-use avian2d::prelude::CollisionStarted;
+use avian2d::prelude::CollisionStart;
 use bevy::{
     app::{Plugin, Update},
     ecs::{
-        event::{EventReader, EventWriter},
+        message::{MessageReader, MessageWriter},
         query::{With, Without},
         schedule::{common_conditions, IntoScheduleConfigs},
         system::Query,
@@ -22,24 +22,28 @@ impl Plugin for ThetawaveCollisionsPlugin {
         app.add_systems(
             Update,
             detect_collisions_system
-                .run_if(common_conditions::on_event::<CollisionStarted>)
+                .run_if(common_conditions::on_message::<CollisionStart>)
                 .before(ProjectileSystemSet::Despawn),
         );
     }
 }
 
 pub fn detect_collisions_system(
-    mut started: EventReader<CollisionStarted>,
+    mut started: MessageReader<CollisionStart>,
     mut player_q: Query<&mut HealthComponent, (With<PlayerStats>, Without<MobMarker>)>,
     mut mob_q: Query<&mut HealthComponent, (With<MobMarker>, Without<PlayerStats>)>,
     projectile_q: Query<&CollisionDamage, With<ProjectileType>>,
-    mut player_death_event_writer: EventWriter<PlayerDeathEvent>,
-    mut mob_death_event_writer: EventWriter<MobDeathEvent>,
+    mut player_death_event_writer: MessageWriter<PlayerDeathEvent>,
+    mut mob_death_event_writer: MessageWriter<MobDeathEvent>,
 ) {
     for event in started.read() {
-        // Get the two entities involved in the collision
-        let entity1 = event.0;
-        let entity2 = event.1;
+        // Get the two entities involved in the collision (bodies are optional)
+        let Some(entity1) = event.body1 else {
+            continue;
+        };
+        let Some(entity2) = event.body2 else {
+            continue;
+        };
 
         // Check if one of the entities is a projectile
         if let Ok(projectile_damage) = projectile_q.get(entity1) {

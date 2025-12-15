@@ -1,6 +1,6 @@
 use bevy::{
     color::Color,
-    ecs::{component::Component, entity::Entity, event::Event},
+    ecs::{component::Component, entity::Entity, message::Message},
     math::{Vec2, Vec3},
     time::{Timer, TimerMode},
 };
@@ -20,7 +20,7 @@ const BLOOD_INACTIVE_RANDOM_FACTOR: f32 = 0.3;
 const BLOOD_MIN_INACTIVE_TIMER_INTERVAL: f32 = 0.05;
 
 /// Event for spawning blood particle effects
-#[derive(Event)]
+#[derive(Message)]
 pub struct SpawnBloodEffectEvent {
     // A value that determines the intensity, amount, and length of the effect
     pub amount: f32,
@@ -35,7 +35,7 @@ pub struct SpawnBloodEffectEvent {
 }
 
 /// Event for spawning projectile trail particle effects
-#[derive(Event)]
+#[derive(Message)]
 pub struct SpawnProjectileTrailEffectEvent {
     // Color of the trail
     pub color: Color,
@@ -46,7 +46,7 @@ pub struct SpawnProjectileTrailEffectEvent {
 }
 
 /// Event for spawning explosion particle effects
-#[derive(Event)]
+#[derive(Message)]
 pub struct SpawnExplosionEffectEvent {
     // Color of the explosion
     pub color: Color,
@@ -57,7 +57,7 @@ pub struct SpawnExplosionEffectEvent {
 }
 
 /// Event for spawning projectile despawn particle effects
-#[derive(Event)]
+#[derive(Message)]
 pub struct SpawnProjectileDespawnEffectEvent {
     // Effect type (e.g., "despawn_bullet" or "despawn_blast")
     pub effect_type: String,
@@ -70,7 +70,7 @@ pub struct SpawnProjectileDespawnEffectEvent {
 }
 
 /// Event for spawning projectile hit particle effects
-#[derive(Event)]
+#[derive(Message)]
 pub struct SpawnProjectileHitEffectEvent {
     // Effect type (e.g., "hit_bullet" or "hit_blast")
     pub effect_type: String,
@@ -83,7 +83,7 @@ pub struct SpawnProjectileHitEffectEvent {
 }
 
 /// Event for spawning projectile spawner particle effects on mobs
-#[derive(Event)]
+#[derive(Message)]
 pub struct SpawnSpawnerEffectEvent {
     // Parent entity (the mob that owns this spawner)
     pub parent_entity: Entity,
@@ -98,7 +98,7 @@ pub struct SpawnSpawnerEffectEvent {
 }
 
 /// Used for associating particle effects with spawners based on spawner keys
-#[derive(Event)]
+#[derive(Message)]
 pub struct SpawnerParticleEffectSpawnedEvent {
     pub key: String,
     pub effect_entity: Entity,
@@ -106,13 +106,13 @@ pub struct SpawnerParticleEffectSpawnedEvent {
 }
 
 /// Event for setting the active state of a particle entity
-#[derive(Event)]
+#[derive(Message)]
 pub struct ActivateParticleEvent {
     pub entity: Entity,
     pub active: bool,
 }
 
-#[derive(Event)]
+#[derive(Message)]
 pub struct ToggleActiveParticleEvent {
     pub entity: Entity,
 }

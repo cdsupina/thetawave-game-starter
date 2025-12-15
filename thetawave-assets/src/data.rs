@@ -1,9 +1,13 @@
+//! Asset data structures for Thetawave.
+//!
+//! Uses bevy_asset_loader's AssetCollection derive for managed asset loading.
+
 use bevy::{
     asset::{Assets, Handle},
     color::Color,
     image::Image,
     platform::collections::HashMap,
-    prelude::{Event, Res, Resource},
+    prelude::{Res, Resource},
     scene::Scene,
     text::Font,
 };
@@ -16,8 +20,15 @@ use thetawave_core::Faction;
 
 use crate::AssetError;
 
+#[cfg(feature = "progress_tracking")]
+use bevy::prelude::Message;
+
+// ============================================================================
+// Game Assets
+// ============================================================================
+
 /// Assets used in the game state
-#[derive(AssetCollection, Resource)]
+#[derive(Resource, AssetCollection)]
 pub struct GameAssets {
     #[asset(key = "game_sprites", collection(typed, mapped))]
     pub sprites: HashMap<AssetFileStem, Handle<Aseprite>>,
@@ -26,17 +37,17 @@ pub struct GameAssets {
 }
 
 /// Additional assets used in the game state that are not built in to thetawave-assets
-#[derive(AssetCollection, Resource, Default, Clone)]
+#[derive(Resource, Default, Clone, AssetCollection)]
 pub struct ExtendedGameAssets {
     #[asset(key = "extended_game_sprites", collection(typed, mapped), optional)]
     pub sprites: Option<HashMap<AssetFileStem, Handle<Aseprite>>>,
-    #[asset(
-        key = "extended_game_particle_effects",
-        collection(typed, mapped),
-        optional
-    )]
+    #[asset(key = "extended_game_particle_effects", collection(typed, mapped), optional)]
     pub particle_effects: Option<HashMap<AssetFileStem, Handle<Particle2dEffect>>>,
 }
+
+// ============================================================================
+// Particle Materials
+// ============================================================================
 
 /// Resource for storing particle materials
 #[derive(Resource)]
@@ -58,24 +69,111 @@ impl ParticleMaterials {
         color: &Color,
         materials: &mut Assets<ColorParticle2dMaterial>,
     ) -> Handle<ColorParticle2dMaterial> {
-        // Check if this is a faction color first
         if *color == Faction::Ally.get_color() {
             return self.ally_material.clone();
         }
         if *color == Faction::Enemy.get_color() {
             return self.enemy_material.clone();
         }
-
-        // Create a new material for the custom color
         materials.add(ColorParticle2dMaterial::new((*color).into()))
     }
 }
 
-/// Utility for resolving assets with ExtendedGameAssets priority and GameAssets fallback
+// ============================================================================
+// Music Assets
+// ============================================================================
+
+/// Audio assets used throughout all states of the app
+#[derive(Resource, AssetCollection)]
+pub struct MusicAssets {
+    #[asset(key = "music", collection(typed, mapped))]
+    pub music: HashMap<AssetFileStem, Handle<AudioSource>>,
+}
+
+/// Extended audio assets
+#[derive(Resource, Default, AssetCollection)]
+pub struct ExtendedMusicAssets {
+    #[asset(key = "extended_music", collection(typed, mapped), optional)]
+    pub music: Option<HashMap<AssetFileStem, Handle<AudioSource>>>,
+}
+
+// ============================================================================
+// UI Assets
+// ============================================================================
+
+/// Assets for Bevy UI
+#[derive(Resource, AssetCollection)]
+pub struct UiAssets {
+    #[asset(key = "ui_sprites", collection(typed, mapped))]
+    pub sprites: HashMap<AssetFileStem, Handle<Aseprite>>,
+    #[asset(key = "ui_images", collection(typed, mapped))]
+    pub images: HashMap<AssetFileStem, Handle<Image>>,
+    #[asset(key = "ui_fonts", collection(typed, mapped))]
+    pub fonts: HashMap<AssetFileStem, Handle<Font>>,
+    #[asset(key = "ui_button_select_audio", collection(typed))]
+    pub menu_button_select_effects: Vec<Handle<AudioSource>>,
+    #[asset(key = "ui_button_release_audio", collection(typed))]
+    pub menu_button_release_effects: Vec<Handle<AudioSource>>,
+    #[asset(key = "ui_button_confirm_audio", collection(typed))]
+    pub menu_button_confirm_effects: Vec<Handle<AudioSource>>,
+}
+
+/// Extended UI assets
+#[derive(Resource, Default, AssetCollection)]
+pub struct ExtendedUiAssets {
+    #[asset(key = "extended_ui_sprites", collection(typed, mapped), optional)]
+    pub sprites: Option<HashMap<AssetFileStem, Handle<Aseprite>>>,
+    #[asset(key = "extended_ui_images", collection(typed, mapped), optional)]
+    pub images: Option<HashMap<AssetFileStem, Handle<Image>>>,
+    #[asset(key = "extended_ui_fonts", collection(typed, mapped), optional)]
+    pub fonts: Option<HashMap<AssetFileStem, Handle<Font>>>,
+    #[asset(key = "extended_ui_button_select_audio", collection(typed), optional)]
+    pub menu_button_select_effects: Option<Vec<Handle<AudioSource>>>,
+    #[asset(key = "extended_ui_button_release_audio", collection(typed), optional)]
+    pub menu_button_release_effects: Option<Vec<Handle<AudioSource>>>,
+    #[asset(key = "extended_ui_button_confirm_audio", collection(typed), optional)]
+    pub menu_button_confirm_effects: Option<Vec<Handle<AudioSource>>>,
+}
+
+// ============================================================================
+// Background Assets
+// ============================================================================
+
+/// Assets for background images
+#[derive(Resource, AssetCollection)]
+pub struct BackgroundAssets {
+    #[asset(key = "space_backgrounds", collection(typed))]
+    pub space_backgrounds: Vec<Handle<Image>>,
+    #[asset(key = "planets", collection(typed))]
+    pub planets: Vec<Handle<Scene>>,
+}
+
+/// Extended background assets
+#[derive(Resource, Default, AssetCollection)]
+pub struct ExtendedBackgroundAssets {
+    #[asset(key = "extended_space_backgrounds", collection(typed), optional)]
+    pub space_backgrounds: Option<Vec<Handle<Image>>>,
+    #[asset(key = "extended_planets", collection(typed), optional)]
+    pub planets: Option<Vec<Handle<Scene>>>,
+}
+
+// ============================================================================
+// Loading Progress Event (only with progress_tracking feature)
+// ============================================================================
+
+/// Message for sending percentage of loading progress
+#[cfg(feature = "progress_tracking")]
+#[derive(Message)]
+pub struct LoadingProgressEvent(pub f32);
+
+// ============================================================================
+// Asset Resolver
+// ============================================================================
+
+/// Utility for resolving assets with Extended*Assets priority and base assets fallback
 ///
-/// Note: With bevy_asset_loader's `Files(paths: [...])` format and `collection(typed, mapped)`,
-/// assets are keyed by their full file path as specified in the paths array.
-/// For example, "media/aseprite/bullet_projectile.aseprite" gets key "media/aseprite/bullet_projectile.aseprite".
+/// Note: With `collection(typed, mapped)`, assets are keyed by their file stem.
+/// For example, "media/aseprite/bullet_projectile.aseprite" gets key "bullet_projectile".
 pub struct AssetResolver;
 
 impl AssetResolver {
@@ -94,7 +192,7 @@ impl AssetResolver {
             .ok_or_else(|| AssetError::NotFound(key.to_string()))
     }
 
-    /// Get an Particle2DEffect handle by key, checking ExtendedGameAssets first, then GameAssets
+    /// Get a Particle2DEffect handle by key, checking ExtendedGameAssets first, then GameAssets
     pub fn get_game_particle_effect(
         key: &str,
         extended_assets: &ExtendedGameAssets,
@@ -215,25 +313,16 @@ impl AssetResolver {
         extended_assets: &ExtendedBackgroundAssets,
         assets: &BackgroundAssets,
     ) -> Result<Handle<Image>, AssetError> {
-        // Create a combined vector of all space backgrounds
         let mut all_backgrounds = Vec::new();
-        
-        // Add base space backgrounds
         all_backgrounds.extend(assets.space_backgrounds.iter().cloned());
-        
-        // Add extended space backgrounds if they exist
         if let Some(extended_backgrounds) = &extended_assets.space_backgrounds {
             all_backgrounds.extend(extended_backgrounds.iter().cloned());
         }
-        
-        // Check if we have any space backgrounds at all
         if all_backgrounds.is_empty() {
             return Err(AssetError::EmptyCollections(
                 "space backgrounds".to_string(),
             ));
         }
-        
-        // Select a random space background from the combined collection
         let idx = rand::rng().random_range(0..all_backgrounds.len());
         Ok(all_backgrounds[idx].clone())
     }
@@ -242,23 +331,14 @@ impl AssetResolver {
         extended_assets: &ExtendedBackgroundAssets,
         assets: &BackgroundAssets,
     ) -> Result<Handle<Scene>, AssetError> {
-        // Create a combined vector of all planets
         let mut all_planets = Vec::new();
-        
-        // Add base planets
         all_planets.extend(assets.planets.iter().cloned());
-        
-        // Add extended planets if they exist
         if let Some(extended_planets) = &extended_assets.planets {
             all_planets.extend(extended_planets.iter().cloned());
         }
-        
-        // Check if we have any planets at all
         if all_planets.is_empty() {
             return Err(AssetError::EmptyCollections("planets".to_string()));
         }
-        
-        // Select a random planet from the combined collection
         let idx = rand::rng().random_range(0..all_planets.len());
         Ok(all_planets[idx].clone())
     }
@@ -277,76 +357,3 @@ impl AssetResolver {
             .ok_or_else(|| AssetError::NotFound(key.to_string()))
     }
 }
-
-/// Audio assets used throughout all states of the app
-#[derive(AssetCollection, Resource)]
-pub struct MusicAssets {
-    #[asset(key = "music", collection(typed, mapped))]
-    pub music: HashMap<AssetFileStem, Handle<AudioSource>>,
-}
-
-/// Audio assets used throughout all states of the app
-#[derive(AssetCollection, Resource, Default)]
-pub struct ExtendedMusicAssets {
-    #[asset(key = "extended_music", collection(typed, mapped), optional)]
-    pub music: Option<HashMap<AssetFileStem, Handle<AudioSource>>>,
-}
-
-// Assets for Bevy ui
-#[derive(AssetCollection, Resource)]
-pub struct UiAssets {
-    #[asset(key = "ui_sprites", collection(typed, mapped))]
-    pub sprites: HashMap<AssetFileStem, Handle<Aseprite>>,
-    #[asset(key = "ui_images", collection(typed, mapped))]
-    pub images: HashMap<AssetFileStem, Handle<Image>>,
-    #[asset(key = "ui_fonts", collection(typed, mapped))]
-    pub fonts: HashMap<AssetFileStem, Handle<Font>>,
-    #[asset(key = "ui_button_select_audio", collection(typed))]
-    pub menu_button_select_effects: Vec<Handle<AudioSource>>,
-    #[asset(key = "ui_button_release_audio", collection(typed))]
-    pub menu_button_release_effects: Vec<Handle<AudioSource>>,
-    #[asset(key = "ui_button_confirm_audio", collection(typed))]
-    pub menu_button_confirm_effects: Vec<Handle<AudioSource>>,
-}
-
-#[derive(AssetCollection, Resource, Default)]
-pub struct ExtendedUiAssets {
-    #[asset(key = "extended_ui_sprites", collection(typed, mapped), optional)]
-    pub sprites: Option<HashMap<AssetFileStem, Handle<Aseprite>>>,
-    #[asset(key = "extended_ui_images", collection(typed, mapped), optional)]
-    pub images: Option<HashMap<AssetFileStem, Handle<Image>>>,
-    #[asset(key = "extended_ui_fonts", collection(typed, mapped), optional)]
-    pub fonts: Option<HashMap<AssetFileStem, Handle<Font>>>,
-    #[asset(key = "extended_ui_button_select_audio", collection(typed), optional)]
-    pub menu_button_select_effects: Option<Vec<Handle<AudioSource>>>,
-    #[asset(key = "extended_ui_button_release_audio", collection(typed), optional)]
-    pub menu_button_release_effects: Option<Vec<Handle<AudioSource>>>,
-    #[asset(key = "extended_ui_button_confirm_audio", collection(typed), optional)]
-    pub menu_button_confirm_effects: Option<Vec<Handle<AudioSource>>>,
-}
-
-// Assets for background images
-#[derive(AssetCollection, Resource)]
-pub struct BackgroundAssets {
-    // all space backgrounds
-    #[asset(key = "space_backgrounds", collection(typed))]
-    pub space_backgrounds: Vec<Handle<Image>>,
-    // all planets
-    #[asset(key = "planets", collection(typed))]
-    pub planets: Vec<Handle<Scene>>,
-}
-
-// Assets for background images
-#[derive(AssetCollection, Resource, Default)]
-pub struct ExtendedBackgroundAssets {
-    // all space backgrounds
-    #[asset(key = "extended_space_backgrounds", collection(typed), optional)]
-    pub space_backgrounds: Option<Vec<Handle<Image>>>,
-    // all planets
-    #[asset(key = "extended_planets", collection(typed), optional)]
-    pub planets: Option<Vec<Handle<Scene>>>,
-}
-
-/// Event for sending percentage of loading progress
-#[derive(Event)]
-pub struct LoadingProgressEvent(pub f32);

@@ -4,7 +4,7 @@ use crate::data::{
 use bevy::{
     ecs::{
         entity::Entity,
-        event::{EventReader, EventWriter},
+        message::{MessageReader, MessageWriter},
         query::Without,
         system::{Commands, Query, Res},
     },
@@ -17,7 +17,7 @@ use bevy_enoki::prelude::ParticleSpawnerState;
 /// Listens for events to activate or deactivate particles
 pub(crate) fn activate_particle_effect_system(
     mut particle_spawner_state_q: Query<&mut ParticleSpawnerState>,
-    mut activate_particle_event_reader: EventReader<ActivateParticleEvent>,
+    mut activate_particle_event_reader: MessageReader<ActivateParticleEvent>,
 ) {
     for event in activate_particle_event_reader.read() {
         if let Ok(mut spawner_state) = particle_spawner_state_q.get_mut(event.entity) {
@@ -29,7 +29,7 @@ pub(crate) fn activate_particle_effect_system(
 /// Listens for events to toggle particles active
 pub(crate) fn toggle_particle_effect_system(
     mut particle_spawner_state_q: Query<&mut ParticleSpawnerState>,
-    mut toggle_active_particle_event_reader: EventReader<ToggleActiveParticleEvent>,
+    mut toggle_active_particle_event_reader: MessageReader<ToggleActiveParticleEvent>,
 ) {
     for event in toggle_active_particle_event_reader.read() {
         if let Ok(mut spawner_state) = particle_spawner_state_q.get_mut(event.entity) {
@@ -79,7 +79,7 @@ pub(crate) fn particle_lifetime_management_system(
         // Reset the timer if the effect activates again, good for effects like the blood effect that toggle active and inactive
         if !spawner_state.active && life_timer.timer.tick(time.delta()).just_finished() {
             // Timer expired, despawn the spawner entity
-            cmds.entity(entity).despawn();
+            cmds.entity(entity).try_despawn();
         } else if spawner_state.active {
             life_timer.timer.reset();
         }
@@ -90,7 +90,7 @@ pub(crate) fn particle_lifetime_management_system(
 pub(crate) fn blood_effect_management_system(
     mut blood_effects_q: Query<(Entity, &mut BloodEffectManager, &ParticleLifeTimer)>,
     parent_q: Query<Entity, (Without<ParticleLifeTimer>,)>,
-    mut active_particle_event_writer: EventWriter<ActivateParticleEvent>,
+    mut active_particle_event_writer: MessageWriter<ActivateParticleEvent>,
     time: Res<Time>,
 ) {
     for (entity, mut blood_manager, life_timer) in blood_effects_q.iter_mut() {

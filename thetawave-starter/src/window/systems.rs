@@ -16,9 +16,12 @@ use crate::options::OptionsRes;
 
 /// Set the image for the window icon
 pub(super) fn set_window_icon_system(
-    // we have to use `NonSend` here
-    windows: NonSend<WinitWindows>,
+    // we have to use `NonSend` here - wrap in Option since it may not be available yet
+    windows: Option<NonSend<WinitWindows>>,
 ) {
+    let Some(windows) = windows else {
+        return;
+    };
     // Try multiple possible locations for the window icon
     let possible_paths = [
         "assets/window_icon.png",        // When running from workspace root

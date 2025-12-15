@@ -6,22 +6,25 @@ use crate::{
     audio::AudioEffectEvent,
     options::{ApplyOptionsEvent, OptionsRes},
 };
-use thetawave_assets::{LoadingProgressEvent, UiAssets};
+use thetawave_assets::UiAssets;
 use thetawave_player::{ChosenCharactersResource, InputType, PlayerJoinEvent, PlayerNum};
 use thetawave_core::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState};
+
+#[cfg(feature = "progress_tracking")]
+use thetawave_assets::LoadingProgressEvent;
 
 use bevy::{
     app::AppExit,
     input::ButtonInput,
     log::{info, warn},
     prelude::{
-        Children, Entity, EventReader, EventWriter, Gamepad, GamepadButton, KeyCode, Local,
+        Children, Entity, MessageReader, MessageWriter, Gamepad, GamepadButton, KeyCode, Local,
         MouseButton, NextState, Query, Res, ResMut, With,
     },
     time::Time,
     ui::{Node, UiRect, Val},
 };
-use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
+use bevy_alt_ui_navigation_lite::prelude::{NavMessage, Focusable};
 use bevy_aseprite_ultra::prelude::AseAnimation;
 
 pub(super) mod character_selection;
@@ -29,6 +32,7 @@ pub(super) mod egui;
 pub(super) mod game_debug;
 pub(super) mod game_end;
 pub(super) mod input_rebinding;
+#[cfg(feature = "progress_tracking")]
 pub(super) mod loading;
 pub(super) mod options;
 pub(super) mod pause;
@@ -41,14 +45,14 @@ const BLUESKY_URL: &str = "https://bsky.app/profile/carlo.metalmancy.tech";
 /// Updates the animation state of buttons when focus changes
 /// Takes navigation events and queries for focusable entities and their animations
 pub(super) fn menu_button_focus_system(
-    mut nav_events: EventReader<NavEvent>,
+    mut nav_events: MessageReader<NavMessage>,
     focusable_q: Query<(&Children, &MenuButtonState), With<Focusable>>,
     mut ase_q: Query<(&Children, &mut AseAnimation)>,
     mut text_container_q: Query<&mut Node, With<MenuButtonTextContainer>>,
-    mut audio_effect_events: EventWriter<AudioEffectEvent>,
+    mut audio_effect_events: MessageWriter<AudioEffectEvent>,
 ) {
     for event in nav_events.read() {
-        if let NavEvent::FocusChanged { to, from } = event
+        if let NavMessage::FocusChanged { to, from } = event
             && to != from
         {
             // Handle newly focused button
@@ -102,19 +106,19 @@ pub(super) fn menu_button_focus_system(
 /// This system reads and performs navigation events from bevy_alt_ui_navigation, handling each button action accordingly.
 /// If a player one has been registered, will only activate button actions from player one
 pub(super) fn menu_button_action_system(
-    mut nav_events: EventReader<NavEvent>,
+    mut nav_events: MessageReader<NavMessage>,
     focusable_q: Query<(Entity, &ButtonAction), With<Focusable>>,
-    mut effect_events: EventWriter<AudioEffectEvent>,
+    mut effect_events: MessageWriter<AudioEffectEvent>,
     key_code_input: Res<ButtonInput<KeyCode>>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
     gamepads_q: Query<(Entity, &Gamepad)>,
     chosen_characters_res: Res<ChosenCharactersResource>,
-    mut button_action_events: EventWriter<DelayedButtonPressEvent>,
-    mut player_join_events: EventWriter<PlayerJoinEvent>,
-    mut player_ready_events: EventWriter<PlayerReadyEvent>,
+    mut button_action_events: MessageWriter<DelayedButtonPressEvent>,
+    mut player_join_events: MessageWriter<PlayerJoinEvent>,
+    mut player_ready_events: MessageWriter<PlayerReadyEvent>,
 ) {
     for event in nav_events.read() {
-        if let NavEvent::NoChanges { from, .. } = event
+        if let NavMessage::NoChanges { from, .. } = event
             && let Ok((button_entity, button_action)) = focusable_q.get(*from.first())
         {
             // Try to get the input from gamepad
@@ -183,7 +187,7 @@ pub(super) fn menu_button_action_system(
 }
 
 pub(super) fn menu_button_delayed_action_system(
-    mut button_press_events: EventReader<DelayedButtonPressEvent>,
+    mut button_press_events: MessageReader<DelayedButtonPressEvent>,
     mut button_action_timer: Local<ButtonActionDelayTimer>,
     mut queued_button_action: Local<Option<ButtonAction>>,
     time: Res<Time>,
@@ -191,8 +195,8 @@ pub(super) fn menu_button_delayed_action_system(
     mut next_app_state: ResMut<NextState<AppState>>,
     mut next_game_state: ResMut<NextState<GameState>>,
     mut next_pause_state: ResMut<NextState<PauseMenuState>>,
-    mut exit_events: EventWriter<AppExit>,
-    mut apply_options_events: EventWriter<ApplyOptionsEvent>,
+    mut exit_events: MessageWriter<AppExit>,
+    mut apply_options_events: MessageWriter<ApplyOptionsEvent>,
     focusable_q: Query<&Children, With<Focusable>>,
     mut ase_q: Query<(&Children, &mut AseAnimation)>,
     mut text_container_q: Query<&mut Node, With<MenuButtonTextContainer>>,

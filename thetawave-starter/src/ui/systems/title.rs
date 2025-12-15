@@ -2,11 +2,11 @@ use crate::ui::data::{ButtonAction, UiChildBuilderExt};
 
 use super::{Cleanup, MainMenuState, UiAssets};
 use bevy::{
-    prelude::{Commands, EventReader, ImageNode, Name, Query, Res, With},
+    prelude::{Commands, MessageReader, ImageNode, Name, Query, Res, With},
     ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
-use bevy_alt_ui_navigation_lite::{events::NavEvent, prelude::Focusable};
+use bevy_alt_ui_navigation_lite::prelude::{NavMessage, Focusable};
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use thetawave_assets::{AssetResolver, ExtendedUiAssets};
 
@@ -156,11 +156,11 @@ pub(in crate::ui) fn spawn_title_menu_system(
 /// Updates the animation state when focus changes between buttons
 /// Takes navigation events and queries for focusable animations
 pub(in crate::ui) fn website_footer_button_focus_system(
-    mut nav_events: EventReader<NavEvent>,
+    mut nav_events: MessageReader<NavMessage>,
     mut focusable_q: Query<&mut AseAnimation, With<Focusable>>,
 ) {
     for event in nav_events.read() {
-        if let NavEvent::FocusChanged { to, from } = event {
+        if let NavMessage::FocusChanged { to, from } = event {
             // Set newly focused button to selected animation
             if let Ok(mut ase_animation) = focusable_q.get_mut(*to.first()) {
                 ase_animation.animation.play_loop("selected");

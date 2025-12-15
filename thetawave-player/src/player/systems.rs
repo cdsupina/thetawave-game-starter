@@ -2,14 +2,15 @@ use avian2d::prelude::LinearVelocity;
 use bevy::{
     ecs::{
         entity::Entity,
-        event::{EventReader, EventWriter},
+        message::{MessageReader, MessageWriter},
         system::{Query, Res},
     },
     log::{info, warn},
     math::Vec2,
 };
-use leafwing_abilities::prelude::CooldownState;
 use leafwing_input_manager::prelude::ActionState;
+
+use crate::cooldown::CooldownState;
 
 use crate::{
     AbilityRegistry, EquippedAbilities, ExecutePlayerAbilityEvent, PlayerAbility, PlayerAction,
@@ -71,7 +72,7 @@ pub(crate) fn player_ability_system(
         &ActionState<PlayerAbility>,
     )>,
     ability_registry: Res<AbilityRegistry>,
-    mut execute_ability_event_writer: EventWriter<ExecutePlayerAbilityEvent>,
+    mut execute_ability_event_writer: MessageWriter<ExecutePlayerAbilityEvent>,
 ) {
     for (entity, mut cooldown_state, equipped_abilities, action_state) in
         player_ability_q.iter_mut()
@@ -103,7 +104,7 @@ pub(crate) fn player_ability_system(
     }
 }
 
-pub(crate) fn player_death_system(mut player_death_event_reader: EventReader<PlayerDeathEvent>) {
+pub(crate) fn player_death_system(mut player_death_event_reader: MessageReader<PlayerDeathEvent>) {
     for event in player_death_event_reader.read() {
         info!("Player {} died.", event.player_entity);
     }

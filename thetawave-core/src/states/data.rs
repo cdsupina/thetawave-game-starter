@@ -1,5 +1,5 @@
 use bevy::{
-    ecs::event::Event,
+    ecs::message::Message,
     prelude::{Component, States},
 };
 
@@ -68,10 +68,10 @@ pub struct Cleanup<S: States> {
     pub states: Vec<S>,
 }
 
-/// Event for pausing and unpausing the game
-#[derive(Event)]
+/// Message for pausing and unpausing the game
+#[derive(Message)]
 pub struct ToggleGameStateEvent;
 
-/// Event for switching between normal and debug mode
-#[derive(Event)]
+/// Message for switching between normal and debug mode
+#[derive(Message)]
 pub struct ToggleDebugStateEvent;

@@ -1,5 +1,5 @@
 #[cfg(feature = "debug")]
-use bevy::ecs::{event::EventWriter, system::Local};
+use bevy::ecs::{message::MessageWriter, system::Local};
 use bevy::{
     ecs::{error::Result, system::ResMut},
     math::Vec2,
@@ -30,11 +30,11 @@ pub(in crate::ui) fn game_debug_menu_system(
     mut mob_debug_settings: ResMut<MobDebugSettings>,
     mut physics_debug_settings: ResMut<PhysicsDebugSettings>,
     mut inspector_debug_settings: ResMut<InspectorDebugSettings>,
-    mut spawn_mob_event_writer: EventWriter<SpawnMobEvent>,
-    mut spawn_projectile_event_writer: EventWriter<SpawnProjectileEvent>,
-    mut camera2d_zoom_event_writer: EventWriter<Camera2DZoomEvent>,
+    mut spawn_mob_event_writer: MessageWriter<SpawnMobEvent>,
+    mut spawn_projectile_event_writer: MessageWriter<SpawnProjectileEvent>,
+    mut camera2d_zoom_event_writer: MessageWriter<Camera2DZoomEvent>,
     mut camera2d_zoom: Local<i8>,
-    mut camera3d_zoom_event_writer: EventWriter<Camera3DZoomEvent>,
+    mut camera3d_zoom_event_writer: MessageWriter<Camera3DZoomEvent>,
     mut camera3d_zoom: Local<i8>,
     mut spawn_location: Local<Vec2>,
 ) -> Result {

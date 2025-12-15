@@ -11,7 +11,7 @@ fn main() {
 
     app.add_plugins((ThetawaveStarterPlugin {
         window_title: "Thetawave Test".to_string(),
-        starting_resolution: (1280., 720.),
+        starting_resolution: (1280, 720),
         show_debug_keycode: KeyCode::Backquote,
         extended_abilities: HashMap::new(),
         extended_duration_abilities: HashSet::new(),

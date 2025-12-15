@@ -1,7 +1,7 @@
-use avian2d::prelude::CollisionStarted;
+use avian2d::prelude::CollisionStart;
 use bevy::{
     app::{Plugin, Update},
-    ecs::schedule::{Condition, IntoScheduleConfigs, common_conditions::on_event},
+    ecs::schedule::{IntoScheduleConfigs, SystemCondition, common_conditions::on_message},
     state::condition::in_state,
 };
 use bevy_aseprite_ultra::prelude::AnimationEvents;
@@ -25,13 +25,13 @@ impl Plugin for ThetawaveProjectilesPlugin {
                 (
                     timed_range_system.in_set(ProjectileSystemSet::Despawn),
                     projectile_hit_system
-                        .run_if(on_event::<CollisionStarted>)
+                        .run_if(on_message::<CollisionStart>)
                         .in_set(ProjectileSystemSet::Despawn),
-                    spawn_projectile_system.run_if(on_event::<SpawnProjectileEvent>),
-                    despawn_after_animation_system.run_if(on_event::<AnimationEvents>),
+                    spawn_projectile_system.run_if(on_message::<SpawnProjectileEvent>),
+                    despawn_after_animation_system.run_if(on_message::<AnimationEvents>),
                 )
                     .run_if(in_state(AppState::Game).and(in_state(GameState::Playing))),
             )
-            .add_event::<SpawnProjectileEvent>();
+            .add_message::<SpawnProjectileEvent>();
     }
 }
