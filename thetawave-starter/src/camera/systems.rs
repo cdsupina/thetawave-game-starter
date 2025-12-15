@@ -11,7 +11,6 @@ use bevy::{
     render::view::Hdr,
     utils::default,
 };
-use bevy_egui::PrimaryEguiContext;
 
 const VIEWPORT_HEIGHT: f32 = 250.0;
 
@@ -20,7 +19,6 @@ pub(super) fn setup_cameras_system(mut cmd: Commands) {
     // Necessary for viewing 2d sprites
     cmd.spawn((
         Camera2d,
-        PrimaryEguiContext,
         Camera {
             order: 1,
             clear_color: ClearColorConfig::Custom(Color::NONE),

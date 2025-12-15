@@ -79,6 +79,9 @@ impl Plugin for ThetawaveStarterPlugin {
                         .with_scale_factor_override(1.0),
                         resizable: false,
                         title: self.window_title.clone(),
+                        // For wasm: use the canvas defined in index.html
+                        #[cfg(target_arch = "wasm32")]
+                        canvas: Some("#bevy".to_string()),
                         ..default()
                     }),
                     ..default()
