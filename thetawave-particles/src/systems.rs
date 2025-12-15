@@ -8,11 +8,12 @@ use bevy::{
         query::Without,
         system::{Commands, Query, Res},
     },
-    log::warn,
     time::Time,
     transform::components::Transform,
 };
 use bevy_enoki::prelude::ParticleSpawnerState;
+#[cfg(feature = "debug")]
+use thetawave_core::LoggingSettings;
 
 /// Listens for events to activate or deactivate particles
 pub(crate) fn activate_particle_effect_system(
@@ -92,6 +93,7 @@ pub(crate) fn blood_effect_management_system(
     parent_q: Query<Entity, (Without<ParticleLifeTimer>,)>,
     mut active_particle_event_writer: MessageWriter<ActivateParticleEvent>,
     time: Res<Time>,
+    #[cfg(feature = "debug")] logging_settings: Res<LoggingSettings>,
 ) {
     for (entity, mut blood_manager, life_timer) in blood_effects_q.iter_mut() {
         // Every blood entity should have a parent entity specified due to it spawning from a joint
@@ -118,7 +120,9 @@ pub(crate) fn blood_effect_management_system(
                 });
             }
         } else {
-            warn!("No parent entity found for blood effect: {:?}", entity);
+            thetawave_core::log_if!(logging_settings, particles, warn,
+                "No parent entity found for blood effect: {:?}", entity
+            );
         }
     }
 }

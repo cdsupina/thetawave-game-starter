@@ -20,3 +20,4 @@ dynamic_linking = [
     "thetawave-assets/dynamic_linking",
     "thetawave-core/dynamic_linking",
 ]
+debug = ["thetawave-core/debug"]

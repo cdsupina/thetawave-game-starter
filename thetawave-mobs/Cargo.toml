@@ -32,4 +32,4 @@ dynamic_linking = [
     "thetawave-core/dynamic_linking",
     "thetawave-particles/dynamic_linking",
 ]
-debug = []
+debug = ["thetawave-core/debug"]

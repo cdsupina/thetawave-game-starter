@@ -20,3 +20,4 @@ web-sys = { workspace = true, features = [
 
 [features]
 dynamic_linking = ["bevy/dynamic_linking"]
+debug = []

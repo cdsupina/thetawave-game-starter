@@ -5,11 +5,13 @@ use bevy::{
         message::{MessageReader, MessageWriter},
         query::{With, Without},
         schedule::{common_conditions, IntoScheduleConfigs},
-        system::Query,
+        system::{Query, Res},
     },
-    log::info,
 };
-use thetawave_core::{CollisionDamage, HealthComponent};
+use thetawave_core::CollisionDamage;
+#[cfg(feature = "debug")]
+use thetawave_core::LoggingSettings;
+use thetawave_core::HealthComponent;
 use thetawave_mobs::{MobDeathEvent, MobMarker};
 use thetawave_player::{PlayerDeathEvent, PlayerStats};
 use thetawave_projectiles::{ProjectileSystemSet, ProjectileType};
@@ -35,6 +37,7 @@ pub fn detect_collisions_system(
     projectile_q: Query<&CollisionDamage, With<ProjectileType>>,
     mut player_death_event_writer: MessageWriter<PlayerDeathEvent>,
     mut mob_death_event_writer: MessageWriter<MobDeathEvent>,
+    #[cfg(feature = "debug")] logging_settings: Res<LoggingSettings>,
 ) {
     for event in started.read() {
         // Get the two entities involved in the collision (bodies are optional)
@@ -54,7 +57,7 @@ pub fn detect_collisions_system(
                         player_entity: entity2,
                     });
                 }
-                info!(
+                thetawave_core::log_if!(logging_settings, combat, info,
                     "Projectile collision detected: Projectile (Entity {:?}) hit Player (Entity {:?}) for {} damage. Player health: {}",
                     entity1, entity2, projectile_damage.0, player_health.current_health
                 );
@@ -64,7 +67,10 @@ pub fn detect_collisions_system(
                         mob_entity: entity2,
                     });
                 }
-                info!(
+                thetawave_core::log_if!(
+                    logging_settings,
+                    combat,
+                    info,
                     "Projectile collision detected: Projectile (Entity {:?}) hit Mob (Entity {:?}) for {} damage. Mob health: {}",
                     entity1, entity2, projectile_damage.0, mob_health.current_health
                 );
@@ -77,7 +83,10 @@ pub fn detect_collisions_system(
                         player_entity: entity1,
                     });
                 }
-                info!(
+                thetawave_core::log_if!(
+                    logging_settings,
+                    combat,
+                    info,
                     "Projectile collision detected: Projectile (Entity {:?}) hit Player (Entity {:?}) for {} damage. Player health: {}",
                     entity2, entity1, projectile_damage.0, player_health.current_health
                 );
@@ -87,7 +96,10 @@ pub fn detect_collisions_system(
                         mob_entity: entity1,
                     });
                 }
-                info!(
+                thetawave_core::log_if!(
+                    logging_settings,
+                    combat,
+                    info,
                     "Projectile collision detected: Projectile (Entity {:?}) hit Mob (Entity {:?}) for {} damage. Mob health: {}",
                     entity2, entity1, projectile_damage.0, mob_health.current_health
                 );
