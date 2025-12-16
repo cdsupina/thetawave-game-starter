@@ -5,10 +5,11 @@ use bevy::{
         message::{MessageReader, MessageWriter},
         system::{Query, Res},
     },
-    log::{info, warn},
     math::Vec2,
 };
 use leafwing_input_manager::prelude::ActionState;
+#[cfg(feature = "debug")]
+use thetawave_core::LoggingSettings;
 
 use crate::cooldown::CooldownState;
 
@@ -72,6 +73,7 @@ pub(crate) fn player_ability_system(
         &ActionState<PlayerAbility>,
     )>,
     ability_registry: Res<AbilityRegistry>,
+    #[cfg(feature = "debug")] logging_settings: Res<LoggingSettings>,
     mut execute_ability_event_writer: MessageWriter<ExecutePlayerAbilityEvent>,
 ) {
     for (entity, mut cooldown_state, equipped_abilities, action_state) in
@@ -84,7 +86,14 @@ pub(crate) fn player_ability_system(
                         player_entity: entity,
                         ability_type: ability_type.clone(),
                     };
-                    info!("{:?}: {:?}", ability, execute_ability_event);
+                    thetawave_core::log_if!(
+                        logging_settings,
+                        abilities,
+                        info,
+                        "{:?}: {:?}",
+                        ability,
+                        execute_ability_event
+                    );
                     execute_ability_event_writer.write(execute_ability_event);
 
                     // For duration abilities, immediately refresh the cooldown to keep it ready
@@ -94,7 +103,10 @@ pub(crate) fn player_ability_system(
                         cooldown.refresh();
                     }
                 } else {
-                    warn!(
+                    thetawave_core::log_if!(
+                        logging_settings,
+                        abilities,
+                        warn,
                         "Player attempted to use ability {:?} but it's not equipped",
                         ability
                     );
@@ -104,8 +116,17 @@ pub(crate) fn player_ability_system(
     }
 }
 
-pub(crate) fn player_death_system(mut player_death_event_reader: MessageReader<PlayerDeathEvent>) {
+pub(crate) fn player_death_system(
+    mut player_death_event_reader: MessageReader<PlayerDeathEvent>,
+    #[cfg(feature = "debug")] logging_settings: Res<LoggingSettings>,
+) {
     for event in player_death_event_reader.read() {
-        info!("Player {} died.", event.player_entity);
+        thetawave_core::log_if!(
+            logging_settings,
+            abilities,
+            info,
+            "Player {} died.",
+            event.player_entity
+        );
     }
 }

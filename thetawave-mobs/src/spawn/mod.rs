@@ -9,7 +9,6 @@ use bevy::{
         resource::Resource,
         system::{Commands, Query, Res},
     },
-    log::warn,
     math::{Quat, Vec2},
     platform::collections::HashMap,
     prelude::Name,
@@ -20,6 +19,8 @@ use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_behave::prelude::BehaveTree;
 use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
 use thetawave_core::{AppState, Cleanup};
+#[cfg(feature = "debug")]
+use thetawave_core::LoggingSettings;
 use thetawave_particles::{SpawnSpawnerEffectEvent, SpawnerParticleEffectSpawnedEvent};
 use thetawave_projectiles::ProjectileType;
 
@@ -89,6 +90,7 @@ pub(super) fn spawn_mob_system(
     game_assets: Res<GameAssets>,
     extended_assets: Res<ExtendedGameAssets>,
     mob_debug_settings: Res<MobDebugSettings>,
+    #[cfg(feature = "debug")] logging_settings: Res<LoggingSettings>,
     mut spawn_mob_event_reader: MessageReader<SpawnMobEvent>,
     attributes_res: Res<MobAttributesResource>,
     behaviors_res: Res<MobBehaviorsResource>,
@@ -104,6 +106,8 @@ pub(super) fn spawn_mob_system(
             event.position,
             event.rotation,
             &mob_debug_settings,
+            #[cfg(feature = "debug")]
+            &logging_settings,
             &attributes_res,
             &behaviors_res,
             &game_assets,
@@ -123,6 +127,7 @@ fn spawn_mob(
     position: Vec2,
     rotation: f32,
     mob_debug_settings: &MobDebugSettings,
+    #[cfg(feature = "debug")] logging_settings: &LoggingSettings,
     attributes_res: &MobAttributesResource,
     behaviors_res: &MobBehaviorsResource,
     game_assets: &GameAssets,
@@ -182,10 +187,9 @@ fn spawn_mob(
                             game_assets,
                         ) {
                             Ok(handle) => handle,
-                            Err(e) => {
-                                warn!(
-                                    "Failed to load decoration sprite, skipping decoration: {}",
-                                    e
+                            Err(_e) => {
+                                thetawave_core::log_if!(logging_settings, spawning, warn,
+                                    "Failed to load decoration sprite, skipping decoration: {}", _e
                                 );
                                 continue;
                             }
@@ -243,6 +247,8 @@ fn spawn_mob(
                     position + jointed_mob.offset_pos + chain.pos_offset * chain_index as f32,
                     0.0,
                     mob_debug_settings,
+                    #[cfg(feature = "debug")]
+                    logging_settings,
                     attributes_res,
                     behaviors_res,
                     game_assets,
@@ -281,6 +287,8 @@ fn spawn_mob(
                 position + jointed_mob.offset_pos,
                 0.0,
                 mob_debug_settings,
+                #[cfg(feature = "debug")]
+                logging_settings,
                 attributes_res,
                 behaviors_res,
                 game_assets,
@@ -353,6 +361,7 @@ fn create_joint(
 pub(crate) fn connect_effect_to_spawner(
     mut events: MessageReader<SpawnerParticleEffectSpawnedEvent>,
     mut mob_query: Query<&mut ProjectileSpawnerComponent, With<MobMarker>>,
+    #[cfg(feature = "debug")] logging_settings: Res<LoggingSettings>,
 ) {
     for event in events.read() {
         // Directly access the parent mob using the parent_entity from the event
@@ -361,14 +370,13 @@ pub(crate) fn connect_effect_to_spawner(
             if let Some(spawner) = projectile_spawner_component.spawners.get_mut(&event.key) {
                 spawner.spawn_effect_entity = Some(event.effect_entity);
             } else {
-                warn!(
+                thetawave_core::log_if!(logging_settings, spawning, warn,
                     "Mob {} has no spawner with key '{}'",
-                    event.parent_entity.index(),
-                    event.key
+                    event.parent_entity.index(), event.key
                 );
             }
         } else {
-            warn!(
+            thetawave_core::log_if!(logging_settings, spawning, warn,
                 "Parent entity {} is not a valid mob with ProjectileSpawnerComponent",
                 event.parent_entity.index()
             );

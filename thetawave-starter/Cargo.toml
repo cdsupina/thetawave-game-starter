@@ -80,5 +80,8 @@ dynamic_linking = [
 debug = [
     "thetawave-debug",
     "thetawave-physics/physics_debug",
+    "thetawave-core/debug",
     "thetawave-mobs/debug",
+    "thetawave-player/debug",
+    "thetawave-particles/debug",
 ]

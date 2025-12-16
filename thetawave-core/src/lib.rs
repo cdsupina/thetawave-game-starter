@@ -1,5 +1,6 @@
 mod data;
 mod data_loader;
+mod logging;
 mod plugin;
 mod states;
 mod tags;
@@ -9,6 +10,8 @@ pub use data::{
     XHITARA_BLOOD_COLOR,
 };
 pub use data_loader::load_with_extended;
+#[cfg(feature = "debug")]
+pub use logging::LoggingSettings;
 pub use plugin::ThetawaveCorePlugin;
 pub use states::{
     AppState, Cleanup, DebugState, GameState, MainMenuState, PauseMenuState, ThetawaveStatesPlugin,

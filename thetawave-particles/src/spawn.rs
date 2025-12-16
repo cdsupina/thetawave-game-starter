@@ -8,7 +8,6 @@ use bevy::{
         name::Name,
         system::{Commands, Res, ResMut},
     },
-    log::warn,
     math::{Vec2, Vec3},
     camera::primitives::Aabb,
     transform::components::Transform,
@@ -19,6 +18,8 @@ use bevy_enoki::{
 };
 use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
 use thetawave_core::{AppState, Cleanup};
+#[cfg(feature = "debug")]
+use thetawave_core::LoggingSettings;
 
 use crate::{
     SpawnBloodEffectEvent, SpawnProjectileTrailEffectEvent,
@@ -84,6 +85,7 @@ pub fn spawn_blood_effect(
     materials: &ParticleMaterials,
     particle_effects: &mut Assets<Particle2dEffect>,
     color_materials: &mut Assets<ColorParticle2dMaterial>,
+    #[cfg(feature = "debug")] logging_settings: &LoggingSettings,
 ) -> Result<Entity, BevyError> {
     // Get the base blood effect handle and modify it for direction
     let base_handle = AssetResolver::get_game_particle_effect("blood", extended_assets, assets)?;
@@ -94,7 +96,7 @@ pub fn spawn_blood_effect(
         if let Some(ref mut current_direction) = modified_effect.direction {
             current_direction.0 = direction; // Update base value only
         } else {
-            warn!(
+            thetawave_core::log_if!(logging_settings, particles, warn,
                 "Trying to set direction on blood effect without existing direction: {:?}",
                 direction
             );
@@ -147,6 +149,7 @@ pub fn spawn_projectile_trail(
     materials: &ParticleMaterials,
     particle_effects: &mut Assets<Particle2dEffect>,
     color_materials: &mut Assets<ColorParticle2dMaterial>,
+    #[cfg(feature = "debug")] logging_settings: &LoggingSettings,
 ) -> Result<Entity, BevyError> {
     // Get the projectile trail effect handle and apply scaling
     let particle_effect_handle = {
@@ -193,7 +196,7 @@ pub fn spawn_projectile_trail(
         let randomness = particle_effect.lifetime.1;
         base_lifetime + (base_lifetime * randomness)
     } else {
-        warn!(
+        thetawave_core::log_if!(logging_settings, particles, warn,
             "Projectile trail effect not loaded yet, using fallback lifetime: {}",
             MAX_LIFETIME_FALLBACK
         );
@@ -427,6 +430,7 @@ pub(crate) fn spawn_blood_effect_system(
     materials: Res<ParticleMaterials>,
     mut particle_effects: ResMut<Assets<Particle2dEffect>>,
     mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
+    #[cfg(feature = "debug")] logging_settings: Res<LoggingSettings>,
     mut blood_effect_event_reader: MessageReader<SpawnBloodEffectEvent>,
 ) -> Result {
     for event in blood_effect_event_reader.read() {
@@ -442,6 +446,8 @@ pub(crate) fn spawn_blood_effect_system(
             &materials,
             &mut particle_effects,
             &mut color_materials,
+            #[cfg(feature = "debug")]
+            &logging_settings,
         )?;
     }
 
@@ -455,6 +461,7 @@ pub(crate) fn spawn_projectile_trail_system(
     materials: Res<ParticleMaterials>,
     mut particle_effects: ResMut<Assets<Particle2dEffect>>,
     mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
+    #[cfg(feature = "debug")] logging_settings: Res<LoggingSettings>,
     mut projectile_trail_event_reader: MessageReader<SpawnProjectileTrailEffectEvent>,
 ) -> Result {
     for event in projectile_trail_event_reader.read() {
@@ -468,6 +475,8 @@ pub(crate) fn spawn_projectile_trail_system(
             &materials,
             &mut particle_effects,
             &mut color_materials,
+            #[cfg(feature = "debug")]
+            &logging_settings,
         )?;
     }
 

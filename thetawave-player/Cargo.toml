@@ -25,3 +25,4 @@ dynamic_linking = [
     "thetawave-core/dynamic_linking",
     "thetawave-projectiles/dynamic_linking",
 ]
+debug = ["thetawave-core/debug"]

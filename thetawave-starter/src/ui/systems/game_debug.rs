@@ -13,7 +13,7 @@ use bevy_egui::{
 #[cfg(feature = "debug")]
 use thetawave_camera::{Camera2DZoomEvent, Camera3DZoomEvent};
 #[cfg(feature = "debug")]
-use thetawave_core::Faction;
+use thetawave_core::{Faction, LoggingSettings};
 #[cfg(feature = "debug")]
 use thetawave_debug::InspectorDebugSettings;
 #[cfg(feature = "debug")]
@@ -30,6 +30,7 @@ pub(in crate::ui) fn game_debug_menu_system(
     mut mob_debug_settings: ResMut<MobDebugSettings>,
     mut physics_debug_settings: ResMut<PhysicsDebugSettings>,
     mut inspector_debug_settings: ResMut<InspectorDebugSettings>,
+    mut logging_settings: ResMut<LoggingSettings>,
     mut spawn_mob_event_writer: MessageWriter<SpawnMobEvent>,
     mut spawn_projectile_event_writer: MessageWriter<SpawnProjectileEvent>,
     mut camera2d_zoom_event_writer: MessageWriter<Camera2DZoomEvent>,
@@ -48,6 +49,15 @@ pub(in crate::ui) fn game_debug_menu_system(
                     &mut inspector_debug_settings.inspector_enabled,
                     "World Inspector",
                 );
+            });
+
+            ui.menu_button("Logging", |ui| {
+                ui.checkbox(&mut logging_settings.combat, "Combat");
+                ui.checkbox(&mut logging_settings.abilities, "Abilities");
+                ui.checkbox(&mut logging_settings.spawning, "Spawning");
+                ui.checkbox(&mut logging_settings.particles, "Particles");
+                ui.checkbox(&mut logging_settings.data, "Data Loading");
+                ui.checkbox(&mut logging_settings.ui, "UI");
             });
 
             ui.menu_button("View", |ui| {
