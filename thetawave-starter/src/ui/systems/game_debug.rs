@@ -51,6 +51,15 @@ pub(in crate::ui) fn game_debug_menu_system(
                 );
             });
 
+            ui.menu_button("Logging", |ui| {
+                ui.checkbox(&mut logging_settings.combat, "Combat");
+                ui.checkbox(&mut logging_settings.abilities, "Abilities");
+                ui.checkbox(&mut logging_settings.spawning, "Spawning");
+                ui.checkbox(&mut logging_settings.particles, "Particles");
+                ui.checkbox(&mut logging_settings.data, "Data Loading");
+                ui.checkbox(&mut logging_settings.ui, "UI");
+            });
+
             ui.menu_button("View", |ui| {
                 use bevy_egui::egui::Slider;
 
@@ -71,15 +80,6 @@ pub(in crate::ui) fn game_debug_menu_system(
                     &mut physics_debug_settings.diagnostics_enabled,
                     "Diagnostics",
                 );
-            });
-
-            ui.menu_button("Logging", |ui| {
-                ui.checkbox(&mut logging_settings.combat, "Combat");
-                ui.checkbox(&mut logging_settings.abilities, "Abilities");
-                ui.checkbox(&mut logging_settings.spawning, "Spawning");
-                ui.checkbox(&mut logging_settings.particles, "Particles");
-                ui.checkbox(&mut logging_settings.data, "Data Loading");
-                ui.checkbox(&mut logging_settings.ui, "UI");
             });
 
             ui.menu_button("Spawn", |ui| {
