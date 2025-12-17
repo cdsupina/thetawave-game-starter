@@ -1,10 +1,13 @@
 use bevy::{
     app::{Plugin, Update},
-    ecs::schedule::{IntoScheduleConfigs, SystemCondition},
+    ecs::{
+        schedule::{IntoScheduleConfigs, SystemCondition},
+        system::Res,
+    },
     state::condition::in_state,
 };
 use bevy_enoki::EnokiPlugin;
-use thetawave_core::{AppState, GameState};
+use thetawave_core::{AppState, GameState, ParticleRenderingEnabled};
 
 use crate::{
     SpawnBloodEffectEvent,
@@ -14,9 +17,9 @@ use crate::{
         SpawnerParticleEffectSpawnedEvent, ToggleActiveParticleEvent,
     },
     spawn::{
-        spawn_blood_effect_system, spawn_explosion_system,
-        spawn_projectile_despawn_effect_system, spawn_projectile_hit_effect_system,
-        spawn_projectile_trail_system, spawn_spawner_effect_system,
+        spawn_blood_effect_system, spawn_explosion_system, spawn_projectile_despawn_effect_system,
+        spawn_projectile_hit_effect_system, spawn_projectile_trail_system,
+        spawn_spawner_effect_system,
     },
     systems::{
         activate_particle_effect_system, blood_effect_management_system,
@@ -44,6 +47,7 @@ impl Plugin for ThetawaveParticlesPlugin {
         app.add_systems(
             Update,
             (
+                // Particle Creation & Setup Systems
                 particle_position_tracking_system,
                 activate_particle_effect_system,
                 toggle_particle_effect_system,
@@ -53,17 +57,15 @@ impl Plugin for ThetawaveParticlesPlugin {
                 spawn_projectile_despawn_effect_system,
                 spawn_projectile_hit_effect_system,
                 spawn_spawner_effect_system,
-            )
-                .run_if(in_state(AppState::Game).and(in_state(GameState::Playing))),
-        );
-
-        app.add_systems(
-            Update,
-            (
+                // Particle Lifecycle Management Systems
                 particle_lifetime_management_system,
                 blood_effect_management_system,
             )
-                .run_if(in_state(AppState::Game).and(in_state(GameState::Playing))),
+                .run_if(
+                    in_state(AppState::Game)
+                        .and(in_state(GameState::Playing))
+                        .and(|res: Res<ParticleRenderingEnabled>| res.0),
+                ),
         );
     }
 }

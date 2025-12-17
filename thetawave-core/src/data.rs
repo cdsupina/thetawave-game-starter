@@ -1,4 +1,4 @@
-use bevy::{color::Color, ecs::component::Component, reflect::Reflect};
+use bevy::{color::Color, ecs::component::Component, ecs::resource::Resource, reflect::Reflect};
 use serde::Deserialize;
 
 // Faction color constants
@@ -62,3 +62,14 @@ impl HealthComponent {
 /// Component for transferring collision damage between players, projectiles, and mobs
 #[derive(Component, Reflect)]
 pub struct CollisionDamage(pub u32);
+
+/// Resource to control whether particle rendering is enabled
+/// Used to disable particles when features incompatible with bevy_enoki (like multi-window) are active
+#[derive(Resource)]
+pub struct ParticleRenderingEnabled(pub bool);
+
+impl Default for ParticleRenderingEnabled {
+    fn default() -> Self {
+        Self(true)
+    }
+}

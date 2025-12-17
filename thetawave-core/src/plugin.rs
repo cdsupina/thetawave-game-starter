@@ -1,6 +1,6 @@
 use bevy::{app::Plugin, prelude::App};
 
-use crate::{Faction, HealthComponent};
+use crate::{Faction, HealthComponent, ParticleRenderingEnabled};
 #[cfg(feature = "debug")]
 use crate::LoggingSettings;
 
@@ -11,6 +11,9 @@ impl Plugin for ThetawaveCorePlugin {
         // Register core components for reflection/inspection
         app.register_type::<HealthComponent>();
         app.register_type::<Faction>();
+
+        // Initialize particle rendering control
+        app.init_resource::<ParticleRenderingEnabled>();
 
         // Initialize logging settings resource (debug builds only)
         #[cfg(feature = "debug")]
