@@ -21,7 +21,7 @@ pub(crate) struct MobSpawnerComponent {
 /// Maps String keys to ProjectileSpawners
 /// Intended to be used by behaviors
 #[derive(Component, Deserialize, Debug, Clone, Reflect)]
-pub(crate) struct ProjectileSpawnerComponent {
+pub struct ProjectileSpawnerComponent {
     pub spawners: HashMap<String, ProjectileSpawner>,
 }
 

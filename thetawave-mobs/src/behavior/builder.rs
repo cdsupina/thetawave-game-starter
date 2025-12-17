@@ -1,7 +1,7 @@
 use bevy_behave::{prelude::Tree, Behave, behave};
 
 use super::{
-    data::MobBehaviorComponent,
+    data::{BehaviorActionName, MobBehaviorComponent},
     toml_data::BehaviorNodeData,
 };
 
@@ -38,9 +38,10 @@ pub fn build_behavior_tree(node: &BehaviorNodeData) -> Tree<Behave> {
         
         BehaviorNodeData::Action { name, behaviors } => {
             let component = MobBehaviorComponent { behaviors: behaviors.clone() };
+            let action_name = BehaviorActionName(name.clone());
             // Convert name to &'static str by leaking it
             let static_name: &'static str = Box::leak(name.clone().into_boxed_str());
-            behave! { Behave::spawn_named(static_name, component) }
+            behave! { Behave::spawn_named(static_name, (component, action_name)) }
         }
         
         BehaviorNodeData::Trigger { trigger_type: _trigger_type } => {

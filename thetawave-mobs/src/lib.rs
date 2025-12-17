@@ -3,7 +3,10 @@ mod behavior;
 mod spawn;
 mod systems;
 
-pub use attributes::{MobDeathEvent, MobMarker};
+pub use attributes::{
+    JointsComponent, MobAttributesComponent, MobDeathEvent, MobMarker, ProjectileSpawnerComponent,
+};
+pub use behavior::{BehaviorActionName, BehaviorReceiverComponent, MobBehaviorComponent, MobBehaviorType, MobBehaviorsResource};
 pub use spawn::MobDebugSettings;
 
 use bevy::{

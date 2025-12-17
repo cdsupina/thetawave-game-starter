@@ -1,3 +1,5 @@
+mod mob_view;
+
 use bevy::{
     app::{Plugin, Update},
     ecs::{resource::Resource, system::Res},
@@ -6,6 +8,8 @@ use bevy::{
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use thetawave_core::ToggleDebugStateEvent;
+
+pub use mob_view::{MobViewPlugin, ToggleMobViewWindowEvent};
 
 pub struct ThetawaveDebugPlugin {
     /// The keycode to toggle debug mode on release
@@ -19,6 +23,7 @@ impl Plugin for ThetawaveDebugPlugin {
             WorldInspectorPlugin::new()
                 .run_if(|res: Res<InspectorDebugSettings>| res.inspector_enabled),
         );
+        app.add_plugins(MobViewPlugin);
         app.add_systems(Update, toggle_debug_mode);
         app.insert_resource(DebugKeycode(self.show_debug_keycode));
     }

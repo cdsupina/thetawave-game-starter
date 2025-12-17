@@ -57,6 +57,6 @@ pub(crate) struct JointedMob {
 /// This is for "anchors" only
 /// Used by behaviors for referencing joint entities
 #[derive(Component, Reflect)]
-pub(crate) struct JointsComponent {
+pub struct JointsComponent {
     pub joints: HashMap<String, Entity>,
 }

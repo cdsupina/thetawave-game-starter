@@ -7,7 +7,7 @@ mod tags;
 
 pub use data::{
     with_bloom, ALLY_BASE_COLOR, CollisionDamage, ENEMY_BASE_COLOR, Faction, HealthComponent,
-    XHITARA_BLOOD_COLOR,
+    ParticleRenderingEnabled, XHITARA_BLOOD_COLOR,
 };
 pub use data_loader::load_with_extended;
 #[cfg(feature = "debug")]
