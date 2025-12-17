@@ -1,8 +1,20 @@
 use std::process::Command;
 
 fn main() {
+    // Watch all workspace Cargo.toml files for dependency changes
     println!("cargo:rerun-if-changed=../Cargo.toml");
     println!("cargo:rerun-if-changed=Cargo.toml");
+    println!("cargo:rerun-if-changed=../thetawave-assets/Cargo.toml");
+    println!("cargo:rerun-if-changed=../thetawave-backgrounds/Cargo.toml");
+    println!("cargo:rerun-if-changed=../thetawave-camera/Cargo.toml");
+    println!("cargo:rerun-if-changed=../thetawave-core/Cargo.toml");
+    println!("cargo:rerun-if-changed=../thetawave-debug/Cargo.toml");
+    println!("cargo:rerun-if-changed=../thetawave-mobs/Cargo.toml");
+    println!("cargo:rerun-if-changed=../thetawave-particles/Cargo.toml");
+    println!("cargo:rerun-if-changed=../thetawave-physics/Cargo.toml");
+    println!("cargo:rerun-if-changed=../thetawave-player/Cargo.toml");
+    println!("cargo:rerun-if-changed=../thetawave-projectiles/Cargo.toml");
+    println!("cargo:rerun-if-changed=../thetawave-starter/Cargo.toml");
 
     // Generate dependency graph
     let output = Command::new("cargo")
