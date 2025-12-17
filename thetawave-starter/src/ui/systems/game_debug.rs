@@ -15,7 +15,7 @@ use thetawave_camera::{Camera2DZoomEvent, Camera3DZoomEvent};
 #[cfg(feature = "debug")]
 use thetawave_core::{Faction, LoggingSettings};
 #[cfg(feature = "debug")]
-use thetawave_debug::InspectorDebugSettings;
+use thetawave_debug::{InspectorDebugSettings, ToggleMobViewWindowEvent};
 #[cfg(feature = "debug")]
 use thetawave_mobs::{MobDebugSettings, SpawnMobEvent};
 #[cfg(feature = "debug")]
@@ -38,6 +38,7 @@ pub(in crate::ui) fn game_debug_menu_system(
     mut camera3d_zoom_event_writer: MessageWriter<Camera3DZoomEvent>,
     mut camera3d_zoom: Local<i8>,
     mut spawn_location: Local<Vec2>,
+    mut toggle_mob_view_event_writer: MessageWriter<ToggleMobViewWindowEvent>,
 ) -> Result {
     let mut camera2d_zoom_new = *camera2d_zoom;
     let mut camera3d_zoom_new = *camera3d_zoom;
@@ -62,6 +63,12 @@ pub(in crate::ui) fn game_debug_menu_system(
 
             ui.menu_button("View", |ui| {
                 use bevy_egui::egui::Slider;
+
+                if ui.button("Show Mob View").clicked() {
+                    toggle_mob_view_event_writer.write(ToggleMobViewWindowEvent);
+                }
+
+                ui.separator();
 
                 ui.horizontal(|ui| {
                     ui.label("2D Zoom");

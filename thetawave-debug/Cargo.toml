@@ -5,8 +5,13 @@ edition.workspace = true
 
 [dependencies]
 thetawave-core = { path = "../thetawave-core" }
+thetawave-mobs = { path = "../thetawave-mobs" }
 bevy.workspace = true
 bevy-inspector-egui.workspace = true
+bevy_egui.workspace = true
+bevy_enoki.workspace = true
+avian2d.workspace = true
+bevy_behave.workspace = true
 
 [features]
-dynamic_linking = ["bevy/dynamic_linking", "thetawave-core/dynamic_linking"]
+dynamic_linking = ["bevy/dynamic_linking", "thetawave-core/dynamic_linking", "thetawave-mobs/dynamic_linking"]
