@@ -18,8 +18,10 @@ use thetawave_physics::{ColliderShape, ThetawaveCollider, ThetawavePhysicsLayer}
 mod joints;
 mod spawners;
 
-pub(crate) use joints::{JointedMob, JointsComponent};
-pub(crate) use spawners::{MobSpawnerComponent, ProjectileSpawnerComponent};
+pub(crate) use joints::JointedMob;
+pub use joints::JointsComponent;
+pub(crate) use spawners::MobSpawnerComponent;
+pub use spawners::ProjectileSpawnerComponent;
 
 const DEFAULT_COLLIDERS: &[ThetawaveCollider] = &[ThetawaveCollider {
     shape: ColliderShape::Rectangle(10.0, 10.0),
@@ -72,7 +74,7 @@ impl MobMarker {
 /// Mob attributes not directly used to make any other componnents
 /// Typically used in mob behaviors
 #[derive(Component, Reflect)]
-pub(crate) struct MobAttributesComponent {
+pub struct MobAttributesComponent {
     pub linear_acceleration: Vec2,
     pub linear_deceleration: Vec2,
     pub max_linear_speed: Vec2,

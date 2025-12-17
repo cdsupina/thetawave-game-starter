@@ -204,7 +204,7 @@ fn spawn_mob(
             if let Some(tree) = behaviors_res.behaviors.get(mob_type) {
                 parent.spawn((
                     Name::new("Mob Behavior Tree"),
-                    BehaveTree::new(tree.clone()).with_logging(true),
+                    BehaveTree::new(tree.clone()),
                 ));
             }
         })
