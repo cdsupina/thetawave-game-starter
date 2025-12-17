@@ -50,13 +50,14 @@ pub fn update_mob_groups_system(
             }
             visited.insert(current);
 
-            if mob_query.get(current).is_ok() {
-                group_members.push(current);
+            // All entities in the queue are guaranteed to be mobs:
+            // - Initial entity comes from mob_query.iter()
+            // - Neighbors come from adjacency which only contains verified mobs (line 30)
+            group_members.push(current);
 
-                // Prefer using a behavior transmitter (has JointsComponent) as the group key
-                if joints_component_query.get(current).is_ok() {
-                    group_key = current;
-                }
+            // Prefer using a behavior transmitter (has JointsComponent) as the group key
+            if joints_component_query.get(current).is_ok() {
+                group_key = current;
             }
 
             // Add connected entities to queue
