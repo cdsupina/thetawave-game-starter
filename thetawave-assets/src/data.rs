@@ -18,10 +18,9 @@ use bevy_kira_audio::AudioSource;
 use rand::Rng;
 use thetawave_core::Faction;
 
-use crate::AssetError;
-
-#[cfg(feature = "progress_tracking")]
 use bevy::prelude::Message;
+
+use crate::AssetError;
 
 // ============================================================================
 // Game Assets
@@ -158,11 +157,10 @@ pub struct ExtendedBackgroundAssets {
 }
 
 // ============================================================================
-// Loading Progress Event (only with progress_tracking feature)
+// Loading Progress Event
 // ============================================================================
 
 /// Message for sending percentage of loading progress
-#[cfg(feature = "progress_tracking")]
 #[derive(Message)]
 pub struct LoadingProgressEvent(pub f32);
 

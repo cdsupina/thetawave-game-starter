@@ -15,4 +15,3 @@ getrandom = { version = "0.2", features = ["js"] }
 dynamic_linking = ["bevy/dynamic_linking", "thetawave-starter/dynamic_linking"]
 default = ["debug", "dynamic_linking"]
 debug = ["thetawave-starter/debug"]
-progress_tracking = ["thetawave-starter/progress_tracking"]

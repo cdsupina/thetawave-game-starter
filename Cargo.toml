@@ -28,15 +28,17 @@ bevy_egui = { version = "0.38.0", default-features = false, features = [
     "render",
 ] }
 bevy-alt-ui-navigation-lite = "0.5.0"
-bevy_asset_loader = { version = "0.24.0-rc.1", features = [
+bevy_asset_loader = { version = "0.24.0", features = [
     "standard_dynamic_assets",
+    "progress_tracking",
 ] }
 bevy_embedded_assets = "0.14.0"
 bevy_state_macros = "0.17.3"
 rand = "0.9.2"
 webbrowser = "1.0.6"
 bevy_aseprite_ultra = "0.7.0"
-iyes_progress = "0.14.0" # For progress_tracking feature, awaiting Bevy 0.17 compatibility
+iyes_progress = "0.15.0"
+ron = "0.12.0"
 bevy_kira_audio = { version = "0.24.0", features = ["mp3", "wav"] }
 serde = "1.0.228"
 bevy-persistent = { version = "0.9.0", features = ["all"] }

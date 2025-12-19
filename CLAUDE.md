@@ -158,7 +158,6 @@ Extended data merges with base via `load_with_extended()` from `thetawave-core`.
 |---------|---------|---------|
 | `debug` | Enables bevy-inspector-egui world inspector and debug menu | ON in test-game |
 | `dynamic_linking` | Faster iteration via dynamic Bevy linking | ON in test-game |
-| `progress_tracking` | Loading progress UI (iyes_progress) | OFF |
 | `physics_debug` | Physics diagnostic UI (avian2d) | OFF |
 
 ## Key Dependencies
@@ -166,7 +165,8 @@ Extended data merges with base via `load_with_extended()` from `thetawave-core`.
 | Dependency | Version | Purpose |
 |------------|---------|---------|
 | bevy | 0.17.3 | Core game engine |
-| bevy_asset_loader | 0.24.0-rc.1 | Asset loading with states |
+| bevy_asset_loader | 0.24.0 | Asset loading with states |
+| iyes_progress | 0.15.0 | Loading progress tracking |
 | avian2d | 0.4.1 | 2D physics engine |
 | bevy_behave | 0.4.0 | Behavior tree AI system |
 | bevy-enoki | 0.5 | Particle effects |

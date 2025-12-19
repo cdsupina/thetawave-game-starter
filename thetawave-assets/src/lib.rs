@@ -17,8 +17,6 @@ pub use data::{
 
 pub use bevy_asset_loader::mapped::AssetFileStem;
 
-// Only export LoadingProgressEvent when progress_tracking is enabled
-#[cfg(feature = "progress_tracking")]
 pub use data::LoadingProgressEvent;
 
 pub use plugin::ThetawaveAssetsPlugin;
