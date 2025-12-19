@@ -1,0 +1,31 @@
+# Xhitara Pacer
+# Moves down and to the side. Switches direction when hit. Also shoots projectiles.
+
+name = "Xhitara Pacer"
+
+colliders = [
+    { shape = { Rectangle = [19.0, 8.0] }, position = [0.0, 0.0], rotation = 0.0 }
+]
+
+decorations = [
+    ["xhitara_pacer_thrusters", [0.0, 6.5]],
+]
+
+[projectile_spawners.spawners.south]
+timer = 1.25
+position = [0.0, -8.0]
+rotation = -90.0
+projectile_type = "Blast"
+faction = "Enemy"
+
+[behavior]
+type = "Forever"
+
+[[behavior.children]]
+type = "Action"
+name = "Movement"
+behaviors = [
+    { action = "MoveDown" },
+    { action = "BrakeHorizontal" },
+    { action = "SpawnProjectile", keys = ["south"] }
+]

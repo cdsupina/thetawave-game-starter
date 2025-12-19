@@ -1,10 +1,8 @@
 use bevy::{
-    ecs::{entity::Entity, message::Message, resource::Resource},
-    platform::collections::HashMap,
+    ecs::{entity::Entity, message::Message},
     prelude::Component,
     reflect::Reflect,
 };
-use bevy_behave::{prelude::Tree, Behave};
 use serde::Deserialize;
 
 /// Used for receiving behaviors from another mob's TransmitMobBehavior
@@ -19,7 +17,7 @@ pub(crate) struct TargetComponent(pub Entity);
 
 /// Mob behaviors that can be run together at a single node in the behavior tree
 #[derive(Clone, PartialEq, Debug, Deserialize)]
-#[serde(tag = "action")]
+#[serde(tag = "action", deny_unknown_fields)]
 pub enum MobBehaviorType {
     // Movement behaviors
     MoveDown,
@@ -74,13 +72,6 @@ pub struct MobBehaviorComponent {
 #[derive(Component, Clone)]
 pub struct BehaviorActionName(pub String);
 
-/// Resource for mapping behavior trees to mob types
-/// Used for mob spawning mobs
-#[derive(Resource)]
-pub struct MobBehaviorsResource {
-    pub behaviors: HashMap<String, Tree<Behave>>,
-}
-
 /// Used for transmitting behaviors to other mobs
 #[derive(Message)]
 pub(crate) struct TransmitBehaviorEvent {
@@ -88,5 +79,3 @@ pub(crate) struct TransmitBehaviorEvent {
     pub mob_type: String,
     pub behaviors: Vec<MobBehaviorType>,
 }
-
-// Behaviors are now loaded from mob_behaviors.toml via the plugin

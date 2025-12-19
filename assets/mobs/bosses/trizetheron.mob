@@ -1,0 +1,153 @@
+# Trizetheron
+# Three headed and three eyed tentacled boss.
+
+name = "Trizetheron"
+
+sprite_key = "trizetheron_mob"
+
+linear_acceleration = [0.1, 0.1]
+
+colliders = [
+    { shape = { Rectangle = [45.0, 18.0] }, position = [0.0, -7.0], rotation = 0.0 },
+    { shape = { Rectangle = [12.0, 20.0] }, position = [0.0, 13.0], rotation = 0.0 }
+]
+
+[[jointed_mobs]]
+key = "left_head"
+mob_ref = "mobs/trizetheron_parts/left_head.mob"
+offset_pos = [-32.0, -4.5]
+anchor_1_pos = [-23.0, -10.0]
+anchor_2_pos = [9.0, -5.5]
+compliance = 0.000001
+
+[jointed_mobs.angle_limit_range]
+min = -1.0
+max = 1.0
+torque = 1.0
+
+[[jointed_mobs]]
+key = "right_head"
+mob_ref = "mobs/trizetheron_parts/right_head.mob"
+offset_pos = [32.0, -4.5]
+anchor_1_pos = [23.0, -10.0]
+anchor_2_pos = [-9.0, -5.5]
+compliance = 0.000001
+
+[jointed_mobs.angle_limit_range]
+min = -1.0
+max = 1.0
+torque = 1.0
+
+[[jointed_mobs]]
+key = "tentacle_1"
+mob_ref = "mobs/xhitara/tentacle_short.mob"
+offset_pos = [-25.0, -19.5]
+anchor_1_pos = [-25.0, -15.0]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[jointed_mobs]]
+key = "tentacle_8"
+mob_ref = "mobs/xhitara/tentacle_short.mob"
+offset_pos = [25.0, -19.5]
+anchor_1_pos = [25.0, -15.0]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[jointed_mobs]]
+key = "tentacle_2"
+mob_ref = "mobs/xhitara/tentacle_short.mob"
+offset_pos = [-19.0, -19.5]
+anchor_1_pos = [-19.0, -15.0]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[jointed_mobs]]
+key = "tentacle_7"
+mob_ref = "mobs/xhitara/tentacle_short.mob"
+offset_pos = [19.0, -19.5]
+anchor_1_pos = [19.0, -15.0]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[jointed_mobs]]
+key = "tentacle_3"
+mob_ref = "mobs/xhitara/tentacle_long.mob"
+offset_pos = [-13.0, -19.5]
+anchor_1_pos = [-13.0, -15.0]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[jointed_mobs]]
+key = "tentacle_6"
+mob_ref = "mobs/xhitara/tentacle_long.mob"
+offset_pos = [13.0, -19.5]
+anchor_1_pos = [13.0, -15.0]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[jointed_mobs]]
+key = "tentacle_4"
+mob_ref = "mobs/xhitara/tentacle_long.mob"
+offset_pos = [-7.0, -19.5]
+anchor_1_pos = [-7.0, -15.0]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[jointed_mobs]]
+key = "tentacle_5"
+mob_ref = "mobs/xhitara/tentacle_long.mob"
+offset_pos = [7.0, -19.5]
+anchor_1_pos = [7.0, -15.0]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[behavior]
+type = "Forever"
+
+[[behavior.children]]
+type = "Action"
+name = "Movement"
+behaviors = [
+    { action = "MoveTo", x = 0.0, y = 50.0 }
+]

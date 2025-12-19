@@ -21,7 +21,8 @@ avian2d.workspace = true
 serde.workspace = true
 rand.workspace = true
 bevy_behave.workspace = true
-
+bevy_asset_loader.workspace = true
+toml.workspace = true
 
 [features]
 dynamic_linking = [

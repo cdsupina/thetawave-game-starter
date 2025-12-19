@@ -1,0 +1,9 @@
+# Extended Spitter - overrides specific fields from base
+# Other fields (colliders, decorations, behavior) remain from base mob
+
+name = "Super Fast Spitter"
+projectile_speed = 300.0
+
+# Override just the timer for faster shooting
+[projectile_spawners.spawners.south]
+timer = 0.25

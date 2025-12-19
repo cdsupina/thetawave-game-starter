@@ -1,0 +1,13 @@
+# Trizetheron Right Head
+# Right head component of the Trizetheron boss.
+
+name = "Trizetheron Right Head"
+spawnable = false
+sprite_key = "trizetheron_right_head_mob"
+
+rotation_locked = false
+z_level = 1.0
+
+colliders = [
+    { shape = { Rectangle = [17.0, 8.0] }, position = [1.0, 3.0], rotation = 55.0 }
+]

@@ -1,0 +1,17 @@
+// Extended background assets - add your custom backgrounds and planets here
+({
+    // Extended space backgrounds - these are added to the background pool
+    "extended_space_backgrounds": Files(
+        paths: [
+            // Add extended background paths here, e.g.:
+            // "extended://media/images/backgrounds/custom_background.png",
+        ]
+    ),
+    // Extended planets - these are added to the planet pool
+    "extended_planets": Files(
+        paths: [
+            // Add extended planet paths here, e.g.:
+            // "extended://media/models/planets/Custom_Planet.glb#Scene0",
+        ]
+    ),
+})

@@ -1,0 +1,26 @@
+# Ferritharax Left Shoulder
+# Left shoulder component of the Ferritharax boss.
+
+name = "Ferritharax Left Shoulder"
+spawnable = false
+sprite_key = "ferritharax_left_shoulder_mob"
+
+rotation_locked = false
+
+colliders = [
+    { shape = { Rectangle = [28.0, 20.0] }, position = [9.0, 14.0], rotation = 30.0 },
+    { shape = { Rectangle = [10.0, 44.0] }, position = [-13.0, -8.0], rotation = -20.0 }
+]
+
+[[jointed_mobs]]
+key = "arm"
+mob_ref = "mobs/ferritharax_parts/left_arm.mob"
+offset_pos = [-31.5, -57.0]
+anchor_1_pos = [-20.0, -31.0]
+anchor_2_pos = [11.5, 26.0]
+compliance = 0.0000001
+
+[jointed_mobs.angle_limit_range]
+min = -2.0
+max = 5.0
+torque = 0.001

@@ -1,0 +1,7 @@
+# Extended character attributes - override base character stats here
+# Fields you specify will override base values; unspecified fields keep base values
+
+# Example: Override Captain's health and speed
+# [characters.captain_character]
+# health = 200
+# max_speed = 150.0

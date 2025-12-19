@@ -1,0 +1,11 @@
+({
+    // Extended music tracks - these take precedence over base tracks
+    // Key by file stem (e.g., "game_theme" for game_theme.mp3)
+    // Base keys: "game_theme", "main_menu_theme"
+    "extended_music": Files(
+        paths: [
+            // Add extended music paths here, e.g.:
+            // "extended://media/audio/music/custom_game_theme.mp3",
+        ]
+    ),
+})

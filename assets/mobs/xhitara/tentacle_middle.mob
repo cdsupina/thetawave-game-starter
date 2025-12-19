@@ -1,0 +1,31 @@
+# Xhitara Tentacle Middle
+# Middle segment of a tentacle chain.
+
+name = "Xhitara Tentacle Middle"
+spawnable = false
+
+rotation_locked = false
+restitution = 0.0
+friction = 1.0
+z_level = -1.0
+collider_density = 0.5
+
+colliders = [
+    { shape = { Circle = 1.7 }, position = [0.0, 0.0], rotation = 0.0 }
+]
+
+collision_layer_membership = ["EnemyTentacle"]
+collision_layer_filter = ["AllyProjectile", "AllyMob", "Player", "EnemyMob"]
+
+[[jointed_mobs]]
+key = "end"
+mob_ref = "mobs/xhitara/tentacle_end.mob"
+offset_pos = [0.0, -8.5]
+anchor_1_pos = [0.0, -2.5]
+anchor_2_pos = [0.0, 6.0]
+compliance = 0.000001
+
+[jointed_mobs.angle_limit_range]
+min = -10.0
+max = 10.0
+torque = 0.001

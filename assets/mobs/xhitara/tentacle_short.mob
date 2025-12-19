@@ -1,0 +1,41 @@
+# Xhitara Tentacle Short
+# Start of a short tentacle chain.
+
+name = "Xhitara Tentacle Short"
+spawnable = false
+
+sprite_key = "xhitara_tentacle_start_mob"
+rotation_locked = false
+restitution = 0.0
+friction = 1.0
+z_level = -1.0
+collider_density = 0.5
+
+colliders = [
+    { shape = { Rectangle = [4.0, 3.0] }, position = [0.0, 0.0], rotation = 0.0 }
+]
+
+collision_layer_membership = ["EnemyTentacle"]
+collision_layer_filter = ["AllyProjectile", "AllyMob", "Player", "EnemyMob"]
+
+[[jointed_mobs]]
+key = "middle"
+mob_ref = "mobs/xhitara/tentacle_middle.mob"
+offset_pos = [0.0, -5.0]
+anchor_1_pos = [0.0, -3.5]
+anchor_2_pos = [0.0, 1.5]
+compliance = 0.000001
+
+[jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[jointed_mobs.chain]
+length = 12
+pos_offset = [0.0, -4.0]
+anchor_offset = [0.0, 1.0]
+
+[jointed_mobs.chain.random_chain]
+min_length = 6
+end_chance = 0.15

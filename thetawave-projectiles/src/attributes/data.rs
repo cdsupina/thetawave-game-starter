@@ -18,6 +18,7 @@ pub enum ProjectileType {
 
 /// Defines how multiple projectiles are spread when fired
 #[derive(Debug, Deserialize, Clone, Reflect)]
+#[serde(deny_unknown_fields)]
 pub enum ProjectileSpread {
     /// Projectiles are evenly distributed in an arc pattern
     Arc {

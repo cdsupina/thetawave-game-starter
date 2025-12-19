@@ -50,13 +50,15 @@ impl Plugin for ThetawaveStarterPlugin {
         #[cfg(not(target_arch = "wasm32"))]
         app.register_asset_source(
             "extended",
-            AssetSource::build().with_reader(|| Box::new(FileAssetReader::new("assets"))),
+            AssetSource::build()
+                .with_reader(|| Box::new(FileAssetReader::new("assets"))),
         );
 
         #[cfg(target_arch = "wasm32")]
         app.register_asset_source(
             "extended",
-            AssetSource::build().with_reader(|| Box::new(HttpWasmAssetReader::new("assets"))),
+            AssetSource::build()
+                .with_reader(|| Box::new(HttpWasmAssetReader::new("assets"))),
         );
 
         app.add_plugins((

@@ -1,0 +1,32 @@
+# Xhitara Launcher
+# Moves down and periodically spawns Xhitara Missiles.
+
+name = "Xhitara Launcher"
+
+max_linear_speed = [10.0, 10.0]
+
+colliders = [
+    { shape = { Rectangle = [16.0, 20.0] }, position = [0.0, 2.0], rotation = 0.0 }
+]
+
+decorations = [
+    ["xhitara_launcher_thrusters", [0.0, 13.5]],
+]
+
+[mob_spawners.spawners.missiles]
+timer = 4.0
+position = [0.0, -18.0]
+rotation = 0.0
+mob_ref = "xhitara/missile"
+
+[behavior]
+type = "Forever"
+
+[[behavior.children]]
+type = "Action"
+name = "Move and Spawn Missiles"
+behaviors = [
+    { action = "MoveDown" },
+    { action = "BrakeHorizontal" },
+    { action = "SpawnMob", keys = ["missiles"] }
+]

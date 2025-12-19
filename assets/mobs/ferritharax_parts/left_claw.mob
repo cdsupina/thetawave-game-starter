@@ -1,0 +1,14 @@
+# Ferritharax Left Claw
+# Left claw component of the Ferritharax boss.
+
+name = "Ferritharax Left Claw"
+spawnable = false
+sprite_key = "ferritharax_left_claw_mob"
+
+rotation_locked = false
+
+colliders = [
+    { shape = { Rectangle = [18.0, 12.0] }, position = [-4.0, -8.0], rotation = -5.0 },
+    { shape = { Rectangle = [14.0, 10.0] }, position = [6.0, -3.0], rotation = 45.0 },
+    { shape = { Rectangle = [6.0, 6.0] }, position = [12.0, 5.0], rotation = 60.0 }
+]

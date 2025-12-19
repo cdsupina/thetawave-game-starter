@@ -1,0 +1,47 @@
+({
+    // Extended UI sprites - these take precedence over base sprites
+    // Key by file stem (e.g., "menu_button" for menu_button.aseprite)
+    "extended_ui_sprites": Files(
+        paths: [
+            // Add extended UI sprite paths here, e.g.:
+            // "extended://media/aseprite/custom_menu_button.aseprite",
+        ]
+    ),
+    // Extended UI images - these take precedence over base images
+    // Key by file stem (e.g., "captain_character" for captain_character.png)
+    "extended_ui_images": Files(
+        paths: [
+            // Add extended UI image paths here, e.g.:
+            // "extended://media/images/ui/custom_character.png",
+        ]
+    ),
+    // Extended UI fonts - these take precedence over base fonts
+    // Key by file stem (e.g., "Dank-Depths" for Dank-Depths.ttf)
+    "extended_ui_fonts": Files(
+        paths: [
+            // Add extended font paths here, e.g.:
+            // "extended://media/fonts/Custom-Font.ttf",
+        ]
+    ),
+    // Extended button select sound effects (combined with base effects)
+    "extended_ui_button_select_audio": Files(
+        paths: [
+            // Add extended button press audio paths here, e.g.:
+            // "extended://media/audio/ui/custom_button_press.wav",
+        ]
+    ),
+    // Extended button release sound effects (combined with base effects)
+    "extended_ui_button_release_audio": Files(
+        paths: [
+            // Add extended button release audio paths here, e.g.:
+            // "extended://media/audio/ui/custom_button_release.wav",
+        ]
+    ),
+    // Extended button confirm sound effects (combined with base effects)
+    "extended_ui_button_confirm_audio": Files(
+        paths: [
+            // Add extended button confirm audio paths here, e.g.:
+            // "extended://media/audio/ui/custom_button_confirm.wav",
+        ]
+    ),
+})

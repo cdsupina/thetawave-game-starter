@@ -1,0 +1,43 @@
+# Xhitara Missile
+# Searches for player targets, then pursues them. Explodes on impact.
+
+name = "Xhitara Missile"
+
+rotation_locked = false
+max_linear_speed = [100.0, 100.0]
+linear_acceleration = [0.8, 0.8]
+angular_acceleration = 0.15
+max_angular_speed = 2.0
+targeting_range = 130.0
+
+colliders = [
+    { shape = { Circle = 3.0 }, position = [0.0, -4.0], rotation = 0.0 }
+]
+
+decorations = [
+    ["xhitara_missile_thrusters", [0.0, 10.5]],
+]
+
+[behavior]
+type = "Forever"
+
+[[behavior.children]]
+type = "Sequence"
+
+[[behavior.children.children]]
+type = "Action"
+name = "Find Target"
+behaviors = [
+    { action = "FindPlayerTarget" },
+    { action = "MoveForward" },
+    { action = "BrakeAngular" }
+]
+
+[[behavior.children.children]]
+type = "Action"
+name = "Move To Target"
+behaviors = [
+    { action = "MoveForward" },
+    { action = "RotateToTarget" },
+    { action = "LoseTarget" }
+]
