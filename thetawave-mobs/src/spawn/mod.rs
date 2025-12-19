@@ -31,7 +31,7 @@ use bevy::ecs::bundle::Bundle;
 
 use crate::{
     MobMarker,
-    asset::{JointedMobRef, MobAsset, MobRegistry, normalize_mob_ref},
+    asset::{JointedMobRef, MobAsset, MobRef, MobRegistry},
     attributes::{
         JointsComponent, MobAttributesComponent, ProjectileSpawnerComponent,
     },
@@ -148,15 +148,17 @@ impl Default for MobDebugSettings {
 /// The `mob_ref` can be specified in two formats:
 /// - Full path: "mobs/ferritharax/head.mob"
 /// - Normalized key: "ferritharax/head"
+///
+/// Both formats are automatically normalized to the key format.
 #[derive(Message, Debug)]
 pub struct SpawnMobEvent {
-    pub mob_ref: String,
+    pub mob_ref: MobRef,
     pub position: Vec2,
     pub rotation: f32,
 }
 
 impl SpawnMobEvent {
-    pub fn new(mob_ref: impl Into<String>, position: Vec2, rotation: f32) -> Self {
+    pub fn new(mob_ref: impl Into<MobRef>, position: Vec2, rotation: f32) -> Self {
         Self {
             mob_ref: mob_ref.into(),
             position,
@@ -202,7 +204,7 @@ pub(super) fn spawn_mob_system(
 /// Spawns a mob entity with all its components, decorations, and jointed sub-mobs
 fn spawn_mob(
     cmds: &mut Commands,
-    mob_ref: &str,
+    mob_ref: &MobRef,
     position: Vec2,
     rotation: f32,
     mob_debug_settings: &MobDebugSettings,
@@ -214,8 +216,8 @@ fn spawn_mob(
     transmitter_entity: Option<Entity>, // entity that can transmit behaviors to the mob
     spawner_effect_event_writer: &mut MessageWriter<SpawnSpawnerEffectEvent>,
 ) -> Result<Entity, BevyError> {
-    // Normalize the mob_ref to strip "mobs/" prefix and ".mob" suffix
-    let normalized_ref = normalize_mob_ref(mob_ref);
+    // MobRef is already normalized
+    let normalized_ref = mob_ref.as_str();
 
     // Look up the mob from the registry (now returns &MobAsset directly)
     let mob = mob_registry
@@ -237,7 +239,7 @@ fn spawn_mob(
     // Spawn the main anchor entity with all core components
     let mut entity_commands = cmds.spawn((
         MobComponentBundle::from(mob),
-        MobMarker::new(&normalized_ref),
+        MobMarker::new(normalized_ref),
         AseAnimation {
             animation: Animation::tag("idle"),
             aseprite: AssetResolver::get_game_sprite(sprite_key, extended_assets, game_assets)?,

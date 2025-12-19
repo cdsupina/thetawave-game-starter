@@ -1,16 +1,94 @@
 //! MobRegistry resource for resolving mob references to loaded assets.
 
+use std::fmt;
+
 use bevy::{
     asset::{Asset, Assets, Handle},
     log::{debug, info, warn},
     platform::collections::HashMap,
     prelude::Resource,
+    reflect::Reflect,
 };
 use bevy_behave::{Behave, prelude::Tree};
+use serde::{Deserialize, Serialize};
 use thetawave_core::merge_toml_values;
 
 use super::{ExtendedMobPatches, ExtendedMobs, MobAsset, MobAssets, MobPatch, RawMob};
 use crate::behavior::build_behavior_tree;
+
+/// A strongly-typed reference to a mob definition.
+///
+/// This newtype wrapper prevents accidentally passing other string types
+/// (like sprite keys or entity names) where a mob reference is expected.
+///
+/// MobRef values are automatically normalized during creation:
+/// - "mobs/xhitara/grunt.mob" → "xhitara/grunt"
+/// - "xhitara/grunt" → "xhitara/grunt" (already normalized)
+///
+/// # Example
+/// ```ignore
+/// let mob_ref = MobRef::new("mobs/xhitara/grunt.mob");
+/// assert_eq!(mob_ref.as_str(), "xhitara/grunt");
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Reflect, Serialize)]
+pub struct MobRef(String);
+
+impl MobRef {
+    /// Create a new MobRef, normalizing the path automatically.
+    pub fn new(path: impl Into<String>) -> Self {
+        Self(normalize_mob_ref(&path.into()))
+    }
+
+    /// Get the normalized mob reference as a string slice.
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    /// Consume the MobRef and return the inner String.
+    pub fn into_inner(self) -> String {
+        self.0
+    }
+}
+
+impl fmt::Display for MobRef {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl AsRef<str> for MobRef {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<&str> for MobRef {
+    fn from(s: &str) -> Self {
+        Self::new(s)
+    }
+}
+
+impl From<String> for MobRef {
+    fn from(s: String) -> Self {
+        Self::new(s)
+    }
+}
+
+impl From<&String> for MobRef {
+    fn from(s: &String) -> Self {
+        Self::new(s.as_str())
+    }
+}
+
+impl<'de> Deserialize<'de> for MobRef {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Ok(MobRef::new(s))
+    }
+}
 
 /// Extract the normalized key from any asset handle's path.
 fn get_normalized_key<T: Asset>(handle: &Handle<T>) -> Option<String> {
@@ -167,8 +245,12 @@ impl MobRegistry {
     }
 
     /// Deserialize all raw TOML values to MobAsset structs.
+    ///
+    /// Collects all deserialization errors and reports them as a batch summary
+    /// to avoid log spam when multiple mobs fail.
     fn deserialize_all(raw_values: HashMap<String, toml::Value>) -> HashMap<String, MobAsset> {
         let mut mobs = HashMap::new();
+        let mut errors: Vec<(String, String)> = Vec::new();
 
         for (key, value) in raw_values {
             match value.try_into::<MobAsset>() {
@@ -176,12 +258,25 @@ impl MobRegistry {
                     mobs.insert(key, mob);
                 }
                 Err(e) => {
-                    warn!("Failed to deserialize mob '{}': {}", key, e);
+                    errors.push((key, e.to_string()));
                 }
             }
         }
 
-        info!("Deserialized {} mobs", mobs.len());
+        // Report errors as a batch summary
+        if !errors.is_empty() {
+            warn!(
+                "Failed to deserialize {} mob(s):\n{}",
+                errors.len(),
+                errors
+                    .iter()
+                    .map(|(key, err)| format!("  - {}: {}", key, err))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            );
+        }
+
+        info!("Deserialized {} mobs ({} failed)", mobs.len(), errors.len());
         mobs
     }
 
@@ -287,5 +382,258 @@ mod tests {
         // Already normalized
         assert_eq!(normalize_mob_ref("ferritharax/body"), "ferritharax/body");
         assert_eq!(normalize_mob_ref("grunt"), "grunt");
+    }
+
+    #[test]
+    fn test_mob_ref_normalization() {
+        // Full paths are normalized
+        let ref1 = MobRef::new("mobs/xhitara/grunt.mob");
+        assert_eq!(ref1.as_str(), "xhitara/grunt");
+
+        // Already normalized paths stay the same
+        let ref2 = MobRef::new("xhitara/grunt");
+        assert_eq!(ref2.as_str(), "xhitara/grunt");
+
+        // .mobpatch extension is also stripped
+        let ref3 = MobRef::new("mobs/xhitara/spitter.mobpatch");
+        assert_eq!(ref3.as_str(), "xhitara/spitter");
+    }
+
+    #[test]
+    fn test_mob_ref_equality() {
+        // Same normalized value should be equal regardless of input format
+        let ref1 = MobRef::new("mobs/xhitara/grunt.mob");
+        let ref2 = MobRef::new("xhitara/grunt");
+        assert_eq!(ref1, ref2);
+    }
+
+    #[test]
+    fn test_mob_ref_from_string() {
+        let s = String::from("mobs/xhitara/grunt.mob");
+        let mob_ref: MobRef = s.into();
+        assert_eq!(mob_ref.as_str(), "xhitara/grunt");
+    }
+
+    #[test]
+    fn test_mob_ref_from_str() {
+        let mob_ref: MobRef = "mobs/xhitara/grunt.mob".into();
+        assert_eq!(mob_ref.as_str(), "xhitara/grunt");
+    }
+
+    #[test]
+    fn test_mob_ref_display() {
+        let mob_ref = MobRef::new("xhitara/grunt");
+        assert_eq!(format!("{}", mob_ref), "xhitara/grunt");
+    }
+
+    // ========================================================================
+    // Integration tests for MobRegistry build pipeline
+    // ========================================================================
+
+    #[test]
+    fn test_mob_asset_deserialization_minimal() {
+        // Minimal valid mob definition
+        let toml_str = r#"
+            name = "Test Mob"
+        "#;
+
+        let value: toml::Value = toml::from_str(toml_str).unwrap();
+        let mob: MobAsset = value.try_into().expect("Should deserialize minimal mob");
+
+        assert_eq!(mob.name, "Test Mob");
+        assert!(mob.spawnable); // default
+        assert_eq!(mob.health, 50); // default
+    }
+
+    #[test]
+    fn test_mob_asset_deserialization_with_colliders() {
+        let toml_str = r#"
+            name = "Collider Mob"
+            health = 100
+            colliders = [
+                { shape = { Rectangle = [12.0, 15.0] }, position = [0.0, 0.0], rotation = 0.0 }
+            ]
+        "#;
+
+        let value: toml::Value = toml::from_str(toml_str).unwrap();
+        let mob: MobAsset = value.try_into().expect("Should deserialize mob with colliders");
+
+        assert_eq!(mob.name, "Collider Mob");
+        assert_eq!(mob.health, 100);
+        assert_eq!(mob.colliders.len(), 1);
+    }
+
+    #[test]
+    fn test_mob_asset_deserialization_with_behavior() {
+        let toml_str = r#"
+            name = "Behaving Mob"
+
+            [behavior]
+            type = "Forever"
+            [[behavior.children]]
+            type = "Action"
+            name = "Movement"
+            behaviors = [{ action = "MoveDown" }]
+        "#;
+
+        let value: toml::Value = toml::from_str(toml_str).unwrap();
+        let mob: MobAsset = value.try_into().expect("Should deserialize mob with behavior");
+
+        assert_eq!(mob.name, "Behaving Mob");
+        assert!(mob.behavior.is_some());
+    }
+
+    #[test]
+    fn test_mob_asset_deserialization_with_jointed_mobs() {
+        let toml_str = r#"
+            name = "Parent Mob"
+
+            [[jointed_mobs]]
+            key = "left_arm"
+            mob_ref = "mobs/parts/arm.mob"
+            offset_pos = [10.0, 0.0]
+        "#;
+
+        let value: toml::Value = toml::from_str(toml_str).unwrap();
+        let mob: MobAsset = value.try_into().expect("Should deserialize mob with joints");
+
+        assert_eq!(mob.name, "Parent Mob");
+        assert_eq!(mob.jointed_mobs.len(), 1);
+        assert_eq!(mob.jointed_mobs[0].key, "left_arm");
+        // MobRef is normalized
+        assert_eq!(mob.jointed_mobs[0].mob_ref.as_str(), "parts/arm");
+    }
+
+    #[test]
+    fn test_mob_asset_deserialization_rejects_unknown_fields() {
+        let toml_str = r#"
+            name = "Test Mob"
+            unknown_field = "should fail"
+        "#;
+
+        let value: toml::Value = toml::from_str(toml_str).unwrap();
+        let result: Result<MobAsset, _> = value.try_into();
+
+        assert!(result.is_err(), "Should reject unknown fields");
+    }
+
+    #[test]
+    fn test_toml_merge_basic_fields() {
+        let base_toml = r#"
+            name = "Base Mob"
+            health = 100
+            projectile_speed = 50.0
+        "#;
+
+        let patch_toml = r#"
+            name = "Patched Mob"
+            projectile_speed = 200.0
+        "#;
+
+        let mut base: toml::Value = toml::from_str(base_toml).unwrap();
+        let patch: toml::Value = toml::from_str(patch_toml).unwrap();
+
+        merge_toml_values(&mut base, patch);
+
+        let mob: MobAsset = base.try_into().expect("Should deserialize merged mob");
+
+        assert_eq!(mob.name, "Patched Mob"); // overridden
+        assert_eq!(mob.health, 100); // unchanged from base
+        assert_eq!(mob.projectile_speed, 200.0); // overridden
+    }
+
+    #[test]
+    fn test_toml_merge_nested_tables() {
+        let base_toml = r#"
+            name = "Base Mob"
+
+            [projectile_spawners]
+            [projectile_spawners.spawners.north]
+            timer = 1.0
+            position = [0.0, 5.0]
+            [projectile_spawners.spawners.south]
+            timer = 2.0
+            position = [0.0, -5.0]
+        "#;
+
+        let patch_toml = r#"
+            [projectile_spawners.spawners.south]
+            timer = 0.5
+        "#;
+
+        let mut base: toml::Value = toml::from_str(base_toml).unwrap();
+        let patch: toml::Value = toml::from_str(patch_toml).unwrap();
+
+        merge_toml_values(&mut base, patch);
+
+        // Verify the merge: south timer changed, north unchanged
+        let spawners = base.get("projectile_spawners")
+            .and_then(|ps| ps.get("spawners"))
+            .expect("spawners should exist");
+
+        let north_timer = spawners.get("north")
+            .and_then(|n| n.get("timer"))
+            .and_then(|t| t.as_float())
+            .expect("north timer should exist");
+        assert_eq!(north_timer, 1.0);
+
+        let south_timer = spawners.get("south")
+            .and_then(|s| s.get("timer"))
+            .and_then(|t| t.as_float())
+            .expect("south timer should exist");
+        assert_eq!(south_timer, 0.5);
+    }
+
+    #[test]
+    fn test_deserialize_all_handles_errors_gracefully() {
+        let mut raw_values = HashMap::new();
+
+        // Valid mob
+        let valid_toml = r#"name = "Valid Mob""#;
+        raw_values.insert(
+            "valid/mob".to_string(),
+            toml::from_str(valid_toml).unwrap(),
+        );
+
+        // Invalid mob (unknown field)
+        let invalid_toml = r#"
+            name = "Invalid Mob"
+            unknown_field = true
+        "#;
+        raw_values.insert(
+            "invalid/mob".to_string(),
+            toml::from_str(invalid_toml).unwrap(),
+        );
+
+        // Another valid mob
+        let valid_toml2 = r#"name = "Another Valid Mob""#;
+        raw_values.insert(
+            "another/valid".to_string(),
+            toml::from_str(valid_toml2).unwrap(),
+        );
+
+        let mobs = MobRegistry::deserialize_all(raw_values);
+
+        // Should have 2 valid mobs, 1 failed
+        assert_eq!(mobs.len(), 2);
+        assert!(mobs.contains_key("valid/mob"));
+        assert!(mobs.contains_key("another/valid"));
+        assert!(!mobs.contains_key("invalid/mob"));
+    }
+
+    #[test]
+    fn test_mob_ref_deserialization_in_jointed_mob() {
+        // Test that MobRef deserializes and normalizes correctly in JointedMobRef
+        let toml_str = r#"
+            key = "arm"
+            mob_ref = "mobs/parts/arm.mob"
+        "#;
+
+        let value: toml::Value = toml::from_str(toml_str).unwrap();
+        let jointed: super::super::JointedMobRef = value.try_into()
+            .expect("Should deserialize JointedMobRef");
+
+        assert_eq!(jointed.key, "arm");
+        assert_eq!(jointed.mob_ref.as_str(), "parts/arm");
     }
 }

@@ -5,6 +5,7 @@ use serde::Deserialize;
 use thetawave_physics::{ThetawaveCollider, ThetawavePhysicsLayer};
 
 use crate::{
+    asset::MobRef,
     attributes::{MobSpawnerComponent, ProjectileSpawnerComponent},
     behavior::BehaviorNodeData,
 };
@@ -163,7 +164,8 @@ pub struct JointedMobRef {
     pub key: String,
 
     /// Path to the .mob file, e.g., "mobs/ferritharax/body.mob"
-    pub mob_ref: String,
+    /// Automatically normalized to "ferritharax/body" format.
+    pub mob_ref: MobRef,
 
     /// Position offset from parent mob
     #[serde(default)]

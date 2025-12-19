@@ -8,6 +8,8 @@ use bevy::{
 use serde::Deserialize;
 use thetawave_projectiles::ProjectileSpawner;
 
+use crate::asset::MobRef;
+
 
 /// Mob spawner component for use in spawned mobs
 /// Maps String keys to MobSpawners
@@ -34,7 +36,8 @@ pub struct MobSpawner {
     pub position: Vec2,
     pub rotation: f32,
     /// Path to the mob file to spawn, e.g., "mobs/xhitara/grunt.mob"
-    pub mob_ref: String,
+    /// Automatically normalized to "xhitara/grunt" format.
+    pub mob_ref: MobRef,
 }
 
 impl<'de> Deserialize<'de> for MobSpawner {
@@ -48,7 +51,7 @@ impl<'de> Deserialize<'de> for MobSpawner {
             pub timer: f32,
             pub position: Vec2,
             pub rotation: f32,
-            pub mob_ref: String,
+            pub mob_ref: MobRef,
         }
 
         let helper = Helper::deserialize(deserializer)?;
