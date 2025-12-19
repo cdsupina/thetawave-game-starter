@@ -1,13 +1,13 @@
 # Thetawave Game Starter
 
-A complete starter template for creating Thetawave-style space shooter games using Bevy and Rust. Features a modular crate architecture with extensive customization through extended data assets.
+A complete starter template for creating Thetawave-style space shooter games using Bevy 0.17 and Rust. Features a modular crate architecture with extensive customization through extended data assets and the new `.mob` file asset system.
 
 ## Key Features
-- **Complete Game Systems**: Character selection, physics, multiplayer, persistence, audio
-- **Extended Assets**: Override and extend game data (characters, mobs, projectiles, behaviors) via TOML files
-- **Modular Architecture**: 16 specialized crates for clean separation of concerns
-- **Cross-Platform**: Supports desktop and WASM deployment
-- **Developer Friendly**: Extended assets and data, built in debug menu.
+- **Complete Game Systems**: Character selection, physics, persistence, audio, particle effects
+- **Extended Assets**: Override and extend game data (characters, mobs, projectiles) via TOML and `.mob` files
+- **Modular Architecture**: 12 specialized crates for clean separation of concerns
+- **Cross-Platform**: Supports desktop and WASM (WebGPU) deployment
+- **Developer Friendly**: Debug menu with auto-generated spawn lists, world inspector, behavior tree visualization
 
 ## Quick Start
 
@@ -75,16 +75,47 @@ Override or extend media assets by creating files in `thetawave-test-game/assets
 - `background.assets.ron` - Background textures and environment art
 - `media/` - Place actual asset files (images, audio, etc.)
 
-### Data Assets
-Customize game behavior with TOML configuration files in `thetawave-test-game/assets/data/`:
-- `character_attributes.toml` - Player character stats and abilities
-- `mob_attributes.toml` - Enemy attributes, health, and projectiles
-- `mob_behaviors.toml` - AI behavior trees and movement patterns
-- `projectile_attributes.toml` - Projectile physics and collision shapes
+### Mob Definitions (`.mob` Files)
+Mobs are defined using individual `.mob` files (TOML format) instead of monolithic configuration files:
+- **Base mobs**: `assets/mobs/` - 26 embedded mob definitions
+- **Extended mobs**: `thetawave-test-game/assets/mobs/` - Add new mobs or override existing ones
+- **Mob patches** (`.mobpatch`): Partial overrides that merge field-level into base mobs
 
-Extended files merge with base assets using field-level overrides.
+Example `.mob` file:
+```toml
+name = "Xhitara Grunt"
+colliders = [{ shape = { Rectangle = [12.0, 15.0] }, position = [0.0, 0.0], rotation = 0.0 }]
+sprite_key = "xhitara_grunt_mob"
+
+[behavior]
+type = "Forever"
+[[behavior.children]]
+type = "Action"
+name = "Movement"
+behaviors = [{ action = "MoveDown" }, { action = "BrakeHorizontal" }]
+```
+
+### Character Data
+Customize player characters in `thetawave-test-game/assets/data/character_attributes.toml`. Extended files merge with base assets using field-level overrides.
 
 ## Project Architecture
+
+The workspace contains 12 specialized crates:
+
+| Crate | Purpose |
+|-------|---------|
+| `thetawave-starter` | Main plugin, collision system, window management, UI orchestration |
+| `thetawave-core` | Shared types: `Faction`, `HealthComponent`, `CollisionDamage`, app states |
+| `thetawave-assets` | Asset loading with `bevy_asset_loader`, manages base and extended assets |
+| `thetawave-player` | Input handling, ability system, character attributes |
+| `thetawave-mobs` | Mob spawning, `.mob` file asset system, AI behaviors via `bevy_behave` |
+| `thetawave-projectiles` | Projectile lifecycle, collision/damage, despawn ordering |
+| `thetawave-particles` | Unified particle effects using `bevy-enoki` |
+| `thetawave-physics` | Wraps `avian2d` physics, manages pause/resume |
+| `thetawave-backgrounds` | Background and planet rendering |
+| `thetawave-camera` | 2D/3D camera zoom via events |
+| `thetawave-debug` | World inspector via `bevy-inspector-egui` (feature-gated) |
+| `thetawave-test-game` | Example game binary |
 
 The following dependency graph shows the modular architecture and relationships between crates:
 
