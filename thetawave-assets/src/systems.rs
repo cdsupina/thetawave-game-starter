@@ -2,14 +2,23 @@
 
 use std::hash::Hash;
 
+use bevy::{
+    asset::Assets,
+    ecs::system::Commands,
+    log::info,
+    platform::collections::HashMap,
+    prelude::{MessageWriter, Res, ResMut},
+};
+use bevy_enoki::prelude::ColorParticle2dMaterial;
+use iyes_progress::ProgressTracker;
+use thetawave_core::{AppState, Faction};
+
+use super::data::{
+    BackgroundAssets, GameAssets, LoadingProgressEvent, MusicAssets, ParticleMaterials, UiAssets,
+};
 use crate::{
     ExtendedBackgroundAssets, ExtendedGameAssets, ExtendedMusicAssets, ExtendedUiAssets,
 };
-
-use super::data::{BackgroundAssets, GameAssets, MusicAssets, ParticleMaterials, UiAssets};
-use bevy::{asset::Assets, ecs::system::Commands, log::info, platform::collections::HashMap, prelude::{Res, ResMut}};
-use bevy_enoki::prelude::ColorParticle2dMaterial;
-use thetawave_core::Faction;
 
 /// Helper to get length of an optional HashMap, returning 0 if None.
 fn opt_map_len<K: Eq + Hash, V>(opt: &Option<HashMap<K, V>>) -> usize {
@@ -21,26 +30,12 @@ fn opt_vec_len<T>(opt: &Option<Vec<T>>) -> usize {
     opt.as_ref().map_or(0, |v| v.len())
 }
 
-#[cfg(feature = "progress_tracking")]
-use bevy::prelude::MessageWriter;
-
-#[cfg(feature = "progress_tracking")]
-use super::data::LoadingProgressEvent;
-
-#[cfg(feature = "progress_tracking")]
-use iyes_progress::ProgressTracker;
-
-#[cfg(feature = "progress_tracking")]
-use thetawave_core::AppState;
-
 /// System for getting loading progress and sending the value as a message
-/// Only available when progress_tracking feature is enabled
-#[cfg(feature = "progress_tracking")]
 pub(super) fn get_loading_progress_system(
     progress: Res<ProgressTracker<AppState>>,
     mut loading_event_writer: MessageWriter<LoadingProgressEvent>,
 ) {
-    let progress = progress.global_progress();
+    let progress = progress.get_global_progress();
     loading_event_writer.write(LoadingProgressEvent(
         progress.done as f32 / progress.total as f32,
     ));

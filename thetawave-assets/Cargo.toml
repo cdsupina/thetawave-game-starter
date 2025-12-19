@@ -14,14 +14,11 @@ bevy_enoki.workspace = true
 bevy_aseprite_ultra.workspace = true
 bevy_kira_audio = { workspace = true, features = ["mp3", "wav"] }
 rand.workspace = true
-ron = "0.10"
+ron.workspace = true
 
 bevy_asset_loader = { workspace = true }
-
-# Optional dependency for progress_tracking feature (awaiting Bevy 0.17 compatibility)
-iyes_progress = { workspace = true, optional = true }
+iyes_progress = { workspace = true }
 
 [features]
 default = []
-progress_tracking = ["dep:iyes_progress"]
 dynamic_linking = ["bevy/dynamic_linking", "thetawave-core/dynamic_linking"]

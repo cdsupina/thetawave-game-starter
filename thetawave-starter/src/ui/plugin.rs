@@ -12,6 +12,7 @@ use super::{
         egui::{setup_egui_system, update_egui_scale_system},
         game_end::{reset_game_end_result_resource_system, spawn_game_end_system},
         input_rebinding::{input_rebinding_menu_system, spawn_input_rebinding_menu_system},
+        loading::{setup_loading_ui_system, update_loading_bar_system},
         menu_button_action_system, menu_button_delayed_action_system, menu_button_focus_system,
         options::{options_menu_system, persist_options_system, spawn_options_menu_system},
         pause::{spawn_pause_menu_system, spawn_pause_options_system},
@@ -24,14 +25,9 @@ use bevy::{
     prelude::{IntoScheduleConfigs, OnEnter, in_state},
 };
 use bevy_alt_ui_navigation_lite::NavRequestSystem;
+use bevy_asset_loader::loading_state::LoadingStateSet;
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
 use thetawave_core::{AppState, DebugState, GameState, MainMenuState, PauseMenuState};
-
-#[cfg(feature = "progress_tracking")]
-use super::systems::loading::{setup_loading_ui_system, update_loading_bar_system};
-
-#[cfg(feature = "progress_tracking")]
-use bevy_asset_loader::loading_state::LoadingStateSet;
 
 // Plugin responsible for managing the Thetawave user interface components and systems
 pub(crate) struct ThetawaveUiPlugin;
@@ -44,8 +40,7 @@ impl Plugin for ThetawaveUiPlugin {
             .add_message::<PlayerReadyEvent>()
             .add_message::<DelayedButtonPressEvent>();
 
-        // Only add loading UI systems when progress_tracking is enabled
-        #[cfg(feature = "progress_tracking")]
+        // Add loading UI systems
         app.add_systems(OnEnter(AppState::MainMenuLoading), setup_loading_ui_system);
 
         app
@@ -84,8 +79,7 @@ impl Plugin for ThetawaveUiPlugin {
             ),
         );
 
-        // Only add loading bar update system when progress_tracking is enabled
-        #[cfg(feature = "progress_tracking")]
+        // Add loading bar update system
         app.add_systems(
             Update,
             update_loading_bar_system

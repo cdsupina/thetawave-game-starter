@@ -63,7 +63,6 @@ bevy = { workspace = true, features = ["x11"] }
 
 [features]
 default = []
-progress_tracking = ["thetawave-assets/progress_tracking"]
 dynamic_linking = [
     "bevy/dynamic_linking",
     "thetawave-physics/dynamic_linking",

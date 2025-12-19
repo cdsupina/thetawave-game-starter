@@ -1,8 +1,4 @@
 //! Loading UI systems.
-//!
-//! Only available when the `progress_tracking` feature is enabled.
-
-#![cfg(feature = "progress_tracking")]
 
 use bevy::{
     color::Color,
