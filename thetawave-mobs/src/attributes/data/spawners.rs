@@ -42,36 +42,22 @@ impl<'de> Deserialize<'de> for MobSpawner {
     where
         D: serde::Deserializer<'de>,
     {
-        // Define a "helper" struct that mirrors MobSpawner
-        // but uses types that can be deserialized easily
-        // Supports both "mob_ref" (new) and "mob_type" (legacy) field names
         #[derive(Deserialize)]
         #[serde(deny_unknown_fields)]
         struct Helper {
             pub timer: f32,
             pub position: Vec2,
             pub rotation: f32,
-            /// New field name for mob path reference
-            pub mob_ref: Option<String>,
-            /// Legacy field name, kept for backward compatibility
-            pub mob_type: Option<String>,
+            pub mob_ref: String,
         }
 
-        // Let serde deserialize into the Helper struct first
         let helper = Helper::deserialize(deserializer)?;
 
-        // Get the mob reference from either new or legacy field
-        let mob_ref = helper
-            .mob_ref
-            .or(helper.mob_type)
-            .ok_or_else(|| serde::de::Error::missing_field("mob_ref"))?;
-
-        // Construct our actual struct with the transformed data
         Ok(MobSpawner {
             timer: Timer::from_seconds(helper.timer, TimerMode::Repeating),
             position: helper.position,
             rotation: helper.rotation,
-            mob_ref,
+            mob_ref: helper.mob_ref,
         })
     }
 }
