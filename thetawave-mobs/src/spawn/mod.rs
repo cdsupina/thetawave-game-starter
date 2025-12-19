@@ -1,4 +1,7 @@
-use avian2d::prelude::{AngleLimit, RevoluteJoint, RigidBody};
+use avian2d::prelude::{
+    AngleLimit, Collider, ColliderDensity, CollisionLayers, Friction, LockedAxes, PhysicsLayer,
+    Restitution, RevoluteJoint, RigidBody, Rotation,
+};
 use bevy::{
     asset::Handle,
     ecs::{
@@ -18,20 +21,94 @@ use bevy::{
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_behave::prelude::BehaveTree;
 use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
-use thetawave_core::{AppState, Cleanup};
+use thetawave_core::{AppState, Cleanup, HealthComponent};
 #[cfg(feature = "debug")]
 use thetawave_core::LoggingSettings;
 use thetawave_particles::{SpawnSpawnerEffectEvent, SpawnerParticleEffectSpawnedEvent};
 use thetawave_projectiles::ProjectileType;
 
+use bevy::ecs::bundle::Bundle;
+
 use crate::{
     MobMarker,
+    asset::{JointedMobRef, MobAsset, MobRegistry, normalize_mob_ref},
     attributes::{
-        JointedMob, JointsComponent, MobAttributesResource, MobComponentBundle,
-        ProjectileSpawnerComponent,
+        JointsComponent, MobAttributesComponent, ProjectileSpawnerComponent,
     },
-    behavior::{BehaviorReceiverComponent, MobBehaviorsResource},
+    behavior::BehaviorReceiverComponent,
 };
+
+/// Bundle containing all the core physics and gameplay components for a mob entity.
+#[derive(Bundle)]
+struct MobComponentBundle {
+    name: Name,
+    restitution: Restitution,
+    friction: Friction,
+    collision_layers: CollisionLayers,
+    collider: Collider,
+    locked_axes: LockedAxes,
+    collider_density: ColliderDensity,
+    mob_attributes: MobAttributesComponent,
+    health: HealthComponent,
+}
+
+impl From<&MobAsset> for MobComponentBundle {
+    fn from(mob: &MobAsset) -> Self {
+        // Calculate collision layers
+        let mut membership: u32 = 0;
+        for layer in &mob.collision_layer_membership {
+            membership |= layer.to_bits();
+        }
+        let mut filter: u32 = 0;
+        for layer in &mob.collision_layer_filter {
+            filter |= layer.to_bits();
+        }
+
+        // Build compound collider
+        let collider = Collider::compound(
+            mob.colliders
+                .iter()
+                .map(|c| {
+                    (
+                        c.position,
+                        Rotation::degrees(c.rotation),
+                        Collider::from(&c.shape),
+                    )
+                })
+                .collect(),
+        );
+
+        // Determine locked axes
+        let locked_axes = if mob.rotation_locked {
+            LockedAxes::ROTATION_LOCKED
+        } else {
+            LockedAxes::new()
+        };
+
+        MobComponentBundle {
+            name: Name::new(mob.name.clone()),
+            restitution: Restitution::new(mob.restitution),
+            friction: Friction::new(mob.friction),
+            collision_layers: CollisionLayers::new(membership, filter),
+            collider,
+            locked_axes,
+            collider_density: ColliderDensity(mob.collider_density),
+            mob_attributes: MobAttributesComponent {
+                linear_acceleration: mob.linear_acceleration,
+                linear_deceleration: mob.linear_deceleration,
+                max_linear_speed: mob.max_linear_speed,
+                angular_acceleration: mob.angular_acceleration,
+                angular_deceleration: mob.angular_deceleration,
+                max_angular_speed: mob.max_angular_speed,
+                targeting_range: mob.targeting_range,
+                projectile_speed: mob.projectile_speed,
+                projectile_damage: mob.projectile_damage,
+                projectile_range_seconds: mob.projectile_range_seconds,
+            },
+            health: HealthComponent::new(mob.health),
+        }
+    }
+}
 
 /// Get the Aseprite handle from a decoration name string using asset resolver
 fn get_mob_decoration_sprite(
@@ -66,18 +143,22 @@ impl Default for MobDebugSettings {
     }
 }
 
-/// Event for spawning mobs using a mob type string and position
+/// Event for spawning mobs using a mob reference path and position.
+///
+/// The `mob_ref` can be specified in two formats:
+/// - Full path: "mobs/ferritharax/head.mob"
+/// - Normalized key: "ferritharax/head"
 #[derive(Message, Debug)]
 pub struct SpawnMobEvent {
-    pub mob_type: String,
+    pub mob_ref: String,
     pub position: Vec2,
     pub rotation: f32,
 }
 
 impl SpawnMobEvent {
-    pub fn new(mob_type: impl Into<String>, position: Vec2, rotation: f32) -> Self {
+    pub fn new(mob_ref: impl Into<String>, position: Vec2, rotation: f32) -> Self {
         Self {
-            mob_type: mob_type.into(),
+            mob_ref: mob_ref.into(),
             position,
             rotation,
         }
@@ -92,8 +173,7 @@ pub(super) fn spawn_mob_system(
     mob_debug_settings: Res<MobDebugSettings>,
     #[cfg(feature = "debug")] logging_settings: Res<LoggingSettings>,
     mut spawn_mob_event_reader: MessageReader<SpawnMobEvent>,
-    attributes_res: Res<MobAttributesResource>,
-    behaviors_res: Res<MobBehaviorsResource>,
+    mob_registry: Res<MobRegistry>,
     mut spawner_effect_event_writer: MessageWriter<SpawnSpawnerEffectEvent>,
 ) -> Result {
     for event in spawn_mob_event_reader.read() {
@@ -102,14 +182,13 @@ pub(super) fn spawn_mob_system(
 
         spawn_mob(
             &mut cmds,
-            &event.mob_type,
+            &event.mob_ref,
             event.position,
             event.rotation,
             &mob_debug_settings,
             #[cfg(feature = "debug")]
             &logging_settings,
-            &attributes_res,
-            &behaviors_res,
+            &mob_registry,
             &game_assets,
             &extended_assets,
             suppress_jointed_mobs,
@@ -123,49 +202,56 @@ pub(super) fn spawn_mob_system(
 /// Spawns a mob entity with all its components, decorations, and jointed sub-mobs
 fn spawn_mob(
     cmds: &mut Commands,
-    mob_type: &str,
+    mob_ref: &str,
     position: Vec2,
     rotation: f32,
     mob_debug_settings: &MobDebugSettings,
     #[cfg(feature = "debug")] logging_settings: &LoggingSettings,
-    attributes_res: &MobAttributesResource,
-    behaviors_res: &MobBehaviorsResource,
+    mob_registry: &MobRegistry,
     game_assets: &GameAssets,
     extended_assets: &ExtendedGameAssets,
     suppress_jointed_mobs: bool,
     transmitter_entity: Option<Entity>, // entity that can transmit behaviors to the mob
     spawner_effect_event_writer: &mut MessageWriter<SpawnSpawnerEffectEvent>,
 ) -> Result<Entity, BevyError> {
-    // Look up the mob's configuration data from resources
-    let mob_attributes = attributes_res
-        .attributes
-        .get(mob_type)
-        .ok_or(BevyError::from("Mob attributes not found"))?;
+    // Normalize the mob_ref to strip "mobs/" prefix and ".mob" suffix
+    let normalized_ref = normalize_mob_ref(mob_ref);
+
+    // Look up the mob from the registry (now returns &MobAsset directly)
+    let mob = mob_registry
+        .get_mob(&normalized_ref)
+        .ok_or(BevyError::from(format!("Mob not found in registry: {}", normalized_ref)))?;
+
+    // Get the sprite key: either the specified sprite_key or derive from normalized mob_ref
+    // Derive: "xhitara/launcher" -> "xhitara_launcher_mob"
+    let derived_sprite_key;
+    let sprite_key = if let Some(key) = &mob.sprite_key {
+        key.as_str()
+    } else {
+        // Normalize the mob_ref and convert to sprite format
+        // "xhitara/launcher" -> "xhitara_launcher_mob"
+        derived_sprite_key = format!("{}_mob", normalized_ref.replace('/', "_"));
+        &derived_sprite_key
+    };
+
     // Spawn the main anchor entity with all core components
     let mut entity_commands = cmds.spawn((
-        MobComponentBundle::from(mob_attributes),
-        MobMarker::new(mob_type),
+        MobComponentBundle::from(mob),
+        MobMarker::new(&normalized_ref),
         AseAnimation {
             animation: Animation::tag("idle"),
-            aseprite: {
-                let sprite_key = if let Some(sprite_key) = &mob_attributes.sprite_key {
-                    sprite_key.as_str()
-                } else {
-                    mob_type
-                };
-                AssetResolver::get_game_sprite(sprite_key, extended_assets, game_assets)?
-            },
+            aseprite: AssetResolver::get_game_sprite(sprite_key, extended_assets, game_assets)?,
         },
         Sprite::default(),
         Cleanup::<AppState> {
             states: vec![AppState::Game],
         },
         RigidBody::Dynamic,
-        Transform::from_xyz(position.x, position.y, mob_attributes.z_level)
+        Transform::from_xyz(position.x, position.y, mob.z_level)
             .with_rotation(Quat::from_rotation_z(rotation.to_radians())),
     ));
 
-    if let Some(mob_spawners) = &mob_attributes.mob_spawners {
+    if let Some(mob_spawners) = &mob.mob_spawners {
         entity_commands.insert(mob_spawners.clone());
     }
 
@@ -176,7 +262,7 @@ fn spawn_mob(
     let anchor_id = entity_commands
         .with_children(|parent| {
             // Spawn visual decorations as child entities
-            for (decoration_sprite_stem, pos) in &mob_attributes.decorations {
+            for (decoration_sprite_stem, pos) in &mob.decorations {
                 parent.spawn((
                     Transform::from_xyz(pos.x, pos.y, 0.0),
                     AseAnimation {
@@ -200,8 +286,8 @@ fn spawn_mob(
                 ));
             }
 
-            // Spawn behavior tree
-            if let Some(tree) = behaviors_res.behaviors.get(mob_type) {
+            // Spawn behavior tree from registry
+            if let Some(tree) = mob_registry.get_behavior(&normalized_ref) {
                 parent.spawn((
                     Name::new("Mob Behavior Tree"),
                     BehaveTree::new(tree.clone()),
@@ -211,7 +297,7 @@ fn spawn_mob(
         .id();
 
     // Set the transmitter entity for the spawned joints
-    let new_transmitter_entity = if mob_attributes.behavior_transmitter {
+    let new_transmitter_entity = if mob.behavior_transmitter {
         Some(anchor_id)
     } else {
         transmitter_entity
@@ -220,7 +306,7 @@ fn spawn_mob(
     let mut mob_joints = HashMap::new();
 
     // Process all jointed sub-mobs (mobs connected via physics joints)
-    for jointed_mob in &mob_attributes.jointed_mobs {
+    for jointed_mob in &mob.jointed_mobs {
         // Handle chain spawning: creates a sequence of connected mobs
         if let Some(chain) = &jointed_mob.chain {
             let mut previous_id = anchor_id;
@@ -243,14 +329,13 @@ fn spawn_mob(
             for chain_index in 0..actual_length {
                 let jointed_id = spawn_mob(
                     cmds,
-                    &jointed_mob.mob_type,
+                    &jointed_mob.mob_ref, // Use mob_ref path
                     position + jointed_mob.offset_pos + chain.pos_offset * chain_index as f32,
                     0.0,
                     mob_debug_settings,
                     #[cfg(feature = "debug")]
                     logging_settings,
-                    attributes_res,
-                    behaviors_res,
+                    mob_registry,
                     game_assets,
                     extended_assets,
                     chain_index < actual_length - 1, // Suppress jointed mobs except on the last chain link
@@ -283,14 +368,13 @@ fn spawn_mob(
             // Handle single jointed mob (not part of a chain)
             let jointed_id = spawn_mob(
                 cmds,
-                &jointed_mob.mob_type,
+                &jointed_mob.mob_ref, // Use mob_ref path
                 position + jointed_mob.offset_pos,
                 0.0,
                 mob_debug_settings,
                 #[cfg(feature = "debug")]
                 logging_settings,
-                attributes_res,
-                behaviors_res,
+                mob_registry,
                 game_assets,
                 extended_assets,
                 false,
@@ -314,7 +398,7 @@ fn spawn_mob(
     }
 
     // Now spawn particle effects and update projectile spawners
-    if let Some(ref mut projectile_spawners) = mob_attributes.projectile_spawners.clone() {
+    if let Some(ref mut projectile_spawners) = mob.projectile_spawners.clone() {
         for (key, spawner) in projectile_spawners.spawners.iter_mut() {
             spawner_effect_event_writer.write(SpawnSpawnerEffectEvent {
                 parent_entity: anchor_id,
@@ -337,7 +421,7 @@ fn create_joint(
     cmds: &mut Commands,
     anchor: Entity,
     jointed: Entity,
-    jointed_mob: &JointedMob,
+    jointed_mob: &JointedMobRef,
     anchor_offset: Vec2,
 ) -> Entity {
     // Create the revolute joint with anchor positions and compliance settings

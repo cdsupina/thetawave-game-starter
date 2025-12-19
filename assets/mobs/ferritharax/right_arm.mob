@@ -1,0 +1,25 @@
+# Ferritharax Right Arm
+# Right arm component of the Ferritharax boss.
+
+name = "Ferritharax Right Arm"
+
+rotation_locked = false
+
+colliders = [
+    { shape = { Rectangle = [10.0, 45.0] }, position = [-1.0, 3.0], rotation = 25.0 },
+    { shape = { Rectangle = [22.0, 8.0] }, position = [-5.0, -19.0], rotation = 30.0 },
+    { shape = { Rectangle = [7.0, 25.0] }, position = [11.0, -6.0], rotation = 20.0 }
+]
+
+[[jointed_mobs]]
+key = "claw"
+mob_ref = "mobs/ferritharax/right_claw.mob"
+offset_pos = [-31.5, -17.5]
+anchor_1_pos = [-17.0, -25.0]
+anchor_2_pos = [14.5, -7.5]
+compliance = 0.0000001
+
+[jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001

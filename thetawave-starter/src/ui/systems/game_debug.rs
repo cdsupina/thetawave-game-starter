@@ -111,7 +111,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                     ui.menu_button("Xhitara", |ui| {
                         if ui.button("Xhitara Grunt").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "xhitara_grunt_mob",
+                                "xhitara/grunt",
                                 *spawn_location,
                                 0.0,
                             ));
@@ -119,7 +119,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Xhitara Spitter").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "xhitara_spitter_mob",
+                                "xhitara/spitter",
                                 *spawn_location,
                                 0.0,
                             ));
@@ -127,7 +127,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Xhitara Gyro").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "xhitara_gyro_mob",
+                                "xhitara/gyro",
                                 *spawn_location,
                                 0.0,
                             ));
@@ -135,7 +135,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Xhitara Pacer").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "xhitara_pacer_mob",
+                                "xhitara/pacer",
                                 *spawn_location,
                                 0.0,
                             ));
@@ -143,7 +143,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Xhitara Missile").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "xhitara_missile_mob",
+                                "xhitara/missile",
                                 *spawn_location,
                                 0.0,
                             ));
@@ -151,7 +151,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Xhitara Launcher").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "xhitara_launcher_mob",
+                                "xhitara/launcher",
                                 *spawn_location,
                                 0.0,
                             ));
@@ -159,7 +159,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Xhitara Cyclusk").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "xhitara_cyclusk_mob",
+                                "xhitara/cyclusk",
                                 *spawn_location,
                                 0.0,
                             ));
@@ -167,7 +167,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Ferritharax").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "ferritharax_head_mob",
+                                "ferritharax/head",
                                 *spawn_location,
                                 0.0,
                             ));
@@ -175,7 +175,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Trizetheron").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "trizetheron_mob",
+                                "trizetheron/main",
                                 *spawn_location,
                                 0.0,
                             ));
@@ -185,7 +185,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                             ui.menu_button("Xhitara Tentacle", |ui| {
                                 if ui.button("Xhitara Tentacle Short").clicked() {
                                     spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                        "xhitara_tentacle_short_mob",
+                                        "xhitara/tentacle_short",
                                         *spawn_location,
                                         0.0,
                                     ));
@@ -193,7 +193,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                                 if ui.button("Xhitara Tentacle Long").clicked() {
                                     spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                        "xhitara_tentacle_long_mob",
+                                        "xhitara/tentacle_long",
                                         *spawn_location,
                                         0.0,
                                     ));
@@ -201,7 +201,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                                 if ui.button("Xhitara Tentacle Middle").clicked() {
                                     spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                        "xhitara_tentacle_middle_mob",
+                                        "xhitara/tentacle_middle",
                                         *spawn_location,
                                         0.0,
                                     ));
@@ -209,7 +209,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                                 if ui.button("Xhitara Tentacle End").clicked() {
                                     spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                        "xhitara_tentacle_end_mob",
+                                        "xhitara/tentacle_end",
                                         *spawn_location,
                                         0.0,
                                     ));
@@ -222,7 +222,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                     ui.menu_button("Ally", |ui| {
                         if ui.button("Freighter One").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "freighter_one_mob",
+                                "freighter/front_one",
                                 *spawn_location,
                                 0.0,
                             ));
@@ -230,7 +230,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                         if ui.button("Freighter Two").clicked() {
                             spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "freighter_two_mob",
+                                "freighter/front_two",
                                 *spawn_location,
                                 0.0,
                             ));
@@ -240,7 +240,7 @@ pub(in crate::ui) fn game_debug_menu_system(
                             ui.menu_button("Freighter", |ui| {
                                 if ui.button("Freighter Middle").clicked() {
                                     spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                        "freighter_middle_mob",
+                                        "freighter/middle",
                                         *spawn_location,
                                         0.0,
                                     ));
@@ -248,7 +248,7 @@ pub(in crate::ui) fn game_debug_menu_system(
 
                                 if ui.button("Freighter Back").clicked() {
                                     spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                        "freighter_back_mob",
+                                        "freighter/back",
                                         *spawn_location,
                                         0.0,
                                     ));

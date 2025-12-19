@@ -1,17 +1,10 @@
-use bevy::platform::collections::HashMap;
 use serde::Deserialize;
 
 use super::data::MobBehaviorType;
 
-/// Root structure for deserializing mob_behaviors.toml
-#[derive(Deserialize, Debug)]
-pub struct MobBehaviorsTomlData {
-    pub behaviors: HashMap<String, BehaviorNodeData>,
-}
-
 /// Represents a node in the behavior tree that can be deserialized from TOML
 #[derive(Deserialize, Debug, Clone)]
-#[serde(tag = "type")]
+#[serde(tag = "type", deny_unknown_fields)]
 pub enum BehaviorNodeData {
     /// Control Flow Nodes
     

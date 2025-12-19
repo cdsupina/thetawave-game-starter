@@ -1,0 +1,71 @@
+# Ferritharax Head
+# Main component of the Ferritharax boss. Vulnerable in head/eye. Uses arms to protect itself.
+
+name = "Ferritharax"
+
+linear_acceleration = [0.3, 0.3]
+max_linear_speed = [20.0, 20.0]
+behavior_transmitter = true
+
+colliders = [
+    { shape = { Circle = 18.0 }, position = [0.0, -3.0], rotation = 0.0 }
+]
+
+[[jointed_mobs]]
+key = "body"
+mob_ref = "mobs/ferritharax/body.mob"
+offset_pos = [0.0, 37.0]
+anchor_1_pos = [0.0, 20.0]
+anchor_2_pos = [0.0, -17.0]
+compliance = 0.0000001
+
+[jointed_mobs.angle_limit_range]
+min = -2.0
+max = 2.0
+torque = 0.001
+
+[behavior]
+type = "Forever"
+
+[[behavior.children]]
+type = "Sequence"
+
+# Phase 1: Move to center position
+[[behavior.children.children]]
+type = "Action"
+name = "Phase 1 - Center Position"
+behaviors = [
+    { action = "MoveTo", x = 0.0, y = 50.0 },
+    { action = "DoForTime", seconds = 15.0 }
+]
+
+# Phase 2: Move right and activate claws
+[[behavior.children.children]]
+type = "Action"
+name = "Phase 2 - Right Attack"
+behaviors = [
+    { action = "MoveTo", x = 125.0, y = 50.0 },
+    { action = "DoForTime", seconds = 15.0 },
+    { action = "TransmitMobBehavior", mob_type = "ferritharax/left_claw", behaviors = [{ action = "MoveRight" }] },
+    { action = "TransmitMobBehavior", mob_type = "ferritharax/right_claw", behaviors = [{ action = "MoveLeft" }] }
+]
+
+# Phase 3: Return to center
+[[behavior.children.children]]
+type = "Action"
+name = "Phase 3 - Return Center"
+behaviors = [
+    { action = "MoveTo", x = 0.0, y = 50.0 },
+    { action = "DoForTime", seconds = 15.0 }
+]
+
+# Phase 4: Move left and activate claws
+[[behavior.children.children]]
+type = "Action"
+name = "Phase 4 - Left Attack"
+behaviors = [
+    { action = "MoveTo", x = -125.0, y = 50.0 },
+    { action = "DoForTime", seconds = 15.0 },
+    { action = "TransmitMobBehavior", mob_type = "ferritharax/left_claw", behaviors = [{ action = "MoveRight" }] },
+    { action = "TransmitMobBehavior", mob_type = "ferritharax/right_claw", behaviors = [{ action = "MoveLeft" }] }
+]

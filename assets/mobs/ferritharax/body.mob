@@ -1,0 +1,39 @@
+# Ferritharax Body
+# Body component of the Ferritharax boss.
+
+name = "Ferritharax Body"
+
+z_level = -1.0
+rotation_locked = false
+
+colliders = [
+    { shape = { Rectangle = [38.0, 10.0] }, position = [0.0, -8.0], rotation = 0.0 },
+    { shape = { Rectangle = [20.0, 11.0] }, position = [-18.0, 4.0], rotation = -60.0 },
+    { shape = { Rectangle = [20.0, 11.0] }, position = [18.0, 4.0], rotation = 60.0 }
+]
+
+[[jointed_mobs]]
+key = "left_shoulder"
+mob_ref = "mobs/ferritharax/left_shoulder.mob"
+offset_pos = [-50.0, -18.5]
+anchor_1_pos = [-30.0, 1.5]
+anchor_2_pos = [20.0, 20.0]
+compliance = 0.0000001
+
+[jointed_mobs.angle_limit_range]
+min = -5.0
+max = 35.0
+torque = 0.001
+
+[[jointed_mobs]]
+key = "right_shoulder"
+mob_ref = "mobs/ferritharax/right_shoulder.mob"
+offset_pos = [50.0, -18.5]
+anchor_1_pos = [30.0, 1.5]
+anchor_2_pos = [-20.0, 20.0]
+compliance = 0.0000001
+
+[jointed_mobs.angle_limit_range]
+min = -35.0
+max = 5.0
+torque = 0.001

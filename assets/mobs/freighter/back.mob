@@ -1,0 +1,13 @@
+# Freighter Back
+# Back cargo component of a Freighter.
+
+name = "Freighter Back"
+
+rotation_locked = false
+
+colliders = [
+    { shape = { Rectangle = [13.0, 18.0] }, position = [0.0, 0.0], rotation = 0.0 }
+]
+
+collision_layer_membership = ["AllyMob"]
+collision_layer_filter = ["EnemyMob", "AllyMob", "Player", "EnemyTentacle", "EnemyProjectile"]

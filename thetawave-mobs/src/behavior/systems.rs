@@ -617,7 +617,7 @@ fn spawn_mob(
             && spawner.timer.tick(time.delta()).just_finished()
         {
             spawn_mob_event_writer.write(SpawnMobEvent {
-                mob_type: spawner.mob_type.clone(),
+                mob_ref: spawner.mob_ref.clone(),
                 rotation: spawner.rotation,
                 position: transform.translation.truncate() + spawner.position,
             });

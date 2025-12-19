@@ -13,7 +13,8 @@ use thetawave_projectiles::ProjectileSpawner;
 /// Maps String keys to MobSpawners
 /// Intended to be used by behaviors
 #[derive(Component, Deserialize, Debug, Clone, Reflect)]
-pub(crate) struct MobSpawnerComponent {
+#[serde(deny_unknown_fields)]
+pub struct MobSpawnerComponent {
     pub spawners: HashMap<String, MobSpawner>,
 }
 
@@ -21,17 +22,19 @@ pub(crate) struct MobSpawnerComponent {
 /// Maps String keys to ProjectileSpawners
 /// Intended to be used by behaviors
 #[derive(Component, Deserialize, Debug, Clone, Reflect)]
+#[serde(deny_unknown_fields)]
 pub struct ProjectileSpawnerComponent {
     pub spawners: HashMap<String, ProjectileSpawner>,
 }
 
 /// Used for periodically spawning mobs with a MobSpawnerComponent
 #[derive(Debug, Clone, Reflect)]
-pub(crate) struct MobSpawner {
+pub struct MobSpawner {
     pub timer: Timer,
     pub position: Vec2,
     pub rotation: f32,
-    pub mob_type: String,
+    /// Path to the mob file to spawn, e.g., "mobs/xhitara/grunt.mob"
+    pub mob_ref: String,
 }
 
 impl<'de> Deserialize<'de> for MobSpawner {
@@ -41,24 +44,34 @@ impl<'de> Deserialize<'de> for MobSpawner {
     {
         // Define a "helper" struct that mirrors MobSpawner
         // but uses types that can be deserialized easily
+        // Supports both "mob_ref" (new) and "mob_type" (legacy) field names
         #[derive(Deserialize)]
         #[serde(deny_unknown_fields)]
         struct Helper {
             pub timer: f32,
             pub position: Vec2,
             pub rotation: f32,
-            pub mob_type: String,
+            /// New field name for mob path reference
+            pub mob_ref: Option<String>,
+            /// Legacy field name, kept for backward compatibility
+            pub mob_type: Option<String>,
         }
 
         // Let serde deserialize into the Helper struct first
         let helper = Helper::deserialize(deserializer)?;
+
+        // Get the mob reference from either new or legacy field
+        let mob_ref = helper
+            .mob_ref
+            .or(helper.mob_type)
+            .ok_or_else(|| serde::de::Error::missing_field("mob_ref"))?;
 
         // Construct our actual struct with the transformed data
         Ok(MobSpawner {
             timer: Timer::from_seconds(helper.timer, TimerMode::Repeating),
             position: helper.position,
             rotation: helper.rotation,
-            mob_type: helper.mob_type,
+            mob_ref,
         })
     }
 }

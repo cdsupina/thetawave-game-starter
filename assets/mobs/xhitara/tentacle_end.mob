@@ -1,0 +1,44 @@
+# Xhitara Tentacle End
+# End segment of a tentacle chain. Aggressively seeks players.
+
+name = "Xhitara Tentacle End"
+
+rotation_locked = false
+restitution = 0.0
+friction = 1.0
+z_level = -2.0
+linear_acceleration = [0.15, 0.15]
+max_linear_speed = [25.0, 25.0]
+angular_acceleration = 0.2
+max_angular_speed = 1.5
+targeting_range = 100.0
+
+colliders = [
+    { shape = { Rectangle = [4.0, 9.0] }, position = [0.0, 0.0], rotation = 0.0 }
+]
+
+collision_layer_membership = ["EnemyTentacle"]
+collision_layer_filter = ["AllyProjectile", "AllyMob", "Player", "EnemyMob"]
+
+[behavior]
+type = "Forever"
+
+[[behavior.children]]
+type = "Sequence"
+
+[[behavior.children.children]]
+type = "Action"
+name = "Find Target"
+behaviors = [
+    { action = "FindPlayerTarget" },
+    { action = "BrakeAngular" }
+]
+
+[[behavior.children.children]]
+type = "Action"
+name = "Move To Target"
+behaviors = [
+    { action = "MoveForward" },
+    { action = "RotateToTarget" },
+    { action = "LoseTarget" }
+]

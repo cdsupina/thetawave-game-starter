@@ -25,7 +25,6 @@ pub enum ThetawavePhysicsLayer {
 
 /// Describes a collider that can be attached to mobs
 #[derive(Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct ThetawaveCollider {
     pub shape: ColliderShape,
     pub position: Vec2,
@@ -34,7 +33,6 @@ pub struct ThetawaveCollider {
 
 /// All types of collider shapes that can be attached to mobs
 #[derive(Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
 pub enum ColliderShape {
     Circle(f32),
     Rectangle(f32, f32),

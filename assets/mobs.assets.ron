@@ -1,0 +1,35 @@
+({
+    "mobs": Files(
+        paths: [
+            "mobs/xhitara/grunt.mob",
+            "mobs/xhitara/spitter.mob",
+            "mobs/xhitara/gyro.mob",
+            "mobs/xhitara/pacer.mob",
+            "mobs/xhitara/missile.mob",
+            "mobs/xhitara/launcher.mob",
+            "mobs/xhitara/cyclusk.mob",
+            "mobs/xhitara/tentacle_short.mob",
+            "mobs/xhitara/tentacle_long.mob",
+            "mobs/xhitara/tentacle_middle.mob",
+            "mobs/xhitara/tentacle_end.mob",
+
+            "mobs/ferritharax/head.mob",
+            "mobs/ferritharax/body.mob",
+            "mobs/ferritharax/left_shoulder.mob",
+            "mobs/ferritharax/right_shoulder.mob",
+            "mobs/ferritharax/left_arm.mob",
+            "mobs/ferritharax/right_arm.mob",
+            "mobs/ferritharax/left_claw.mob",
+            "mobs/ferritharax/right_claw.mob",
+
+            "mobs/trizetheron/main.mob",
+            "mobs/trizetheron/left_head.mob",
+            "mobs/trizetheron/right_head.mob",
+
+            "mobs/freighter/front_one.mob",
+            "mobs/freighter/front_two.mob",
+            "mobs/freighter/middle.mob",
+            "mobs/freighter/back.mob",
+        ]
+    ),
+})

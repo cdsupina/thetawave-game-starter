@@ -1,0 +1,19 @@
+// Extended mobs - add your custom mob definitions here
+({
+    // Extended complete mobs - these add new mobs to the game
+    // Use .mob extension for complete mob definitions
+    "extended_mobs": Files(
+        paths: [
+            // Add extended mob paths here, e.g.:
+            // "extended://mobs/custom/my_new_enemy.mob",
+        ]
+    ),
+    // Extended mob patches - these merge with base mobs
+    // Use .mobpatch extension for partial field overrides
+    "extended_mob_patches": Files(
+        paths: [
+            // Add extended mob patch paths here, e.g.:
+            // "extended://mobs/xhitara/grunt.mobpatch",
+        ]
+    ),
+})

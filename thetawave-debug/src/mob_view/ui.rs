@@ -4,7 +4,7 @@ use bevy_egui::{
     EguiContext, PrimaryEguiContext,
     egui::{self, Color32, ScrollArea, SidePanel, TopBottomPanel, CollapsingHeader, ProgressBar},
 };
-use thetawave_mobs::MobBehaviorsResource;
+use thetawave_mobs::MobRegistry;
 
 use super::data::{
     BehaviorTreeDisplay, BehaviorTreeDisplays, MobDisplayStats, MobGroupDisplayStats,
@@ -18,7 +18,7 @@ pub fn mob_view_ui_system(
     registry: Res<MobGroupRegistry>,
     group_stats: Res<MobGroupDisplayStats>,
     tree_displays: Res<BehaviorTreeDisplays>,
-    behaviors_resource: Res<MobBehaviorsResource>,
+    mob_registry: Res<MobRegistry>,
 ) {
     let mut binding = egui_context.into_inner();
     let ctx = binding.get_mut();
@@ -92,7 +92,7 @@ pub fn mob_view_ui_system(
             } else {
                 ScrollArea::vertical().show(ui, |ui| {
                     for tree_display in relevant_displays {
-                        render_behavior_tree_section(ui, tree_display, &behaviors_resource);
+                        render_behavior_tree_section(ui, tree_display, &mob_registry);
                     }
                 });
             }
@@ -243,7 +243,7 @@ fn render_mob_stats_section(ui: &mut egui::Ui, stats: &MobDisplayStats) {
 fn render_behavior_tree_section(
     ui: &mut egui::Ui,
     display: &BehaviorTreeDisplay,
-    behaviors_resource: &MobBehaviorsResource,
+    mob_registry: &MobRegistry,
 ) {
     let header_text = format!(
         "{} (Entity {})",
@@ -264,7 +264,7 @@ fn render_behavior_tree_section(
 
             // Look up the tree definition and render structure (only for mobs with their own tree)
             if display.has_own_tree {
-                if let Some(tree) = behaviors_resource.behaviors.get(&display.mob_type) {
+                if let Some(tree) = mob_registry.get_behavior(&display.mob_type) {
                     ui.add_space(4.0);
                     ui.label("Tree Structure:");
                     render_tree_node(ui, tree.root(), 0, display.active_node_name.as_deref());

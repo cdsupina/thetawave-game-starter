@@ -1,0 +1,49 @@
+# Xhitara Gyro
+# Moves down and shoots projectiles in a ring around it. Can be spun around when hit.
+
+name = "Xhitara Gyro"
+
+rotation_locked = false
+
+colliders = [
+    { shape = { Rectangle = [17.0, 17.0] }, position = [0.0, 0.0], rotation = 0.0 }
+]
+
+linear_deceleration = [0.05, 0.08]
+max_linear_speed = [8.0, 8.0]
+
+[projectile_spawners.spawners.south]
+timer = 1.0
+position = [0.0, -14.0]
+rotation = -90.0
+range_seconds_multiplier = 0.5
+projectile_type = "Bullet"
+faction = "Enemy"
+
+[projectile_spawners.spawners.east]
+timer = 1.0
+position = [14.0, 0.0]
+rotation = 0.0
+range_seconds_multiplier = 0.5
+projectile_type = "Bullet"
+faction = "Enemy"
+
+[projectile_spawners.spawners.west]
+timer = 1.0
+position = [-14.0, 0.0]
+rotation = 180.0
+range_seconds_multiplier = 0.5
+projectile_type = "Bullet"
+faction = "Enemy"
+
+[behavior]
+type = "Forever"
+
+[[behavior.children]]
+type = "Action"
+name = "Movement"
+behaviors = [
+    { action = "MoveDown" },
+    { action = "BrakeHorizontal" },
+    { action = "SpawnProjectile", keys = ["south", "east", "west"] }
+]

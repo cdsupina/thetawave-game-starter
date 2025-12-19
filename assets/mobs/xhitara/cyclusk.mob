@@ -1,0 +1,71 @@
+# Xhitara Cyclusk
+# Moves toward player with tentacles attached.
+
+name = "Xhitara Cyclusk"
+
+linear_acceleration = [0.2, 0.2]
+max_linear_speed = [20.0, 20.0]
+
+colliders = [
+    { shape = { Rectangle = [25.0, 5.0] }, position = [0.0, -6.0], rotation = 0.0 },
+    { shape = { Rectangle = [10.0, 12.0] }, position = [0.0, 4.0], rotation = 0.0 }
+]
+
+[[jointed_mobs]]
+key = "middle_tentacle"
+mob_ref = "mobs/xhitara/tentacle_short.mob"
+offset_pos = [0.0, -12.0]
+anchor_1_pos = [0.0, -7.5]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[jointed_mobs]]
+key = "left_tentacle"
+mob_ref = "mobs/xhitara/tentacle_short.mob"
+offset_pos = [-6.0, -12.0]
+anchor_1_pos = [-6.0, -7.5]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[[jointed_mobs]]
+key = "right_tentacle"
+mob_ref = "mobs/xhitara/tentacle_short.mob"
+offset_pos = [6.0, -12.0]
+anchor_1_pos = [6.0, -7.5]
+anchor_2_pos = [0.0, 4.5]
+compliance = 0.000001
+
+[jointed_mobs.angle_limit_range]
+min = -5.0
+max = 5.0
+torque = 0.001
+
+[behavior]
+type = "Forever"
+
+[[behavior.children]]
+type = "Sequence"
+
+[[behavior.children.children]]
+type = "Action"
+name = "Find Target"
+behaviors = [
+    { action = "FindPlayerTarget" }
+]
+
+[[behavior.children.children]]
+type = "Action"
+name = "Move To Target"
+behaviors = [
+    { action = "MoveToTarget" }
+]
