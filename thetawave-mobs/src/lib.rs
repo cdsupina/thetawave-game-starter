@@ -5,7 +5,7 @@ mod spawn;
 mod systems;
 
 // Only export types that are used by other crates
-pub use asset::MobRegistry;
+pub use asset::{MobAsset, MobRegistry};
 pub use attributes::{JointsComponent, MobAttributesComponent, MobDeathEvent, MobMarker};
 pub use behavior::{BehaviorActionName, BehaviorReceiverComponent, MobBehaviorComponent};
 pub use spawn::MobDebugSettings;

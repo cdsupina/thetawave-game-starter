@@ -229,6 +229,12 @@ impl MobRegistry {
         self.mobs.keys()
     }
 
+    /// Get all spawnable mobs (for debug spawn menu).
+    /// Filters out mobs with `spawnable = false` (e.g., jointed parts).
+    pub fn spawnable_mobs(&self) -> impl Iterator<Item = (&String, &MobAsset)> {
+        self.mobs.iter().filter(|(_, mob)| mob.spawnable)
+    }
+
     /// Get the number of registered mobs.
     pub fn len(&self) -> usize {
         self.mobs.len()

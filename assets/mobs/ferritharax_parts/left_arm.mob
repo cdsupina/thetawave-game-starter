@@ -2,6 +2,8 @@
 # Left arm component of the Ferritharax boss.
 
 name = "Ferritharax Left Arm"
+spawnable = false
+sprite_key = "ferritharax_left_arm_mob"
 
 rotation_locked = false
 
@@ -13,7 +15,7 @@ colliders = [
 
 [[jointed_mobs]]
 key = "claw"
-mob_ref = "mobs/ferritharax/left_claw.mob"
+mob_ref = "mobs/ferritharax_parts/left_claw.mob"
 offset_pos = [31.5, -17.5]
 anchor_1_pos = [17.0, -25.0]
 anchor_2_pos = [-14.5, -7.5]

@@ -2,6 +2,7 @@
 # End segment of a tentacle chain. Aggressively seeks players.
 
 name = "Xhitara Tentacle End"
+spawnable = false
 
 rotation_locked = false
 restitution = 0.0

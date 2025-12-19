@@ -5,6 +5,10 @@ use bevy::{
     math::Vec2,
 };
 #[cfg(feature = "debug")]
+use bevy::ecs::system::Res;
+#[cfg(feature = "debug")]
+use bevy_platform::collections::HashMap;
+#[cfg(feature = "debug")]
 use bevy_egui::{
     EguiContexts,
     egui::{TopBottomPanel, containers::menu},
@@ -17,7 +21,7 @@ use thetawave_core::{Faction, LoggingSettings};
 #[cfg(feature = "debug")]
 use thetawave_debug::{InspectorDebugSettings, ToggleMobViewWindowEvent};
 #[cfg(feature = "debug")]
-use thetawave_mobs::{MobDebugSettings, SpawnMobEvent};
+use thetawave_mobs::{MobDebugSettings, MobRegistry, SpawnMobEvent};
 #[cfg(feature = "debug")]
 use thetawave_physics::PhysicsDebugSettings;
 #[cfg(feature = "debug")]
@@ -39,6 +43,7 @@ pub(in crate::ui) fn game_debug_menu_system(
     mut camera3d_zoom: Local<i8>,
     mut spawn_location: Local<Vec2>,
     mut toggle_mob_view_event_writer: MessageWriter<ToggleMobViewWindowEvent>,
+    mob_registry: Res<MobRegistry>,
 ) -> Result {
     let mut camera2d_zoom_new = *camera2d_zoom;
     let mut camera3d_zoom_new = *camera3d_zoom;
@@ -107,155 +112,43 @@ pub(in crate::ui) fn game_debug_menu_system(
                 });
 
                 ui.menu_button("Mob", |ui| {
-                    // Xhitara Mobs
-                    ui.menu_button("Xhitara", |ui| {
-                        if ui.button("Xhitara Grunt").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "xhitara/grunt",
-                                *spawn_location,
-                                0.0,
-                            ));
-                        }
+                    // Collect spawnable mobs grouped by directory
+                    let mut categories: HashMap<String, Vec<(String, String)>> = HashMap::new();
+                    for (key, mob) in mob_registry.spawnable_mobs() {
+                        let parts: Vec<&str> = key.split('/').collect();
+                        let category = parts[0].to_string();
+                        let display_name = mob.name.clone();
+                        categories
+                            .entry(category)
+                            .or_default()
+                            .push((key.clone(), display_name));
+                    }
 
-                        if ui.button("Xhitara Spitter").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "xhitara/spitter",
-                                *spawn_location,
-                                0.0,
-                            ));
-                        }
+                    // Sort categories alphabetically
+                    let mut sorted_categories: Vec<_> = categories.into_iter().collect();
+                    sorted_categories.sort_by(|a, b| a.0.cmp(&b.0));
 
-                        if ui.button("Xhitara Gyro").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "xhitara/gyro",
-                                *spawn_location,
-                                0.0,
-                            ));
-                        }
+                    // Build sub-menus for each category
+                    for (category, mobs) in &sorted_categories {
+                        // Capitalize the category name for display
+                        let category_display = capitalize_first(category);
 
-                        if ui.button("Xhitara Pacer").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "xhitara/pacer",
-                                *spawn_location,
-                                0.0,
-                            ));
-                        }
+                        ui.menu_button(&category_display, |ui| {
+                            // Sort mobs within category by display name
+                            let mut sorted_mobs = mobs.clone();
+                            sorted_mobs.sort_by(|a, b| a.1.cmp(&b.1));
 
-                        if ui.button("Xhitara Missile").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "xhitara/missile",
-                                *spawn_location,
-                                0.0,
-                            ));
-                        }
-
-                        if ui.button("Xhitara Launcher").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "xhitara/launcher",
-                                *spawn_location,
-                                0.0,
-                            ));
-                        }
-
-                        if ui.button("Xhitara Cyclusk").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "xhitara/cyclusk",
-                                *spawn_location,
-                                0.0,
-                            ));
-                        }
-
-                        if ui.button("Ferritharax").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "ferritharax/head",
-                                *spawn_location,
-                                0.0,
-                            ));
-                        }
-
-                        if ui.button("Trizetheron").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "trizetheron/main",
-                                *spawn_location,
-                                0.0,
-                            ));
-                        }
-
-                        ui.menu_button("Misc", |ui| {
-                            ui.menu_button("Xhitara Tentacle", |ui| {
-                                if ui.button("Xhitara Tentacle Short").clicked() {
+                            for (mob_ref, display_name) in sorted_mobs {
+                                if ui.button(&display_name).clicked() {
                                     spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                        "xhitara/tentacle_short",
+                                        &mob_ref,
                                         *spawn_location,
                                         0.0,
                                     ));
                                 }
-
-                                if ui.button("Xhitara Tentacle Long").clicked() {
-                                    spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                        "xhitara/tentacle_long",
-                                        *spawn_location,
-                                        0.0,
-                                    ));
-                                }
-
-                                if ui.button("Xhitara Tentacle Middle").clicked() {
-                                    spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                        "xhitara/tentacle_middle",
-                                        *spawn_location,
-                                        0.0,
-                                    ));
-                                }
-
-                                if ui.button("Xhitara Tentacle End").clicked() {
-                                    spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                        "xhitara/tentacle_end",
-                                        *spawn_location,
-                                        0.0,
-                                    ));
-                                }
-                            });
+                            }
                         });
-                    });
-
-                    // Ally Mobs
-                    ui.menu_button("Ally", |ui| {
-                        if ui.button("Freighter One").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "freighter/front_one",
-                                *spawn_location,
-                                0.0,
-                            ));
-                        }
-
-                        if ui.button("Freighter Two").clicked() {
-                            spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                "freighter/front_two",
-                                *spawn_location,
-                                0.0,
-                            ));
-                        }
-
-                        ui.menu_button("Misc", |ui| {
-                            ui.menu_button("Freighter", |ui| {
-                                if ui.button("Freighter Middle").clicked() {
-                                    spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                        "freighter/middle",
-                                        *spawn_location,
-                                        0.0,
-                                    ));
-                                }
-
-                                if ui.button("Freighter Back").clicked() {
-                                    spawn_mob_event_writer.write(SpawnMobEvent::new(
-                                        "freighter/back",
-                                        *spawn_location,
-                                        0.0,
-                                    ));
-                                }
-                            });
-                        });
-                    });
+                    }
                 });
 
                 ui.menu_button("Projectile", |ui| {
@@ -351,4 +244,14 @@ pub(in crate::ui) fn game_debug_menu_system(
     }
 
     Ok(())
+}
+
+/// Helper function to capitalize the first letter of a string.
+#[cfg(feature = "debug")]
+fn capitalize_first(s: &str) -> String {
+    let mut chars = s.chars();
+    match chars.next() {
+        None => String::new(),
+        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+    }
 }

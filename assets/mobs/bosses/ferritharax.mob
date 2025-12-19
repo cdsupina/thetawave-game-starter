@@ -2,6 +2,7 @@
 # Main component of the Ferritharax boss. Vulnerable in head/eye. Uses arms to protect itself.
 
 name = "Ferritharax"
+sprite_key = "ferritharax_head_mob"
 
 linear_acceleration = [0.3, 0.3]
 max_linear_speed = [20.0, 20.0]
@@ -13,7 +14,7 @@ colliders = [
 
 [[jointed_mobs]]
 key = "body"
-mob_ref = "mobs/ferritharax/body.mob"
+mob_ref = "mobs/ferritharax_parts/body.mob"
 offset_pos = [0.0, 37.0]
 anchor_1_pos = [0.0, 20.0]
 anchor_2_pos = [0.0, -17.0]
@@ -46,8 +47,8 @@ name = "Phase 2 - Right Attack"
 behaviors = [
     { action = "MoveTo", x = 125.0, y = 50.0 },
     { action = "DoForTime", seconds = 15.0 },
-    { action = "TransmitMobBehavior", mob_type = "ferritharax/left_claw", behaviors = [{ action = "MoveRight" }] },
-    { action = "TransmitMobBehavior", mob_type = "ferritharax/right_claw", behaviors = [{ action = "MoveLeft" }] }
+    { action = "TransmitMobBehavior", mob_type = "ferritharax_parts/left_claw", behaviors = [{ action = "MoveRight" }] },
+    { action = "TransmitMobBehavior", mob_type = "ferritharax_parts/right_claw", behaviors = [{ action = "MoveLeft" }] }
 ]
 
 # Phase 3: Return to center
@@ -66,6 +67,6 @@ name = "Phase 4 - Left Attack"
 behaviors = [
     { action = "MoveTo", x = -125.0, y = 50.0 },
     { action = "DoForTime", seconds = 15.0 },
-    { action = "TransmitMobBehavior", mob_type = "ferritharax/left_claw", behaviors = [{ action = "MoveRight" }] },
-    { action = "TransmitMobBehavior", mob_type = "ferritharax/right_claw", behaviors = [{ action = "MoveLeft" }] }
+    { action = "TransmitMobBehavior", mob_type = "ferritharax_parts/left_claw", behaviors = [{ action = "MoveRight" }] },
+    { action = "TransmitMobBehavior", mob_type = "ferritharax_parts/right_claw", behaviors = [{ action = "MoveLeft" }] }
 ]

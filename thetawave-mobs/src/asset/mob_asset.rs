@@ -25,6 +25,7 @@ const DEFAULT_PROJECTILE_SPEED: f32 = 100.0;
 const DEFAULT_PROJECTILE_DAMAGE: u32 = 5;
 const DEFAULT_HEALTH: u32 = 50;
 const DEFAULT_RANGE_SECONDS: f32 = 1.0;
+const DEFAULT_SPAWNABLE: bool = true;
 
 /// A single mob definition loaded from a .mob file.
 ///
@@ -35,6 +36,11 @@ const DEFAULT_RANGE_SECONDS: f32 = 1.0;
 pub struct MobAsset {
     /// Display name for the mob
     pub name: String,
+
+    /// Whether this mob can be spawned directly (appears in debug spawn menu)
+    /// Set to false for jointed parts that should only spawn as part of a parent mob
+    #[serde(default = "default_spawnable")]
+    pub spawnable: bool,
 
     // === Physical attributes ===
     /// Collision shapes for the mob
@@ -303,4 +309,8 @@ fn default_health() -> u32 {
 
 fn default_range_seconds() -> f32 {
     DEFAULT_RANGE_SECONDS
+}
+
+fn default_spawnable() -> bool {
+    DEFAULT_SPAWNABLE
 }

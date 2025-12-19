@@ -14,7 +14,7 @@ colliders = [
 
 [[jointed_mobs]]
 key = "left_head"
-mob_ref = "mobs/trizetheron/left_head.mob"
+mob_ref = "mobs/trizetheron_parts/left_head.mob"
 offset_pos = [-32.0, -4.5]
 anchor_1_pos = [-23.0, -10.0]
 anchor_2_pos = [9.0, -5.5]
@@ -27,7 +27,7 @@ torque = 1.0
 
 [[jointed_mobs]]
 key = "right_head"
-mob_ref = "mobs/trizetheron/right_head.mob"
+mob_ref = "mobs/trizetheron_parts/right_head.mob"
 offset_pos = [32.0, -4.5]
 anchor_1_pos = [23.0, -10.0]
 anchor_2_pos = [-9.0, -5.5]

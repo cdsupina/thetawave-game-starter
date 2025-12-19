@@ -2,6 +2,7 @@
 # Middle segment of a tentacle chain.
 
 name = "Xhitara Tentacle Middle"
+spawnable = false
 
 rotation_locked = false
 restitution = 0.0

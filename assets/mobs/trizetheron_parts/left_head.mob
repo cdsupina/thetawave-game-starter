@@ -2,6 +2,8 @@
 # Left head component of the Trizetheron boss.
 
 name = "Trizetheron Left Head"
+spawnable = false
+sprite_key = "trizetheron_left_head_mob"
 
 rotation_locked = false
 z_level = 1.0

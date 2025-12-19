@@ -2,6 +2,7 @@
 # Start of a long tentacle chain.
 
 name = "Xhitara Tentacle Long"
+spawnable = false
 
 sprite_key = "xhitara_tentacle_start_mob"
 rotation_locked = false

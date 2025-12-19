@@ -2,6 +2,8 @@
 # Right shoulder component of the Ferritharax boss.
 
 name = "Ferritharax Right Shoulder"
+spawnable = false
+sprite_key = "ferritharax_right_shoulder_mob"
 
 rotation_locked = false
 
@@ -12,7 +14,7 @@ colliders = [
 
 [[jointed_mobs]]
 key = "arm"
-mob_ref = "mobs/ferritharax/right_arm.mob"
+mob_ref = "mobs/ferritharax_parts/right_arm.mob"
 offset_pos = [31.5, -57.0]
 anchor_1_pos = [20.0, -31.0]
 anchor_2_pos = [-11.5, 26.0]

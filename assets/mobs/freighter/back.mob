@@ -2,6 +2,7 @@
 # Back cargo component of a Freighter.
 
 name = "Freighter Back"
+spawnable = false
 
 rotation_locked = false
 

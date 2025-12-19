@@ -2,6 +2,7 @@
 # Middle cargo component of a Freighter.
 
 name = "Freighter Middle"
+spawnable = false
 
 rotation_locked = false
 

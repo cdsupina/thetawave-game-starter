@@ -2,6 +2,8 @@
 # Body component of the Ferritharax boss.
 
 name = "Ferritharax Body"
+spawnable = false
+sprite_key = "ferritharax_body_mob"
 
 z_level = -1.0
 rotation_locked = false
@@ -14,7 +16,7 @@ colliders = [
 
 [[jointed_mobs]]
 key = "left_shoulder"
-mob_ref = "mobs/ferritharax/left_shoulder.mob"
+mob_ref = "mobs/ferritharax_parts/left_shoulder.mob"
 offset_pos = [-50.0, -18.5]
 anchor_1_pos = [-30.0, 1.5]
 anchor_2_pos = [20.0, 20.0]
@@ -27,7 +29,7 @@ torque = 0.001
 
 [[jointed_mobs]]
 key = "right_shoulder"
-mob_ref = "mobs/ferritharax/right_shoulder.mob"
+mob_ref = "mobs/ferritharax_parts/right_shoulder.mob"
 offset_pos = [50.0, -18.5]
 anchor_1_pos = [30.0, 1.5]
 anchor_2_pos = [-20.0, 20.0]

@@ -2,6 +2,8 @@
 # Left claw component of the Ferritharax boss.
 
 name = "Ferritharax Left Claw"
+spawnable = false
+sprite_key = "ferritharax_left_claw_mob"
 
 rotation_locked = false
 
