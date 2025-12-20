@@ -373,22 +373,1030 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                     });
                 });
 
-            // Colliders section (simplified)
+            // Colliders section
             egui::CollapsingHeader::new("Colliders")
                 .default_open(false)
                 .show(ui, |ui| {
-                    if let Some(colliders) = table.get("colliders").and_then(|v| v.as_array()) {
-                        ui.label(format!("{} collider(s)", colliders.len()));
-                        for (i, _collider) in colliders.iter().enumerate() {
-                            ui.label(format!("  Collider {}", i + 1));
+                    let colliders = table
+                        .get("colliders")
+                        .and_then(|v| v.as_array())
+                        .cloned()
+                        .unwrap_or_default();
+
+                    let mut colliders_modified = false;
+                    let mut new_colliders = colliders.clone();
+                    let mut to_remove: Option<usize> = None;
+
+                    for (i, collider) in colliders.iter().enumerate() {
+                        let id = ui.make_persistent_id(format!("collider_{}", i));
+                        egui::CollapsingHeader::new(format!("Collider {}", i + 1))
+                            .id_salt(id)
+                            .default_open(false)
+                            .show(ui, |ui| {
+                                if let Some(collider_table) = collider.as_table() {
+                                    let mut c = collider_table.clone();
+
+                                    // Shape type selection
+                                    let current_shape = c.get("shape").and_then(|s| s.as_table());
+                                    let shape_type = if current_shape
+                                        .map(|s| s.contains_key("Circle"))
+                                        .unwrap_or(false)
+                                    {
+                                        0 // Circle
+                                    } else {
+                                        1 // Rectangle
+                                    };
+
+                                    ui.horizontal(|ui| {
+                                        ui.label("Shape:");
+                                        let mut new_shape_type = shape_type;
+                                        egui::ComboBox::from_id_salt(format!("shape_type_{}", i))
+                                            .selected_text(if shape_type == 0 {
+                                                "Circle"
+                                            } else {
+                                                "Rectangle"
+                                            })
+                                            .show_ui(ui, |ui| {
+                                                ui.selectable_value(
+                                                    &mut new_shape_type,
+                                                    0,
+                                                    "Circle",
+                                                );
+                                                ui.selectable_value(
+                                                    &mut new_shape_type,
+                                                    1,
+                                                    "Rectangle",
+                                                );
+                                            });
+
+                                        if new_shape_type != shape_type {
+                                            let new_shape = if new_shape_type == 0 {
+                                                let mut shape_table = toml::value::Table::new();
+                                                shape_table.insert(
+                                                    "Circle".to_string(),
+                                                    toml::Value::Float(10.0),
+                                                );
+                                                toml::Value::Table(shape_table)
+                                            } else {
+                                                let mut shape_table = toml::value::Table::new();
+                                                shape_table.insert(
+                                                    "Rectangle".to_string(),
+                                                    toml::Value::Array(vec![
+                                                        toml::Value::Float(10.0),
+                                                        toml::Value::Float(10.0),
+                                                    ]),
+                                                );
+                                                toml::Value::Table(shape_table)
+                                            };
+                                            c.insert("shape".to_string(), new_shape);
+                                            new_colliders[i] = toml::Value::Table(c.clone());
+                                            colliders_modified = true;
+                                        }
+                                    });
+
+                                    // Shape parameters
+                                    if let Some(shape) = c.get("shape").and_then(|s| s.as_table()) {
+                                        if let Some(radius) = shape.get("Circle") {
+                                            let mut r = radius.as_float().unwrap_or(10.0) as f32;
+                                            ui.horizontal(|ui| {
+                                                ui.label("Radius:");
+                                                if ui
+                                                    .add(
+                                                        egui::DragValue::new(&mut r)
+                                                            .range(0.1..=100.0)
+                                                            .speed(0.5),
+                                                    )
+                                                    .changed()
+                                                {
+                                                    let mut shape_table =
+                                                        toml::value::Table::new();
+                                                    shape_table.insert(
+                                                        "Circle".to_string(),
+                                                        toml::Value::Float(r as f64),
+                                                    );
+                                                    c.insert(
+                                                        "shape".to_string(),
+                                                        toml::Value::Table(shape_table),
+                                                    );
+                                                    new_colliders[i] = toml::Value::Table(c.clone());
+                                                    colliders_modified = true;
+                                                }
+                                            });
+                                        } else if let Some(dims) = shape.get("Rectangle") {
+                                            if let Some(arr) = dims.as_array() {
+                                                let mut w = arr
+                                                    .first()
+                                                    .and_then(|v| v.as_float())
+                                                    .unwrap_or(10.0)
+                                                    as f32;
+                                                let mut h = arr
+                                                    .get(1)
+                                                    .and_then(|v| v.as_float())
+                                                    .unwrap_or(10.0)
+                                                    as f32;
+
+                                                ui.horizontal(|ui| {
+                                                    ui.label("Width:");
+                                                    let w_changed = ui
+                                                        .add(
+                                                            egui::DragValue::new(&mut w)
+                                                                .range(0.1..=200.0)
+                                                                .speed(0.5),
+                                                        )
+                                                        .changed();
+                                                    ui.label("Height:");
+                                                    let h_changed = ui
+                                                        .add(
+                                                            egui::DragValue::new(&mut h)
+                                                                .range(0.1..=200.0)
+                                                                .speed(0.5),
+                                                        )
+                                                        .changed();
+
+                                                    if w_changed || h_changed {
+                                                        let mut shape_table =
+                                                            toml::value::Table::new();
+                                                        shape_table.insert(
+                                                            "Rectangle".to_string(),
+                                                            toml::Value::Array(vec![
+                                                                toml::Value::Float(w as f64),
+                                                                toml::Value::Float(h as f64),
+                                                            ]),
+                                                        );
+                                                        c.insert(
+                                                            "shape".to_string(),
+                                                            toml::Value::Table(shape_table),
+                                                        );
+                                                        new_colliders[i] =
+                                                            toml::Value::Table(c.clone());
+                                                        colliders_modified = true;
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    }
+
+                                    // Position
+                                    let pos = c
+                                        .get("position")
+                                        .and_then(|v| v.as_array())
+                                        .map(|arr| {
+                                            (
+                                                arr.first()
+                                                    .and_then(|v| v.as_float())
+                                                    .unwrap_or(0.0)
+                                                    as f32,
+                                                arr.get(1)
+                                                    .and_then(|v| v.as_float())
+                                                    .unwrap_or(0.0)
+                                                    as f32,
+                                            )
+                                        })
+                                        .unwrap_or((0.0, 0.0));
+                                    let mut px = pos.0;
+                                    let mut py = pos.1;
+                                    ui.horizontal(|ui| {
+                                        ui.label("Pos X:");
+                                        let x_changed = ui
+                                            .add(
+                                                egui::DragValue::new(&mut px)
+                                                    .range(-100.0..=100.0)
+                                                    .speed(0.5),
+                                            )
+                                            .changed();
+                                        ui.label("Y:");
+                                        let y_changed = ui
+                                            .add(
+                                                egui::DragValue::new(&mut py)
+                                                    .range(-100.0..=100.0)
+                                                    .speed(0.5),
+                                            )
+                                            .changed();
+
+                                        if x_changed || y_changed {
+                                            c.insert(
+                                                "position".to_string(),
+                                                toml::Value::Array(vec![
+                                                    toml::Value::Float(px as f64),
+                                                    toml::Value::Float(py as f64),
+                                                ]),
+                                            );
+                                            new_colliders[i] = toml::Value::Table(c.clone());
+                                            colliders_modified = true;
+                                        }
+                                    });
+
+                                    // Rotation
+                                    let mut rot = c
+                                        .get("rotation")
+                                        .and_then(|v| v.as_float())
+                                        .unwrap_or(0.0) as f32;
+                                    ui.horizontal(|ui| {
+                                        ui.label("Rotation:");
+                                        if ui
+                                            .add(
+                                                egui::DragValue::new(&mut rot)
+                                                    .range(-180.0..=180.0)
+                                                    .speed(1.0)
+                                                    .suffix("°"),
+                                            )
+                                            .changed()
+                                        {
+                                            c.insert(
+                                                "rotation".to_string(),
+                                                toml::Value::Float(rot as f64),
+                                            );
+                                            new_colliders[i] = toml::Value::Table(c.clone());
+                                            colliders_modified = true;
+                                        }
+                                    });
+
+                                    // Remove button
+                                    if ui
+                                        .add(
+                                            egui::Button::new("Remove")
+                                                .fill(egui::Color32::from_rgb(80, 30, 30)),
+                                        )
+                                        .clicked()
+                                    {
+                                        to_remove = Some(i);
+                                    }
+                                }
+                            });
+                    }
+
+                    // Handle removal
+                    if let Some(idx) = to_remove {
+                        new_colliders.remove(idx);
+                        colliders_modified = true;
+                    }
+
+                    // Add collider button
+                    if ui.button("+ Add Collider").clicked() {
+                        let mut new_collider = toml::value::Table::new();
+                        let mut shape_table = toml::value::Table::new();
+                        shape_table.insert(
+                            "Rectangle".to_string(),
+                            toml::Value::Array(vec![
+                                toml::Value::Float(10.0),
+                                toml::Value::Float(10.0),
+                            ]),
+                        );
+                        new_collider.insert("shape".to_string(), toml::Value::Table(shape_table));
+                        new_collider.insert(
+                            "position".to_string(),
+                            toml::Value::Array(vec![
+                                toml::Value::Float(0.0),
+                                toml::Value::Float(0.0),
+                            ]),
+                        );
+                        new_collider.insert("rotation".to_string(), toml::Value::Float(0.0));
+                        new_colliders.push(toml::Value::Table(new_collider));
+                        colliders_modified = true;
+                    }
+
+                    if colliders_modified {
+                        table.insert("colliders".to_string(), toml::Value::Array(new_colliders));
+                        modified = true;
+                    }
+                });
+
+            // Projectile Spawners section
+            egui::CollapsingHeader::new("Projectile Spawners")
+                .default_open(false)
+                .show(ui, |ui| {
+                    let has_spawners = table.contains_key("projectile_spawners");
+                    let mut spawners_modified = false;
+
+                    if has_spawners {
+                        // Get or create the projectile_spawners table
+                        let spawners_table = table
+                            .get("projectile_spawners")
+                            .and_then(|v| v.as_table())
+                            .cloned()
+                            .unwrap_or_default();
+
+                        let inner_spawners = spawners_table
+                            .get("spawners")
+                            .and_then(|v| v.as_table())
+                            .cloned()
+                            .unwrap_or_default();
+
+                        let mut new_spawners = inner_spawners.clone();
+                        let mut to_remove: Option<String> = None;
+
+                        // Sort keys for consistent display
+                        let mut keys: Vec<_> = inner_spawners.keys().cloned().collect();
+                        keys.sort();
+
+                        for key in keys {
+                            if let Some(spawner) = inner_spawners.get(&key) {
+                                let id = ui.make_persistent_id(format!("proj_spawner_{}", key));
+                                egui::CollapsingHeader::new(format!("Spawner: {}", key))
+                                    .id_salt(id)
+                                    .default_open(false)
+                                    .show(ui, |ui| {
+                                        if let Some(spawner_table) = spawner.as_table() {
+                                            let mut s = spawner_table.clone();
+
+                                            // Timer
+                                            let mut timer = s
+                                                .get("timer")
+                                                .and_then(|v| v.as_float())
+                                                .unwrap_or(1.0)
+                                                as f32;
+                                            ui.horizontal(|ui| {
+                                                ui.label("Timer (s):");
+                                                if ui
+                                                    .add(
+                                                        egui::DragValue::new(&mut timer)
+                                                            .range(0.1..=10.0)
+                                                            .speed(0.05),
+                                                    )
+                                                    .changed()
+                                                {
+                                                    s.insert(
+                                                        "timer".to_string(),
+                                                        toml::Value::Float(timer as f64),
+                                                    );
+                                                    new_spawners.insert(
+                                                        key.clone(),
+                                                        toml::Value::Table(s.clone()),
+                                                    );
+                                                    spawners_modified = true;
+                                                }
+                                            });
+
+                                            // Position
+                                            let pos = s
+                                                .get("position")
+                                                .and_then(|v| v.as_array())
+                                                .map(|arr| {
+                                                    (
+                                                        arr.first()
+                                                            .and_then(|v| v.as_float())
+                                                            .unwrap_or(0.0)
+                                                            as f32,
+                                                        arr.get(1)
+                                                            .and_then(|v| v.as_float())
+                                                            .unwrap_or(0.0)
+                                                            as f32,
+                                                    )
+                                                })
+                                                .unwrap_or((0.0, 0.0));
+                                            let mut px = pos.0;
+                                            let mut py = pos.1;
+                                            ui.horizontal(|ui| {
+                                                ui.label("Pos X:");
+                                                let x_changed = ui
+                                                    .add(
+                                                        egui::DragValue::new(&mut px)
+                                                            .range(-100.0..=100.0)
+                                                            .speed(0.5),
+                                                    )
+                                                    .changed();
+                                                ui.label("Y:");
+                                                let y_changed = ui
+                                                    .add(
+                                                        egui::DragValue::new(&mut py)
+                                                            .range(-100.0..=100.0)
+                                                            .speed(0.5),
+                                                    )
+                                                    .changed();
+
+                                                if x_changed || y_changed {
+                                                    s.insert(
+                                                        "position".to_string(),
+                                                        toml::Value::Array(vec![
+                                                            toml::Value::Float(px as f64),
+                                                            toml::Value::Float(py as f64),
+                                                        ]),
+                                                    );
+                                                    new_spawners.insert(
+                                                        key.clone(),
+                                                        toml::Value::Table(s.clone()),
+                                                    );
+                                                    spawners_modified = true;
+                                                }
+                                            });
+
+                                            // Rotation
+                                            let mut rot = s
+                                                .get("rotation")
+                                                .and_then(|v| v.as_float())
+                                                .unwrap_or(0.0)
+                                                as f32;
+                                            ui.horizontal(|ui| {
+                                                ui.label("Rotation:");
+                                                if ui
+                                                    .add(
+                                                        egui::DragValue::new(&mut rot)
+                                                            .range(-180.0..=180.0)
+                                                            .speed(1.0)
+                                                            .suffix("°"),
+                                                    )
+                                                    .changed()
+                                                {
+                                                    s.insert(
+                                                        "rotation".to_string(),
+                                                        toml::Value::Float(rot as f64),
+                                                    );
+                                                    new_spawners.insert(
+                                                        key.clone(),
+                                                        toml::Value::Table(s.clone()),
+                                                    );
+                                                    spawners_modified = true;
+                                                }
+                                            });
+
+                                            // Projectile Type
+                                            let proj_type = s
+                                                .get("projectile_type")
+                                                .and_then(|v| v.as_str())
+                                                .unwrap_or("Bullet")
+                                                .to_string();
+                                            let type_idx = if proj_type == "Blast" { 1 } else { 0 };
+                                            ui.horizontal(|ui| {
+                                                ui.label("Type:");
+                                                let mut new_type_idx = type_idx;
+                                                egui::ComboBox::from_id_salt(format!(
+                                                    "proj_type_{}",
+                                                    key
+                                                ))
+                                                .selected_text(&proj_type)
+                                                .show_ui(ui, |ui| {
+                                                    ui.selectable_value(
+                                                        &mut new_type_idx,
+                                                        0,
+                                                        "Bullet",
+                                                    );
+                                                    ui.selectable_value(
+                                                        &mut new_type_idx,
+                                                        1,
+                                                        "Blast",
+                                                    );
+                                                });
+                                                if new_type_idx != type_idx {
+                                                    s.insert(
+                                                        "projectile_type".to_string(),
+                                                        toml::Value::String(
+                                                            if new_type_idx == 1 {
+                                                                "Blast"
+                                                            } else {
+                                                                "Bullet"
+                                                            }
+                                                            .to_string(),
+                                                        ),
+                                                    );
+                                                    new_spawners.insert(
+                                                        key.clone(),
+                                                        toml::Value::Table(s.clone()),
+                                                    );
+                                                    spawners_modified = true;
+                                                }
+                                            });
+
+                                            // Faction
+                                            let faction = s
+                                                .get("faction")
+                                                .and_then(|v| v.as_str())
+                                                .unwrap_or("Enemy")
+                                                .to_string();
+                                            let faction_idx = if faction == "Ally" { 0 } else { 1 };
+                                            ui.horizontal(|ui| {
+                                                ui.label("Faction:");
+                                                let mut new_faction_idx = faction_idx;
+                                                egui::ComboBox::from_id_salt(format!(
+                                                    "faction_{}",
+                                                    key
+                                                ))
+                                                .selected_text(&faction)
+                                                .show_ui(ui, |ui| {
+                                                    ui.selectable_value(
+                                                        &mut new_faction_idx,
+                                                        0,
+                                                        "Ally",
+                                                    );
+                                                    ui.selectable_value(
+                                                        &mut new_faction_idx,
+                                                        1,
+                                                        "Enemy",
+                                                    );
+                                                });
+                                                if new_faction_idx != faction_idx {
+                                                    s.insert(
+                                                        "faction".to_string(),
+                                                        toml::Value::String(
+                                                            if new_faction_idx == 0 {
+                                                                "Ally"
+                                                            } else {
+                                                                "Enemy"
+                                                            }
+                                                            .to_string(),
+                                                        ),
+                                                    );
+                                                    new_spawners.insert(
+                                                        key.clone(),
+                                                        toml::Value::Table(s.clone()),
+                                                    );
+                                                    spawners_modified = true;
+                                                }
+                                            });
+
+                                            // Count
+                                            let mut count = s
+                                                .get("count")
+                                                .and_then(|v| v.as_integer())
+                                                .unwrap_or(1)
+                                                as i32;
+                                            ui.horizontal(|ui| {
+                                                ui.label("Count:");
+                                                if ui
+                                                    .add(
+                                                        egui::DragValue::new(&mut count)
+                                                            .range(1..=20),
+                                                    )
+                                                    .changed()
+                                                {
+                                                    s.insert(
+                                                        "count".to_string(),
+                                                        toml::Value::Integer(count as i64),
+                                                    );
+                                                    new_spawners.insert(
+                                                        key.clone(),
+                                                        toml::Value::Table(s.clone()),
+                                                    );
+                                                    spawners_modified = true;
+                                                }
+                                            });
+
+                                            // Multipliers (collapsed)
+                                            egui::CollapsingHeader::new("Multipliers")
+                                                .id_salt(format!("mult_{}", key))
+                                                .default_open(false)
+                                                .show(ui, |ui| {
+                                                    let mut speed_mult = s
+                                                        .get("speed_multiplier")
+                                                        .and_then(|v| v.as_float())
+                                                        .unwrap_or(1.0)
+                                                        as f32;
+                                                    ui.horizontal(|ui| {
+                                                        ui.label("Speed:");
+                                                        if ui
+                                                            .add(
+                                                                egui::DragValue::new(&mut speed_mult)
+                                                                    .range(0.1..=5.0)
+                                                                    .speed(0.05),
+                                                            )
+                                                            .changed()
+                                                        {
+                                                            s.insert(
+                                                                "speed_multiplier".to_string(),
+                                                                toml::Value::Float(
+                                                                    speed_mult as f64,
+                                                                ),
+                                                            );
+                                                            new_spawners.insert(
+                                                                key.clone(),
+                                                                toml::Value::Table(s.clone()),
+                                                            );
+                                                            spawners_modified = true;
+                                                        }
+                                                    });
+
+                                                    let mut damage_mult = s
+                                                        .get("damage_multiplier")
+                                                        .and_then(|v| v.as_float())
+                                                        .unwrap_or(1.0)
+                                                        as f32;
+                                                    ui.horizontal(|ui| {
+                                                        ui.label("Damage:");
+                                                        if ui
+                                                            .add(
+                                                                egui::DragValue::new(
+                                                                    &mut damage_mult,
+                                                                )
+                                                                .range(0.1..=5.0)
+                                                                .speed(0.05),
+                                                            )
+                                                            .changed()
+                                                        {
+                                                            s.insert(
+                                                                "damage_multiplier".to_string(),
+                                                                toml::Value::Float(
+                                                                    damage_mult as f64,
+                                                                ),
+                                                            );
+                                                            new_spawners.insert(
+                                                                key.clone(),
+                                                                toml::Value::Table(s.clone()),
+                                                            );
+                                                            spawners_modified = true;
+                                                        }
+                                                    });
+
+                                                    let mut range_mult = s
+                                                        .get("range_seconds_multiplier")
+                                                        .and_then(|v| v.as_float())
+                                                        .unwrap_or(1.0)
+                                                        as f32;
+                                                    ui.horizontal(|ui| {
+                                                        ui.label("Range:");
+                                                        if ui
+                                                            .add(
+                                                                egui::DragValue::new(&mut range_mult)
+                                                                    .range(0.1..=5.0)
+                                                                    .speed(0.05),
+                                                            )
+                                                            .changed()
+                                                        {
+                                                            s.insert(
+                                                                "range_seconds_multiplier"
+                                                                    .to_string(),
+                                                                toml::Value::Float(
+                                                                    range_mult as f64,
+                                                                ),
+                                                            );
+                                                            new_spawners.insert(
+                                                                key.clone(),
+                                                                toml::Value::Table(s.clone()),
+                                                            );
+                                                            spawners_modified = true;
+                                                        }
+                                                    });
+                                                });
+
+                                            // Remove button
+                                            if ui
+                                                .add(
+                                                    egui::Button::new("Remove")
+                                                        .fill(egui::Color32::from_rgb(80, 30, 30)),
+                                                )
+                                                .clicked()
+                                            {
+                                                to_remove = Some(key.clone());
+                                            }
+                                        }
+                                    });
+                            }
+                        }
+
+                        // Handle removal
+                        if let Some(key) = to_remove {
+                            new_spawners.remove(&key);
+                            spawners_modified = true;
+                        }
+
+                        // Add spawner button with key input
+                        ui.horizontal(|ui| {
+                            if ui.button("+ Add Spawner").clicked() {
+                                // Find a unique key
+                                let mut new_key = "south".to_string();
+                                let mut counter = 1;
+                                while new_spawners.contains_key(&new_key) {
+                                    new_key = format!("spawner_{}", counter);
+                                    counter += 1;
+                                }
+
+                                let mut new_spawner = toml::value::Table::new();
+                                new_spawner.insert(
+                                    "timer".to_string(),
+                                    toml::Value::Float(1.0),
+                                );
+                                new_spawner.insert(
+                                    "position".to_string(),
+                                    toml::Value::Array(vec![
+                                        toml::Value::Float(0.0),
+                                        toml::Value::Float(-10.0),
+                                    ]),
+                                );
+                                new_spawner.insert(
+                                    "rotation".to_string(),
+                                    toml::Value::Float(0.0),
+                                );
+                                new_spawner.insert(
+                                    "projectile_type".to_string(),
+                                    toml::Value::String("Bullet".to_string()),
+                                );
+                                new_spawner.insert(
+                                    "faction".to_string(),
+                                    toml::Value::String("Enemy".to_string()),
+                                );
+                                new_spawners.insert(new_key, toml::Value::Table(new_spawner));
+                                spawners_modified = true;
+                            }
+                        });
+
+                        if spawners_modified {
+                            let mut new_proj_spawners = toml::value::Table::new();
+                            new_proj_spawners
+                                .insert("spawners".to_string(), toml::Value::Table(new_spawners));
+                            table.insert(
+                                "projectile_spawners".to_string(),
+                                toml::Value::Table(new_proj_spawners),
+                            );
+                            modified = true;
                         }
                     } else {
-                        ui.label("No colliders defined");
+                        ui.label("No projectile spawners");
+                        if ui.button("+ Add Projectile Spawners").clicked() {
+                            let mut spawners = toml::value::Table::new();
+                            let mut inner = toml::value::Table::new();
+
+                            let mut new_spawner = toml::value::Table::new();
+                            new_spawner.insert("timer".to_string(), toml::Value::Float(1.0));
+                            new_spawner.insert(
+                                "position".to_string(),
+                                toml::Value::Array(vec![
+                                    toml::Value::Float(0.0),
+                                    toml::Value::Float(-10.0),
+                                ]),
+                            );
+                            new_spawner.insert("rotation".to_string(), toml::Value::Float(0.0));
+                            new_spawner.insert(
+                                "projectile_type".to_string(),
+                                toml::Value::String("Bullet".to_string()),
+                            );
+                            new_spawner.insert(
+                                "faction".to_string(),
+                                toml::Value::String("Enemy".to_string()),
+                            );
+
+                            inner.insert("south".to_string(), toml::Value::Table(new_spawner));
+                            spawners.insert("spawners".to_string(), toml::Value::Table(inner));
+                            table.insert(
+                                "projectile_spawners".to_string(),
+                                toml::Value::Table(spawners),
+                            );
+                            modified = true;
+                        }
                     }
-                    ui.colored_label(
-                        egui::Color32::GRAY,
-                        "Detailed collider editing coming soon",
-                    );
+                });
+
+            // Mob Spawners section
+            egui::CollapsingHeader::new("Mob Spawners")
+                .default_open(false)
+                .show(ui, |ui| {
+                    let has_spawners = table.contains_key("mob_spawners");
+                    let mut spawners_modified = false;
+
+                    if has_spawners {
+                        let spawners_table = table
+                            .get("mob_spawners")
+                            .and_then(|v| v.as_table())
+                            .cloned()
+                            .unwrap_or_default();
+
+                        let inner_spawners = spawners_table
+                            .get("spawners")
+                            .and_then(|v| v.as_table())
+                            .cloned()
+                            .unwrap_or_default();
+
+                        let mut new_spawners = inner_spawners.clone();
+                        let mut to_remove: Option<String> = None;
+
+                        let mut keys: Vec<_> = inner_spawners.keys().cloned().collect();
+                        keys.sort();
+
+                        for key in keys {
+                            if let Some(spawner) = inner_spawners.get(&key) {
+                                let id = ui.make_persistent_id(format!("mob_spawner_{}", key));
+                                egui::CollapsingHeader::new(format!("Spawner: {}", key))
+                                    .id_salt(id)
+                                    .default_open(false)
+                                    .show(ui, |ui| {
+                                        if let Some(spawner_table) = spawner.as_table() {
+                                            let mut s = spawner_table.clone();
+
+                                            // Timer
+                                            let mut timer = s
+                                                .get("timer")
+                                                .and_then(|v| v.as_float())
+                                                .unwrap_or(1.0)
+                                                as f32;
+                                            ui.horizontal(|ui| {
+                                                ui.label("Timer (s):");
+                                                if ui
+                                                    .add(
+                                                        egui::DragValue::new(&mut timer)
+                                                            .range(0.1..=30.0)
+                                                            .speed(0.1),
+                                                    )
+                                                    .changed()
+                                                {
+                                                    s.insert(
+                                                        "timer".to_string(),
+                                                        toml::Value::Float(timer as f64),
+                                                    );
+                                                    new_spawners.insert(
+                                                        key.clone(),
+                                                        toml::Value::Table(s.clone()),
+                                                    );
+                                                    spawners_modified = true;
+                                                }
+                                            });
+
+                                            // Position
+                                            let pos = s
+                                                .get("position")
+                                                .and_then(|v| v.as_array())
+                                                .map(|arr| {
+                                                    (
+                                                        arr.first()
+                                                            .and_then(|v| v.as_float())
+                                                            .unwrap_or(0.0)
+                                                            as f32,
+                                                        arr.get(1)
+                                                            .and_then(|v| v.as_float())
+                                                            .unwrap_or(0.0)
+                                                            as f32,
+                                                    )
+                                                })
+                                                .unwrap_or((0.0, 0.0));
+                                            let mut px = pos.0;
+                                            let mut py = pos.1;
+                                            ui.horizontal(|ui| {
+                                                ui.label("Pos X:");
+                                                let x_changed = ui
+                                                    .add(
+                                                        egui::DragValue::new(&mut px)
+                                                            .range(-200.0..=200.0)
+                                                            .speed(1.0),
+                                                    )
+                                                    .changed();
+                                                ui.label("Y:");
+                                                let y_changed = ui
+                                                    .add(
+                                                        egui::DragValue::new(&mut py)
+                                                            .range(-200.0..=200.0)
+                                                            .speed(1.0),
+                                                    )
+                                                    .changed();
+
+                                                if x_changed || y_changed {
+                                                    s.insert(
+                                                        "position".to_string(),
+                                                        toml::Value::Array(vec![
+                                                            toml::Value::Float(px as f64),
+                                                            toml::Value::Float(py as f64),
+                                                        ]),
+                                                    );
+                                                    new_spawners.insert(
+                                                        key.clone(),
+                                                        toml::Value::Table(s.clone()),
+                                                    );
+                                                    spawners_modified = true;
+                                                }
+                                            });
+
+                                            // Rotation
+                                            let mut rot = s
+                                                .get("rotation")
+                                                .and_then(|v| v.as_float())
+                                                .unwrap_or(0.0)
+                                                as f32;
+                                            ui.horizontal(|ui| {
+                                                ui.label("Rotation:");
+                                                if ui
+                                                    .add(
+                                                        egui::DragValue::new(&mut rot)
+                                                            .range(-180.0..=180.0)
+                                                            .speed(1.0)
+                                                            .suffix("°"),
+                                                    )
+                                                    .changed()
+                                                {
+                                                    s.insert(
+                                                        "rotation".to_string(),
+                                                        toml::Value::Float(rot as f64),
+                                                    );
+                                                    new_spawners.insert(
+                                                        key.clone(),
+                                                        toml::Value::Table(s.clone()),
+                                                    );
+                                                    spawners_modified = true;
+                                                }
+                                            });
+
+                                            // Mob Ref
+                                            let mob_ref = s
+                                                .get("mob_ref")
+                                                .and_then(|v| v.as_str())
+                                                .unwrap_or("")
+                                                .to_string();
+                                            let mut mob_ref_edit = mob_ref.clone();
+                                            ui.horizontal(|ui| {
+                                                ui.label("Mob Ref:");
+                                                if ui
+                                                    .text_edit_singleline(&mut mob_ref_edit)
+                                                    .changed()
+                                                {
+                                                    s.insert(
+                                                        "mob_ref".to_string(),
+                                                        toml::Value::String(mob_ref_edit),
+                                                    );
+                                                    new_spawners.insert(
+                                                        key.clone(),
+                                                        toml::Value::Table(s.clone()),
+                                                    );
+                                                    spawners_modified = true;
+                                                }
+                                            });
+                                            ui.label(
+                                                egui::RichText::new(
+                                                    "e.g. xhitara/grunt or xhitara/spitter",
+                                                )
+                                                .small()
+                                                .color(egui::Color32::GRAY),
+                                            );
+
+                                            // Remove button
+                                            if ui
+                                                .add(
+                                                    egui::Button::new("Remove")
+                                                        .fill(egui::Color32::from_rgb(80, 30, 30)),
+                                                )
+                                                .clicked()
+                                            {
+                                                to_remove = Some(key.clone());
+                                            }
+                                        }
+                                    });
+                            }
+                        }
+
+                        // Handle removal
+                        if let Some(key) = to_remove {
+                            new_spawners.remove(&key);
+                            spawners_modified = true;
+                        }
+
+                        // Add spawner button
+                        if ui.button("+ Add Mob Spawner").clicked() {
+                            let mut new_key = "spawn_1".to_string();
+                            let mut counter = 1;
+                            while new_spawners.contains_key(&new_key) {
+                                counter += 1;
+                                new_key = format!("spawn_{}", counter);
+                            }
+
+                            let mut new_spawner = toml::value::Table::new();
+                            new_spawner.insert("timer".to_string(), toml::Value::Float(5.0));
+                            new_spawner.insert(
+                                "position".to_string(),
+                                toml::Value::Array(vec![
+                                    toml::Value::Float(0.0),
+                                    toml::Value::Float(0.0),
+                                ]),
+                            );
+                            new_spawner.insert("rotation".to_string(), toml::Value::Float(0.0));
+                            new_spawner.insert(
+                                "mob_ref".to_string(),
+                                toml::Value::String("xhitara/grunt".to_string()),
+                            );
+                            new_spawners.insert(new_key, toml::Value::Table(new_spawner));
+                            spawners_modified = true;
+                        }
+
+                        if spawners_modified {
+                            let mut new_mob_spawners = toml::value::Table::new();
+                            new_mob_spawners
+                                .insert("spawners".to_string(), toml::Value::Table(new_spawners));
+                            table.insert(
+                                "mob_spawners".to_string(),
+                                toml::Value::Table(new_mob_spawners),
+                            );
+                            modified = true;
+                        }
+                    } else {
+                        ui.label("No mob spawners");
+                        if ui.button("+ Add Mob Spawners").clicked() {
+                            let mut spawners = toml::value::Table::new();
+                            let mut inner = toml::value::Table::new();
+
+                            let mut new_spawner = toml::value::Table::new();
+                            new_spawner.insert("timer".to_string(), toml::Value::Float(5.0));
+                            new_spawner.insert(
+                                "position".to_string(),
+                                toml::Value::Array(vec![
+                                    toml::Value::Float(0.0),
+                                    toml::Value::Float(0.0),
+                                ]),
+                            );
+                            new_spawner.insert("rotation".to_string(), toml::Value::Float(0.0));
+                            new_spawner.insert(
+                                "mob_ref".to_string(),
+                                toml::Value::String("xhitara/grunt".to_string()),
+                            );
+
+                            inner.insert("spawn_1".to_string(), toml::Value::Table(new_spawner));
+                            spawners.insert("spawners".to_string(), toml::Value::Table(inner));
+                            table
+                                .insert("mob_spawners".to_string(), toml::Value::Table(spawners));
+                            modified = true;
+                        }
+                    }
                 });
 
             // Behavior section (simplified)
