@@ -1,7 +1,7 @@
 //! MobAsset type definition for .mob files.
 
 use bevy::math::Vec2;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use thetawave_physics::{ThetawaveCollider, ThetawavePhysicsLayer};
 
 use crate::{
@@ -157,7 +157,7 @@ pub struct MobAsset {
 }
 
 /// Reference to a jointed mob using a file path instead of a string key.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct JointedMobRef {
     /// Identifier key for this joint (used by behaviors)
@@ -193,7 +193,7 @@ pub struct JointedMobRef {
 }
 
 /// Describes angle limits for a revolute joint.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct JointAngleLimit {
     /// Minimum angle (degrees)
@@ -205,7 +205,7 @@ pub struct JointAngleLimit {
 }
 
 /// Configuration for creating a chain of jointed mobs.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct MobChain {
     /// Number of links in the chain
@@ -220,7 +220,7 @@ pub struct MobChain {
 }
 
 /// Settings for random chain length termination.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RandomMobChain {
     /// Minimum guaranteed chain length

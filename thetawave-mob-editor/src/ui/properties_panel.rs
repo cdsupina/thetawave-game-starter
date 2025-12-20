@@ -7,6 +7,9 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
     ui.heading("Properties");
     ui.separator();
 
+    // Track if any value was modified during this frame
+    let mut modified = false;
+
     let Some(mob) = &mut session.current_mob else {
         ui.label("No mob loaded");
         return;
@@ -38,7 +41,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                                 "name".to_string(),
                                 toml::Value::String(name_edit),
                             );
-                            session.is_modified = true;
+                            modified = true;
                         }
                     });
 
@@ -55,7 +58,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                                 "spawnable".to_string(),
                                 toml::Value::Boolean(spawnable_edit),
                             );
-                            session.is_modified = true;
+                            modified = true;
                         }
                     });
 
@@ -77,7 +80,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                                     toml::Value::String(key_edit),
                                 );
                             }
-                            session.is_modified = true;
+                            modified = true;
                         }
                     });
                 });
@@ -102,7 +105,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                                 "health".to_string(),
                                 toml::Value::Integer(health_edit as i64),
                             );
-                            session.is_modified = true;
+                            modified = true;
                         }
                     });
 
@@ -122,7 +125,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                                 "projectile_speed".to_string(),
                                 toml::Value::Float(speed_edit as f64),
                             );
-                            session.is_modified = true;
+                            modified = true;
                         }
                     });
 
@@ -142,7 +145,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                                 "projectile_damage".to_string(),
                                 toml::Value::Integer(damage_edit as i64),
                             );
-                            session.is_modified = true;
+                            modified = true;
                         }
                     });
 
@@ -165,7 +168,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                             } else {
                                 table.remove("targeting_range");
                             }
-                            session.is_modified = true;
+                            modified = true;
                         }
 
                         if has_range {
@@ -177,7 +180,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                                     "targeting_range".to_string(),
                                     toml::Value::Float(range_edit as f64),
                                 );
-                                session.is_modified = true;
+                                modified = true;
                             }
                         }
                     });
@@ -203,7 +206,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                             .changed();
                         if x_changed || y_changed {
                             set_vec2_value(table, "max_linear_speed", speed_x, speed_y);
-                            session.is_modified = true;
+                            modified = true;
                         }
                     });
 
@@ -223,7 +226,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                             .changed();
                         if x_changed || y_changed {
                             set_vec2_value(table, "linear_acceleration", accel_x, accel_y);
-                            session.is_modified = true;
+                            modified = true;
                         }
                     });
 
@@ -243,7 +246,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                             .changed();
                         if x_changed || y_changed {
                             set_vec2_value(table, "linear_deceleration", decel_x, decel_y);
-                            session.is_modified = true;
+                            modified = true;
                         }
                     });
 
@@ -263,7 +266,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                                 "max_angular_speed".to_string(),
                                 toml::Value::Float(angular_edit as f64),
                             );
-                            session.is_modified = true;
+                            modified = true;
                         }
                     });
                 });
@@ -288,7 +291,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                                 "z_level".to_string(),
                                 toml::Value::Float(z_edit as f64),
                             );
-                            session.is_modified = true;
+                            modified = true;
                         }
                     });
 
@@ -305,7 +308,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                                 "rotation_locked".to_string(),
                                 toml::Value::Boolean(locked_edit),
                             );
-                            session.is_modified = true;
+                            modified = true;
                         }
                     });
 
@@ -325,7 +328,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                                 "restitution".to_string(),
                                 toml::Value::Float(r_edit as f64),
                             );
-                            session.is_modified = true;
+                            modified = true;
                         }
                     });
 
@@ -345,7 +348,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                                 "friction".to_string(),
                                 toml::Value::Float(f_edit as f64),
                             );
-                            session.is_modified = true;
+                            modified = true;
                         }
                     });
 
@@ -365,7 +368,7 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                                 "collider_density".to_string(),
                                 toml::Value::Float(d_edit as f64),
                             );
-                            session.is_modified = true;
+                            modified = true;
                         }
                     });
                 });
@@ -403,6 +406,11 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                     );
                 });
         });
+
+    // Check if modified after all edits
+    if modified {
+        session.check_modified();
+    }
 }
 
 /// Helper to get a Vec2 value from TOML

@@ -5,7 +5,7 @@ use bevy::{
     reflect::Reflect,
     time::{Timer, TimerMode},
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use thetawave_projectiles::ProjectileSpawner;
 
 use crate::asset::MobRef;
@@ -13,7 +13,7 @@ use crate::asset::MobRef;
 /// Mob spawner component for use in spawned mobs
 /// Maps String keys to MobSpawners
 /// Intended to be used by behaviors
-#[derive(Component, Deserialize, Debug, Clone, Reflect)]
+#[derive(Component, Serialize, Deserialize, Debug, Clone, Reflect)]
 #[serde(deny_unknown_fields)]
 pub struct MobSpawnerComponent {
     pub spawners: HashMap<String, MobSpawner>,
@@ -22,7 +22,7 @@ pub struct MobSpawnerComponent {
 /// Projectile spawner component for use in spawned mobs
 /// Maps String keys to ProjectileSpawners
 /// Intended to be used by behaviors
-#[derive(Component, Deserialize, Debug, Clone, Reflect)]
+#[derive(Component, Serialize, Deserialize, Debug, Clone, Reflect)]
 #[serde(deny_unknown_fields)]
 pub struct ProjectileSpawnerComponent {
     pub spawners: HashMap<String, ProjectileSpawner>,
@@ -61,5 +61,21 @@ impl<'de> Deserialize<'de> for MobSpawner {
             rotation: helper.rotation,
             mob_ref: helper.mob_ref,
         })
+    }
+}
+
+impl Serialize for MobSpawner {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+
+        let mut state = serializer.serialize_struct("MobSpawner", 4)?;
+        state.serialize_field("timer", &self.timer.duration().as_secs_f32())?;
+        state.serialize_field("position", &self.position)?;
+        state.serialize_field("rotation", &self.rotation)?;
+        state.serialize_field("mob_ref", &self.mob_ref)?;
+        state.end()
     }
 }

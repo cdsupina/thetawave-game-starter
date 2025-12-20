@@ -8,6 +8,7 @@ pub enum FileError {
     Io(io::Error),
     Toml(toml::de::Error),
     TomlSer(toml::ser::Error),
+    Trash(trash::Error),
     AlreadyExists,
     NotFound,
     InvalidPath,
@@ -31,12 +32,19 @@ impl From<toml::ser::Error> for FileError {
     }
 }
 
+impl From<trash::Error> for FileError {
+    fn from(e: trash::Error) -> Self {
+        FileError::Trash(e)
+    }
+}
+
 impl std::fmt::Display for FileError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             FileError::Io(e) => write!(f, "IO error: {}", e),
             FileError::Toml(e) => write!(f, "TOML parse error: {}", e),
             FileError::TomlSer(e) => write!(f, "TOML serialize error: {}", e),
+            FileError::Trash(e) => write!(f, "Trash error: {}", e),
             FileError::AlreadyExists => write!(f, "File already exists"),
             FileError::NotFound => write!(f, "File not found"),
             FileError::InvalidPath => write!(f, "Invalid file path"),
@@ -59,73 +67,31 @@ impl FileOperations {
         Ok(value)
     }
 
-    /// Save a TOML value to a file with backup
+    /// Save a TOML value to a file
     pub fn save_file(path: &PathBuf, value: &toml::Value) -> Result<(), FileError> {
-        // Create backup if file exists
-        if path.exists() {
-            Self::create_backup(path)?;
-        }
-
         // Serialize to TOML string
         let content = toml::to_string_pretty(value)?;
 
+        // Create parent directories if needed
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+
         // Write atomically using temp file
         let temp_path = path.with_extension("tmp");
-        fs::write(&temp_path, content)?;
+        fs::write(&temp_path, &content)?;
         fs::rename(&temp_path, path)?;
 
         Ok(())
     }
 
-    /// Create a backup of an existing file
-    pub fn create_backup(path: &PathBuf) -> Result<(), FileError> {
-        if path.exists() {
-            let backup_path = path.with_extension(format!(
-                "{}.bak",
-                path.extension()
-                    .map(|e| e.to_string_lossy().to_string())
-                    .unwrap_or_default()
-            ));
-            fs::copy(path, backup_path)?;
-        }
-        Ok(())
-    }
-
-    /// Delete a file (moves to .deleted folder for recovery)
+    /// Delete a file (moves to system trash for recovery)
     pub fn delete_file(path: &PathBuf) -> Result<(), FileError> {
         if !path.exists() {
             return Err(FileError::NotFound);
         }
 
-        let Some(parent) = path.parent() else {
-            return Err(FileError::InvalidPath);
-        };
-
-        let deleted_dir = parent.join(".deleted");
-        fs::create_dir_all(&deleted_dir)?;
-
-        let Some(filename) = path.file_name() else {
-            return Err(FileError::InvalidPath);
-        };
-
-        let deleted_path = deleted_dir.join(filename);
-
-        // If a deleted version already exists, add a timestamp
-        let final_path = if deleted_path.exists() {
-            let timestamp = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_secs())
-                .unwrap_or(0);
-            deleted_dir.join(format!(
-                "{}.{}",
-                timestamp,
-                filename.to_string_lossy()
-            ))
-        } else {
-            deleted_path
-        };
-
-        fs::rename(path, final_path)?;
+        trash::delete(path)?;
         Ok(())
     }
 
@@ -158,54 +124,16 @@ impl FileOperations {
         Ok(value)
     }
 
-    /// Validate a mob TOML value (basic validation)
+    /// Validate a mob TOML value
+    /// Returns error messages as strings for backward compatibility
     pub fn validate(value: &toml::Value) -> Vec<String> {
-        let mut errors = Vec::new();
+        let result = super::validation::validate_mob(value, false);
+        result.error_messages()
+    }
 
-        if let Some(table) = value.as_table() {
-            // Check for required name field
-            if !table.contains_key("name") {
-                errors.push("Missing required field: name".to_string());
-            } else if let Some(name) = table.get("name") {
-                if let Some(s) = name.as_str() {
-                    if s.is_empty() {
-                        errors.push("Name cannot be empty".to_string());
-                    }
-                } else {
-                    errors.push("Name must be a string".to_string());
-                }
-            }
-
-            // Validate health if present
-            if let Some(health) = table.get("health") {
-                if let Some(h) = health.as_integer() {
-                    if h <= 0 {
-                        errors.push("Health must be positive".to_string());
-                    }
-                } else {
-                    errors.push("Health must be an integer".to_string());
-                }
-            }
-
-            // Validate colliders if present
-            if let Some(colliders) = table.get("colliders") {
-                if let Some(arr) = colliders.as_array() {
-                    for (i, collider) in arr.iter().enumerate() {
-                        if let Some(c) = collider.as_table() {
-                            if !c.contains_key("shape") {
-                                errors.push(format!("Collider {} missing shape", i));
-                            }
-                        } else {
-                            errors.push(format!("Collider {} is not a table", i));
-                        }
-                    }
-                }
-            }
-        } else {
-            errors.push("Root must be a TOML table".to_string());
-        }
-
-        errors
+    /// Validate a mob TOML value with full result
+    pub fn validate_full(value: &toml::Value, is_patch: bool) -> super::validation::ValidationResult {
+        super::validation::validate_mob(value, is_patch)
     }
 }
 

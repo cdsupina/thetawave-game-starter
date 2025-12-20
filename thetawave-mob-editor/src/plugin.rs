@@ -11,7 +11,7 @@ use crate::{
     },
     preview::{setup_preview_camera, PreviewSettings},
     states::{DialogState, EditingMode, EditorState},
-    ui::main_ui_system,
+    ui::{main_ui_system, DeleteDialogState, FileDialogState},
 };
 
 /// Main plugin for the mob editor
@@ -46,7 +46,9 @@ impl Plugin for MobEditorPlugin {
         // Resources
         app.init_resource::<EditorSession>()
             .init_resource::<FileTreeState>()
-            .init_resource::<PreviewSettings>();
+            .init_resource::<PreviewSettings>()
+            .init_resource::<FileDialogState>()
+            .init_resource::<DeleteDialogState>();
 
         // Store config
         app.insert_resource(EditorConfig {
@@ -130,7 +132,8 @@ fn handle_load_mob(
                     crate::data::FileType::Mob
                 };
 
-                session.current_mob = Some(value);
+                session.current_mob = Some(value.clone());
+                session.original_mob = Some(value);
                 session.current_path = Some(event.path.clone());
                 session.file_type = file_type;
                 session.is_modified = false;
@@ -180,6 +183,8 @@ fn handle_save_mob(
 
         match FileOperations::save_file(&path, &mob) {
             Ok(()) => {
+                // Update original_mob to match current after save
+                session.original_mob = session.current_mob.clone();
                 session.is_modified = false;
                 if event.path.is_some() {
                     session.current_path = event.path.clone();
@@ -217,7 +222,8 @@ fn handle_new_mob(
     for event in events.read() {
         match FileOperations::create_new_file(&event.path, &event.name, event.is_patch) {
             Ok(value) => {
-                session.current_mob = Some(value);
+                session.current_mob = Some(value.clone());
+                session.original_mob = Some(value);
                 session.current_path = Some(event.path.clone());
                 session.file_type = if event.is_patch {
                     crate::data::FileType::MobPatch
@@ -296,7 +302,7 @@ fn handle_keyboard_shortcuts(
             if let Some(mob) = session.current_mob.clone() {
                 if let Some(prev) = session.history.undo(&mob) {
                     session.current_mob = Some(prev);
-                    session.is_modified = true;
+                    session.check_modified();
                 }
             }
         }
@@ -308,7 +314,7 @@ fn handle_keyboard_shortcuts(
             if let Some(mob) = session.current_mob.clone() {
                 if let Some(next) = session.history.redo(&mob) {
                     session.current_mob = Some(next);
-                    session.is_modified = true;
+                    session.check_modified();
                 }
             }
         }

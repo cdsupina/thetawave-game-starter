@@ -1,47 +1,74 @@
 use bevy::ecs::message::MessageWriter;
 use bevy_egui::egui;
 
-use crate::{data::EditorSession, file::SaveMobEvent};
+use crate::{
+    data::EditorSession,
+    file::{ReloadMobEvent, SaveMobEvent},
+    plugin::EditorConfig,
+};
+
+use super::FileDialogState;
 
 /// Render the top toolbar with menus and action buttons
-#[allow(deprecated)]
 pub fn toolbar_ui(
     ctx: &mut egui::Context,
     session: &mut EditorSession,
     save_events: &mut MessageWriter<SaveMobEvent>,
+    reload_events: &mut MessageWriter<ReloadMobEvent>,
+    file_dialog: &mut FileDialogState,
+    config: &EditorConfig,
 ) {
     egui::TopBottomPanel::top("toolbar").show(ctx, |ui| {
         egui::menu::bar(ui, |ui| {
             // File menu
             ui.menu_button("File", |ui| {
-                if ui.button("New Mob...").clicked() {
-                    // TODO: Open new file dialog
+                let dialog_busy = file_dialog.dialog_open;
+
+                if ui
+                    .add_enabled(!dialog_busy, egui::Button::new("New Mob..."))
+                    .clicked()
+                {
+                    file_dialog.open_new_mob_dialog(config);
                     ui.close();
                 }
 
-                if ui.button("New Patch...").clicked() {
-                    // TODO: Open new patch dialog
-                    ui.close();
-                }
-
-                ui.separator();
-
-                if ui.button("Save").clicked() {
-                    if session.current_path.is_some() {
-                        save_events.write(SaveMobEvent { path: None });
-                    }
-                    ui.close();
-                }
-
-                if ui.button("Save As...").clicked() {
-                    // TODO: Open save as dialog
+                if ui
+                    .add_enabled(!dialog_busy, egui::Button::new("New Patch..."))
+                    .clicked()
+                {
+                    file_dialog.open_new_patch_dialog(config);
                     ui.close();
                 }
 
                 ui.separator();
 
-                if ui.button("Reload from Disk").clicked() {
-                    // TODO: Send reload event
+                if ui
+                    .add_enabled(!dialog_busy, egui::Button::new("Open..."))
+                    .clicked()
+                {
+                    file_dialog.open_file_dialog(config);
+                    ui.close();
+                }
+
+                ui.separator();
+
+                let save_enabled = session.is_modified && session.current_path.is_some();
+                if ui
+                    .add_enabled(save_enabled, egui::Button::new("Save"))
+                    .clicked()
+                {
+                    save_events.write(SaveMobEvent { path: None });
+                    ui.close();
+                }
+
+                ui.separator();
+
+                let reload_enabled = session.current_path.is_some();
+                if ui
+                    .add_enabled(reload_enabled, egui::Button::new("Reload from Disk"))
+                    .clicked()
+                {
+                    reload_events.write(ReloadMobEvent);
                     ui.close();
                 }
             });
@@ -58,7 +85,7 @@ pub fn toolbar_ui(
                     if let Some(mob) = &session.current_mob {
                         if let Some(prev) = session.history.undo(mob) {
                             session.current_mob = Some(prev);
-                            session.is_modified = true;
+                            session.check_modified();
                         }
                     }
                     ui.close();
@@ -71,7 +98,7 @@ pub fn toolbar_ui(
                     if let Some(mob) = &session.current_mob {
                         if let Some(next) = session.history.redo(mob) {
                             session.current_mob = Some(next);
-                            session.is_modified = true;
+                            session.check_modified();
                         }
                     }
                     ui.close();
@@ -91,14 +118,18 @@ pub fn toolbar_ui(
                 let save_enabled = session.is_modified && session.current_path.is_some();
 
                 if ui
-                    .add_enabled(save_enabled, egui::Button::new("Save"))
+                    .add_enabled(save_enabled, egui::Button::new("💾 Save"))
                     .clicked()
                 {
                     save_events.write(SaveMobEvent { path: None });
                 }
 
-                if ui.button("Reload").clicked() {
-                    // TODO: Send reload event
+                let reload_enabled = session.current_path.is_some();
+                if ui
+                    .add_enabled(reload_enabled, egui::Button::new("🔄 Reload"))
+                    .clicked()
+                {
+                    reload_events.write(ReloadMobEvent);
                 }
             });
         });

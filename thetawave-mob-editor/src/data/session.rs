@@ -82,6 +82,9 @@ pub struct EditorSession {
     /// Currently loaded mob as raw TOML value (allows flexible editing)
     pub current_mob: Option<toml::Value>,
 
+    /// Original mob value when loaded (for detecting actual modifications)
+    pub original_mob: Option<toml::Value>,
+
     /// Path to the current file being edited
     pub current_path: Option<PathBuf>,
 
@@ -108,6 +111,7 @@ impl Default for EditorSession {
     fn default() -> Self {
         Self {
             current_mob: None,
+            original_mob: None,
             current_path: None,
             file_type: FileType::Mob,
             is_modified: false,
@@ -120,6 +124,20 @@ impl Default for EditorSession {
 }
 
 impl EditorSession {
+    /// Check if current_mob differs from original_mob and update is_modified
+    pub fn check_modified(&mut self) {
+        self.is_modified = match (&self.current_mob, &self.original_mob) {
+            (Some(current), Some(original)) => current != original,
+            (None, None) => false,
+            _ => true,
+        };
+    }
+
+    /// Mark the current state as modified (call before making changes)
+    pub fn mark_modified(&mut self) {
+        self.is_modified = true;
+    }
+
     /// Set a status message that will be displayed temporarily
     pub fn set_status(&mut self, message: impl Into<String>, time: &Time) {
         self.status_message = Some((message.into(), time.elapsed_secs_f64() + 3.0));
