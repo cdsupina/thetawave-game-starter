@@ -13,8 +13,6 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  # Disable Cranelift codegen backend for CI (use LLVM instead)
-  CARGO_PROFILE_DEV_CODEGEN_BACKEND: llvm
 
 jobs:
   fmt:
@@ -30,6 +28,8 @@ jobs:
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
+    env:
+      CARGO_PROFILE_DEV_CODEGEN_BACKEND: llvm
     steps:
       - uses: actions/checkout@v4
       - name: Install Linux dependencies
@@ -48,6 +48,8 @@ jobs:
   check:
     name: Check
     runs-on: ubuntu-latest
+    env:
+      CARGO_PROFILE_DEV_CODEGEN_BACKEND: llvm
     steps:
       - uses: actions/checkout@v4
       - name: Install Linux dependencies
@@ -64,6 +66,8 @@ jobs:
   test:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    env:
+      CARGO_PROFILE_DEV_CODEGEN_BACKEND: llvm
     strategy:
       fail-fast: false
       matrix:
@@ -85,6 +89,8 @@ jobs:
   doc:
     name: Documentation
     runs-on: ubuntu-latest
+    env:
+      CARGO_PROFILE_DEV_CODEGEN_BACKEND: llvm
     steps:
       - uses: actions/checkout@v4
       - name: Install Linux dependencies
@@ -112,6 +118,8 @@ jobs:
   build-release:
     name: Build Release
     runs-on: ubuntu-latest
+    env:
+      CARGO_PROFILE_DEV_CODEGEN_BACKEND: llvm
     steps:
       - uses: actions/checkout@v4
       - name: Install Linux dependencies
