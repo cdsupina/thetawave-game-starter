@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use bevy::{ecs::message::{MessageReader, MessageWriter}, prelude::*};
+use bevy_aseprite_ultra::AsepriteUltraPlugin;
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
 
 use crate::{
@@ -9,7 +10,11 @@ use crate::{
         DeleteMobEvent, FileOperations, FileTreeState, LoadMobEvent, NewMobEvent, ReloadMobEvent,
         SaveMobEvent,
     },
-    preview::{setup_preview_camera, PreviewSettings},
+    preview::{
+        check_preview_update, draw_collider_gizmos, draw_grid, draw_spawner_gizmos,
+        handle_camera_input, setup_preview_camera, update_preview_camera, update_preview_mob,
+        update_preview_settings, PreviewSettings, PreviewState,
+    },
     states::{DialogState, EditingMode, EditorState},
     ui::{main_ui_system, DeleteDialogState, FileDialogState},
 };
@@ -38,6 +43,11 @@ impl Plugin for MobEditorPlugin {
             app.add_plugins(EguiPlugin::default());
         }
 
+        // Add Aseprite plugin for sprite loading
+        if !app.is_plugin_added::<AsepriteUltraPlugin>() {
+            app.add_plugins(AsepriteUltraPlugin);
+        }
+
         // States
         app.init_state::<EditorState>()
             .init_state::<EditingMode>()
@@ -47,6 +57,7 @@ impl Plugin for MobEditorPlugin {
         app.init_resource::<EditorSession>()
             .init_resource::<FileTreeState>()
             .init_resource::<PreviewSettings>()
+            .init_resource::<PreviewState>()
             .init_resource::<FileDialogState>()
             .init_resource::<DeleteDialogState>();
 
@@ -70,6 +81,30 @@ impl Plugin for MobEditorPlugin {
         app.add_systems(
             EguiPrimaryContextPass,
             main_ui_system.run_if(not(in_state(EditorState::Loading))),
+        );
+
+        // Preview update systems (order matters)
+        app.add_systems(
+            Update,
+            (
+                update_preview_settings,
+                handle_camera_input,
+            ),
+        );
+
+        app.add_systems(
+            Update,
+            (
+                check_preview_update,
+                update_preview_mob.after(check_preview_update),
+                update_preview_camera.after(update_preview_settings),
+            ),
+        );
+
+        // Gizmo systems (run after preview update)
+        app.add_systems(
+            Update,
+            (draw_grid, draw_collider_gizmos, draw_spawner_gizmos),
         );
 
         // Keyboard shortcuts and file operations run in Update

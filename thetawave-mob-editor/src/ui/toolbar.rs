@@ -19,7 +19,7 @@ pub fn toolbar_ui(
     config: &EditorConfig,
 ) {
     egui::TopBottomPanel::top("toolbar").show(ctx, |ui| {
-        egui::menu::bar(ui, |ui| {
+        egui::MenuBar::new().ui(ui, |ui| {
             // File menu
             ui.menu_button("File", |ui| {
                 let dialog_busy = file_dialog.dialog_open;
