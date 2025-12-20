@@ -1,5 +1,6 @@
 use bevy::{
     asset::Assets,
+    camera::primitives::Aabb,
     color::Color,
     ecs::{
         entity::Entity,
@@ -9,7 +10,6 @@ use bevy::{
         system::{Commands, Res, ResMut},
     },
     math::{Vec2, Vec3},
-    camera::primitives::Aabb,
     transform::components::Transform,
 };
 use bevy_enoki::{
@@ -17,16 +17,16 @@ use bevy_enoki::{
     prelude::{ColorParticle2dMaterial, OneShot, ParticleSpawnerState},
 };
 use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
-use thetawave_core::{AppState, Cleanup};
 #[cfg(feature = "debug")]
 use thetawave_core::LoggingSettings;
+use thetawave_core::{AppState, Cleanup};
 
 use crate::{
     SpawnBloodEffectEvent, SpawnProjectileTrailEffectEvent,
     data::{
         BloodEffectManager, ParticleLifeTimer, SpawnExplosionEffectEvent,
-        SpawnProjectileDespawnEffectEvent, SpawnProjectileHitEffectEvent,
-        SpawnSpawnerEffectEvent, SpawnerParticleEffectSpawnedEvent,
+        SpawnProjectileDespawnEffectEvent, SpawnProjectileHitEffectEvent, SpawnSpawnerEffectEvent,
+        SpawnerParticleEffectSpawnedEvent,
     },
 };
 
@@ -96,7 +96,10 @@ pub fn spawn_blood_effect(
         if let Some(ref mut current_direction) = modified_effect.direction {
             current_direction.0 = direction; // Update base value only
         } else {
-            thetawave_core::log_if!(logging_settings, particles, warn,
+            thetawave_core::log_if!(
+                logging_settings,
+                particles,
+                warn,
                 "Trying to set direction on blood effect without existing direction: {:?}",
                 direction
             );
@@ -196,7 +199,10 @@ pub fn spawn_projectile_trail(
         let randomness = particle_effect.lifetime.1;
         base_lifetime + (base_lifetime * randomness)
     } else {
-        thetawave_core::log_if!(logging_settings, particles, warn,
+        thetawave_core::log_if!(
+            logging_settings,
+            particles,
+            warn,
             "Projectile trail effect not loaded yet, using fallback lifetime: {}",
             MAX_LIFETIME_FALLBACK
         );

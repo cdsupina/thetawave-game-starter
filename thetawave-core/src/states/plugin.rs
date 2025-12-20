@@ -1,14 +1,17 @@
 use bevy::{
     app::{Plugin, Update},
-    prelude::{in_state, AppExtStates, IntoScheduleConfigs, OnEnter},
+    prelude::{AppExtStates, IntoScheduleConfigs, OnEnter, in_state},
 };
 
 use super::{
-    data::{DebugState, ToggleDebugStateEvent, AppState, GameState, MainMenuState, PauseMenuState, ToggleGameStateEvent},
+    data::{
+        AppState, DebugState, GameState, MainMenuState, PauseMenuState, ToggleDebugStateEvent,
+        ToggleGameStateEvent,
+    },
     systems::{
         cleanup_state_system, enter_game_end_system, enter_title_menu_state_system,
         reset_states_on_app_state_transition_system, reset_states_on_game_state_transition_system,
-        toggle_game_state_system, toggle_debug_state_system,
+        toggle_debug_state_system, toggle_game_state_system,
     },
 };
 

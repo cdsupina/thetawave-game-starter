@@ -1,6 +1,6 @@
 use bevy::{
     app::{Plugin, Update},
-    ecs::schedule::{common_conditions::on_message, IntoScheduleConfigs},
+    ecs::schedule::{IntoScheduleConfigs, common_conditions::on_message},
     state::condition::in_state,
 };
 use thetawave_core::AppState;
@@ -10,12 +10,12 @@ use super::{
     camera::{mob_view_camera_follow_system, mob_view_camera_zoom_system},
     data::{BehaviorTreeDisplays, MobGroupDisplayStats, MobGroupRegistry, MobViewWindowState},
     groups::update_mob_groups_system,
-    selection::{handle_cycle_mob_selection, tab_cycle_mob_system, CycleMobSelectionEvent},
+    selection::{CycleMobSelectionEvent, handle_cycle_mob_selection, tab_cycle_mob_system},
     stats::collect_mob_stats_system,
     ui::mob_view_ui_system,
     window::{
-        handle_mob_view_window_close, toggle_mob_view_window, MobViewContextPass,
-        ToggleMobViewWindowEvent,
+        MobViewContextPass, ToggleMobViewWindowEvent, handle_mob_view_window_close,
+        toggle_mob_view_window,
     },
 };
 

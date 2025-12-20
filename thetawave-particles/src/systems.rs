@@ -120,8 +120,12 @@ pub(crate) fn blood_effect_management_system(
                 });
             }
         } else {
-            thetawave_core::log_if!(logging_settings, particles, warn,
-                "No parent entity found for blood effect: {:?}", entity
+            thetawave_core::log_if!(
+                logging_settings,
+                particles,
+                warn,
+                "No parent entity found for blood effect: {:?}",
+                entity
             );
         }
     }

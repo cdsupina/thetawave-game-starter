@@ -4,8 +4,8 @@ use bevy::{
     state::condition::in_state,
 };
 use leafwing_input_manager::prelude::ActionState;
-use thetawave_player::{PlayerAction, PlayerNum};
 use thetawave_core::{AppState, ToggleGameStateEvent};
+use thetawave_player::{PlayerAction, PlayerNum};
 
 pub(crate) struct ThetawaveStatesPlugin;
 

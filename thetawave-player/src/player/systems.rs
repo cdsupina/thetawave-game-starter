@@ -120,13 +120,13 @@ pub(crate) fn player_death_system(
     mut player_death_event_reader: MessageReader<PlayerDeathEvent>,
     #[cfg(feature = "debug")] logging_settings: Res<LoggingSettings>,
 ) {
-    for event in player_death_event_reader.read() {
+    for _event in player_death_event_reader.read() {
         thetawave_core::log_if!(
             logging_settings,
             abilities,
             info,
             "Player {} died.",
-            event.player_entity
+            _event.player_entity
         );
     }
 }

@@ -3,7 +3,7 @@ mod mob_view;
 use bevy::{
     app::{Plugin, Update},
     ecs::{resource::Resource, system::Res},
-    input::{keyboard::KeyCode, ButtonInput},
+    input::{ButtonInput, keyboard::KeyCode},
     prelude::MessageWriter,
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;

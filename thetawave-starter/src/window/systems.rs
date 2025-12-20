@@ -24,10 +24,10 @@ pub(super) fn set_window_icon_system(
     };
     // Try multiple possible locations for the window icon
     let possible_paths = [
-        "assets/window_icon.png",        // When running from workspace root
-        "../assets/window_icon.png",     // When running from test-game directory
+        "assets/window_icon.png",    // When running from workspace root
+        "../assets/window_icon.png", // When running from test-game directory
     ];
-    
+
     let mut icon_path = None;
     for path in &possible_paths {
         if std::path::Path::new(path).exists() {
@@ -35,7 +35,7 @@ pub(super) fn set_window_icon_system(
             break;
         }
     }
-    
+
     let icon_path = match icon_path {
         Some(path) => path,
         None => {

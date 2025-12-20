@@ -12,7 +12,7 @@ use bevy::{
     window::{Window, WindowClosed, WindowRef, WindowResolution},
 };
 use bevy_egui::EguiMultipassSchedule;
-use bevy_enoki::{prelude::ColorParticle2dMaterial, ParticleSpawner};
+use bevy_enoki::{ParticleSpawner, prelude::ColorParticle2dMaterial};
 use thetawave_core::ParticleRenderingEnabled;
 
 use super::data::{MobViewCamera, MobViewWindow, MobViewWindowState};

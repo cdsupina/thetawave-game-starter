@@ -4,7 +4,7 @@
 //! allowing partial overrides to be merged at the TOML level rather than
 //! requiring complete MobAsset deserialization.
 
-use bevy::asset::{io::Reader, Asset, AssetLoader, LoadContext};
+use bevy::asset::{Asset, AssetLoader, LoadContext, io::Reader};
 use bevy::reflect::TypePath;
 use toml::Value;
 

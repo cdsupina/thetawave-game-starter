@@ -3,7 +3,7 @@ use bevy::{
         query::With,
         system::{Query, Res, ResMut},
     },
-    input::{keyboard::KeyCode, ButtonInput},
+    input::{ButtonInput, keyboard::KeyCode},
     transform::components::Transform,
 };
 

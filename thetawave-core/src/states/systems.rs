@@ -1,9 +1,12 @@
-use super::data::{DebugState, ToggleDebugStateEvent, AppState, Cleanup, GameState, MainMenuState, PauseMenuState, ToggleGameStateEvent};
+use super::data::{
+    AppState, Cleanup, DebugState, GameState, MainMenuState, PauseMenuState, ToggleDebugStateEvent,
+    ToggleGameStateEvent,
+};
 use bevy::{
-    input::{keyboard::KeyCode, ButtonInput},
+    input::{ButtonInput, keyboard::KeyCode},
     prelude::{
-        Commands, Entity, MessageReader, NextState, Query, Res, ResMut, State, StateTransitionEvent,
-        States,
+        Commands, Entity, MessageReader, NextState, Query, Res, ResMut, State,
+        StateTransitionEvent, States,
     },
 };
 

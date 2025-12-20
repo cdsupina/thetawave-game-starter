@@ -1,14 +1,14 @@
 use super::{
+    ApplyOptionsEvent,
     systems::{
         apply_options_system, apply_volume_options_system, setup_options_res,
         sync_options_res_system,
     },
-    ApplyOptionsEvent,
 };
 use bevy::{
     app::{Plugin, Startup, Update},
     ecs::schedule::SystemCondition,
-    prelude::{in_state, IntoScheduleConfigs, OnEnter},
+    prelude::{IntoScheduleConfigs, OnEnter, in_state},
 };
 use thetawave_core::{MainMenuState, PauseMenuState};
 

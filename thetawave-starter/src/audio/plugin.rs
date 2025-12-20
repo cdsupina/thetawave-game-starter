@@ -1,18 +1,18 @@
 use bevy::{
     app::{Plugin, Update},
     ecs::schedule::SystemCondition,
-    prelude::{in_state, not, IntoScheduleConfigs},
+    prelude::{IntoScheduleConfigs, in_state, not},
 };
 use bevy_kira_audio::{AudioApp, AudioPlugin};
 
 use thetawave_core::{AppState, MainMenuState, PauseMenuState};
 
 use super::{
+    ChangeVolumeEvent, MusicTransitionEvent,
     data::{AudioEffectEvent, EffectsAudioChannel, MusicAudioChannel, UiAudioChannel},
     systems::{
         change_volume_system, play_effect_system, start_music_system, transition_music_system,
     },
-    ChangeVolumeEvent, MusicTransitionEvent,
 };
 
 pub(crate) struct ThetawaveAudioPlugin;

@@ -1,5 +1,5 @@
 use bevy::{
-    prelude::{Message, GamepadButton, KeyCode, MouseButton, Resource},
+    prelude::{GamepadButton, KeyCode, Message, MouseButton, Resource},
     window::{WindowMode, WindowResolution},
 };
 use bevy_platform::collections::HashMap;

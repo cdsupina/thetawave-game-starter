@@ -1,8 +1,11 @@
-use bevy::ecs::{query::Without, system::{Res, Single}};
-use bevy_behave::{ego_tree, Behave};
+use bevy::ecs::{
+    query::Without,
+    system::{Res, Single},
+};
+use bevy_behave::{Behave, ego_tree};
 use bevy_egui::{
     EguiContext, PrimaryEguiContext,
-    egui::{self, Color32, ScrollArea, SidePanel, TopBottomPanel, CollapsingHeader, ProgressBar},
+    egui::{self, CollapsingHeader, Color32, ProgressBar, ScrollArea, SidePanel, TopBottomPanel},
 };
 use thetawave_mobs::MobRegistry;
 
@@ -47,8 +50,8 @@ pub fn mob_view_ui_system(
 
                 // Total health bar
                 ui.label("Total Health:");
-                let health_ratio = group_stats.total_health as f32
-                    / group_stats.max_total_health.max(1) as f32;
+                let health_ratio =
+                    group_stats.total_health as f32 / group_stats.max_total_health.max(1) as f32;
                 ui.add(
                     ProgressBar::new(health_ratio)
                         .text(format!(
@@ -190,7 +193,10 @@ fn render_mob_stats_section(ui: &mut egui::Ui, stats: &MobDisplayStats) {
                 ui.label("Physics");
                 ui.horizontal(|ui| {
                     ui.label("Position:");
-                    ui.label(format!("({:.1}, {:.1})", stats.position.x, stats.position.y));
+                    ui.label(format!(
+                        "({:.1}, {:.1})",
+                        stats.position.x, stats.position.y
+                    ));
                 });
                 ui.horizontal(|ui| {
                     ui.label("Rotation:");

@@ -2,11 +2,11 @@ use crate::ui::data::{ButtonAction, UiChildBuilderExt};
 
 use super::{Cleanup, MainMenuState, UiAssets};
 use bevy::{
-    prelude::{Commands, MessageReader, ImageNode, Name, Query, Res, With},
+    prelude::{Commands, ImageNode, MessageReader, Name, Query, Res, With},
     ui::{AlignItems, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
-use bevy_alt_ui_navigation_lite::prelude::{NavMessage, Focusable};
+use bevy_alt_ui_navigation_lite::prelude::{Focusable, NavMessage};
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use thetawave_assets::{AssetResolver, ExtendedUiAssets};
 
@@ -17,12 +17,15 @@ pub(in crate::ui) fn spawn_title_menu_system(
     ui_assets: Res<UiAssets>,
 ) {
     // Pre-resolve assets - will panic on failure
-    let thetawave_logo_sprite = AssetResolver::get_ui_sprite("thetawave_logo", &extended_ui_assets, &ui_assets)
-        .expect("Failed to load thetawave_logo sprite");
-    let bluesky_logo_sprite = AssetResolver::get_ui_sprite("bluesky_logo", &extended_ui_assets, &ui_assets)
-        .expect("Failed to load bluesky_logo sprite");
-    let github_logo_sprite = AssetResolver::get_ui_sprite("github_logo", &extended_ui_assets, &ui_assets)
-        .expect("Failed to load github_logo sprite");
+    let thetawave_logo_sprite =
+        AssetResolver::get_ui_sprite("thetawave_logo", &extended_ui_assets, &ui_assets)
+            .expect("Failed to load thetawave_logo sprite");
+    let bluesky_logo_sprite =
+        AssetResolver::get_ui_sprite("bluesky_logo", &extended_ui_assets, &ui_assets)
+            .expect("Failed to load bluesky_logo sprite");
+    let github_logo_sprite =
+        AssetResolver::get_ui_sprite("github_logo", &extended_ui_assets, &ui_assets)
+            .expect("Failed to load github_logo sprite");
 
     cmds.spawn((
         Cleanup::<MainMenuState> {

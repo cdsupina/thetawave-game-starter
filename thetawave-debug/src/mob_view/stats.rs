@@ -87,7 +87,11 @@ pub fn collect_mob_stats_system(
                 angular_acceleration: attributes.angular_acceleration,
                 position: transform.translation.truncate(),
                 // to_euler is safe in Bevy - returns valid angles even for edge cases
-                rotation: transform.rotation.to_euler(bevy::math::EulerRot::ZYX).0.to_degrees(),
+                rotation: transform
+                    .rotation
+                    .to_euler(bevy::math::EulerRot::ZYX)
+                    .0
+                    .to_degrees(),
                 restitution: restitution.coefficient,
                 friction: friction.dynamic_coefficient,
                 projectile_speed: attributes.projectile_speed,
