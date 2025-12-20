@@ -29,14 +29,19 @@ pub struct ThetawaveAbilitiesPlugin {
 impl Plugin for ThetawaveAbilitiesPlugin {
     fn build(&self, app: &mut App) {
         let ability_registry = AbilityRegistry::from_world(app.world_mut())
-            .with_extended_abilities(self.extended_abilities.clone(), self.extended_duration_abilities.clone());
+            .with_extended_abilities(
+                self.extended_abilities.clone(),
+                self.extended_duration_abilities.clone(),
+            );
 
-        app.insert_resource(ability_registry)
-            .add_systems(Update, (
+        app.insert_resource(ability_registry).add_systems(
+            Update,
+            (
                 tick_cooldowns_system,
                 ability_dispatcher_system,
                 charge_ability_timer_system,
-            ));
+            ),
+        );
     }
 }
 
@@ -81,12 +86,19 @@ impl FromWorld for AbilityRegistry {
         let mut duration_abilities = HashSet::new();
         duration_abilities.insert("charge".to_string());
 
-        AbilityRegistry { abilities, duration_abilities }
+        AbilityRegistry {
+            abilities,
+            duration_abilities,
+        }
     }
 }
 
 impl AbilityRegistry {
-    fn with_extended_abilities(mut self, abilities: HashMap<String, SystemId<In<Entity>>>, duration_abilities: HashSet<String>) -> Self {
+    fn with_extended_abilities(
+        mut self,
+        abilities: HashMap<String, SystemId<In<Entity>>>,
+        duration_abilities: HashSet<String>,
+    ) -> Self {
         self.abilities.extend(abilities);
         self.duration_abilities.extend(duration_abilities);
 

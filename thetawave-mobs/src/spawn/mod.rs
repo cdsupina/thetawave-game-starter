@@ -21,9 +21,9 @@ use bevy::{
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_behave::prelude::BehaveTree;
 use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
-use thetawave_core::{AppState, Cleanup, HealthComponent};
 #[cfg(feature = "debug")]
 use thetawave_core::LoggingSettings;
+use thetawave_core::{AppState, Cleanup, HealthComponent};
 use thetawave_particles::{SpawnSpawnerEffectEvent, SpawnerParticleEffectSpawnedEvent};
 use thetawave_projectiles::ProjectileType;
 
@@ -32,9 +32,7 @@ use bevy::ecs::bundle::Bundle;
 use crate::{
     MobMarker,
     asset::{JointedMobRef, MobAsset, MobRef, MobRegistry},
-    attributes::{
-        JointsComponent, MobAttributesComponent, ProjectileSpawnerComponent,
-    },
+    attributes::{JointsComponent, MobAttributesComponent, ProjectileSpawnerComponent},
     behavior::BehaviorReceiverComponent,
 };
 
@@ -221,8 +219,11 @@ fn spawn_mob(
 
     // Look up the mob from the registry (now returns &MobAsset directly)
     let mob = mob_registry
-        .get_mob(&normalized_ref)
-        .ok_or(BevyError::from(format!("Mob not found in registry: {}", normalized_ref)))?;
+        .get_mob(normalized_ref)
+        .ok_or(BevyError::from(format!(
+            "Mob not found in registry: {}",
+            normalized_ref
+        )))?;
 
     // Get the sprite key: either the specified sprite_key or derive from normalized mob_ref
     // Derive: "xhitara/launcher" -> "xhitara_launcher_mob"
@@ -276,8 +277,12 @@ fn spawn_mob(
                         ) {
                             Ok(handle) => handle,
                             Err(_e) => {
-                                thetawave_core::log_if!(logging_settings, spawning, warn,
-                                    "Failed to load decoration sprite, skipping decoration: {}", _e
+                                thetawave_core::log_if!(
+                                    logging_settings,
+                                    spawning,
+                                    warn,
+                                    "Failed to load decoration sprite, skipping decoration: {}",
+                                    _e
                                 );
                                 continue;
                             }
@@ -289,7 +294,7 @@ fn spawn_mob(
             }
 
             // Spawn behavior tree from registry
-            if let Some(tree) = mob_registry.get_behavior(&normalized_ref) {
+            if let Some(tree) = mob_registry.get_behavior(normalized_ref) {
                 parent.spawn((
                     Name::new("Mob Behavior Tree"),
                     BehaveTree::new(tree.clone()),
@@ -456,13 +461,20 @@ pub(crate) fn connect_effect_to_spawner(
             if let Some(spawner) = projectile_spawner_component.spawners.get_mut(&event.key) {
                 spawner.spawn_effect_entity = Some(event.effect_entity);
             } else {
-                thetawave_core::log_if!(logging_settings, spawning, warn,
+                thetawave_core::log_if!(
+                    logging_settings,
+                    spawning,
+                    warn,
                     "Mob {} has no spawner with key '{}'",
-                    event.parent_entity.index(), event.key
+                    event.parent_entity.index(),
+                    event.key
                 );
             }
         } else {
-            thetawave_core::log_if!(logging_settings, spawning, warn,
+            thetawave_core::log_if!(
+                logging_settings,
+                spawning,
+                warn,
                 "Parent entity {} is not a valid mob with ProjectileSpawnerComponent",
                 event.parent_entity.index()
             );

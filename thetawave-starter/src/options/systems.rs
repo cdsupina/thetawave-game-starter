@@ -1,4 +1,4 @@
-use super::{data::ApplyOptionsEvent, OptionsRes};
+use super::{OptionsRes, data::ApplyOptionsEvent};
 use crate::audio::ChangeVolumeEvent;
 use bevy::{
     camera::{Camera2d, Camera3d},

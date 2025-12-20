@@ -103,7 +103,11 @@ pub use mob_asset::{JointedMobRef, MobAsset};
 pub use mob_patch::{MobPatch, MobPatchLoader};
 pub use registry::{MobRef, MobRegistry};
 
-use bevy::{asset::Handle, platform::collections::HashMap, prelude::{Res, Resource}};
+use bevy::{
+    asset::Handle,
+    platform::collections::HashMap,
+    prelude::{Res, Resource},
+};
 use bevy_asset_loader::{asset_collection::AssetCollection, mapped::AssetFileStem};
 
 /// Base mob assets loaded from embedded assets.

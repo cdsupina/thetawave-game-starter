@@ -40,7 +40,11 @@ pub struct GameAssets {
 pub struct ExtendedGameAssets {
     #[asset(key = "extended_game_sprites", collection(typed, mapped), optional)]
     pub sprites: Option<HashMap<AssetFileStem, Handle<Aseprite>>>,
-    #[asset(key = "extended_game_particle_effects", collection(typed, mapped), optional)]
+    #[asset(
+        key = "extended_game_particle_effects",
+        collection(typed, mapped),
+        optional
+    )]
     pub particle_effects: Option<HashMap<AssetFileStem, Handle<Particle2dEffect>>>,
 }
 

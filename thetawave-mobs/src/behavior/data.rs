@@ -27,38 +27,43 @@ pub enum MobBehaviorType {
     MoveRight,
     BrakeHorizontal,
     BrakeAngular,
-    
+
     /// Move to specific position
-    MoveTo { x: f32, y: f32 },
-    
+    MoveTo {
+        x: f32,
+        y: f32,
+    },
+
     // Targeting behaviors
     FindPlayerTarget,
     MoveToTarget,
     RotateToTarget,
     MoveForward,
     LoseTarget,
-    
+
     // Spawning behaviors
-    SpawnMob { 
-        keys: Option<Vec<String>>
+    SpawnMob {
+        keys: Option<Vec<String>>,
     },
-    SpawnProjectile { 
-        keys: Option<Vec<String>>
+    SpawnProjectile {
+        keys: Option<Vec<String>>,
     },
-    
+
     // Timing behaviors
-    DoForTime { seconds: f32 },
-    
-    // Communication behaviors  
+    DoForTime {
+        seconds: f32,
+    },
+
+    // Communication behaviors
     TransmitMobBehavior {
         mob_type: String,
         behaviors: Vec<MobBehaviorType>,
     },
-    
+
     // Joint behaviors (for future use)
     #[allow(dead_code)]
-    RotateJointsClockwise { 
-        keys: Vec<String>
+    RotateJointsClockwise {
+        keys: Vec<String>,
     },
 }
 

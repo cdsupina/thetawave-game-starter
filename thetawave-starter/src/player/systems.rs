@@ -1,7 +1,6 @@
 use crate::options::OptionsRes;
 use avian2d::prelude::{
-    Collider, CollisionLayers, LayerMask, LockedAxes, PhysicsLayer, Restitution,
-    RigidBody,
+    Collider, CollisionLayers, LayerMask, LockedAxes, PhysicsLayer, Restitution, RigidBody,
 };
 use bevy::{
     prelude::{Commands, Name, Res},

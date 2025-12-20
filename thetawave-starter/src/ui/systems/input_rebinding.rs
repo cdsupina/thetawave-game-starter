@@ -27,8 +27,8 @@ use bevy_persistent::Persistent;
 use itertools::{EitherOrBoth, Itertools};
 use strum::IntoEnumIterator;
 use thetawave_assets::{ExtendedUiAssets, UiAssets};
-use thetawave_player::{DummyGamepad, InputType, PlayerAbility, PlayerAction};
 use thetawave_core::{Cleanup, MainMenuState};
+use thetawave_player::{DummyGamepad, InputType, PlayerAbility, PlayerAction};
 
 const LABEL_TEXT_SIZE: f32 = 12.0;
 

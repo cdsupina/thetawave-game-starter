@@ -7,21 +7,21 @@ use crate::{
     options::{ApplyOptionsEvent, OptionsRes},
 };
 use thetawave_assets::{LoadingProgressEvent, UiAssets};
-use thetawave_player::{ChosenCharactersResource, InputType, PlayerJoinEvent, PlayerNum};
 use thetawave_core::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState};
+use thetawave_player::{ChosenCharactersResource, InputType, PlayerJoinEvent, PlayerNum};
 
 use bevy::{
     app::AppExit,
     input::ButtonInput,
     log::{info, warn},
     prelude::{
-        Children, Entity, MessageReader, MessageWriter, Gamepad, GamepadButton, KeyCode, Local,
+        Children, Entity, Gamepad, GamepadButton, KeyCode, Local, MessageReader, MessageWriter,
         MouseButton, NextState, Query, Res, ResMut, With,
     },
     time::Time,
     ui::{Node, UiRect, Val},
 };
-use bevy_alt_ui_navigation_lite::prelude::{NavMessage, Focusable};
+use bevy_alt_ui_navigation_lite::prelude::{Focusable, NavMessage};
 use bevy_aseprite_ultra::prelude::AseAnimation;
 
 pub(super) mod character_selection;

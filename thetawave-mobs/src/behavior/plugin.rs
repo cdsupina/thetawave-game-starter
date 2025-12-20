@@ -47,8 +47,8 @@ impl Plugin for ThetawaveMobBehaviorPlugin {
                 .run_if({
                     #[cfg(feature = "debug")]
                     {
-                        use bevy::ecs::system::Res;
                         use crate::MobDebugSettings;
+                        use bevy::ecs::system::Res;
                         in_state(AppState::Game)
                             .and(in_state(GameState::Playing))
                             .and(|mob_res: Res<MobDebugSettings>| mob_res.behaviors_enabled)

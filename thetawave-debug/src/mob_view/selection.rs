@@ -3,7 +3,7 @@ use bevy::{
         message::{Message, MessageReader, MessageWriter},
         system::{Res, ResMut},
     },
-    input::{keyboard::KeyCode, ButtonInput},
+    input::{ButtonInput, keyboard::KeyCode},
 };
 
 use super::data::{MobGroupRegistry, MobViewWindowState};

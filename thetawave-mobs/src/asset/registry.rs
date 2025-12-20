@@ -132,8 +132,16 @@ impl MobRegistry {
         info!(
             "Building MobRegistry: {} base handles, extended_mobs is {}, extended_patches is {}",
             base_assets.mobs.len(),
-            if extended_mobs.mobs.is_some() { "Some" } else { "None" },
-            if extended_patches.patches.is_some() { "Some" } else { "None" }
+            if extended_mobs.mobs.is_some() {
+                "Some"
+            } else {
+                "None"
+            },
+            if extended_patches.patches.is_some() {
+                "Some"
+            } else {
+                "None"
+            }
         );
 
         let mut raw_values = Self::collect_base_mobs(base_assets, raw_mob_assets);
@@ -456,7 +464,9 @@ mod tests {
         "#;
 
         let value: toml::Value = toml::from_str(toml_str).unwrap();
-        let mob: MobAsset = value.try_into().expect("Should deserialize mob with colliders");
+        let mob: MobAsset = value
+            .try_into()
+            .expect("Should deserialize mob with colliders");
 
         assert_eq!(mob.name, "Collider Mob");
         assert_eq!(mob.health, 100);
@@ -477,7 +487,9 @@ mod tests {
         "#;
 
         let value: toml::Value = toml::from_str(toml_str).unwrap();
-        let mob: MobAsset = value.try_into().expect("Should deserialize mob with behavior");
+        let mob: MobAsset = value
+            .try_into()
+            .expect("Should deserialize mob with behavior");
 
         assert_eq!(mob.name, "Behaving Mob");
         assert!(mob.behavior.is_some());
@@ -495,7 +507,9 @@ mod tests {
         "#;
 
         let value: toml::Value = toml::from_str(toml_str).unwrap();
-        let mob: MobAsset = value.try_into().expect("Should deserialize mob with joints");
+        let mob: MobAsset = value
+            .try_into()
+            .expect("Should deserialize mob with joints");
 
         assert_eq!(mob.name, "Parent Mob");
         assert_eq!(mob.jointed_mobs.len(), 1);
@@ -567,17 +581,20 @@ mod tests {
         merge_toml_values(&mut base, patch);
 
         // Verify the merge: south timer changed, north unchanged
-        let spawners = base.get("projectile_spawners")
+        let spawners = base
+            .get("projectile_spawners")
             .and_then(|ps| ps.get("spawners"))
             .expect("spawners should exist");
 
-        let north_timer = spawners.get("north")
+        let north_timer = spawners
+            .get("north")
             .and_then(|n| n.get("timer"))
             .and_then(|t| t.as_float())
             .expect("north timer should exist");
         assert_eq!(north_timer, 1.0);
 
-        let south_timer = spawners.get("south")
+        let south_timer = spawners
+            .get("south")
             .and_then(|s| s.get("timer"))
             .and_then(|t| t.as_float())
             .expect("south timer should exist");
@@ -590,10 +607,7 @@ mod tests {
 
         // Valid mob
         let valid_toml = r#"name = "Valid Mob""#;
-        raw_values.insert(
-            "valid/mob".to_string(),
-            toml::from_str(valid_toml).unwrap(),
-        );
+        raw_values.insert("valid/mob".to_string(), toml::from_str(valid_toml).unwrap());
 
         // Invalid mob (unknown field)
         let invalid_toml = r#"
@@ -630,8 +644,8 @@ mod tests {
         "#;
 
         let value: toml::Value = toml::from_str(toml_str).unwrap();
-        let jointed: super::super::JointedMobRef = value.try_into()
-            .expect("Should deserialize JointedMobRef");
+        let jointed: super::super::JointedMobRef =
+            value.try_into().expect("Should deserialize JointedMobRef");
 
         assert_eq!(jointed.key, "arm");
         assert_eq!(jointed.mob_ref.as_str(), "parts/arm");

@@ -13,8 +13,8 @@ use bevy::{
 use thetawave_core::Faction;
 use thetawave_projectiles::{ProjectileType, SpawnProjectileEvent};
 
-use crate::{ExecutePlayerAbilityEvent, PlayerAbility, PlayerStats, ability::AbilityRegistry};
 use crate::cooldown::CooldownState;
+use crate::{ExecutePlayerAbilityEvent, PlayerAbility, PlayerStats, ability::AbilityRegistry};
 
 #[derive(Component)]
 pub struct ChargeAbility {

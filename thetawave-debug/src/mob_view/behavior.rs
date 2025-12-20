@@ -8,7 +8,9 @@ use bevy::{
     prelude::Children,
 };
 use bevy_behave::prelude::{BehaveCtx, BehaveTree};
-use thetawave_mobs::{BehaviorActionName, BehaviorReceiverComponent, MobBehaviorComponent, MobMarker};
+use thetawave_mobs::{
+    BehaviorActionName, BehaviorReceiverComponent, MobBehaviorComponent, MobMarker,
+};
 
 use super::data::{BehaviorTreeDisplay, BehaviorTreeDisplays, MobGroupRegistry};
 
@@ -22,14 +24,21 @@ struct ActiveBehaviorInfo {
 pub fn collect_behavior_tree_display_system(
     registry: Res<MobGroupRegistry>,
     mut tree_displays: ResMut<BehaviorTreeDisplays>,
-    mob_query: Query<(
-        Entity,
-        &MobMarker,
-        Option<&Children>,
-        Option<&BehaviorReceiverComponent>,
-    ), With<MobMarker>>,
+    mob_query: Query<
+        (
+            Entity,
+            &MobMarker,
+            Option<&Children>,
+            Option<&BehaviorReceiverComponent>,
+        ),
+        With<MobMarker>,
+    >,
     behavior_tree_query: Query<&BehaveTree>,
-    active_behavior_query: Query<(&MobBehaviorComponent, &BehaveCtx, Option<&BehaviorActionName>)>,
+    active_behavior_query: Query<(
+        &MobBehaviorComponent,
+        &BehaveCtx,
+        Option<&BehaviorActionName>,
+    )>,
 ) {
     tree_displays.displays.clear();
 
@@ -72,7 +81,10 @@ pub fn collect_behavior_tree_display_system(
         if let Ok((_, marker, children, behavior_receiver)) = mob_query.get(entity) {
             // Check if this mob has a behavior tree child
             let has_tree = children
-                .map(|c| c.iter().any(|child| behavior_tree_query.get(*child).is_ok()))
+                .map(|c| {
+                    c.iter()
+                        .any(|child| behavior_tree_query.get(*child).is_ok())
+                })
                 .unwrap_or(false);
 
             let info = active_info_by_target.get(&entity);
@@ -82,9 +94,7 @@ pub fn collect_behavior_tree_display_system(
                 has_own_tree: has_tree,
                 receives_from: behavior_receiver.map(|r| r.0),
                 active_node_name: info.and_then(|i| i.node_name.clone()),
-                active_actions: info
-                    .map(|i| i.behaviors.clone())
-                    .unwrap_or_default(),
+                active_actions: info.map(|i| i.behaviors.clone()).unwrap_or_default(),
             });
         }
     }

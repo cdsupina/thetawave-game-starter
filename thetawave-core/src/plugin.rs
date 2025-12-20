@@ -1,8 +1,8 @@
 use bevy::{app::Plugin, prelude::App};
 
-use crate::{Faction, HealthComponent, ParticleRenderingEnabled};
 #[cfg(feature = "debug")]
 use crate::LoggingSettings;
+use crate::{Faction, HealthComponent, ParticleRenderingEnabled};
 
 pub struct ThetawaveCorePlugin;
 

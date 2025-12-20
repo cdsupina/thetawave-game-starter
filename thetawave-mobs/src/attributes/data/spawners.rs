@@ -10,7 +10,6 @@ use thetawave_projectiles::ProjectileSpawner;
 
 use crate::asset::MobRef;
 
-
 /// Mob spawner component for use in spawned mobs
 /// Maps String keys to MobSpawners
 /// Intended to be used by behaviors

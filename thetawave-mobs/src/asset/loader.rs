@@ -1,6 +1,6 @@
 //! Asset loader for .mob files.
 
-use bevy::asset::{Asset, io::Reader, AssetLoader, LoadContext};
+use bevy::asset::{Asset, AssetLoader, LoadContext, io::Reader};
 use bevy::reflect::TypePath;
 use toml::Value;
 

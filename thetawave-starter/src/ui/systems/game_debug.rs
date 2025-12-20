@@ -1,18 +1,20 @@
 #[cfg(feature = "debug")]
-use bevy::ecs::{message::MessageWriter, system::Local};
-use bevy::{
-    ecs::{error::Result, system::ResMut},
-    math::Vec2,
-};
+use bevy::ecs::error::Result;
 #[cfg(feature = "debug")]
 use bevy::ecs::system::Res;
 #[cfg(feature = "debug")]
-use bevy_platform::collections::HashMap;
+use bevy::ecs::system::ResMut;
+#[cfg(feature = "debug")]
+use bevy::ecs::{message::MessageWriter, system::Local};
+#[cfg(feature = "debug")]
+use bevy::math::Vec2;
 #[cfg(feature = "debug")]
 use bevy_egui::{
     EguiContexts,
     egui::{TopBottomPanel, containers::menu},
 };
+#[cfg(feature = "debug")]
+use bevy_platform::collections::HashMap;
 
 #[cfg(feature = "debug")]
 use thetawave_camera::{Camera2DZoomEvent, Camera3DZoomEvent};

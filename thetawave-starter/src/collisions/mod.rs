@@ -1,17 +1,19 @@
 use avian2d::prelude::CollisionStart;
+#[cfg(feature = "debug")]
+use bevy::ecs::system::Res;
 use bevy::{
     app::{Plugin, Update},
     ecs::{
         message::{MessageReader, MessageWriter},
         query::{With, Without},
-        schedule::{common_conditions, IntoScheduleConfigs},
-        system::{Query, Res},
+        schedule::{IntoScheduleConfigs, common_conditions},
+        system::Query,
     },
 };
 use thetawave_core::CollisionDamage;
+use thetawave_core::HealthComponent;
 #[cfg(feature = "debug")]
 use thetawave_core::LoggingSettings;
-use thetawave_core::HealthComponent;
 use thetawave_mobs::{MobDeathEvent, MobMarker};
 use thetawave_player::{PlayerDeathEvent, PlayerStats};
 use thetawave_projectiles::{ProjectileSystemSet, ProjectileType};
@@ -57,9 +59,15 @@ pub fn detect_collisions_system(
                         player_entity: entity2,
                     });
                 }
-                thetawave_core::log_if!(logging_settings, combat, info,
+                thetawave_core::log_if!(
+                    logging_settings,
+                    combat,
+                    info,
                     "Projectile collision detected: Projectile (Entity {:?}) hit Player (Entity {:?}) for {} damage. Player health: {}",
-                    entity1, entity2, projectile_damage.0, player_health.current_health
+                    entity1,
+                    entity2,
+                    projectile_damage.0,
+                    player_health.current_health
                 );
             } else if let Ok(mut mob_health) = mob_q.get_mut(entity2) {
                 if mob_health.take_damage(projectile_damage.0) {
@@ -72,7 +80,10 @@ pub fn detect_collisions_system(
                     combat,
                     info,
                     "Projectile collision detected: Projectile (Entity {:?}) hit Mob (Entity {:?}) for {} damage. Mob health: {}",
-                    entity1, entity2, projectile_damage.0, mob_health.current_health
+                    entity1,
+                    entity2,
+                    projectile_damage.0,
+                    mob_health.current_health
                 );
             }
         } else if let Ok(projectile_damage) = projectile_q.get(entity2) {
@@ -88,7 +99,10 @@ pub fn detect_collisions_system(
                     combat,
                     info,
                     "Projectile collision detected: Projectile (Entity {:?}) hit Player (Entity {:?}) for {} damage. Player health: {}",
-                    entity2, entity1, projectile_damage.0, player_health.current_health
+                    entity2,
+                    entity1,
+                    projectile_damage.0,
+                    player_health.current_health
                 );
             } else if let Ok(mut mob_health) = mob_q.get_mut(entity1) {
                 if mob_health.take_damage(projectile_damage.0) {
@@ -101,7 +115,10 @@ pub fn detect_collisions_system(
                     combat,
                     info,
                     "Projectile collision detected: Projectile (Entity {:?}) hit Mob (Entity {:?}) for {} damage. Mob health: {}",
-                    entity2, entity1, projectile_damage.0, mob_health.current_health
+                    entity2,
+                    entity1,
+                    projectile_damage.0,
+                    mob_health.current_health
                 );
             }
         }

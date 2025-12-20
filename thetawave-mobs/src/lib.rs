@@ -26,7 +26,7 @@ use bevy::{
     state::condition::in_state,
 };
 use bevy_asset_loader::{
-    loading_state::{config::ConfigureLoadingState, LoadingStateAppExt},
+    loading_state::{LoadingStateAppExt, config::ConfigureLoadingState},
     prelude::LoadingStateConfig,
     standard_dynamic_asset::StandardDynamicAssetCollection,
 };

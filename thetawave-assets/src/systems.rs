@@ -16,9 +16,7 @@ use thetawave_core::{AppState, Faction};
 use super::data::{
     BackgroundAssets, GameAssets, LoadingProgressEvent, MusicAssets, ParticleMaterials, UiAssets,
 };
-use crate::{
-    ExtendedBackgroundAssets, ExtendedGameAssets, ExtendedMusicAssets, ExtendedUiAssets,
-};
+use crate::{ExtendedBackgroundAssets, ExtendedGameAssets, ExtendedMusicAssets, ExtendedUiAssets};
 
 /// Helper to get length of an optional HashMap, returning 0 if None.
 fn opt_map_len<K: Eq + Hash, V>(opt: &Option<HashMap<K, V>>) -> usize {
@@ -91,22 +89,29 @@ pub(super) fn log_main_menu_assets_system(
 
     info!(
         "UI Assets: {} sprites (+{} extended), {} images (+{} extended), {} fonts (+{} extended)",
-        ui_assets.sprites.len(), ext_ui_sprites,
-        ui_assets.images.len(), ext_ui_images,
-        ui_assets.fonts.len(), ext_ui_fonts,
+        ui_assets.sprites.len(),
+        ext_ui_sprites,
+        ui_assets.images.len(),
+        ext_ui_images,
+        ui_assets.fonts.len(),
+        ext_ui_fonts,
     );
     info!(
         "UI Audio: {} select (+{} extended), {} release (+{} extended), {} confirm (+{} extended)",
-        ui_assets.menu_button_select_effects.len(), ext_ui_btn_select,
-        ui_assets.menu_button_release_effects.len(), ext_ui_btn_release,
-        ui_assets.menu_button_confirm_effects.len(), ext_ui_btn_confirm,
+        ui_assets.menu_button_select_effects.len(),
+        ext_ui_btn_select,
+        ui_assets.menu_button_release_effects.len(),
+        ext_ui_btn_release,
+        ui_assets.menu_button_confirm_effects.len(),
+        ext_ui_btn_confirm,
     );
 
     // Log music assets
     let ext_music = opt_map_len(&extended_music_assets.music);
     info!(
         "Music Assets: {} tracks (+{} extended)",
-        music_assets.music.len(), ext_music
+        music_assets.music.len(),
+        ext_music
     );
 
     // Log background assets
@@ -114,8 +119,10 @@ pub(super) fn log_main_menu_assets_system(
     let ext_planets = opt_vec_len(&extended_bg_assets.planets);
     info!(
         "Background Assets: {} backgrounds (+{} extended), {} planets (+{} extended)",
-        bg_assets.space_backgrounds.len(), ext_backgrounds,
-        bg_assets.planets.len(), ext_planets
+        bg_assets.space_backgrounds.len(),
+        ext_backgrounds,
+        bg_assets.planets.len(),
+        ext_planets
     );
 }
 
@@ -130,8 +137,10 @@ pub(super) fn log_game_assets_system(
 
     info!(
         "Game Assets: {} sprites (+{} extended), {} particle effects (+{} extended)",
-        game_assets.sprites.len(), ext_sprites,
-        game_assets.particle_effects.len(), ext_particles
+        game_assets.sprites.len(),
+        ext_sprites,
+        game_assets.particle_effects.len(),
+        ext_particles
     );
 
     // Log extended sprite names if any

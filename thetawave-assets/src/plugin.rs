@@ -10,7 +10,9 @@ use bevy::{
     state::state::{OnEnter, OnExit},
 };
 use bevy_asset_loader::{
-    loading_state::{LoadingState, LoadingStateAppExt, LoadingStateSet, config::ConfigureLoadingState},
+    loading_state::{
+        LoadingState, LoadingStateAppExt, LoadingStateSet, config::ConfigureLoadingState,
+    },
     standard_dynamic_asset::StandardDynamicAssetCollection,
 };
 use iyes_progress::ProgressPlugin;
@@ -60,18 +62,24 @@ impl Plugin for ThetawaveAssetsPlugin {
             .load_collection::<ExtendedUiAssets>()
             .with_dynamic_assets_file::<StandardDynamicAssetCollection>("music.assets.ron")
             .load_collection::<MusicAssets>()
-            .with_dynamic_assets_file::<StandardDynamicAssetCollection>("extended://music.assets.ron")
+            .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
+                "extended://music.assets.ron",
+            )
             .load_collection::<ExtendedMusicAssets>()
             .with_dynamic_assets_file::<StandardDynamicAssetCollection>("background.assets.ron")
             .load_collection::<BackgroundAssets>()
-            .with_dynamic_assets_file::<StandardDynamicAssetCollection>("extended://background.assets.ron")
+            .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
+                "extended://background.assets.ron",
+            )
             .load_collection::<ExtendedBackgroundAssets>();
 
         // Configure game loading state
         let game_loading = LoadingState::new(AppState::GameLoading)
             .with_dynamic_assets_file::<StandardDynamicAssetCollection>("game.assets.ron")
             .load_collection::<GameAssets>()
-            .with_dynamic_assets_file::<StandardDynamicAssetCollection>("extended://game.assets.ron")
+            .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
+                "extended://game.assets.ron",
+            )
             .load_collection::<ExtendedGameAssets>();
 
         // ProgressPlugin handles state transitions
