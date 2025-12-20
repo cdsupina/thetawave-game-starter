@@ -1,9 +1,9 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use super::data::MobBehaviorType;
 
 /// Represents a node in the behavior tree that can be deserialized from TOML
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type", deny_unknown_fields)]
 pub enum BehaviorNodeData {
     /// Control Flow Nodes

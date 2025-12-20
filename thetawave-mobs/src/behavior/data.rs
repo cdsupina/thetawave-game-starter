@@ -3,7 +3,7 @@ use bevy::{
     prelude::Component,
     reflect::Reflect,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// Used for receiving behaviors from another mob's TransmitMobBehavior
 /// The entity is the mob entity that behaviors can be receieved from
@@ -16,7 +16,7 @@ pub struct BehaviorReceiverComponent(pub Entity);
 pub(crate) struct TargetComponent(pub Entity);
 
 /// Mob behaviors that can be run together at a single node in the behavior tree
-#[derive(Clone, PartialEq, Debug, Deserialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(tag = "action", deny_unknown_fields)]
 pub enum MobBehaviorType {
     // Movement behaviors

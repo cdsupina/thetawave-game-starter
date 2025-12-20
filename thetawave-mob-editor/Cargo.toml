@@ -1,0 +1,45 @@
+[package]
+name = "thetawave-mob-editor"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "mob-editor"
+path = "src/main.rs"
+
+[dependencies]
+# Workspace crates (reuse existing infrastructure)
+thetawave-mobs = { path = "../thetawave-mobs", default-features = false }
+thetawave-core = { path = "../thetawave-core", default-features = false }
+thetawave-physics = { path = "../thetawave-physics" }
+
+# Bevy core (minimal features for editor)
+bevy = { workspace = true, features = [
+    "bevy_asset",
+    "bevy_render",
+    "bevy_sprite",
+    "bevy_winit",
+    "bevy_core_pipeline",
+    "bevy_gizmos",
+    "png",
+    "multi_threaded",
+    "x11",
+    "wayland",
+] }
+
+# UI
+bevy_egui.workspace = true
+
+# Sprites
+bevy_aseprite_ultra.workspace = true
+
+# Serialization
+toml.workspace = true
+serde = { workspace = true, features = ["derive"] }
+
+# File dialogs
+rfd.workspace = true
+
+[features]
+default = ["dynamic_linking"]
+dynamic_linking = ["bevy/dynamic_linking"]
