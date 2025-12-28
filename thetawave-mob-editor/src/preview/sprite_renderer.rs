@@ -44,8 +44,8 @@ pub fn check_preview_update(
         return;
     }
 
-    // Check if sprite_key changed
-    if let Some(mob) = &session.current_mob {
+    // Check if sprite_key changed (use merged data for preview)
+    if let Some(mob) = session.mob_for_preview() {
         let sprite_key = get_sprite_key(mob, session.current_path.as_ref());
 
         if sprite_key != preview_state.current_sprite_key {
@@ -123,7 +123,8 @@ pub fn update_preview_mob(
         commands.entity(entity).despawn();
     }
 
-    let Some(mob) = &session.current_mob else {
+    // Use merged data for preview (falls back to current_mob for .mob files)
+    let Some(mob) = session.mob_for_preview() else {
         return;
     };
 

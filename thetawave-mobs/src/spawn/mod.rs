@@ -37,21 +37,32 @@ use crate::{
 };
 
 /// Bundle containing all the core physics and gameplay components for a mob entity.
+/// Note: Collider is added separately to support mobs with no colliders.
 #[derive(Bundle)]
 struct MobComponentBundle {
     name: Name,
     restitution: Restitution,
     friction: Friction,
-    collision_layers: CollisionLayers,
-    collider: Collider,
     locked_axes: LockedAxes,
-    collider_density: ColliderDensity,
     mob_attributes: MobAttributesComponent,
     health: HealthComponent,
 }
 
-impl From<&MobAsset> for MobComponentBundle {
-    fn from(mob: &MobAsset) -> Self {
+/// Bundle for collider-related components (only added when mob has colliders)
+#[derive(Bundle)]
+struct MobColliderBundle {
+    collision_layers: CollisionLayers,
+    collider: Collider,
+    collider_density: ColliderDensity,
+}
+
+impl MobColliderBundle {
+    /// Create collider bundle from mob asset, returns None if mob has no colliders
+    fn from_mob(mob: &MobAsset) -> Option<Self> {
+        if mob.colliders.is_empty() {
+            return None;
+        }
+
         // Calculate collision layers
         let mut membership: u32 = 0;
         for layer in &mob.collision_layer_membership {
@@ -76,6 +87,16 @@ impl From<&MobAsset> for MobComponentBundle {
                 .collect(),
         );
 
+        Some(MobColliderBundle {
+            collision_layers: CollisionLayers::new(membership, filter),
+            collider,
+            collider_density: ColliderDensity(mob.collider_density),
+        })
+    }
+}
+
+impl From<&MobAsset> for MobComponentBundle {
+    fn from(mob: &MobAsset) -> Self {
         // Determine locked axes
         let locked_axes = if mob.rotation_locked {
             LockedAxes::ROTATION_LOCKED
@@ -87,10 +108,7 @@ impl From<&MobAsset> for MobComponentBundle {
             name: Name::new(mob.name.clone()),
             restitution: Restitution::new(mob.restitution),
             friction: Friction::new(mob.friction),
-            collision_layers: CollisionLayers::new(membership, filter),
-            collider,
             locked_axes,
-            collider_density: ColliderDensity(mob.collider_density),
             mob_attributes: MobAttributesComponent {
                 linear_acceleration: mob.linear_acceleration,
                 linear_deceleration: mob.linear_deceleration,
@@ -253,6 +271,11 @@ fn spawn_mob(
         Transform::from_xyz(position.x, position.y, mob.z_level)
             .with_rotation(Quat::from_rotation_z(rotation.to_radians())),
     ));
+
+    // Add collider bundle only if mob has colliders
+    if let Some(collider_bundle) = MobColliderBundle::from_mob(mob) {
+        entity_commands.insert(collider_bundle);
+    }
 
     if let Some(mob_spawners) = &mob.mob_spawners {
         entity_commands.insert(mob_spawners.clone());

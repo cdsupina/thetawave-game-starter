@@ -158,24 +158,43 @@ fn handle_load_mob(
     time: Res<Time>,
 ) {
     for event in events.read() {
-        match FileOperations::load_file(&event.path) {
-            Ok(value) => {
-                // Determine file type
-                let file_type = if event.path.extension().is_some_and(|e| e == "mobpatch") {
-                    crate::data::FileType::MobPatch
-                } else {
-                    crate::data::FileType::Mob
-                };
+        // Determine file type
+        let is_patch = event.path.extension().is_some_and(|e| e == "mobpatch");
+        let file_type = if is_patch {
+            crate::data::FileType::MobPatch
+        } else {
+            crate::data::FileType::Mob
+        };
 
+        // Load file (with merging for patches)
+        let load_result = if is_patch {
+            FileOperations::load_patch_with_base(&event.path)
+                .map(|(patch, base, merged)| (patch, base, merged))
+        } else {
+            FileOperations::load_file(&event.path).map(|v| (v, None, None))
+        };
+
+        match load_result {
+            Ok((value, base, merged)) => {
                 session.current_mob = Some(value.clone());
                 session.original_mob = Some(value);
+                session.base_mob = base;
+                session.merged_for_preview = merged;
                 session.current_path = Some(event.path.clone());
                 session.file_type = file_type;
                 session.is_modified = false;
                 session.history.clear();
                 session.selected_collider = None;
                 session.selected_behavior_node = None;
-                session.set_status(format!("Loaded: {}", event.path.display()), &time);
+
+                let status = if is_patch && session.merged_for_preview.is_some() {
+                    format!("Loaded patch (merged with base): {}", event.path.display())
+                } else if is_patch {
+                    format!("Loaded patch (no base found): {}", event.path.display())
+                } else {
+                    format!("Loaded: {}", event.path.display())
+                };
+                session.set_status(status, &time);
 
                 next_state.set(EditorState::Editing);
             }
@@ -209,11 +228,14 @@ fn handle_save_mob(
             continue;
         };
 
-        // Validate before saving
-        let errors = FileOperations::validate(&mob);
-        if !errors.is_empty() {
-            session.set_status(format!("Validation errors: {}", errors.join(", ")), &time);
-            continue;
+        // Validate before saving (skip validation for patch files since they're partial)
+        let is_patch = session.file_type == crate::data::FileType::MobPatch;
+        if !is_patch {
+            let errors = FileOperations::validate(&mob);
+            if !errors.is_empty() {
+                session.set_status(format!("Validation errors: {}", errors.join(", ")), &time);
+                continue;
+            }
         }
 
         match FileOperations::save_file(&path, &mob) {

@@ -3,7 +3,6 @@ use bevy::{
     prelude::*,
     window::{PresentMode, WindowResolution},
 };
-use std::path::PathBuf;
 
 mod data;
 mod file;

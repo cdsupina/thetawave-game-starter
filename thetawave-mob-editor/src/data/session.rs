@@ -80,10 +80,19 @@ impl UndoHistory {
 #[derive(Resource)]
 pub struct EditorSession {
     /// Currently loaded mob as raw TOML value (allows flexible editing)
+    /// For .mobpatch files, this is the patch content only
     pub current_mob: Option<toml::Value>,
 
     /// Original mob value when loaded (for detecting actual modifications)
     pub original_mob: Option<toml::Value>,
+
+    /// Merged mob data for preview (base + patch for .mobpatch files)
+    /// For .mob files, this is None (use current_mob directly)
+    pub merged_for_preview: Option<toml::Value>,
+
+    /// Base mob data (for .mobpatch files only)
+    /// Used to show inherited values in the properties panel
+    pub base_mob: Option<toml::Value>,
 
     /// Path to the current file being edited
     pub current_path: Option<PathBuf>,
@@ -112,6 +121,8 @@ impl Default for EditorSession {
         Self {
             current_mob: None,
             original_mob: None,
+            merged_for_preview: None,
+            base_mob: None,
             current_path: None,
             file_type: FileType::Mob,
             is_modified: false,
@@ -191,5 +202,11 @@ impl EditorSession {
         );
 
         toml::Value::Table(table)
+    }
+
+    /// Get the mob data to use for preview rendering
+    /// Returns merged data for .mobpatch files, or current_mob for .mob files
+    pub fn mob_for_preview(&self) -> Option<&toml::Value> {
+        self.merged_for_preview.as_ref().or(self.current_mob.as_ref())
     }
 }

@@ -1,6 +1,7 @@
 use std::{fs, io, path::PathBuf};
 
 use bevy::prelude::*;
+use toml::Value;
 
 /// Errors that can occur during file operations
 #[derive(Debug)]
@@ -134,6 +135,88 @@ impl FileOperations {
     /// Validate a mob TOML value with full result
     pub fn validate_full(value: &toml::Value, is_patch: bool) -> super::validation::ValidationResult {
         super::validation::validate_mob(value, is_patch)
+    }
+
+    /// Find the base .mob file for a .mobpatch file
+    /// Looks for a .mob file with the same relative path in the base assets directory
+    pub fn find_base_mob(patch_path: &PathBuf) -> Option<PathBuf> {
+        let path_str = patch_path.to_string_lossy();
+
+        // Extract the relative path after "mobs/"
+        let mobs_idx = path_str.find("mobs/")?;
+        let relative = &path_str[mobs_idx..]; // e.g., "mobs/xhitara/spitter.mobpatch"
+
+        // Convert to .mob extension
+        let base_relative = relative.strip_suffix(".mobpatch")?.to_string() + ".mob";
+
+        // Get current working directory
+        let cwd = std::env::current_dir().ok()?;
+
+        // Search in base assets directory
+        let base_path = cwd.join("assets").join(&base_relative);
+        if base_path.exists() {
+            return Some(base_path);
+        }
+
+        // Also check parent directory's assets (workspace root)
+        let parent_base = cwd.parent()?.join("assets").join(&base_relative);
+        if parent_base.exists() {
+            return Some(parent_base);
+        }
+
+        None
+    }
+
+    /// Load a .mobpatch file and merge it with its base .mob file
+    /// Returns (patch_value, base_value, merged_value)
+    pub fn load_patch_with_base(patch_path: &PathBuf) -> Result<(Value, Option<Value>, Option<Value>), FileError> {
+        let patch = Self::load_file(patch_path)?;
+
+        // Try to find and load the base mob
+        if let Some(base_path) = Self::find_base_mob(patch_path) {
+            match Self::load_file(&base_path) {
+                Ok(base) => {
+                    // Merge patch into a copy of base
+                    let mut merged = base.clone();
+                    merge_toml_values(&mut merged, patch.clone());
+                    info!("Merged patch with base mob from: {:?}", base_path);
+                    Ok((patch, Some(base), Some(merged)))
+                }
+                Err(e) => {
+                    warn!("Failed to load base mob {:?}: {}", base_path, e);
+                    Ok((patch, None, None))
+                }
+            }
+        } else {
+            warn!("No base mob found for patch: {:?}", patch_path);
+            Ok((patch, None, None))
+        }
+    }
+}
+
+/// Recursively merge TOML values, with extended values taking precedence over base values.
+/// This handles tables, arrays, and primitive values correctly.
+pub fn merge_toml_values(base: &mut Value, extended: Value) {
+    match (base, extended) {
+        // Both are tables - merge recursively
+        (Value::Table(base_table), Value::Table(extended_table)) => {
+            for (key, extended_value) in extended_table {
+                match base_table.get_mut(&key) {
+                    Some(base_value) => {
+                        // Key exists in base - merge recursively
+                        merge_toml_values(base_value, extended_value);
+                    }
+                    None => {
+                        // Key doesn't exist in base - add it
+                        base_table.insert(key, extended_value);
+                    }
+                }
+            }
+        }
+        // For non-table values, extended completely replaces base
+        (base, extended) => {
+            *base = extended;
+        }
     }
 }
 

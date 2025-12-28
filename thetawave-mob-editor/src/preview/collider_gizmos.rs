@@ -18,7 +18,8 @@ pub fn draw_collider_gizmos(
         return;
     }
 
-    let Some(mob) = &session.current_mob else {
+    // Use merged data for preview (falls back to current_mob for .mob files)
+    let Some(mob) = session.mob_for_preview() else {
         return;
     };
 
@@ -202,7 +203,8 @@ pub fn draw_spawner_gizmos(
         return;
     }
 
-    let Some(mob) = &session.current_mob else {
+    // Use merged data for preview (falls back to current_mob for .mob files)
+    let Some(mob) = session.mob_for_preview() else {
         return;
     };
 
