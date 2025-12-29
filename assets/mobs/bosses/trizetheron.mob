@@ -2,8 +2,7 @@
 # Three headed and three eyed tentacled boss.
 
 name = "Trizetheron"
-
-sprite_key = "trizetheron_mob"
+sprite = "media/aseprite/trizetheron_mob.aseprite"
 
 linear_acceleration = [0.1, 0.1]
 

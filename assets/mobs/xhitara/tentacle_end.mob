@@ -2,6 +2,7 @@
 # End segment of a tentacle chain. Aggressively seeks players.
 
 name = "Xhitara Tentacle End"
+sprite = "media/aseprite/xhitara_tentacle_end_mob.aseprite"
 spawnable = false
 
 rotation_locked = false

@@ -2,8 +2,8 @@
 # Right claw component of the Ferritharax boss.
 
 name = "Ferritharax Right Claw"
+sprite = "media/aseprite/ferritharax_right_claw_mob.aseprite"
 spawnable = false
-sprite_key = "ferritharax_right_claw_mob"
 
 rotation_locked = false
 

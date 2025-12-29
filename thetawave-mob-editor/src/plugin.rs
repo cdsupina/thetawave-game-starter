@@ -5,10 +5,10 @@ use bevy_aseprite_ultra::AsepriteUltraPlugin;
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
 
 use crate::{
-    data::EditorSession,
+    data::{EditorSession, RegisteredSprite, SpriteRegistry, SpriteSource},
     file::{
-        DeleteMobEvent, FileOperations, FileTreeState, LoadMobEvent, NewMobEvent, ReloadMobEvent,
-        SaveMobEvent,
+        parse_assets_ron, DeleteMobEvent, FileOperations, FileTreeState, LoadMobEvent,
+        NewMobEvent, ReloadMobEvent, SaveMobEvent,
     },
     preview::{
         check_preview_update, draw_collider_gizmos, draw_grid, draw_spawner_gizmos,
@@ -59,7 +59,10 @@ impl Plugin for MobEditorPlugin {
             .init_resource::<PreviewSettings>()
             .init_resource::<PreviewState>()
             .init_resource::<FileDialogState>()
-            .init_resource::<DeleteDialogState>();
+            .init_resource::<DeleteDialogState>()
+            .init_resource::<SpriteRegistry>()
+            .init_resource::<SpriteRegistrationDialog>()
+            .init_resource::<SpriteSelectionDialog>();
 
         // Store config
         app.insert_resource(EditorConfig {
@@ -75,13 +78,14 @@ impl Plugin for MobEditorPlugin {
             .add_message::<DeleteMobEvent>();
 
         // Startup systems
-        app.add_systems(Startup, (setup_preview_camera, initial_scan_system));
+        app.add_systems(
+            Startup,
+            (setup_preview_camera, initial_scan_system, initial_sprite_scan),
+        );
 
         // UI system runs in EguiPrimaryContextPass schedule (required for egui input handling)
-        app.add_systems(
-            EguiPrimaryContextPass,
-            main_ui_system.run_if(not(in_state(EditorState::Loading))),
-        );
+        // Note: run_if removed due to system parameter limit; state check done inside main_ui_system
+        app.add_systems(EguiPrimaryContextPass, main_ui_system);
 
         // Preview update systems (order matters)
         app.add_systems(
@@ -118,6 +122,7 @@ impl Plugin for MobEditorPlugin {
                 handle_new_mob,
                 handle_delete_mob,
                 check_file_refresh,
+                check_sprite_registry_refresh,
             ),
         );
     }
@@ -130,6 +135,30 @@ pub struct EditorConfig {
     pub extended_assets_dir: Option<PathBuf>,
 }
 
+/// State for the sprite registration dialog
+#[derive(Resource, Default)]
+pub struct SpriteRegistrationDialog {
+    /// Whether the dialog is showing
+    pub show: bool,
+    /// Unregistered sprites found in the mob
+    pub unregistered_sprites: Vec<String>,
+    /// Path to save to after handling
+    pub pending_save_path: Option<PathBuf>,
+}
+
+/// State for the sprite selection confirmation dialog
+#[derive(Resource, Default)]
+pub struct SpriteSelectionDialog {
+    /// Whether the dialog is showing
+    pub show: bool,
+    /// The asset path of the registered sprite
+    pub asset_path: String,
+    /// The path to use in the mob file
+    pub mob_path: String,
+    /// Display name for the sprite
+    pub display_name: String,
+}
+
 /// Initial scan of the mobs directories
 fn initial_scan_system(
     mut file_tree: ResMut<FileTreeState>,
@@ -140,13 +169,86 @@ fn initial_scan_system(
     next_state.set(EditorState::Browsing);
 }
 
+/// Initial scan of sprites from .assets.ron files
+fn initial_sprite_scan(mut sprite_registry: ResMut<SpriteRegistry>) {
+    scan_sprite_registry(&mut sprite_registry);
+}
+
+/// Scan .assets.ron files and populate the sprite registry
+fn scan_sprite_registry(registry: &mut SpriteRegistry) {
+    registry.sprites.clear();
+    registry.parse_errors.clear();
+
+    let cwd = std::env::current_dir().unwrap_or_default();
+
+    // Scan base assets
+    let base_assets_ron = cwd.join("assets/game.assets.ron");
+    if base_assets_ron.exists() {
+        match parse_assets_ron(&base_assets_ron) {
+            Ok(paths) => {
+                for path in paths {
+                    let display_name = extract_sprite_display_name(&path);
+                    registry.sprites.push(RegisteredSprite {
+                        asset_path: path,
+                        display_name,
+                        source: SpriteSource::Base,
+                    });
+                }
+            }
+            Err(e) => registry.parse_errors.push(e),
+        }
+    }
+
+    // Scan extended assets
+    let extended_assets_ron = cwd.join("thetawave-test-game/assets/game.assets.ron");
+    if extended_assets_ron.exists() {
+        match parse_assets_ron(&extended_assets_ron) {
+            Ok(paths) => {
+                for path in paths {
+                    let display_name = extract_sprite_display_name(&path);
+                    registry.sprites.push(RegisteredSprite {
+                        asset_path: path,
+                        display_name,
+                        source: SpriteSource::Extended,
+                    });
+                }
+            }
+            Err(e) => registry.parse_errors.push(e),
+        }
+    }
+
+    // Sort by display name
+    registry.sprites.sort_by(|a, b| a.display_name.cmp(&b.display_name));
+    registry.needs_refresh = false;
+
+    info!(
+        "Loaded {} sprites ({} base, {} extended)",
+        registry.sprites.len(),
+        registry.base_sprites().count(),
+        registry.extended_sprites().count()
+    );
+}
+
+/// Extract display name (file stem) from a sprite path
+fn extract_sprite_display_name(path: &str) -> String {
+    std::path::Path::new(path)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or(path)
+        .to_string()
+}
+
 /// Check if file tree needs refresh
-fn check_file_refresh(
-    mut file_tree: ResMut<FileTreeState>,
-    config: Res<EditorConfig>,
-) {
+fn check_file_refresh(mut file_tree: ResMut<FileTreeState>, config: Res<EditorConfig>) {
     if file_tree.needs_refresh {
         file_tree.scan_directories(&config.base_assets_dir, config.extended_assets_dir.as_ref());
+    }
+}
+
+/// Check if sprite registry needs refresh
+fn check_sprite_registry_refresh(mut sprite_registry: ResMut<SpriteRegistry>) {
+    if sprite_registry.needs_refresh {
+        scan_sprite_registry(&mut sprite_registry);
     }
 }
 
@@ -209,6 +311,8 @@ fn handle_load_mob(
 fn handle_save_mob(
     mut events: MessageReader<SaveMobEvent>,
     mut session: ResMut<EditorSession>,
+    sprite_registry: Res<SpriteRegistry>,
+    mut registration_dialog: ResMut<SpriteRegistrationDialog>,
     time: Res<Time>,
 ) {
     for event in events.read() {
@@ -228,12 +332,14 @@ fn handle_save_mob(
             continue;
         };
 
-        // Validate before saving (skip validation for patch files since they're partial)
-        let is_patch = session.file_type == crate::data::FileType::MobPatch;
-        if !is_patch {
-            let errors = FileOperations::validate(&mob);
-            if !errors.is_empty() {
-                session.set_status(format!("Validation errors: {}", errors.join(", ")), &time);
+        // Check for unregistered sprites (only if dialog isn't already showing)
+        if !registration_dialog.show {
+            let unregistered = find_unregistered_sprites(&mob, &sprite_registry);
+            if !unregistered.is_empty() {
+                // Show dialog instead of saving
+                registration_dialog.show = true;
+                registration_dialog.unregistered_sprites = unregistered;
+                registration_dialog.pending_save_path = Some(path);
                 continue;
             }
         }
@@ -253,6 +359,36 @@ fn handle_save_mob(
             }
         }
     }
+}
+
+/// Find all unregistered sprites in a mob
+fn find_unregistered_sprites(mob: &toml::Value, registry: &SpriteRegistry) -> Vec<String> {
+    let mut unregistered = Vec::new();
+
+    // Check main sprite
+    if let Some(sprite) = mob.get("sprite").and_then(|v| v.as_str()) {
+        if !sprite.is_empty() && !registry.is_registered(sprite) {
+            unregistered.push(sprite.to_string());
+        }
+    }
+
+    // Check decorations
+    if let Some(decorations) = mob.get("decorations").and_then(|v| v.as_array()) {
+        for dec in decorations {
+            if let Some(arr) = dec.as_array() {
+                if let Some(sprite) = arr.first().and_then(|v| v.as_str()) {
+                    if !sprite.is_empty()
+                        && !registry.is_registered(sprite)
+                        && !unregistered.contains(&sprite.to_string())
+                    {
+                        unregistered.push(sprite.to_string());
+                    }
+                }
+            }
+        }
+    }
+
+    unregistered
 }
 
 /// Handle reloading the current mob from disk

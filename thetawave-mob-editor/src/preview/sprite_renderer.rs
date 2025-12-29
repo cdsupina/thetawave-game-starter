@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use bevy::prelude::*;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 
-use crate::{data::EditorSession, plugin::EditorConfig, states::EditorState};
+use crate::{data::EditorSession, states::EditorState};
 
 /// Marker component for the preview mob entity
 #[derive(Component)]
@@ -12,6 +12,19 @@ pub struct PreviewMob;
 /// Marker component for preview decoration entities
 #[derive(Component)]
 pub struct PreviewDecoration;
+
+/// Result of attempting to load a sprite
+#[derive(Debug, Clone, Default)]
+pub struct SpriteLoadInfo {
+    /// The sprite key being loaded
+    pub sprite_key: Option<String>,
+    /// Path where the sprite was found and loaded from (None if not found)
+    pub loaded_from: Option<PathBuf>,
+    /// Paths that were searched
+    pub searched_paths: Vec<PathBuf>,
+    /// Error message if sprite couldn't be loaded
+    pub error: Option<String>,
+}
 
 /// Resource tracking which mob is currently being previewed
 #[derive(Resource, Default)]
@@ -22,6 +35,10 @@ pub struct PreviewState {
     pub current_sprite_key: Option<String>,
     /// Whether the preview needs to be rebuilt
     pub needs_rebuild: bool,
+    /// Information about the current sprite load attempt
+    pub sprite_info: SpriteLoadInfo,
+    /// User-specified override path for sprite loading (editor-only, not saved)
+    pub sprite_override_path: Option<PathBuf>,
 }
 
 /// Check if the preview needs to be updated
@@ -41,50 +58,36 @@ pub fn check_preview_update(
         info!("File changed, triggering preview rebuild. Path: {:?}", session.current_path);
         preview_state.needs_rebuild = true;
         preview_state.current_path = session.current_path.clone();
+        // Clear sprite override when switching files
+        preview_state.sprite_override_path = None;
         return;
     }
 
-    // Check if sprite_key changed (use merged data for preview)
+    // Check if sprite changed (use merged data for preview)
     if let Some(mob) = session.mob_for_preview() {
-        let sprite_key = get_sprite_key(mob, session.current_path.as_ref());
+        let sprite_path = get_sprite_path(mob);
+        let sprite_key = sprite_path.as_ref().map(|p| sprite_path_to_key(p));
 
         if sprite_key != preview_state.current_sprite_key {
-            info!("Sprite key changed: {:?} -> {:?}", preview_state.current_sprite_key, sprite_key);
+            info!("Sprite changed: {:?} -> {:?}", preview_state.current_sprite_key, sprite_key);
             preview_state.needs_rebuild = true;
         }
     }
 }
 
-/// Get the sprite key from mob data, deriving it from the path if not specified
-fn get_sprite_key(mob: &toml::Value, path: Option<&PathBuf>) -> Option<String> {
-    // First check if sprite_key is explicitly set
-    if let Some(key) = mob.get("sprite_key").and_then(|v| v.as_str()) {
-        return Some(key.to_string());
-    }
+/// Get the sprite path from mob data
+fn get_sprite_path(mob: &toml::Value) -> Option<String> {
+    mob.get("sprite").and_then(|v| v.as_str()).map(String::from)
+}
 
-    // Otherwise derive from the file path
-    // e.g., "assets/mobs/xhitara/grunt.mob" -> "xhitara_grunt_mob"
-    if let Some(path) = path {
-        // Try to extract the mob reference from the path
-        let path_str = path.to_string_lossy();
-
-        // Find "mobs/" in the path and extract everything after it
-        if let Some(mobs_idx) = path_str.find("mobs/") {
-            let after_mobs = &path_str[mobs_idx + 5..]; // Skip "mobs/"
-
-            // Remove the extension
-            let without_ext = after_mobs
-                .strip_suffix(".mob")
-                .or_else(|| after_mobs.strip_suffix(".mobpatch"))
-                .unwrap_or(after_mobs);
-
-            // Replace / with _ and append _mob
-            let derived = format!("{}_mob", without_ext.replace('/', "_"));
-            return Some(derived);
-        }
-    }
-
-    None
+/// Extract asset key from sprite path.
+/// "media/aseprite/xhitara_grunt_mob.aseprite" → "xhitara_grunt_mob"
+fn sprite_path_to_key(path: &str) -> String {
+    std::path::Path::new(path)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or(path)
+        .to_string()
 }
 
 /// Spawn or update the preview mob entity
@@ -92,7 +95,6 @@ pub fn update_preview_mob(
     mut commands: Commands,
     session: Res<EditorSession>,
     mut preview_state: ResMut<PreviewState>,
-    config: Res<EditorConfig>,
     asset_server: Res<AssetServer>,
     existing_mobs: Query<Entity, With<PreviewMob>>,
     existing_decorations: Query<Entity, With<PreviewDecoration>>,
@@ -107,6 +109,7 @@ pub fn update_preview_mob(
             commands.entity(entity).despawn();
         }
         preview_state.current_sprite_key = None;
+        preview_state.sprite_info = SpriteLoadInfo::default();
         return;
     }
 
@@ -125,11 +128,19 @@ pub fn update_preview_mob(
 
     // Use merged data for preview (falls back to current_mob for .mob files)
     let Some(mob) = session.mob_for_preview() else {
+        preview_state.sprite_info = SpriteLoadInfo {
+            sprite_key: None,
+            loaded_from: None,
+            searched_paths: vec![],
+            error: Some("No mob data loaded".to_string()),
+        };
         return;
     };
 
-    // Get sprite key (explicit or derived)
-    let sprite_key = get_sprite_key(mob, session.current_path.as_ref());
+    // Get sprite path from mob data
+    let sprite_path = get_sprite_path(mob);
+    // For change detection, use the path with extended:// stripped
+    let sprite_key = sprite_path.as_ref().map(|p| sprite_path_to_key(strip_extended_prefix(p)));
     preview_state.current_sprite_key = sprite_key.clone();
 
     // Get z_level
@@ -139,9 +150,27 @@ pub fn update_preview_mob(
         .unwrap_or(0.0) as f32;
 
     // Try to load the sprite
-    if let Some(ref key) = sprite_key {
-        if let Some(aseprite_handle) = try_load_sprite(key, &config, &asset_server) {
-            info!("Loading sprite for mob preview: {}", key);
+    if let Some(ref path) = sprite_path {
+        let load_result = try_load_sprite_from_path(
+            path,
+            preview_state.sprite_override_path.as_ref(),
+            &asset_server,
+        );
+
+        // Update sprite info for UI display
+        preview_state.sprite_info = SpriteLoadInfo {
+            sprite_key: sprite_path.clone(),
+            loaded_from: load_result.loaded_from.clone(),
+            searched_paths: load_result.searched_paths,
+            error: if load_result.handle.is_none() {
+                Some(format!("Sprite '{}' not found", path))
+            } else {
+                None
+            },
+        };
+
+        if let Some(aseprite_handle) = load_result.handle {
+            info!("Loading sprite for mob preview: {}", path);
 
             // Spawn the main mob preview entity
             let mob_entity = commands
@@ -161,55 +190,111 @@ pub fn update_preview_mob(
                 &mut commands,
                 mob,
                 mob_entity,
-                &config,
+                preview_state.sprite_override_path.as_ref(),
                 &asset_server,
             );
         } else {
-            warn!("Could not find sprite: {}", key);
+            warn!("Could not find sprite: {}", path);
         }
     } else {
-        warn!("No sprite_key found for mob");
+        preview_state.sprite_info = SpriteLoadInfo {
+            sprite_key: None,
+            loaded_from: None,
+            searched_paths: vec![],
+            error: Some("No 'sprite' field in mob data".to_string()),
+        };
+        warn!("No sprite field found for mob");
     }
 }
 
-/// Try to load a sprite by key from various asset directories
-fn try_load_sprite(
-    sprite_key: &str,
-    _config: &EditorConfig,
-    asset_server: &AssetServer,
-) -> Option<Handle<Aseprite>> {
-    let filename = format!("{}.aseprite", sprite_key);
-    let relative_path = format!("media/aseprite/{}", filename);
+/// Result of trying to load a sprite
+struct SpriteLoadResult {
+    handle: Option<Handle<Aseprite>>,
+    loaded_from: Option<PathBuf>,
+    searched_paths: Vec<PathBuf>,
+}
 
-    // Get current working directory for building absolute paths
+/// Check if a sprite path uses the extended:// prefix
+fn is_extended_path(path: &str) -> bool {
+    path.starts_with("extended://")
+}
+
+/// Strip the extended:// prefix from a path if present
+fn strip_extended_prefix(path: &str) -> &str {
+    path.strip_prefix("extended://").unwrap_or(path)
+}
+
+/// Try to load a sprite from a full path (supports extended:// prefix)
+fn try_load_sprite_from_path(
+    sprite_path: &str,
+    override_path: Option<&PathBuf>,
+    asset_server: &AssetServer,
+) -> SpriteLoadResult {
+    // If we have an override path, try that first
+    if let Some(override_path) = override_path {
+        if override_path.exists() {
+            let abs_path = override_path.to_string_lossy().to_string();
+            info!("Loading sprite from override path: {:?}", override_path);
+            return SpriteLoadResult {
+                handle: Some(asset_server.load(abs_path)),
+                loaded_from: Some(override_path.clone()),
+                searched_paths: vec![override_path.clone()],
+            };
+        } else {
+            warn!("Override sprite path does not exist: {:?}", override_path);
+        }
+    }
+
     let cwd = std::env::current_dir().unwrap_or_default();
 
-    // Build list of filesystem paths to check
-    let search_paths: Vec<PathBuf> = vec![
-        // Base assets directory
-        cwd.join("assets").join(&relative_path),
-        // Extended assets (thetawave-test-game)
-        cwd.join("thetawave-test-game/assets").join(&relative_path),
-    ];
+    // Check for extended:// prefix
+    let (relative_path, search_extended_first) = if is_extended_path(sprite_path) {
+        (strip_extended_prefix(sprite_path), true)
+    } else {
+        (sprite_path, false)
+    };
+
+    // Build list of filesystem paths to check based on prefix
+    let search_paths: Vec<PathBuf> = if search_extended_first {
+        vec![
+            // Extended assets first (thetawave-test-game)
+            cwd.join("thetawave-test-game/assets").join(relative_path),
+            // Fall back to base assets
+            cwd.join("assets").join(relative_path),
+        ]
+    } else {
+        vec![
+            // Base assets directory first
+            cwd.join("assets").join(relative_path),
+            // Extended assets (thetawave-test-game)
+            cwd.join("thetawave-test-game/assets").join(relative_path),
+        ]
+    };
 
     // Check each location
     for fs_path in &search_paths {
         if fs_path.exists() {
-            // Use absolute path for loading to handle both base and extended assets
             let abs_path = fs_path.to_string_lossy().to_string();
             info!("Found sprite at: {:?}, loading with absolute path", fs_path);
-            return Some(asset_server.load(abs_path));
+            return SpriteLoadResult {
+                handle: Some(asset_server.load(abs_path)),
+                loaded_from: Some(fs_path.clone()),
+                searched_paths: search_paths,
+            };
         }
     }
 
-    // Log what we tried
     warn!(
         "Sprite '{}' not found. Searched: {:?}",
-        sprite_key,
+        sprite_path,
         search_paths
     );
 
-    None
+    SpriteLoadResult {
+        handle: None,
+        loaded_from: None,
+        searched_paths: search_paths,
+    }
 }
 
 /// Spawn decoration sprites as separate entities
@@ -217,7 +302,7 @@ fn spawn_decorations(
     commands: &mut Commands,
     mob: &toml::Value,
     _parent: Entity,
-    config: &EditorConfig,
+    override_path: Option<&PathBuf>,
     asset_server: &AssetServer,
 ) {
     let Some(decorations) = mob.get("decorations").and_then(|v| v.as_array()) else {
@@ -232,8 +317,9 @@ fn spawn_decorations(
             continue;
         }
 
-        // First element is the sprite key
-        let Some(sprite_key) = arr[0].as_str() else {
+        // First element is the sprite path (e.g., "media/aseprite/xhitara_grunt_thrusters.aseprite")
+        // May also use extended:// prefix for extended assets
+        let Some(sprite_path) = arr[0].as_str() else {
             continue;
         };
 
@@ -246,9 +332,10 @@ fn spawn_decorations(
             Vec2::ZERO
         };
 
-        // Try to load the decoration sprite
-        if let Some(handle) = try_load_sprite(sprite_key, config, asset_server) {
-            info!("Loading decoration sprite: {} at {:?}", sprite_key, position);
+        // Try to load the decoration sprite using the full path (supports extended:// prefix)
+        let load_result = try_load_sprite_from_path(sprite_path, override_path, asset_server);
+        if let Some(handle) = load_result.handle {
+            info!("Loading decoration sprite: {} at {:?}", sprite_path, position);
             commands.spawn((
                 PreviewDecoration,
                 AseAnimation {

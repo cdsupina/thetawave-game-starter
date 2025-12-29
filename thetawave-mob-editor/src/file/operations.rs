@@ -12,7 +12,6 @@ pub enum FileError {
     Trash(trash::Error),
     AlreadyExists,
     NotFound,
-    InvalidPath,
 }
 
 impl From<io::Error> for FileError {
@@ -48,7 +47,6 @@ impl std::fmt::Display for FileError {
             FileError::Trash(e) => write!(f, "Trash error: {}", e),
             FileError::AlreadyExists => write!(f, "File already exists"),
             FileError::NotFound => write!(f, "File not found"),
-            FileError::InvalidPath => write!(f, "Invalid file path"),
         }
     }
 }
@@ -123,18 +121,6 @@ impl FileOperations {
 
         Self::save_file(path, &value)?;
         Ok(value)
-    }
-
-    /// Validate a mob TOML value
-    /// Returns error messages as strings for backward compatibility
-    pub fn validate(value: &toml::Value) -> Vec<String> {
-        let result = super::validation::validate_mob(value, false);
-        result.error_messages()
-    }
-
-    /// Validate a mob TOML value with full result
-    pub fn validate_full(value: &toml::Value, is_patch: bool) -> super::validation::ValidationResult {
-        super::validation::validate_mob(value, is_patch)
     }
 
     /// Find the base .mob file for a .mobpatch file

@@ -2,13 +2,14 @@
 # Moves down and to the side. Switches direction when hit. Also shoots projectiles.
 
 name = "Xhitara Pacer"
+sprite = "media/aseprite/xhitara_pacer_mob.aseprite"
 
 colliders = [
     { shape = { Rectangle = [19.0, 8.0] }, position = [0.0, 0.0], rotation = 0.0 }
 ]
 
 decorations = [
-    ["xhitara_pacer_thrusters", [0.0, 6.5]],
+    ["media/aseprite/xhitara_pacer_thrusters.aseprite", [0.0, 6.5]],
 ]
 
 [projectile_spawners.spawners.south]

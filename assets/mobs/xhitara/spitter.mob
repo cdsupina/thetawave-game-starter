@@ -2,6 +2,7 @@
 # Moves down and shoots projectiles.
 
 name = "Xhitara Spitter"
+sprite = "media/aseprite/xhitara_spitter_mob.aseprite"
 
 colliders = [
     { shape = { Rectangle = [14.0, 15.0] }, position = [0.0, 0.0], rotation = 0.0 }
@@ -11,7 +12,7 @@ max_linear_speed = [10.0, 15.0]
 projectile_speed = 130.0
 
 decorations = [
-    ["xhitara_spitter_thrusters", [0.0, 11.0]],
+    ["media/aseprite/xhitara_spitter_thrusters.aseprite", [0.0, 11.0]],
 ]
 
 [projectile_spawners.spawners.south]

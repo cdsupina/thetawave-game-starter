@@ -2,8 +2,7 @@
 # Spawns with two cargo attached. If its cargo makes it to the bottom of the arena, the defence bar is healed.
 
 name = "Freighter Two"
-
-sprite_key = "freighter_front_mob"
+sprite = "media/aseprite/freighter_front_mob.aseprite"
 
 colliders = [
     { shape = { Rectangle = [13.0, 8.0] }, position = [0.0, 0.0], rotation = 0.0 }
@@ -13,7 +12,7 @@ collision_layer_membership = ["AllyMob"]
 collision_layer_filter = ["EnemyMob", "AllyMob", "Player", "EnemyTentacle", "EnemyProjectile"]
 
 decorations = [
-    ["freighter_thrusters", [0.0, 8.5]],
+    ["media/aseprite/freighter_thrusters.aseprite", [0.0, 8.5]],
 ]
 
 [[jointed_mobs]]

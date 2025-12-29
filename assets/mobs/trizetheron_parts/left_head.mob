@@ -2,8 +2,8 @@
 # Left head component of the Trizetheron boss.
 
 name = "Trizetheron Left Head"
+sprite = "media/aseprite/trizetheron_left_head_mob.aseprite"
 spawnable = false
-sprite_key = "trizetheron_left_head_mob"
 
 rotation_locked = false
 z_level = 1.0

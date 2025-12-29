@@ -10,15 +10,6 @@ pub enum FileType {
     MobPatch,
 }
 
-impl FileType {
-    pub fn extension(&self) -> &'static str {
-        match self {
-            FileType::Mob => "mob",
-            FileType::MobPatch => "mobpatch",
-        }
-    }
-}
-
 /// Stores the undo/redo history for the current editing session
 #[derive(Default)]
 pub struct UndoHistory {
@@ -144,11 +135,6 @@ impl EditorSession {
         };
     }
 
-    /// Mark the current state as modified (call before making changes)
-    pub fn mark_modified(&mut self) {
-        self.is_modified = true;
-    }
-
     /// Set a status message that will be displayed temporarily
     pub fn set_status(&mut self, message: impl Into<String>, time: &Time) {
         self.status_message = Some((message.into(), time.elapsed_secs_f64() + 3.0));
@@ -163,19 +149,35 @@ impl EditorSession {
         }
     }
 
-    /// Get the mob name from the current TOML data
-    pub fn get_mob_name(&self) -> Option<String> {
-        self.current_mob.as_ref().and_then(|v| {
-            v.get("name")
-                .and_then(|n| n.as_str())
-                .map(|s| s.to_string())
-        })
+    /// Check if the current file is from the extended assets directory
+    /// (i.e., in thetawave-test-game/assets/mobs/)
+    pub fn is_extended_mob(&self) -> bool {
+        self.current_path
+            .as_ref()
+            .map(|p| {
+                let path_str = p.to_string_lossy();
+                path_str.contains("thetawave-test-game")
+            })
+            .unwrap_or(false)
+    }
+
+    /// Check if extended sprites should be available for the current file
+    /// Extended sprites are available for:
+    /// - Extended mobs (in thetawave-test-game/assets/mobs/)
+    /// - All mobpatches (they can override with extended sprites)
+    pub fn can_use_extended_sprites(&self) -> bool {
+        self.file_type == FileType::MobPatch || self.is_extended_mob()
     }
 
     /// Create a new empty mob with defaults
     pub fn new_mob(name: &str) -> toml::Value {
         let mut table = toml::value::Table::new();
         table.insert("name".to_string(), toml::Value::String(name.to_string()));
+        // Default sprite path - user should update this
+        table.insert(
+            "sprite".to_string(),
+            toml::Value::String(format!("media/aseprite/{}_mob.aseprite", name.to_lowercase().replace(' ', "_"))),
+        );
         table.insert("spawnable".to_string(), toml::Value::Boolean(true));
         table.insert("health".to_string(), toml::Value::Integer(50));
 

@@ -1,6 +1,8 @@
+use std::path::PathBuf;
+
 use bevy_egui::egui;
 
-use crate::data::{EditorSession, FileType};
+use crate::data::{EditorSession, FileType, SpriteRegistry, SpriteSource};
 
 /// Color for patched/overridden values
 const PATCHED_COLOR: egui::Color32 = egui::Color32::from_rgb(100, 200, 255);
@@ -12,8 +14,35 @@ const PROJECTILE_TYPES: &[&str] = &["Bullet", "Blast"];
 /// Valid faction types
 const FACTIONS: &[&str] = &["Enemy", "Ally"];
 
+/// Result of browsing for a sprite to register
+#[derive(Debug, Clone)]
+pub enum BrowseResult {
+    /// Successfully identified a sprite to register
+    Register(BrowseRegistrationRequest),
+    /// File was selected but is not in a valid assets directory
+    InvalidLocation(String),
+}
+
+/// Request to browse for and register a new sprite
+#[derive(Debug, Clone)]
+pub struct BrowseRegistrationRequest {
+    /// The asset path (relative to assets directory)
+    pub asset_path: String,
+    /// Whether this is an extended sprite
+    pub is_extended: bool,
+    /// The path to use in the mob file
+    pub mob_path: String,
+}
+
 /// Render the properties editing panel
-pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
+/// Returns a BrowseResult if the user clicked browse to add a new sprite
+pub fn properties_panel_ui(
+    ui: &mut egui::Ui,
+    session: &mut EditorSession,
+    sprite_registry: &SpriteRegistry,
+) -> Option<BrowseResult> {
+    let mut browse_result: Option<BrowseResult> = None;
+
     ui.heading("Properties");
 
     // Show patch indicator if applicable
@@ -54,12 +83,12 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
 
     let Some(display_mob) = display_mob else {
         ui.label("No mob loaded");
-        return;
+        return None;
     };
 
     let Some(display_table) = display_mob.as_table().cloned() else {
         ui.colored_label(egui::Color32::RED, "Invalid mob data");
-        return;
+        return None;
     };
 
     // Get patch table for checking what's overridden
@@ -120,32 +149,30 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
                         FieldResult::NoChange => {}
                     }
 
-                    // Sprite Key
-                    let is_patched = is_patch && patch_table.contains_key("sprite_key");
-                    match render_optional_string_field(
-                        ui, "Sprite Key:", "sprite_key",
-                        display_table.get("sprite_key").and_then(|v| v.as_str()),
-                        is_patched, is_patch,
+                    // Sprite (dropdown picker from registered sprites)
+                    if let Some(result) = render_sprite_picker(
+                        ui,
+                        &display_table,
+                        &patch_table,
+                        session,
+                        sprite_registry,
+                        is_patch,
+                        &mut modified,
                     ) {
-                        FieldResult::Changed(new_val) => {
-                            if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-                                if let Some(val) = new_val {
-                                    mob.insert("sprite_key".to_string(), toml::Value::String(val));
-                                } else {
-                                    mob.remove("sprite_key");
-                                }
-                                modified = true;
-                            }
-                        }
-                        FieldResult::Reset => {
-                            if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-                                mob.remove("sprite_key");
-                                modified = true;
-                            }
-                        }
-                        FieldResult::NoChange => {}
+                        browse_result = Some(result);
                     }
                 });
+
+            // Decorations section
+            render_decorations_section(
+                ui,
+                &display_table,
+                &patch_table,
+                session,
+                sprite_registry,
+                is_patch,
+                &mut modified,
+            );
 
             // Combat section
             egui::CollapsingHeader::new("Combat")
@@ -439,6 +466,8 @@ pub fn properties_panel_ui(ui: &mut egui::Ui, session: &mut EditorSession) {
         }
         session.check_modified();
     }
+
+    browse_result
 }
 
 /// Render a patch indicator (● for patched, ○ for inherited)
@@ -503,45 +532,6 @@ fn render_string_field(
 
         if response.changed() {
             result = FieldResult::Changed(value);
-        }
-
-        if render_reset_button(ui, is_patched, is_patch_file) {
-            result = FieldResult::Reset;
-        }
-    });
-    result
-}
-
-/// Render an optional string field
-fn render_optional_string_field(
-    ui: &mut egui::Ui,
-    label: &str,
-    _key: &str,
-    current_value: Option<&str>,
-    is_patched: bool,
-    is_patch_file: bool,
-) -> FieldResult<Option<String>> {
-    let mut result = FieldResult::NoChange;
-    ui.horizontal(|ui| {
-        render_patch_indicator(ui, is_patched, is_patch_file);
-
-        let text_color = if is_patch_file && !is_patched {
-            INHERITED_COLOR
-        } else {
-            ui.style().visuals.text_color()
-        };
-
-        ui.label(egui::RichText::new(label).color(text_color));
-
-        let mut value = current_value.unwrap_or("").to_string();
-        let response = ui.text_edit_singleline(&mut value);
-
-        if response.changed() {
-            if value.is_empty() {
-                result = FieldResult::Changed(None);
-            } else {
-                result = FieldResult::Changed(Some(value));
-            }
         }
 
         if render_reset_button(ui, is_patched, is_patch_file) {
@@ -1595,6 +1585,585 @@ fn rename_spawner_by_name(session: &mut EditorSession, spawner_type: &str, old_n
                     spawners.insert(new_name.to_string(), data);
                 }
             }
+        }
+    }
+}
+
+/// Render a sprite picker dropdown
+/// Returns a BrowseResult if user clicked browse and selected a file
+fn render_sprite_picker(
+    ui: &mut egui::Ui,
+    display_table: &toml::value::Table,
+    patch_table: &toml::value::Table,
+    session: &mut EditorSession,
+    sprite_registry: &SpriteRegistry,
+    is_patch: bool,
+    modified: &mut bool,
+) -> Option<BrowseResult> {
+    let mut browse_result: Option<BrowseResult> = None;
+
+    let is_patched = is_patch && patch_table.contains_key("sprite");
+    let current_sprite = display_table
+        .get("sprite")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    // Normalize for comparison (strip extended:// prefix)
+    let normalized_current = current_sprite
+        .strip_prefix("extended://")
+        .unwrap_or(current_sprite);
+
+    ui.horizontal(|ui| {
+        render_patch_indicator(ui, is_patched, is_patch);
+
+        let text_color = if is_patch && !is_patched {
+            INHERITED_COLOR
+        } else {
+            ui.style().visuals.text_color()
+        };
+
+        ui.label(egui::RichText::new("Sprite:").color(text_color));
+
+        // Determine if current sprite is registered
+        let is_registered = sprite_registry.is_registered(current_sprite);
+        let display_text = if is_registered {
+            sprite_registry.display_name_for(current_sprite)
+        } else if current_sprite.is_empty() {
+            "(none)".to_string()
+        } else {
+            format!("{} ⚠", sprite_registry.display_name_for(current_sprite))
+        };
+
+        let mut selected_path = current_sprite.to_string();
+
+        egui::ComboBox::from_id_salt("sprite_picker")
+            .selected_text(&display_text)
+            .width(160.0)
+            .show_ui(ui, |ui| {
+                // Option for no sprite
+                if ui
+                    .selectable_label(current_sprite.is_empty(), "(none)")
+                    .clicked()
+                {
+                    selected_path = String::new();
+                }
+
+                ui.separator();
+
+                // Base sprites section
+                let base_sprites: Vec<_> = sprite_registry.base_sprites().collect();
+                if !base_sprites.is_empty() {
+                    ui.label(
+                        egui::RichText::new("Base Sprites")
+                            .small()
+                            .color(egui::Color32::GRAY),
+                    );
+                    for sprite in base_sprites {
+                        let is_selected = normalized_current == sprite.asset_path;
+                        if ui
+                            .selectable_label(is_selected, &sprite.display_name)
+                            .clicked()
+                        {
+                            selected_path = sprite.mob_path();
+                        }
+                    }
+                }
+
+                // Extended sprites section (only for extended mobs or mobpatches)
+                if session.can_use_extended_sprites() {
+                    let extended_sprites: Vec<_> = sprite_registry.extended_sprites().collect();
+                    if !extended_sprites.is_empty() {
+                        ui.separator();
+                        ui.label(
+                            egui::RichText::new("Extended Sprites")
+                                .small()
+                                .color(PATCHED_COLOR),
+                        );
+                        for sprite in extended_sprites {
+                            let is_selected = normalized_current == sprite.asset_path;
+                            if ui
+                                .selectable_label(is_selected, &sprite.display_name)
+                                .clicked()
+                            {
+                                // For patches, use extended:// prefix for extended sprites
+                                selected_path = if is_patch && sprite.source == SpriteSource::Extended {
+                                    sprite.mobpatch_path()
+                                } else {
+                                    sprite.mob_path()
+                                };
+                            }
+                        }
+                    }
+                }
+
+                // Show current unregistered sprite at bottom if applicable
+                if !is_registered && !current_sprite.is_empty() {
+                    ui.separator();
+                    ui.label(
+                        egui::RichText::new("Current (Unregistered)")
+                            .small()
+                            .color(egui::Color32::YELLOW),
+                    );
+                    let _ = ui.selectable_label(true, &sprite_registry.display_name_for(current_sprite));
+                }
+            });
+
+        // Apply change if different
+        if selected_path != current_sprite {
+            if let Some(mob) = session
+                .current_mob
+                .as_mut()
+                .and_then(|v| v.as_table_mut())
+            {
+                if selected_path.is_empty() {
+                    mob.remove("sprite");
+                } else {
+                    mob.insert("sprite".to_string(), toml::Value::String(selected_path));
+                }
+                *modified = true;
+            }
+        }
+
+        // Reset button for patches
+        if render_reset_button(ui, is_patched, is_patch) {
+            if let Some(mob) = session
+                .current_mob
+                .as_mut()
+                .and_then(|v| v.as_table_mut())
+            {
+                mob.remove("sprite");
+                *modified = true;
+            }
+        }
+    });
+
+    // Browse & Register button row
+    ui.horizontal(|ui| {
+        ui.add_space(16.0);
+
+        if ui.small_button("Browse & Register...").clicked() {
+            // Open file dialog
+            if let Some(path) = rfd::FileDialog::new()
+                .add_filter("Aseprite Files", &["aseprite", "ase"])
+                .set_title("Select Sprite to Register")
+                .pick_file()
+            {
+                // Analyze the path to determine if it's valid
+                let can_use_extended = session.can_use_extended_sprites();
+                browse_result = Some(analyze_sprite_path(&path, is_patch, can_use_extended));
+            }
+        }
+
+        ui.label(
+            egui::RichText::new("Add new sprite to assets")
+                .small()
+                .color(egui::Color32::GRAY),
+        );
+    });
+
+    // Show warning if unregistered
+    if !sprite_registry.is_registered(current_sprite) && !current_sprite.is_empty() {
+        ui.horizontal(|ui| {
+            ui.add_space(16.0);
+            ui.label(
+                egui::RichText::new("⚠ Not in game.assets.ron")
+                    .small()
+                    .color(egui::Color32::YELLOW),
+            );
+        });
+    }
+
+    browse_result
+}
+
+/// Analyze a filesystem path to determine its asset path and whether it's base or extended
+fn analyze_sprite_path(
+    filesystem_path: &PathBuf,
+    is_patch: bool,
+    can_use_extended: bool,
+) -> BrowseResult {
+    let Some(cwd) = std::env::current_dir().ok() else {
+        return BrowseResult::InvalidLocation(
+            "Could not determine current directory".to_string()
+        );
+    };
+
+    // Check if it's in extended assets directory
+    let extended_assets_dir = cwd.join("thetawave-test-game/assets");
+    let base_assets_dir = cwd.join("assets");
+
+    if let Ok(relative) = filesystem_path.strip_prefix(&extended_assets_dir) {
+        // Extended asset - check if allowed
+        if !can_use_extended {
+            return BrowseResult::InvalidLocation(
+                "Extended sprites are only available for mobpatches and extended mobs. \
+                 Base game mobs can only use sprites from 'assets/'."
+                    .to_string(),
+            );
+        }
+
+        let asset_path = relative.to_string_lossy().to_string();
+        let mob_path = if is_patch {
+            format!("extended://{}", asset_path)
+        } else {
+            asset_path.clone()
+        };
+        BrowseResult::Register(BrowseRegistrationRequest {
+            asset_path,
+            is_extended: true,
+            mob_path,
+        })
+    } else if let Ok(relative) = filesystem_path.strip_prefix(&base_assets_dir) {
+        // Base asset
+        let asset_path = relative.to_string_lossy().to_string();
+        BrowseResult::Register(BrowseRegistrationRequest {
+            asset_path: asset_path.clone(),
+            is_extended: false,
+            mob_path: asset_path,
+        })
+    } else {
+        // File is not in either assets directory
+        BrowseResult::InvalidLocation(format!(
+            "Sprite must be in 'assets/' or 'thetawave-test-game/assets/'. \
+             Selected file is outside these directories: {}",
+            filesystem_path.display()
+        ))
+    }
+}
+
+/// Render the decorations section with sprite pickers
+fn render_decorations_section(
+    ui: &mut egui::Ui,
+    display_table: &toml::value::Table,
+    patch_table: &toml::value::Table,
+    session: &mut EditorSession,
+    sprite_registry: &SpriteRegistry,
+    is_patch: bool,
+    modified: &mut bool,
+) {
+    let is_patched = is_patch && patch_table.contains_key("decorations");
+
+    egui::CollapsingHeader::new("Decorations")
+        .default_open(false)
+        .show(ui, |ui| {
+            ui.horizontal(|ui| {
+                render_patch_indicator(ui, is_patched, is_patch);
+                if is_patch && !is_patched {
+                    ui.label(
+                        egui::RichText::new("(inherited from base)")
+                            .small()
+                            .color(INHERITED_COLOR),
+                    );
+                }
+            });
+
+            // Get decorations array
+            let decorations = display_table
+                .get("decorations")
+                .and_then(|v| v.as_array())
+                .cloned()
+                .unwrap_or_default();
+
+            if decorations.is_empty() {
+                ui.label(
+                    egui::RichText::new("No decorations")
+                        .small()
+                        .color(egui::Color32::GRAY),
+                );
+            }
+
+            let mut delete_index: Option<usize> = None;
+
+            for (i, decoration) in decorations.iter().enumerate() {
+                let Some(arr) = decoration.as_array() else {
+                    continue;
+                };
+                if arr.len() < 2 {
+                    continue;
+                }
+
+                let sprite_path = arr[0].as_str().unwrap_or("");
+                let position = if let Some(pos_arr) = arr[1].as_array() {
+                    let x = pos_arr
+                        .first()
+                        .and_then(|v| v.as_float())
+                        .unwrap_or(0.0) as f32;
+                    let y = pos_arr.get(1).and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
+                    (x, y)
+                } else {
+                    (0.0, 0.0)
+                };
+
+                ui.group(|ui| {
+                    ui.horizontal(|ui| {
+                        ui.label(format!("#{}", i + 1));
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            if ui
+                                .button(egui::RichText::new("🗑").color(egui::Color32::RED))
+                                .on_hover_text("Delete decoration")
+                                .clicked()
+                            {
+                                delete_index = Some(i);
+                            }
+                        });
+                    });
+
+                    // Sprite picker for this decoration
+                    render_decoration_sprite_picker(
+                        ui,
+                        i,
+                        sprite_path,
+                        sprite_registry,
+                        session,
+                        is_patch,
+                        modified,
+                    );
+
+                    // Position editors
+                    ui.horizontal(|ui| {
+                        ui.label("Position:");
+                        let mut x = position.0;
+                        let mut y = position.1;
+                        let x_changed = ui
+                            .add(
+                                egui::DragValue::new(&mut x)
+                                    .prefix("X: ")
+                                    .range(-500.0..=500.0)
+                                    .speed(0.5),
+                            )
+                            .changed();
+                        let y_changed = ui
+                            .add(
+                                egui::DragValue::new(&mut y)
+                                    .prefix("Y: ")
+                                    .range(-500.0..=500.0)
+                                    .speed(0.5),
+                            )
+                            .changed();
+
+                        if x_changed || y_changed {
+                            update_decoration_position(session, i, x, y);
+                            *modified = true;
+                        }
+                    });
+                });
+            }
+
+            // Handle deletion
+            if let Some(idx) = delete_index {
+                delete_decoration(session, idx);
+                *modified = true;
+            }
+
+            ui.separator();
+
+            // Add new decoration button
+            if ui.button("+ Add Decoration").clicked() {
+                add_new_decoration(session, sprite_registry);
+                *modified = true;
+            }
+        });
+}
+
+/// Render sprite picker for a decoration
+fn render_decoration_sprite_picker(
+    ui: &mut egui::Ui,
+    index: usize,
+    current_sprite: &str,
+    sprite_registry: &SpriteRegistry,
+    session: &mut EditorSession,
+    is_patch: bool,
+    modified: &mut bool,
+) {
+    // Normalize for comparison (strip extended:// prefix)
+    let normalized_current = current_sprite
+        .strip_prefix("extended://")
+        .unwrap_or(current_sprite);
+
+    ui.horizontal(|ui| {
+        ui.label("Sprite:");
+
+        // Determine if current sprite is registered
+        let is_registered = sprite_registry.is_registered(current_sprite);
+        let display_text = if is_registered {
+            sprite_registry.display_name_for(current_sprite)
+        } else if current_sprite.is_empty() {
+            "(none)".to_string()
+        } else {
+            format!("{} ⚠", sprite_registry.display_name_for(current_sprite))
+        };
+
+        let mut selected_path = current_sprite.to_string();
+
+        egui::ComboBox::from_id_salt(format!("decoration_sprite_{}", index))
+            .selected_text(&display_text)
+            .width(140.0)
+            .show_ui(ui, |ui| {
+                // Base sprites section
+                let base_sprites: Vec<_> = sprite_registry.base_sprites().collect();
+                if !base_sprites.is_empty() {
+                    ui.label(
+                        egui::RichText::new("Base Sprites")
+                            .small()
+                            .color(egui::Color32::GRAY),
+                    );
+                    for sprite in base_sprites {
+                        let is_selected = normalized_current == sprite.asset_path;
+                        if ui
+                            .selectable_label(is_selected, &sprite.display_name)
+                            .clicked()
+                        {
+                            selected_path = sprite.mob_path();
+                        }
+                    }
+                }
+
+                // Extended sprites section (only for extended mobs or mobpatches)
+                if session.can_use_extended_sprites() {
+                    let extended_sprites: Vec<_> = sprite_registry.extended_sprites().collect();
+                    if !extended_sprites.is_empty() {
+                        ui.separator();
+                        ui.label(
+                            egui::RichText::new("Extended Sprites")
+                                .small()
+                                .color(PATCHED_COLOR),
+                        );
+                        for sprite in extended_sprites {
+                            let is_selected = normalized_current == sprite.asset_path;
+                            if ui
+                                .selectable_label(is_selected, &sprite.display_name)
+                                .clicked()
+                            {
+                                // For patches, use extended:// prefix for extended sprites
+                                selected_path = if is_patch && sprite.source == SpriteSource::Extended {
+                                    sprite.mobpatch_path()
+                                } else {
+                                    sprite.mob_path()
+                                };
+                            }
+                        }
+                    }
+                }
+
+                // Show current unregistered sprite at bottom if applicable
+                if !is_registered && !current_sprite.is_empty() {
+                    ui.separator();
+                    ui.label(
+                        egui::RichText::new("Current (Unregistered)")
+                            .small()
+                            .color(egui::Color32::YELLOW),
+                    );
+                    let _ =
+                        ui.selectable_label(true, &sprite_registry.display_name_for(current_sprite));
+                }
+            });
+
+        // Apply change if different
+        if selected_path != current_sprite {
+            update_decoration_sprite(session, index, &selected_path);
+            *modified = true;
+        }
+    });
+
+    // Show warning if unregistered
+    if !sprite_registry.is_registered(current_sprite) && !current_sprite.is_empty() {
+        ui.horizontal(|ui| {
+            ui.add_space(16.0);
+            ui.label(
+                egui::RichText::new("⚠ Not registered")
+                    .small()
+                    .color(egui::Color32::YELLOW),
+            );
+        });
+    }
+}
+
+/// Update a decoration's sprite path
+fn update_decoration_sprite(session: &mut EditorSession, index: usize, sprite_path: &str) {
+    if let Some(mob) = session
+        .current_mob
+        .as_mut()
+        .and_then(|v| v.as_table_mut())
+    {
+        if let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut()) {
+            if let Some(decoration) = decorations.get_mut(index) {
+                if let Some(arr) = decoration.as_array_mut() {
+                    if !arr.is_empty() {
+                        arr[0] = toml::Value::String(sprite_path.to_string());
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Update a decoration's position
+fn update_decoration_position(session: &mut EditorSession, index: usize, x: f32, y: f32) {
+    if let Some(mob) = session
+        .current_mob
+        .as_mut()
+        .and_then(|v| v.as_table_mut())
+    {
+        if let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut()) {
+            if let Some(decoration) = decorations.get_mut(index) {
+                if let Some(arr) = decoration.as_array_mut() {
+                    if arr.len() >= 2 {
+                        arr[1] = toml::Value::Array(vec![
+                            toml::Value::Float(x as f64),
+                            toml::Value::Float(y as f64),
+                        ]);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Delete a decoration at the given index
+fn delete_decoration(session: &mut EditorSession, index: usize) {
+    if let Some(mob) = session
+        .current_mob
+        .as_mut()
+        .and_then(|v| v.as_table_mut())
+    {
+        if let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut()) {
+            if index < decorations.len() {
+                decorations.remove(index);
+            }
+            // Remove empty decorations array
+            if decorations.is_empty() {
+                mob.remove("decorations");
+            }
+        }
+    }
+}
+
+/// Add a new decoration with default values
+fn add_new_decoration(session: &mut EditorSession, sprite_registry: &SpriteRegistry) {
+    if let Some(mob) = session
+        .current_mob
+        .as_mut()
+        .and_then(|v| v.as_table_mut())
+    {
+        // Get first available sprite as default, or empty string
+        let default_sprite = sprite_registry
+            .sprites
+            .first()
+            .map(|s| s.asset_path.clone())
+            .unwrap_or_default();
+
+        let new_decoration = toml::Value::Array(vec![
+            toml::Value::String(default_sprite),
+            toml::Value::Array(vec![toml::Value::Float(0.0), toml::Value::Float(0.0)]),
+        ]);
+
+        if let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut()) {
+            decorations.push(new_decoration);
+        } else {
+            mob.insert(
+                "decorations".to_string(),
+                toml::Value::Array(vec![new_decoration]),
+            );
         }
     }
 }

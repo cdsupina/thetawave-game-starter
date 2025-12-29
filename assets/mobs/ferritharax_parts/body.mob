@@ -2,8 +2,8 @@
 # Body component of the Ferritharax boss.
 
 name = "Ferritharax Body"
+sprite = "media/aseprite/ferritharax_body_mob.aseprite"
 spawnable = false
-sprite_key = "ferritharax_body_mob"
 
 z_level = -1.0
 rotation_locked = false

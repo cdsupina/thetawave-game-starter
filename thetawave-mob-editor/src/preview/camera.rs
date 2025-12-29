@@ -4,6 +4,7 @@ use bevy::{
     prelude::*,
     camera::ScalingMode,
 };
+use bevy_egui::EguiContexts;
 
 /// Marker component for the preview camera
 #[derive(Component)]
@@ -44,11 +45,6 @@ impl PreviewSettings {
     /// Adjust zoom by a delta factor
     pub fn adjust_zoom(&mut self, delta: f32) {
         self.set_zoom(self.target_zoom * (1.0 + delta));
-    }
-
-    /// Set target pan offset
-    pub fn set_pan(&mut self, pan: Vec2) {
-        self.target_pan = pan;
     }
 
     /// Adjust pan by a delta
@@ -119,21 +115,30 @@ pub fn handle_camera_input(
     mut mouse_motion: MessageReader<MouseMotion>,
     mut scroll_events: MessageReader<MouseWheel>,
     keyboard: Res<ButtonInput<KeyCode>>,
+    mut contexts: EguiContexts,
 ) {
-    // Zoom with scroll wheel
-    for event in scroll_events.read() {
-        let zoom_delta = event.y * 0.1;
-        settings.adjust_zoom(zoom_delta);
-    }
+    // Check if egui has any popup open (like dropdown menus)
+    let egui_wants_scroll = contexts.ctx_mut().map(|ctx| {
+        // Check if any popup is open (dropdowns, menus, etc.)
+        bevy_egui::egui::Popup::is_any_open(ctx)
+    }).unwrap_or(false);
 
-    // Pan with middle mouse button or right mouse button
-    if mouse_button.pressed(MouseButton::Middle) || mouse_button.pressed(MouseButton::Right) {
-        for event in mouse_motion.read() {
-            settings.adjust_pan(Vec2::new(-event.delta.x, event.delta.y));
+    if !egui_wants_scroll {
+        // Zoom with scroll wheel
+        for event in scroll_events.read() {
+            let zoom_delta = event.y * 0.1;
+            settings.adjust_zoom(zoom_delta);
+        }
+
+        // Pan with middle mouse button or right mouse button
+        if mouse_button.pressed(MouseButton::Middle) || mouse_button.pressed(MouseButton::Right) {
+            for event in mouse_motion.read() {
+                settings.adjust_pan(Vec2::new(-event.delta.x, event.delta.y));
+            }
         }
     }
 
-    // Reset view with Home key
+    // Reset view with Home key (always allow this)
     if keyboard.just_pressed(KeyCode::Home) {
         settings.reset_view();
     }

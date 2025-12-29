@@ -2,6 +2,7 @@
 # Moves down and periodically spawns Xhitara Missiles.
 
 name = "Xhitara Launcher"
+sprite = "media/aseprite/xhitara_launcher_mob.aseprite"
 
 max_linear_speed = [10.0, 10.0]
 
@@ -10,7 +11,7 @@ colliders = [
 ]
 
 decorations = [
-    ["xhitara_launcher_thrusters", [0.0, 13.5]],
+    ["media/aseprite/xhitara_launcher_thrusters.aseprite", [0.0, 13.5]],
 ]
 
 [mob_spawners.spawners.missiles]

@@ -1,0 +1,159 @@
+use std::fs;
+use std::path::PathBuf;
+
+/// Parse sprite paths from a .assets.ron file
+/// Returns paths without the extended:// prefix (normalized)
+pub fn parse_assets_ron(path: &PathBuf) -> Result<Vec<String>, String> {
+    let content = fs::read_to_string(path)
+        .map_err(|e| format!("Failed to read {}: {}", path.display(), e))?;
+
+    let mut sprites = Vec::new();
+
+    // Track parsing state
+    let mut in_sprites_section = false;
+    let mut in_paths_array = false;
+    let mut brace_depth = 0;
+
+    for line in content.lines() {
+        let trimmed = line.trim();
+
+        // Skip comments
+        if trimmed.starts_with("//") {
+            continue;
+        }
+
+        // Check for sprites section start
+        if trimmed.contains("game_sprites")
+            || trimmed.contains("extended_game_sprites")
+        {
+            in_sprites_section = true;
+            continue;
+        }
+
+        if in_sprites_section {
+            // Track bracket depth to know when section ends
+            for ch in trimmed.chars() {
+                match ch {
+                    '(' | '[' => brace_depth += 1,
+                    ')' | ']' => brace_depth -= 1,
+                    _ => {}
+                }
+            }
+
+            // Check for paths array
+            if trimmed.contains("paths:") {
+                in_paths_array = true;
+            }
+
+            // Extract quoted strings ending in .aseprite
+            if in_paths_array {
+                if let Some(path_str) = extract_quoted_path(trimmed) {
+                    if path_str.ends_with(".aseprite") || path_str.ends_with(".ase") {
+                        // Strip extended:// prefix if present to normalize
+                        let clean_path = path_str
+                            .strip_prefix("extended://")
+                            .unwrap_or(&path_str);
+                        sprites.push(clean_path.to_string());
+                    }
+                }
+            }
+
+            // End of section when we close back to depth 0 after entering
+            if brace_depth == 0 && in_paths_array {
+                in_sprites_section = false;
+                in_paths_array = false;
+            }
+        }
+    }
+
+    Ok(sprites)
+}
+
+/// Extract a quoted path from a line like `"media/aseprite/foo.aseprite",`
+fn extract_quoted_path(line: &str) -> Option<String> {
+    let start = line.find('"')?;
+    let rest = &line[start + 1..];
+    let end = rest.find('"')?;
+    Some(rest[..end].to_string())
+}
+
+/// Append a sprite path to a .assets.ron file
+/// Inserts the path into the appropriate section (game_sprites or extended_game_sprites)
+pub fn append_sprite_to_assets_ron(
+    path: &PathBuf,
+    sprite_path: &str,
+    is_extended: bool,
+) -> Result<(), String> {
+    let content = fs::read_to_string(path)
+        .map_err(|e| format!("Failed to read {}: {}", path.display(), e))?;
+
+    let section_name = if is_extended {
+        "extended_game_sprites"
+    } else {
+        "game_sprites"
+    };
+
+    let mut lines: Vec<String> = content.lines().map(String::from).collect();
+    let mut in_section = false;
+    let mut in_paths = false;
+    let mut insert_index = None;
+
+    for (i, line) in lines.iter().enumerate() {
+        let trimmed = line.trim();
+
+        if trimmed.contains(section_name) {
+            in_section = true;
+            continue;
+        }
+
+        if in_section && trimmed.contains("paths:") {
+            in_paths = true;
+            continue;
+        }
+
+        // Find the closing bracket of the paths array
+        if in_paths && trimmed.starts_with(']') {
+            insert_index = Some(i);
+            break;
+        }
+    }
+
+    if let Some(idx) = insert_index {
+        // Format the new line with proper indentation
+        let new_line = if is_extended {
+            format!("            \"extended://{}\",", sprite_path)
+        } else {
+            format!("            \"{}\",", sprite_path)
+        };
+        lines.insert(idx, new_line);
+
+        let new_content = lines.join("\n");
+        fs::write(path, new_content)
+            .map_err(|e| format!("Failed to write {}: {}", path.display(), e))?;
+        Ok(())
+    } else {
+        Err(format!(
+            "Could not find '{}' section in {}",
+            section_name,
+            path.display()
+        ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_extract_quoted_path() {
+        assert_eq!(
+            extract_quoted_path(r#"            "media/aseprite/foo.aseprite","#),
+            Some("media/aseprite/foo.aseprite".to_string())
+        );
+        assert_eq!(
+            extract_quoted_path(r#"            "extended://media/aseprite/bar.aseprite","#),
+            Some("extended://media/aseprite/bar.aseprite".to_string())
+        );
+        assert_eq!(extract_quoted_path("no quotes here"), None);
+    }
+}

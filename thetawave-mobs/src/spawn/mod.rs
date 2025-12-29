@@ -126,13 +126,31 @@ impl From<&MobAsset> for MobComponentBundle {
     }
 }
 
-/// Get the Aseprite handle from a decoration name string using asset resolver
-fn get_mob_decoration_sprite(
-    decoration_name: &str,
+/// Strip the extended:// prefix from a path if present
+fn strip_extended_prefix(path: &str) -> &str {
+    path.strip_prefix("extended://").unwrap_or(path)
+}
+
+/// Extract asset key from sprite path.
+/// "media/aseprite/xhitara_grunt_mob.aseprite" → "xhitara_grunt_mob"
+/// "extended://media/aseprite/foo.aseprite" → "foo"
+fn sprite_path_to_key(path: &str) -> &str {
+    let path = strip_extended_prefix(path);
+    std::path::Path::new(path)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or(path)
+}
+
+/// Get the Aseprite handle from a sprite path using asset resolver.
+/// Supports extended:// prefix to hint at extended asset location.
+fn get_sprite_from_path(
+    sprite_path: &str,
     extended_assets: &ExtendedGameAssets,
     game_assets: &GameAssets,
 ) -> Result<Handle<Aseprite>, AssetError> {
-    AssetResolver::get_game_sprite(decoration_name, extended_assets, game_assets)
+    let key = sprite_path_to_key(sprite_path);
+    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
 }
 
 fn get_particle_effect_str(projectile_type: &ProjectileType) -> &str {
@@ -243,17 +261,8 @@ fn spawn_mob(
             normalized_ref
         )))?;
 
-    // Get the sprite key: either the specified sprite_key or derive from normalized mob_ref
-    // Derive: "xhitara/launcher" -> "xhitara_launcher_mob"
-    let derived_sprite_key;
-    let sprite_key = if let Some(key) = &mob.sprite_key {
-        key.as_str()
-    } else {
-        // Normalize the mob_ref and convert to sprite format
-        // "xhitara/launcher" -> "xhitara_launcher_mob"
-        derived_sprite_key = format!("{}_mob", normalized_ref.replace('/', "_"));
-        &derived_sprite_key
-    };
+    // Load sprite using the path from the mob asset
+    let sprite_handle = get_sprite_from_path(&mob.sprite, extended_assets, game_assets)?;
 
     // Spawn the main anchor entity with all core components
     let mut entity_commands = cmds.spawn((
@@ -261,7 +270,7 @@ fn spawn_mob(
         MobMarker::new(normalized_ref),
         AseAnimation {
             animation: Animation::tag("idle"),
-            aseprite: AssetResolver::get_game_sprite(sprite_key, extended_assets, game_assets)?,
+            aseprite: sprite_handle,
         },
         Sprite::default(),
         Cleanup::<AppState> {
@@ -288,13 +297,13 @@ fn spawn_mob(
     let anchor_id = entity_commands
         .with_children(|parent| {
             // Spawn visual decorations as child entities
-            for (decoration_sprite_stem, pos) in &mob.decorations {
+            for (decoration_sprite_path, pos) in &mob.decorations {
                 parent.spawn((
                     Transform::from_xyz(pos.x, pos.y, 0.0),
                     AseAnimation {
                         animation: Animation::tag("idle"),
-                        aseprite: match get_mob_decoration_sprite(
-                            decoration_sprite_stem,
+                        aseprite: match get_sprite_from_path(
+                            decoration_sprite_path,
                             extended_assets,
                             game_assets,
                         ) {
@@ -312,7 +321,7 @@ fn spawn_mob(
                         },
                     },
                     Sprite::default(),
-                    Name::new(decoration_sprite_stem.clone()),
+                    Name::new(sprite_path_to_key(decoration_sprite_path).to_string()),
                 ));
             }
 

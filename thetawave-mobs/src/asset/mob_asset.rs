@@ -124,9 +124,9 @@ pub struct MobAsset {
     pub projectile_range_seconds: f32,
 
     // === Visual ===
-    /// Override sprite key (defaults to mob file stem if not specified)
-    #[serde(default)]
-    pub sprite_key: Option<String>,
+    /// Sprite file path relative to assets directory.
+    /// Example: "media/aseprite/xhitara_grunt_mob.aseprite"
+    pub sprite: String,
 
     /// Decorative sprites attached to this mob
     #[serde(default)]

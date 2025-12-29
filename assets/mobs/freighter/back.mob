@@ -2,6 +2,7 @@
 # Back cargo component of a Freighter.
 
 name = "Freighter Back"
+sprite = "media/aseprite/freighter_back_mob.aseprite"
 spawnable = false
 
 rotation_locked = false
