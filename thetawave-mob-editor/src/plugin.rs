@@ -18,7 +18,7 @@ use crate::{
         PreviewState,
     },
     states::{DialogState, EditingMode, EditorState},
-    ui::{main_ui_system, DeleteDialogState, FileDialogState},
+    ui::{main_ui_system, DeleteDialogState, ErrorDialog, FileDialogState, UnsavedChangesDialog, ValidationDialog},
 };
 
 /// Main plugin for the mob editor
@@ -62,6 +62,9 @@ impl Plugin for MobEditorPlugin {
             .init_resource::<PreviewState>()
             .init_resource::<FileDialogState>()
             .init_resource::<DeleteDialogState>()
+            .init_resource::<UnsavedChangesDialog>()
+            .init_resource::<ErrorDialog>()
+            .init_resource::<ValidationDialog>()
             .init_resource::<SpriteRegistry>()
             .init_resource::<SpriteRegistrationDialog>()
             .init_resource::<SpriteSelectionDialog>()
@@ -129,6 +132,7 @@ impl Plugin for MobEditorPlugin {
                 handle_delete_mob,
                 check_file_refresh,
                 check_sprite_registry_refresh,
+                handle_window_close,
             ),
         );
     }
@@ -315,12 +319,12 @@ fn handle_load_mob(
                 } else {
                     format!("Loaded: {}", event.path.display())
                 };
-                session.set_status(status, &time);
+                session.log_success(status, &time);
 
                 next_state.set(EditorState::Editing);
             }
             Err(e) => {
-                session.set_status(format!("Error loading file: {}", e), &time);
+                session.log_error(format!("Error loading file: {}", e), &time);
             }
         }
     }
@@ -332,8 +336,11 @@ fn handle_save_mob(
     mut session: ResMut<EditorSession>,
     sprite_registry: Res<SpriteRegistry>,
     mut registration_dialog: ResMut<SpriteRegistrationDialog>,
+    mut validation_dialog: ResMut<ValidationDialog>,
     time: Res<Time>,
 ) {
+    use crate::data::validate_mob;
+
     for event in events.read() {
         // Clone the path to avoid borrow checker issues
         let path = event
@@ -342,14 +349,26 @@ fn handle_save_mob(
             .or_else(|| session.current_path.clone());
 
         let Some(path) = path else {
-            session.set_status("No file path specified", &time);
+            session.log_warning("No file path specified", &time);
             continue;
         };
 
         let Some(mob) = session.current_mob.clone() else {
-            session.set_status("No mob to save", &time);
+            session.log_warning("No mob to save", &time);
             continue;
         };
+
+        // Run validation (skip if validation dialog is already open)
+        if !validation_dialog.is_open {
+            let is_patch = session.file_type == crate::data::FileType::MobPatch;
+            let validation_result = validate_mob(&mob, is_patch);
+            if validation_result.has_errors() {
+                validation_dialog.is_open = true;
+                validation_dialog.errors = validation_result.errors;
+                session.log_warning("Validation errors found - please review", &time);
+                continue;
+            }
+        }
 
         // Check for unregistered sprites (only if dialog isn't already showing)
         if !registration_dialog.show {
@@ -371,10 +390,10 @@ fn handle_save_mob(
                 if event.path.is_some() {
                     session.current_path = event.path.clone();
                 }
-                session.set_status(format!("Saved: {}", path.display()), &time);
+                session.log_success(format!("Saved: {}", path.display()), &time);
             }
             Err(e) => {
-                session.set_status(format!("Error saving: {}", e), &time);
+                session.log_error(format!("Error saving: {}", e), &time);
             }
         }
     }
@@ -444,13 +463,13 @@ fn handle_new_mob(
                 };
                 session.is_modified = false;
                 session.history.clear();
-                session.set_status(format!("Created: {}", event.path.display()), &time);
+                session.log_success(format!("Created: {}", event.path.display()), &time);
 
                 file_tree.needs_refresh = true;
                 next_state.set(EditorState::Editing);
             }
             Err(e) => {
-                session.set_status(format!("Error creating file: {}", e), &time);
+                session.log_error(format!("Error creating file: {}", e), &time);
             }
         }
     }
@@ -476,10 +495,10 @@ fn handle_delete_mob(
                 }
 
                 file_tree.needs_refresh = true;
-                session.set_status(format!("Deleted: {}", event.path.display()), &time);
+                session.log_success(format!("Deleted: {}", event.path.display()), &time);
             }
             Err(e) => {
-                session.set_status(format!("Error deleting: {}", e), &time);
+                session.log_error(format!("Error deleting: {}", e), &time);
             }
         }
     }
@@ -529,6 +548,26 @@ fn handle_keyboard_shortcuts(
                     session.check_modified();
                 }
             }
+        }
+    }
+}
+
+/// Handle window close request - check for unsaved changes
+fn handle_window_close(
+    mut close_events: MessageReader<bevy::window::WindowCloseRequested>,
+    mut exit_writer: MessageWriter<bevy::app::AppExit>,
+    session: Res<EditorSession>,
+    mut unsaved_dialog: ResMut<UnsavedChangesDialog>,
+) {
+    use crate::ui::UnsavedAction;
+
+    for _event in close_events.read() {
+        if session.is_modified {
+            // Show unsaved changes dialog instead of closing
+            unsaved_dialog.open(UnsavedAction::Exit);
+        } else {
+            // No unsaved changes, exit immediately
+            exit_writer.write(bevy::app::AppExit::Success);
         }
     }
 }

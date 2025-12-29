@@ -5,7 +5,7 @@ use bevy::{ecs::message::MessageWriter, prelude::*};
 use bevy_egui::egui;
 
 use crate::{
-    data::EditorSession,
+    data::{EditorSession, FileType},
     file::{DeleteMobEvent, FileNode, FileTreeState, LoadMobEvent},
     plugin::EditorConfig,
 };
@@ -163,6 +163,74 @@ impl DeleteDialogState {
     }
 }
 
+/// Action to perform after confirming unsaved changes
+#[derive(Clone)]
+pub enum UnsavedAction {
+    LoadFile(PathBuf),
+    NewFile(PathBuf, FileType),
+    Exit,
+}
+
+/// Dialog for unsaved changes confirmation
+#[derive(Resource, Default)]
+pub struct UnsavedChangesDialog {
+    pub is_open: bool,
+    pub pending_action: Option<UnsavedAction>,
+}
+
+impl UnsavedChangesDialog {
+    pub fn open(&mut self, action: UnsavedAction) {
+        self.is_open = true;
+        self.pending_action = Some(action);
+    }
+
+    pub fn close(&mut self) {
+        self.is_open = false;
+        self.pending_action = None;
+    }
+}
+
+/// Dialog for displaying critical errors
+#[derive(Resource, Default)]
+pub struct ErrorDialog {
+    pub is_open: bool,
+    pub title: String,
+    pub message: String,
+    pub details: Option<String>,
+}
+
+/// Dialog for displaying validation errors
+#[derive(Resource, Default)]
+pub struct ValidationDialog {
+    pub is_open: bool,
+    pub errors: Vec<crate::data::ValidationError>,
+}
+
+impl ErrorDialog {
+    pub fn show(&mut self, title: impl Into<String>, message: impl Into<String>) {
+        self.is_open = true;
+        self.title = title.into();
+        self.message = message.into();
+        self.details = None;
+    }
+
+    pub fn show_with_details(
+        &mut self,
+        title: impl Into<String>,
+        message: impl Into<String>,
+        details: impl Into<String>,
+    ) {
+        self.is_open = true;
+        self.title = title.into();
+        self.message = message.into();
+        self.details = Some(details.into());
+    }
+
+    pub fn close(&mut self) {
+        self.is_open = false;
+    }
+}
+
 /// Render the file browser panel
 pub fn file_panel_ui(
     ui: &mut egui::Ui,
@@ -171,6 +239,7 @@ pub fn file_panel_ui(
     load_events: &mut MessageWriter<LoadMobEvent>,
     file_dialog: &mut FileDialogState,
     delete_dialog: &mut DeleteDialogState,
+    unsaved_dialog: &mut UnsavedChangesDialog,
     config: &EditorConfig,
 ) {
     ui.heading("Files");
@@ -197,6 +266,7 @@ pub fn file_panel_ui(
                     load_events,
                     file_dialog,
                     delete_dialog,
+                    unsaved_dialog,
                     config,
                 );
             }
@@ -218,6 +288,7 @@ fn render_file_node(
     load_events: &mut MessageWriter<LoadMobEvent>,
     file_dialog: &mut FileDialogState,
     delete_dialog: &mut DeleteDialogState,
+    unsaved_dialog: &mut UnsavedChangesDialog,
     config: &EditorConfig,
 ) {
     let is_selected = file_tree.selected.as_ref() == Some(&node.path);
@@ -239,6 +310,7 @@ fn render_file_node(
                         load_events,
                         file_dialog,
                         delete_dialog,
+                        unsaved_dialog,
                         config,
                     );
                 }
@@ -284,17 +356,30 @@ fn render_file_node(
 
         if response.clicked() {
             file_tree.selected = Some(node.path.clone());
-            load_events.write(LoadMobEvent {
-                path: node.path.clone(),
-            });
+
+            // Check if we're loading a different file with unsaved changes
+            let is_different_file = session.current_path.as_ref() != Some(&node.path);
+            if session.is_modified && is_different_file {
+                // Show unsaved changes dialog
+                unsaved_dialog.open(UnsavedAction::LoadFile(node.path.clone()));
+            } else {
+                load_events.write(LoadMobEvent {
+                    path: node.path.clone(),
+                });
+            }
         }
 
         // Context menu for files
         response.context_menu(|ui| {
             if ui.button("📂 Open").clicked() {
-                load_events.write(LoadMobEvent {
-                    path: node.path.clone(),
-                });
+                let is_different_file = session.current_path.as_ref() != Some(&node.path);
+                if session.is_modified && is_different_file {
+                    unsaved_dialog.open(UnsavedAction::LoadFile(node.path.clone()));
+                } else {
+                    load_events.write(LoadMobEvent {
+                        path: node.path.clone(),
+                    });
+                }
                 ui.close();
             }
 

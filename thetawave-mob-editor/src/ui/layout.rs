@@ -17,8 +17,9 @@ use crate::{
 
 use super::{
     file_panel_ui, properties_panel_ui, render_delete_dialog, toolbar_ui,
-    DeleteDialogState, FileDialogState, FileDialogResult, DecorationBrowseResult,
-    BrowseRegistrationRequest, update_decoration_sprite,
+    DeleteDialogState, ErrorDialog, FileDialogState, FileDialogResult,
+    DecorationBrowseResult, BrowseRegistrationRequest, UnsavedChangesDialog,
+    ValidationDialog, update_decoration_sprite,
 };
 
 /// Grouped message writers for the main UI system
@@ -29,6 +30,7 @@ pub struct UiMessageWriters<'w> {
     reload: MessageWriter<'w, ReloadMobEvent>,
     new: MessageWriter<'w, NewMobEvent>,
     delete: MessageWriter<'w, DeleteMobEvent>,
+    exit: MessageWriter<'w, bevy::app::AppExit>,
 }
 
 /// Grouped dialog resources for the main UI system
@@ -36,6 +38,9 @@ pub struct UiMessageWriters<'w> {
 pub struct DialogResources<'w> {
     pub file_dialog: ResMut<'w, FileDialogState>,
     pub delete_dialog: ResMut<'w, DeleteDialogState>,
+    pub unsaved_dialog: ResMut<'w, UnsavedChangesDialog>,
+    pub error_dialog: ResMut<'w, ErrorDialog>,
+    pub validation_dialog: ResMut<'w, ValidationDialog>,
     pub registration_dialog: ResMut<'w, SpriteRegistrationDialog>,
     pub selection_dialog: ResMut<'w, SpriteSelectionDialog>,
     pub decoration_selection_dialog: ResMut<'w, DecorationSelectionDialog>,
@@ -99,9 +104,6 @@ pub fn main_ui_system(
         return;
     };
 
-    // Update status message expiry
-    session.update_status(&time);
-
     // Top toolbar
     toolbar_ui(
         ctx,
@@ -125,6 +127,7 @@ pub fn main_ui_system(
                 &mut events.load,
                 &mut *dialogs.file_dialog,
                 &mut *dialogs.delete_dialog,
+                &mut *dialogs.unsaved_dialog,
                 &config,
             );
         });
@@ -163,9 +166,10 @@ pub fn main_ui_system(
         );
     }
 
-    // Bottom status bar
+    // Bottom status bar / log panel
+    let panel_height = if session.log.expanded { 120.0 } else { 24.0 };
     egui::TopBottomPanel::bottom("status_bar")
-        .exact_height(24.0)
+        .exact_height(panel_height)
         .show(ctx, |ui| {
             ui.horizontal(|ui| {
                 // File path
@@ -184,12 +188,54 @@ pub fn main_ui_system(
                     ui.label("Saved");
                 }
 
-                // Status message
-                if let Some((msg, _)) = &session.status_message {
-                    ui.separator();
-                    ui.label(msg);
+                // When collapsed, show last message
+                if !session.log.expanded {
+                    if let Some(entry) = session.log.last() {
+                        ui.separator();
+                        ui.colored_label(entry.level.color(), &entry.text);
+                    }
                 }
+
+                // Right-aligned expand/collapse and clear buttons
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    // Clear button (only when there are entries)
+                    if !session.log.is_empty() {
+                        if ui.small_button("Clear").clicked() {
+                            session.log.clear();
+                        }
+                    }
+
+                    // Expand/collapse toggle
+                    let toggle_text = if session.log.expanded { "Collapse" } else { "Log" };
+                    if ui.small_button(toggle_text).clicked() {
+                        session.log.expanded = !session.log.expanded;
+                    }
+                });
             });
+
+            // When expanded, show scrollable log
+            if session.log.expanded {
+                ui.separator();
+                egui::ScrollArea::vertical()
+                    .stick_to_bottom(true)
+                    .show(ui, |ui| {
+                        for entry in session.log.entries() {
+                            ui.horizontal(|ui| {
+                                // Timestamp (relative seconds)
+                                let elapsed = time.elapsed_secs_f64() - entry.timestamp;
+                                let time_str = if elapsed < 60.0 {
+                                    format!("{:.0}s ago", elapsed)
+                                } else if elapsed < 3600.0 {
+                                    format!("{:.0}m ago", elapsed / 60.0)
+                                } else {
+                                    format!("{:.0}h ago", elapsed / 3600.0)
+                                };
+                                ui.label(egui::RichText::new(time_str).small().color(egui::Color32::GRAY));
+                                ui.colored_label(entry.level.color(), &entry.text);
+                            });
+                        }
+                    });
+            }
         });
 
     // Central panel - Preview area (transparent to show 2D camera view)
@@ -300,6 +346,187 @@ pub fn main_ui_system(
         &mut session,
         &time,
     );
+
+    // Render unsaved changes dialog
+    render_unsaved_changes_dialog(
+        ctx,
+        &mut *dialogs.unsaved_dialog,
+        &session,
+        &mut events.save,
+        &mut events.load,
+        &mut events.new,
+        &mut events.exit,
+    );
+
+    // Render error dialog
+    render_error_dialog(ctx, &mut *dialogs.error_dialog);
+
+    // Render validation dialog
+    render_validation_dialog(ctx, &mut *dialogs.validation_dialog);
+}
+
+/// Render the validation errors dialog
+fn render_validation_dialog(ctx: &egui::Context, dialog: &mut ValidationDialog) {
+    if !dialog.is_open {
+        return;
+    }
+
+    egui::Window::new("Validation Errors")
+        .collapsible(false)
+        .resizable(true)
+        .default_width(400.0)
+        .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+        .show(ctx, |ui| {
+            ui.label("The following issues were found:");
+            ui.add_space(8.0);
+
+            egui::ScrollArea::vertical()
+                .max_height(200.0)
+                .show(ui, |ui| {
+                    for error in &dialog.errors {
+                        ui.horizontal(|ui| {
+                            ui.colored_label(egui::Color32::RED, ">");
+                            ui.label(egui::RichText::new(&error.field_path).monospace().strong());
+                            ui.label(&error.message);
+                        });
+                    }
+                });
+
+            ui.add_space(12.0);
+            ui.label(egui::RichText::new("Please fix these issues before saving.").small().color(egui::Color32::GRAY));
+
+            ui.add_space(8.0);
+            if ui.button("OK").clicked() {
+                dialog.is_open = false;
+                dialog.errors.clear();
+            }
+        });
+}
+
+/// Render the unsaved changes dialog
+fn render_unsaved_changes_dialog(
+    ctx: &egui::Context,
+    dialog: &mut UnsavedChangesDialog,
+    session: &EditorSession,
+    save_events: &mut MessageWriter<SaveMobEvent>,
+    load_events: &mut MessageWriter<LoadMobEvent>,
+    new_events: &mut MessageWriter<crate::file::NewMobEvent>,
+    exit_events: &mut MessageWriter<bevy::app::AppExit>,
+) {
+    use super::UnsavedAction;
+
+    if !dialog.is_open {
+        return;
+    }
+
+    let mut action_to_take: Option<UnsavedAction> = None;
+    let mut close_dialog = false;
+
+    // Determine dialog message based on action
+    let is_exit = matches!(&dialog.pending_action, Some(UnsavedAction::Exit));
+    let title = if is_exit { "Exit with Unsaved Changes?" } else { "Unsaved Changes" };
+
+    egui::Window::new(title)
+        .collapsible(false)
+        .resizable(false)
+        .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+        .show(ctx, |ui| {
+            ui.label("You have unsaved changes. What would you like to do?");
+
+            if let Some(path) = &session.current_path {
+                ui.add_space(4.0);
+                ui.label(egui::RichText::new(format!("File: {}", path.display())).small().color(egui::Color32::GRAY));
+            }
+
+            ui.add_space(12.0);
+
+            ui.horizontal(|ui| {
+                let continue_text = if is_exit { "Save & Exit" } else { "Save & Continue" };
+                if ui.button(continue_text).clicked() {
+                    // Save first, then perform action
+                    save_events.write(crate::file::SaveMobEvent { path: None });
+                    action_to_take = dialog.pending_action.clone();
+                    close_dialog = true;
+                }
+
+                let discard_text = if is_exit { "Exit Without Saving" } else { "Discard Changes" };
+                if ui.button(discard_text).clicked() {
+                    // Perform action without saving
+                    action_to_take = dialog.pending_action.clone();
+                    close_dialog = true;
+                }
+
+                if ui.button("Cancel").clicked() {
+                    close_dialog = true;
+                }
+            });
+        });
+
+    if let Some(action) = action_to_take {
+        match action {
+            UnsavedAction::LoadFile(path) => {
+                load_events.write(LoadMobEvent { path });
+            }
+            UnsavedAction::NewFile(path, file_type) => {
+                let is_patch = file_type == crate::data::FileType::MobPatch;
+                let name = path.file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("unnamed")
+                    .to_string();
+                new_events.write(crate::file::NewMobEvent { path, name, is_patch });
+            }
+            UnsavedAction::Exit => {
+                exit_events.write(bevy::app::AppExit::Success);
+            }
+        }
+    }
+
+    if close_dialog {
+        dialog.close();
+    }
+}
+
+/// Render the error dialog
+fn render_error_dialog(ctx: &egui::Context, dialog: &mut ErrorDialog) {
+    if !dialog.is_open {
+        return;
+    }
+
+    egui::Window::new(&dialog.title)
+        .collapsible(false)
+        .resizable(true)
+        .default_width(400.0)
+        .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+        .show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                ui.colored_label(egui::Color32::RED, "Error:");
+                ui.label(&dialog.message);
+            });
+
+            if let Some(details) = &dialog.details {
+                ui.add_space(8.0);
+                egui::CollapsingHeader::new("Details")
+                    .default_open(false)
+                    .show(ui, |ui| {
+                        egui::ScrollArea::vertical()
+                            .max_height(200.0)
+                            .show(ui, |ui| {
+                                ui.add(
+                                    egui::TextEdit::multiline(&mut details.as_str())
+                                        .font(egui::TextStyle::Monospace)
+                                        .desired_width(f32::INFINITY)
+                                );
+                            });
+                    });
+            }
+
+            ui.add_space(12.0);
+            ui.horizontal(|ui| {
+                if ui.button("OK").clicked() {
+                    dialog.close();
+                }
+            });
+        });
 }
 
 /// Render the sprite registration dialog
@@ -357,7 +584,7 @@ fn render_registration_dialog(
 
                         if let Err(e) = append_sprite_to_assets_ron(&assets_ron, clean_path, is_extended)
                         {
-                            session.set_status(format!("Error registering sprite: {}", e), time);
+                            session.log_error(format!("Error registering sprite: {}", e), time);
                         }
                     }
 
@@ -447,12 +674,12 @@ fn render_selection_dialog(
                     };
 
                     if success {
-                        session.set_status(
+                        session.log_success(
                             format!("Sprite set to: {}", dialog.display_name),
                             time,
                         );
                     } else {
-                        session.set_status(
+                        session.log_error(
                             "Error: Could not set sprite - no mob loaded".to_string(),
                             time,
                         );
@@ -465,7 +692,7 @@ fn render_selection_dialog(
                 }
 
                 if ui.button("No, just register").clicked() {
-                    session.set_status(
+                    session.log_success(
                         format!("Sprite registered: {}", dialog.display_name),
                         time,
                     );
@@ -600,7 +827,7 @@ fn handle_sprite_browse_result(
             );
         }
         super::BrowseResult::InvalidLocation(error_msg) => {
-            session.set_status(error_msg, time);
+            session.log_error(error_msg, time);
         }
     }
 }
@@ -629,7 +856,7 @@ fn handle_decoration_browse_result(
             );
         }
         DecorationBrowseResult::InvalidLocation(message) => {
-            session.set_status(message, time);
+            session.log_error(message, time);
         }
     }
 }
@@ -664,13 +891,13 @@ fn register_and_show_dialog<F>(
                 .unwrap_or(&request.asset_path)
                 .to_string();
 
-            session.set_status(format!("Registered: {}", request.asset_path), time);
+            session.log_success(format!("Registered: {}", request.asset_path), time);
 
             // Call the success callback
             on_success(display_name, request.mob_path.clone());
         }
         Err(e) => {
-            session.set_status(format!("Failed to register sprite: {}", e), time);
+            session.log_error(format!("Failed to register sprite: {}", e), time);
         }
     }
 }
@@ -721,7 +948,7 @@ fn render_decoration_selection_dialog(
                         session.merged_for_preview = Some(merged);
                     }
 
-                    session.set_status(
+                    session.log_success(
                         format!("Decoration {} sprite set to: {}", dialog.decoration_index + 1, dialog.display_name),
                         time,
                     );
@@ -732,7 +959,7 @@ fn render_decoration_selection_dialog(
                 }
 
                 if ui.button("No, just register").clicked() {
-                    session.set_status(
+                    session.log_success(
                         format!("Sprite registered: {}", dialog.display_name),
                         time,
                     );

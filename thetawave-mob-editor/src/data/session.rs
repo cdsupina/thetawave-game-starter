@@ -50,6 +50,211 @@ impl UndoHistory {
     }
 }
 
+/// Status message severity level
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StatusLevel {
+    Info,
+    Success,
+    Warning,
+    Error,
+}
+
+impl StatusLevel {
+    pub fn color(&self) -> bevy_egui::egui::Color32 {
+        match self {
+            StatusLevel::Info => bevy_egui::egui::Color32::WHITE,
+            StatusLevel::Success => bevy_egui::egui::Color32::from_rgb(100, 200, 100),
+            StatusLevel::Warning => bevy_egui::egui::Color32::YELLOW,
+            StatusLevel::Error => bevy_egui::egui::Color32::from_rgb(255, 100, 100),
+        }
+    }
+}
+
+/// A single log entry
+#[derive(Debug, Clone)]
+pub struct LogEntry {
+    pub text: String,
+    pub level: StatusLevel,
+    pub timestamp: f64,
+}
+
+/// Scrolling log of status messages
+pub struct StatusLog {
+    entries: Vec<LogEntry>,
+    max_entries: usize,
+    /// Whether the log panel is expanded
+    pub expanded: bool,
+}
+
+impl Default for StatusLog {
+    fn default() -> Self {
+        Self {
+            entries: Vec::new(),
+            max_entries: 50,
+            expanded: false,
+        }
+    }
+}
+
+impl StatusLog {
+    /// Add a new entry to the log
+    pub fn push(&mut self, text: impl Into<String>, level: StatusLevel, timestamp: f64) {
+        self.entries.push(LogEntry {
+            text: text.into(),
+            level,
+            timestamp,
+        });
+        // Remove oldest entries if over capacity
+        while self.entries.len() > self.max_entries {
+            self.entries.remove(0);
+        }
+    }
+
+    /// Get all log entries
+    pub fn entries(&self) -> &[LogEntry] {
+        &self.entries
+    }
+
+    /// Get the most recent entry
+    pub fn last(&self) -> Option<&LogEntry> {
+        self.entries.last()
+    }
+
+    /// Clear all entries
+    pub fn clear(&mut self) {
+        self.entries.clear();
+    }
+
+    /// Check if log is empty
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+}
+
+/// A validation error for a specific field
+#[derive(Debug, Clone)]
+pub struct ValidationError {
+    pub field_path: String,
+    pub message: String,
+}
+
+/// Result of validation
+#[derive(Default)]
+pub struct ValidationResult {
+    pub errors: Vec<ValidationError>,
+}
+
+impl ValidationResult {
+    pub fn add_error(&mut self, field_path: impl Into<String>, message: impl Into<String>) {
+        self.errors.push(ValidationError {
+            field_path: field_path.into(),
+            message: message.into(),
+        });
+    }
+
+    pub fn has_errors(&self) -> bool {
+        !self.errors.is_empty()
+    }
+}
+
+/// Validate a mob value before saving
+pub fn validate_mob(mob: &toml::Value, is_patch: bool) -> ValidationResult {
+    let mut result = ValidationResult::default();
+
+    // Skip most validation for patches - they override only some fields
+    if is_patch {
+        return result;
+    }
+
+    let table = match mob.as_table() {
+        Some(t) => t,
+        None => {
+            result.add_error("root", "Mob must be a TOML table");
+            return result;
+        }
+    };
+
+    // Check sprite path (required for non-patches)
+    match table.get("sprite") {
+        Some(toml::Value::String(s)) if s.is_empty() => {
+            result.add_error("sprite", "Sprite path cannot be empty");
+        }
+        None => {
+            result.add_error("sprite", "Sprite path is required");
+        }
+        _ => {}
+    }
+
+    // Check health (must be positive if spawnable)
+    let is_spawnable = table
+        .get("spawnable")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+
+    if is_spawnable {
+        match table.get("health") {
+            Some(toml::Value::Integer(h)) if *h <= 0 => {
+                result.add_error("health", "Health must be positive for spawnable mobs");
+            }
+            None => {
+                result.add_error("health", "Health is required for spawnable mobs");
+            }
+            _ => {}
+        }
+    }
+
+    // Check colliders (dimensions must be positive)
+    if let Some(colliders) = table.get("colliders").and_then(|v| v.as_array()) {
+        for (i, collider) in colliders.iter().enumerate() {
+            if let Some(table) = collider.as_table() {
+                if let Some(shape) = table.get("shape").and_then(|v| v.as_table()) {
+                    // Check Rectangle dimensions
+                    if let Some(dims) = shape.get("Rectangle").and_then(|v| v.as_array()) {
+                        for (j, dim) in dims.iter().enumerate() {
+                            if let Some(v) = dim.as_float() {
+                                if v <= 0.0 {
+                                    result.add_error(
+                                        format!("colliders[{}].shape.Rectangle[{}]", i, j),
+                                        "Collider dimension must be positive",
+                                    );
+                                }
+                            } else if let Some(v) = dim.as_integer() {
+                                if v <= 0 {
+                                    result.add_error(
+                                        format!("colliders[{}].shape.Rectangle[{}]", i, j),
+                                        "Collider dimension must be positive",
+                                    );
+                                }
+                            }
+                        }
+                    }
+
+                    // Check Ball radius
+                    if let Some(radius) = shape.get("Ball") {
+                        if let Some(r) = radius.as_float() {
+                            if r <= 0.0 {
+                                result.add_error(
+                                    format!("colliders[{}].shape.Ball", i),
+                                    "Ball radius must be positive",
+                                );
+                            }
+                        } else if let Some(r) = radius.as_integer() {
+                            if r <= 0 {
+                                result.add_error(
+                                    format!("colliders[{}].shape.Ball", i),
+                                    "Ball radius must be positive",
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    result
+}
+
 /// Resource tracking the current editor session state
 #[derive(Resource)]
 pub struct EditorSession {
@@ -89,8 +294,8 @@ pub struct EditorSession {
     /// Selected behavior node path for editing
     pub selected_behavior_node: Option<Vec<usize>>,
 
-    /// Status message to display
-    pub status_message: Option<(String, f64)>,
+    /// Status log for messages
+    pub log: StatusLog,
 }
 
 impl Default for EditorSession {
@@ -107,7 +312,7 @@ impl Default for EditorSession {
             selected_collider: None,
             selected_jointed_mob: None,
             selected_behavior_node: None,
-            status_message: None,
+            log: StatusLog::default(),
         }
     }
 }
@@ -122,18 +327,24 @@ impl EditorSession {
         };
     }
 
-    /// Set a status message that will be displayed temporarily
-    pub fn set_status(&mut self, message: impl Into<String>, time: &Time) {
-        self.status_message = Some((message.into(), time.elapsed_secs_f64() + 3.0));
+    /// Log an info message
+    pub fn log_info(&mut self, message: impl Into<String>, time: &Time) {
+        self.log.push(message, StatusLevel::Info, time.elapsed_secs_f64());
     }
 
-    /// Clear expired status messages
-    pub fn update_status(&mut self, time: &Time) {
-        if let Some((_, expiry)) = &self.status_message {
-            if time.elapsed_secs_f64() > *expiry {
-                self.status_message = None;
-            }
-        }
+    /// Log a success message
+    pub fn log_success(&mut self, message: impl Into<String>, time: &Time) {
+        self.log.push(message, StatusLevel::Success, time.elapsed_secs_f64());
+    }
+
+    /// Log a warning message
+    pub fn log_warning(&mut self, message: impl Into<String>, time: &Time) {
+        self.log.push(message, StatusLevel::Warning, time.elapsed_secs_f64());
+    }
+
+    /// Log an error message
+    pub fn log_error(&mut self, message: impl Into<String>, time: &Time) {
+        self.log.push(message, StatusLevel::Error, time.elapsed_secs_f64());
     }
 
     /// Check if the current file is from the extended assets directory
