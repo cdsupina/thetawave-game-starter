@@ -10,16 +10,18 @@ use crate::{
         append_sprite_to_assets_ron, DeleteMobEvent, FileTreeState, LoadMobEvent, NewMobEvent,
         ReloadMobEvent, SaveMobEvent,
     },
-    plugin::{SpriteRegistrationDialog, SpriteSelectionDialog, DecorationSelectionDialog},
+    plugin::{
+        EditorConfig, SpriteBrowserDialog, SpriteBrowserTarget, SpriteRegistrationDialog,
+        SpriteSelectionDialog, DecorationSelectionDialog,
+    },
     preview::{JointedMobCache, PreviewSettings, PreviewState},
     states::EditorState,
 };
 
 use super::{
     file_panel_ui, properties_panel_ui, render_delete_dialog, toolbar_ui,
-    DeleteDialogState, ErrorDialog, DecorationBrowseResult, BrowseRegistrationRequest,
-    UnsavedChangesDialog, ValidationDialog, update_decoration_sprite,
-    NewFolderDialog, NewMobDialog,
+    DeleteDialogState, ErrorDialog, UnsavedChangesDialog, ValidationDialog,
+    update_decoration_sprite, NewFolderDialog, NewMobDialog,
 };
 
 /// Grouped message writers for the main UI system
@@ -45,6 +47,7 @@ pub struct DialogResources<'w> {
     pub decoration_selection_dialog: ResMut<'w, DecorationSelectionDialog>,
     pub new_folder_dialog: ResMut<'w, NewFolderDialog>,
     pub new_mob_dialog: ResMut<'w, NewMobDialog>,
+    pub sprite_browser: ResMut<'w, SpriteBrowserDialog>,
 }
 
 /// Main UI layout system that renders all egui panels
@@ -60,6 +63,7 @@ pub fn main_ui_system(
     mut preview_state: ResMut<PreviewState>,
     mut sprite_registry: ResMut<SpriteRegistry>,
     jointed_cache: Res<JointedMobCache>,
+    config: Res<EditorConfig>,
     mut frames_passed: Local<u8>,
 ) {
     // Skip first two frames to let egui initialize properly
@@ -111,30 +115,20 @@ pub fn main_ui_system(
             .min_width(250.0)
             .resizable(true)
             .show(ctx, |ui| {
-                panel_result = properties_panel_ui(ui, &mut session, &sprite_registry, &jointed_cache);
+                panel_result = properties_panel_ui(ui, &mut session, &sprite_registry, &jointed_cache, &file_tree);
             });
     }
 
-    // Handle main sprite browse & register result
-    if let Some(result) = panel_result.sprite_browse {
-        handle_sprite_browse_result(
-            result,
-            &mut sprite_registry,
-            &mut *dialogs.selection_dialog,
-            &mut session,
-            &time,
-        );
+    // Open sprite browser for main sprite
+    if panel_result.open_sprite_browser {
+        let allow_extended = session.can_use_extended_sprites();
+        dialogs.sprite_browser.open_for_sprite(allow_extended, &config);
     }
 
-    // Handle decoration sprite browse & register result
-    if let Some(result) = panel_result.decoration_browse {
-        handle_decoration_browse_result(
-            result,
-            &mut sprite_registry,
-            &mut *dialogs.decoration_selection_dialog,
-            &mut session,
-            &time,
-        );
+    // Open sprite browser for decoration
+    if let Some(decoration_index) = panel_result.open_decoration_browser {
+        let allow_extended = session.can_use_extended_sprites();
+        dialogs.sprite_browser.open_for_decoration(decoration_index, allow_extended, &config);
     }
 
     // Bottom status bar / log panel
@@ -308,6 +302,7 @@ pub fn main_ui_system(
         &mut *dialogs.selection_dialog,
         &mut session,
         &time,
+        &mut preview_state,
     );
 
     // Render decoration sprite selection confirmation dialog
@@ -316,6 +311,7 @@ pub fn main_ui_system(
         &mut *dialogs.decoration_selection_dialog,
         &mut session,
         &time,
+        &mut preview_state,
     );
 
     // Render unsaved changes dialog
@@ -339,6 +335,67 @@ pub fn main_ui_system(
 
     // Render new mob dialog
     render_new_mob_dialog(ctx, &mut *dialogs.new_mob_dialog, &mut events.new, &mut file_tree);
+
+    // Render sprite browser dialog
+    let browser_result = render_sprite_browser_dialog(
+        ctx,
+        &mut *dialogs.sprite_browser,
+        &config,
+        &mut sprite_registry,
+        &mut session,
+        &time,
+    );
+
+    // Handle sprite browser selection result
+    if let Some((asset_path, is_extended)) = browser_result {
+        let cwd = std::env::current_dir().unwrap_or_default();
+        let assets_ron = if is_extended {
+            cwd.join("thetawave-test-game/assets/game.assets.ron")
+        } else {
+            cwd.join("assets/game.assets.ron")
+        };
+
+        // Determine the mob path (with extended:// prefix if needed)
+        let mob_path = if is_extended && session.file_type == crate::data::FileType::MobPatch {
+            format!("extended://{}", asset_path)
+        } else {
+            asset_path.clone()
+        };
+
+        // Extract display name from asset path
+        let display_name = std::path::Path::new(&asset_path)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or(&asset_path)
+            .to_string();
+
+        // Register sprite if needed
+        if !sprite_registry.is_registered(&asset_path) {
+            if let Err(e) = append_sprite_to_assets_ron(&assets_ron, &asset_path, is_extended) {
+                session.log_error(format!("Failed to register sprite: {}", e), &time);
+                // Don't open dialog if registration failed
+                return;
+            } else {
+                sprite_registry.needs_refresh = true;
+            }
+        }
+
+        // Open confirmation dialog to ask if user wants to set the sprite
+        match dialogs.sprite_browser.target.clone() {
+            SpriteBrowserTarget::MainSprite => {
+                dialogs.selection_dialog.show = true;
+                dialogs.selection_dialog.asset_path = asset_path;
+                dialogs.selection_dialog.mob_path = mob_path;
+                dialogs.selection_dialog.display_name = display_name;
+            }
+            SpriteBrowserTarget::Decoration(index) => {
+                dialogs.decoration_selection_dialog.show = true;
+                dialogs.decoration_selection_dialog.decoration_index = index;
+                dialogs.decoration_selection_dialog.mob_path = mob_path;
+                dialogs.decoration_selection_dialog.display_name = display_name;
+            }
+        }
+    }
 }
 
 /// Render the validation errors dialog
@@ -716,6 +773,7 @@ fn render_selection_dialog(
     dialog: &mut SpriteSelectionDialog,
     session: &mut EditorSession,
     time: &Time,
+    preview_state: &mut PreviewState,
 ) {
     if !dialog.show {
         return;
@@ -726,20 +784,17 @@ fn render_selection_dialog(
         .resizable(false)
         .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
         .show(ctx, |ui| {
-            ui.label("Sprite registered successfully!");
-            ui.add_space(8.0);
-
             ui.horizontal(|ui| {
                 ui.label("Sprite:");
                 ui.label(egui::RichText::new(&dialog.display_name).monospace().strong());
             });
 
             ui.add_space(8.0);
-            ui.label("Would you like to set this as the sprite for the current mob?");
+            ui.label("Would you like to use this sprite for the current mob?");
             ui.add_space(8.0);
 
             ui.horizontal(|ui| {
-                if ui.button("Yes, set sprite").clicked() {
+                if ui.button("Yes, use sprite").clicked() {
                     // Set the sprite path in the mob
                     let success = if let Some(mob) = session
                         .current_mob
@@ -758,6 +813,9 @@ fn render_selection_dialog(
                             crate::file::merge_toml_values(&mut merged, patch.clone());
                             session.merged_for_preview = Some(merged);
                         }
+
+                        // Trigger preview rebuild
+                        preview_state.needs_rebuild = true;
 
                         true
                     } else {
@@ -816,9 +874,6 @@ fn render_sprite_info(ui: &mut egui::Ui, preview_state: &mut PreviewState) {
         ui.label("Status:");
         if sprite_info.loaded_from.is_some() {
             ui.label(egui::RichText::new("Loaded").color(egui::Color32::GREEN));
-            if preview_state.sprite_override_path.is_some() {
-                ui.label(egui::RichText::new("(override)").small().color(egui::Color32::YELLOW));
-            }
         } else if let Some(error) = &sprite_info.error {
             ui.label(egui::RichText::new(error).color(egui::Color32::RED));
         }
@@ -847,150 +902,6 @@ fn render_sprite_info(ui: &mut egui::Ui, preview_state: &mut PreviewState) {
         });
     }
 
-    ui.separator();
-
-    // Sprite override section
-    ui.horizontal(|ui| {
-        ui.label("Override:");
-
-        if let Some(override_path) = &preview_state.sprite_override_path {
-            // Show current override path
-            let path_str = override_path.display().to_string();
-            let short_path = if path_str.len() > 40 {
-                format!("...{}", &path_str[path_str.len() - 37..])
-            } else {
-                path_str
-            };
-            ui.label(egui::RichText::new(short_path).small().monospace().color(egui::Color32::YELLOW));
-
-            // Clear button
-            if ui.small_button("Clear").clicked() {
-                preview_state.sprite_override_path = None;
-                preview_state.needs_rebuild = true;
-            }
-        } else {
-            ui.label(egui::RichText::new("(none)").italics().color(egui::Color32::GRAY));
-        }
-    });
-
-    // Browse button
-    if ui.button("Browse for sprite...").clicked() {
-        // Open file dialog for sprite selection
-        if let Some(path) = rfd::FileDialog::new()
-            .add_filter("Aseprite Files", &["aseprite", "ase"])
-            .add_filter("All Files", &["*"])
-            .set_title("Select Sprite File")
-            .pick_file()
-        {
-            preview_state.sprite_override_path = Some(path);
-            preview_state.needs_rebuild = true;
-        }
-    }
-
-    ui.label(
-        egui::RichText::new("Use this to preview a sprite file that's not in the game's asset directories.")
-            .small()
-            .color(egui::Color32::GRAY),
-    );
-}
-
-/// Handle a browse result for main sprite registration
-fn handle_sprite_browse_result(
-    result: super::BrowseResult,
-    sprite_registry: &mut SpriteRegistry,
-    selection_dialog: &mut SpriteSelectionDialog,
-    session: &mut EditorSession,
-    time: &Time,
-) {
-    match result {
-        super::BrowseResult::Register(request) => {
-            register_and_show_dialog(
-                &request,
-                sprite_registry,
-                session,
-                time,
-                |display_name, mob_path| {
-                    selection_dialog.show = true;
-                    selection_dialog.asset_path = request.asset_path.clone();
-                    selection_dialog.mob_path = mob_path;
-                    selection_dialog.display_name = display_name;
-                },
-            );
-        }
-        super::BrowseResult::InvalidLocation(error_msg) => {
-            session.log_error(error_msg, time);
-        }
-    }
-}
-
-/// Handle a browse result for decoration sprite registration
-fn handle_decoration_browse_result(
-    result: DecorationBrowseResult,
-    sprite_registry: &mut SpriteRegistry,
-    decoration_dialog: &mut DecorationSelectionDialog,
-    session: &mut EditorSession,
-    time: &Time,
-) {
-    match result {
-        DecorationBrowseResult::Register { index, request } => {
-            register_and_show_dialog(
-                &request,
-                sprite_registry,
-                session,
-                time,
-                |display_name, mob_path| {
-                    decoration_dialog.show = true;
-                    decoration_dialog.decoration_index = index;
-                    decoration_dialog.mob_path = mob_path;
-                    decoration_dialog.display_name = display_name;
-                },
-            );
-        }
-        DecorationBrowseResult::InvalidLocation(message) => {
-            session.log_error(message, time);
-        }
-    }
-}
-
-/// Register a sprite and call the success callback
-fn register_and_show_dialog<F>(
-    request: &BrowseRegistrationRequest,
-    sprite_registry: &mut SpriteRegistry,
-    session: &mut EditorSession,
-    time: &Time,
-    on_success: F,
-) where
-    F: FnOnce(String, String),
-{
-    let cwd = std::env::current_dir().unwrap_or_default();
-    let assets_ron = if request.is_extended {
-        cwd.join("thetawave-test-game/assets/game.assets.ron")
-    } else {
-        cwd.join("assets/game.assets.ron")
-    };
-
-    // Register the sprite
-    match append_sprite_to_assets_ron(&assets_ron, &request.asset_path, request.is_extended) {
-        Ok(()) => {
-            // Mark registry for refresh
-            sprite_registry.needs_refresh = true;
-
-            // Extract display name from asset path
-            let display_name = std::path::Path::new(&request.asset_path)
-                .file_stem()
-                .and_then(|s| s.to_str())
-                .unwrap_or(&request.asset_path)
-                .to_string();
-
-            session.log_success(format!("Registered: {}", request.asset_path), time);
-
-            // Call the success callback
-            on_success(display_name, request.mob_path.clone());
-        }
-        Err(e) => {
-            session.log_error(format!("Failed to register sprite: {}", e), time);
-        }
-    }
 }
 
 /// Render the decoration sprite selection confirmation dialog
@@ -999,6 +910,7 @@ fn render_decoration_selection_dialog(
     dialog: &mut DecorationSelectionDialog,
     session: &mut EditorSession,
     time: &Time,
+    preview_state: &mut PreviewState,
 ) {
     if !dialog.show {
         return;
@@ -1009,9 +921,6 @@ fn render_decoration_selection_dialog(
         .resizable(false)
         .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
         .show(ctx, |ui| {
-            ui.label("Sprite registered successfully!");
-            ui.add_space(8.0);
-
             ui.horizontal(|ui| {
                 ui.label("Sprite:");
                 ui.label(egui::RichText::new(&dialog.display_name).monospace().strong());
@@ -1023,11 +932,11 @@ fn render_decoration_selection_dialog(
             });
 
             ui.add_space(8.0);
-            ui.label("Would you like to set this as the sprite for this decoration?");
+            ui.label("Would you like to use this sprite for this decoration?");
             ui.add_space(8.0);
 
             ui.horizontal(|ui| {
-                if ui.button("Yes, set sprite").clicked() {
+                if ui.button("Yes, use sprite").clicked() {
                     // Set the sprite path in the decoration
                     update_decoration_sprite(session, dialog.decoration_index, &dialog.mob_path);
                     session.check_modified();
@@ -1038,6 +947,9 @@ fn render_decoration_selection_dialog(
                         crate::file::merge_toml_values(&mut merged, patch.clone());
                         session.merged_for_preview = Some(merged);
                     }
+
+                    // Trigger preview rebuild
+                    preview_state.needs_rebuild = true;
 
                     session.log_success(
                         format!("Decoration {} sprite set to: {}", dialog.decoration_index + 1, dialog.display_name),
@@ -1061,4 +973,156 @@ fn render_decoration_selection_dialog(
                 }
             });
         });
+}
+
+/// Render the sprite browser dialog
+/// Returns Some((asset_path, is_extended)) if a sprite was selected and confirmed
+fn render_sprite_browser_dialog(
+    ctx: &egui::Context,
+    dialog: &mut SpriteBrowserDialog,
+    config: &EditorConfig,
+    sprite_registry: &SpriteRegistry,
+    _session: &EditorSession,
+    _time: &Time,
+) -> Option<(String, bool)> {
+    if !dialog.is_open {
+        return None;
+    }
+
+    let mut result = None;
+
+    egui::Window::new("Register New Sprite")
+        .collapsible(false)
+        .resizable(true)
+        .default_width(500.0)
+        .default_height(400.0)
+        .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+        .show(ctx, |ui| {
+            ui.label(
+                egui::RichText::new("Browse for an aseprite file to register in game.assets.ron")
+                    .small()
+                    .color(egui::Color32::GRAY)
+            );
+            ui.add_space(4.0);
+            // Asset source tabs
+            ui.horizontal(|ui| {
+                if ui.selectable_label(!dialog.browsing_extended, "📦 Base Assets").clicked() {
+                    dialog.switch_assets_source(false, config);
+                }
+
+                if dialog.allow_extended {
+                    if let Some(_) = &config.extended_assets_dir {
+                        if ui.selectable_label(dialog.browsing_extended, "📂 Extended Assets").clicked() {
+                            dialog.switch_assets_source(true, config);
+                        }
+                    }
+                }
+            });
+
+            ui.separator();
+
+            // Breadcrumb navigation
+            ui.horizontal(|ui| {
+                let source_name = if dialog.browsing_extended { "extended" } else { "base" };
+                if ui.small_button(source_name).clicked() {
+                    dialog.current_path.clear();
+                    dialog.scan_current_directory(config);
+                }
+
+                for (i, component) in dialog.current_path.clone().iter().enumerate() {
+                    ui.label("/");
+                    if ui.small_button(component).clicked() {
+                        dialog.current_path.truncate(i + 1);
+                        dialog.scan_current_directory(config);
+                    }
+                }
+            });
+
+            ui.separator();
+
+            // File list with scroll area
+            egui::ScrollArea::vertical()
+                .auto_shrink([false, false])
+                .max_height(280.0)
+                .show(ui, |ui| {
+                    // Parent directory button
+                    if !dialog.current_path.is_empty() {
+                        if ui.selectable_label(false, "📁 ..").clicked() {
+                            dialog.navigate_up(config);
+                        }
+                    }
+
+                    // List entries
+                    let entries = dialog.entries.clone();
+                    for entry in entries {
+                        let is_selected = dialog.selected.as_ref() == Some(&entry.path);
+
+                        if entry.is_directory {
+                            // Directory - double click to navigate
+                            let response = ui.selectable_label(is_selected, format!("📁 {}", entry.name));
+                            if response.double_clicked() {
+                                dialog.navigate_into(&entry.name, config);
+                            }
+                        } else {
+                            // Sprite file - click to select
+                            // Build full asset path for registry check (e.g., "media/aseprite/sprite.aseprite")
+                            let asset_path = if dialog.current_path.is_empty() {
+                                entry.name.clone()
+                            } else {
+                                format!("{}/{}", dialog.current_path.join("/"), entry.name)
+                            };
+
+                            let label = if sprite_registry.is_registered(&asset_path) {
+                                format!("{} ✔", entry.name)
+                            } else {
+                                entry.name.clone()
+                            };
+
+                            if ui.selectable_label(is_selected, label).clicked() {
+                                dialog.selected = Some(entry.path.clone());
+                            }
+                        }
+                    }
+
+                    if dialog.entries.is_empty() {
+                        ui.colored_label(egui::Color32::GRAY, "No sprite files in this directory.");
+                    }
+                });
+
+            ui.separator();
+
+            // Selected file info
+            if let Some(selected) = &dialog.selected {
+                let file_name = selected.file_name()
+                    .map(|n| n.to_string_lossy().to_string())
+                    .unwrap_or_default();
+                ui.horizontal(|ui| {
+                    ui.label("Selected:");
+                    ui.label(egui::RichText::new(&file_name).monospace().strong());
+                });
+            } else {
+                ui.label(egui::RichText::new("Click a sprite file to select it").italics().color(egui::Color32::GRAY));
+            }
+
+            ui.separator();
+
+            // Action buttons
+            ui.horizontal(|ui| {
+                if ui.button("Cancel").clicked() {
+                    dialog.close();
+                }
+
+                let can_select = dialog.selected.is_some();
+                if ui.add_enabled(can_select, egui::Button::new("Register & Use")).clicked() {
+                    if let Some(selected_path) = &dialog.selected {
+                        if let Some(asset_path) = dialog.get_asset_path(selected_path, config) {
+                            result = Some((asset_path, dialog.browsing_extended));
+                            dialog.close();
+                        }
+                    }
+                }
+            });
+        });
+
+    result
 }

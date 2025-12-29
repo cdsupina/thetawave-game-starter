@@ -70,6 +70,7 @@ impl Plugin for MobEditorPlugin {
             .init_resource::<SpriteRegistrationDialog>()
             .init_resource::<SpriteSelectionDialog>()
             .init_resource::<DecorationSelectionDialog>()
+            .init_resource::<SpriteBrowserDialog>()
             .init_resource::<JointedMobCache>();
 
         // Store config
@@ -181,6 +182,178 @@ pub struct DecorationSelectionDialog {
     pub mob_path: String,
     /// Display name for the sprite
     pub display_name: String,
+}
+
+/// Target for sprite browser selection
+#[derive(Clone, Default)]
+pub enum SpriteBrowserTarget {
+    #[default]
+    MainSprite,
+    Decoration(usize),
+}
+
+/// Entry in the sprite browser file list
+#[derive(Clone)]
+pub struct SpriteBrowserEntry {
+    pub name: String,
+    pub path: PathBuf,
+    pub is_directory: bool,
+}
+
+/// State for the sprite browser dialog
+#[derive(Resource, Default)]
+pub struct SpriteBrowserDialog {
+    /// Whether the dialog is showing
+    pub is_open: bool,
+    /// What we're selecting a sprite for
+    pub target: SpriteBrowserTarget,
+    /// Currently browsing base (false) or extended (true) assets
+    pub browsing_extended: bool,
+    /// Current directory path relative to assets root
+    pub current_path: Vec<String>,
+    /// Entries in current directory
+    pub entries: Vec<SpriteBrowserEntry>,
+    /// Currently selected file (if any)
+    pub selected: Option<PathBuf>,
+    /// Whether extended assets are allowed (based on file type)
+    pub allow_extended: bool,
+}
+
+impl SpriteBrowserDialog {
+    /// Open the browser for main sprite selection
+    pub fn open_for_sprite(&mut self, allow_extended: bool, config: &EditorConfig) {
+        self.is_open = true;
+        self.target = SpriteBrowserTarget::MainSprite;
+        self.allow_extended = allow_extended;
+        self.browsing_extended = false;
+        // Start in media/aseprite where sprite files are located
+        self.current_path = vec!["media".to_string(), "aseprite".to_string()];
+        self.selected = None;
+        self.scan_current_directory(config);
+    }
+
+    /// Open the browser for decoration sprite selection
+    pub fn open_for_decoration(&mut self, index: usize, allow_extended: bool, config: &EditorConfig) {
+        self.is_open = true;
+        self.target = SpriteBrowserTarget::Decoration(index);
+        self.allow_extended = allow_extended;
+        self.browsing_extended = false;
+        // Start in media/aseprite where sprite files are located
+        self.current_path = vec!["media".to_string(), "aseprite".to_string()];
+        self.selected = None;
+        self.scan_current_directory(config);
+    }
+
+    /// Close the browser
+    pub fn close(&mut self) {
+        self.is_open = false;
+        self.selected = None;
+        self.entries.clear();
+    }
+
+    /// Get the current assets directory being browsed
+    /// Note: config stores mobs directories (assets/mobs), but we need the parent assets directory
+    fn get_assets_dir(&self, config: &EditorConfig) -> Option<PathBuf> {
+        if self.browsing_extended {
+            // extended_assets_dir is like "thetawave-test-game/assets/mobs"
+            // We need "thetawave-test-game/assets"
+            config.extended_assets_dir.as_ref().and_then(|p| p.parent()).map(|p| p.to_path_buf())
+        } else {
+            // base_assets_dir is like "assets/mobs"
+            // We need "assets"
+            config.base_assets_dir.parent().map(|p| p.to_path_buf())
+        }
+    }
+
+    /// Scan the current directory for sprite files
+    pub fn scan_current_directory(&mut self, config: &EditorConfig) {
+        self.entries.clear();
+        self.selected = None;
+
+        let Some(assets_dir) = self.get_assets_dir(config) else {
+            return;
+        };
+
+        // Build full path from current_path components
+        let mut full_path = assets_dir;
+        for component in &self.current_path {
+            full_path = full_path.join(component);
+        }
+
+        let Ok(entries) = std::fs::read_dir(&full_path) else {
+            return;
+        };
+
+        let mut dirs = Vec::new();
+        let mut files = Vec::new();
+
+        for entry in entries.flatten() {
+            let entry_path = entry.path();
+            let name = entry.file_name().to_string_lossy().to_string();
+
+            // Skip hidden files
+            if name.starts_with('.') {
+                continue;
+            }
+
+            if entry_path.is_dir() {
+                dirs.push(SpriteBrowserEntry {
+                    name,
+                    path: entry_path,
+                    is_directory: true,
+                });
+            } else if let Some(ext) = entry_path.extension() {
+                let ext_str = ext.to_string_lossy().to_lowercase();
+                if ext_str == "aseprite" || ext_str == "ase" {
+                    files.push(SpriteBrowserEntry {
+                        name,
+                        path: entry_path,
+                        is_directory: false,
+                    });
+                }
+            }
+        }
+
+        // Sort alphabetically
+        dirs.sort_by(|a, b| a.name.cmp(&b.name));
+        files.sort_by(|a, b| a.name.cmp(&b.name));
+
+        // Directories first, then files
+        self.entries.extend(dirs);
+        self.entries.extend(files);
+    }
+
+    /// Navigate into a subdirectory
+    pub fn navigate_into(&mut self, dir_name: &str, config: &EditorConfig) {
+        self.current_path.push(dir_name.to_string());
+        self.scan_current_directory(config);
+    }
+
+    /// Navigate up to parent directory
+    pub fn navigate_up(&mut self, config: &EditorConfig) {
+        if !self.current_path.is_empty() {
+            self.current_path.pop();
+            self.scan_current_directory(config);
+        }
+    }
+
+    /// Switch between base and extended assets
+    pub fn switch_assets_source(&mut self, use_extended: bool, config: &EditorConfig) {
+        if use_extended && !self.allow_extended {
+            return;
+        }
+        self.browsing_extended = use_extended;
+        // Reset to media/aseprite when switching sources
+        self.current_path = vec!["media".to_string(), "aseprite".to_string()];
+        self.scan_current_directory(config);
+    }
+
+    /// Get the asset path for a selected file (relative to assets root)
+    pub fn get_asset_path(&self, file_path: &PathBuf, config: &EditorConfig) -> Option<String> {
+        let assets_dir = self.get_assets_dir(config)?;
+        let relative = file_path.strip_prefix(&assets_dir).ok()?;
+        Some(relative.to_string_lossy().to_string())
+    }
 }
 
 /// Initial scan of the mobs directories

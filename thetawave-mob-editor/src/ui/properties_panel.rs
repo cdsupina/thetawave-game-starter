@@ -1,8 +1,7 @@
-use std::path::PathBuf;
-
 use bevy_egui::egui;
 
 use crate::data::{EditorSession, FileType, SpriteRegistry, SpriteSource};
+use crate::file::FileTreeState;
 use crate::preview::JointedMobCache;
 
 /// Color for patched/overridden values
@@ -15,47 +14,13 @@ const PROJECTILE_TYPES: &[&str] = &["Bullet", "Blast"];
 /// Valid faction types
 const FACTIONS: &[&str] = &["Enemy", "Ally"];
 
-/// Result of browsing for a sprite to register
-#[derive(Debug, Clone)]
-pub enum BrowseResult {
-    /// Successfully identified a sprite to register
-    Register(BrowseRegistrationRequest),
-    /// File was selected but is not in a valid assets directory
-    InvalidLocation(String),
-}
-
-/// Request to browse for and register a new sprite
-#[derive(Debug, Clone)]
-pub struct BrowseRegistrationRequest {
-    /// The asset path (relative to assets directory)
-    pub asset_path: String,
-    /// Whether this is an extended sprite
-    pub is_extended: bool,
-    /// The path to use in the mob file
-    pub mob_path: String,
-}
-
-/// Result of browsing for a decoration sprite to register
-#[derive(Debug, Clone)]
-pub enum DecorationBrowseResult {
-    /// Successfully identified a sprite to register
-    Register {
-        /// The decoration index
-        index: usize,
-        /// The registration request
-        request: BrowseRegistrationRequest,
-    },
-    /// File was selected but is not in a valid assets directory
-    InvalidLocation(String),
-}
-
-/// Results from the properties panel for browse & register actions
+/// Results from the properties panel for sprite browser actions
 #[derive(Debug, Clone, Default)]
 pub struct PropertiesPanelResult {
-    /// Browse result for main sprite
-    pub sprite_browse: Option<BrowseResult>,
-    /// Browse result for decoration sprite
-    pub decoration_browse: Option<DecorationBrowseResult>,
+    /// Request to open the sprite browser for main sprite
+    pub open_sprite_browser: bool,
+    /// Request to open the sprite browser for a decoration (by index)
+    pub open_decoration_browser: Option<usize>,
 }
 
 /// Render the properties editing panel
@@ -65,6 +30,7 @@ pub fn properties_panel_ui(
     session: &mut EditorSession,
     sprite_registry: &SpriteRegistry,
     jointed_cache: &JointedMobCache,
+    file_tree: &FileTreeState,
 ) -> PropertiesPanelResult {
     let mut result = PropertiesPanelResult::default();
 
@@ -175,7 +141,7 @@ pub fn properties_panel_ui(
                     }
 
                     // Sprite (dropdown picker from registered sprites)
-                    if let Some(sprite_result) = render_sprite_picker(
+                    if render_sprite_picker(
                         ui,
                         &display_table,
                         &patch_table,
@@ -184,12 +150,12 @@ pub fn properties_panel_ui(
                         is_patch,
                         &mut modified,
                     ) {
-                        result.sprite_browse = Some(sprite_result);
+                        result.open_sprite_browser = true;
                     }
                 });
 
             // Decorations section
-            if let Some(dec_result) = render_decorations_section(
+            if let Some(idx) = render_decorations_section(
                 ui,
                 &display_table,
                 &patch_table,
@@ -198,7 +164,7 @@ pub fn properties_panel_ui(
                 is_patch,
                 &mut modified,
             ) {
-                result.decoration_browse = Some(dec_result);
+                result.open_decoration_browser = Some(idx);
             }
 
             // Combat section
@@ -460,7 +426,7 @@ pub fn properties_panel_ui(
             render_mob_spawners_section(ui, &display_table, &patch_table, session, is_patch, &mut modified);
 
             // Jointed Mobs section
-            render_jointed_mobs_section(ui, &display_table, &patch_table, session, is_patch, &mut modified);
+            render_jointed_mobs_section(ui, &display_table, &patch_table, session, is_patch, &mut modified, file_tree);
 
             // Behavior tree section
             render_behavior_section(ui, &display_table, &patch_table, session, is_patch, &mut modified);
@@ -1652,6 +1618,7 @@ fn render_jointed_mobs_section(
     session: &mut EditorSession,
     is_patch: bool,
     modified: &mut bool,
+    file_tree: &FileTreeState,
 ) {
     let is_patched = is_patch && patch_table.contains_key("jointed_mobs");
 
@@ -1744,13 +1711,23 @@ fn render_jointed_mobs_section(
                                     }
                                 });
 
-                                // Mob ref field
+                                // Mob ref field (dropdown)
                                 let mob_ref = table.get("mob_ref").and_then(|v| v.as_str()).unwrap_or("");
+                                let mob_refs = file_tree.get_mob_refs();
                                 ui.horizontal(|ui| {
                                     ui.label("Mob Ref:");
-                                    let mut value = mob_ref.to_string();
-                                    if ui.text_edit_singleline(&mut value).changed() {
-                                        set_jointed_mob_field(session, i, "mob_ref", toml::Value::String(value));
+                                    let mut selected = mob_ref.to_string();
+                                    egui::ComboBox::from_id_salt(format!("mob_ref_{}", i))
+                                        .selected_text(if selected.is_empty() { "(none)" } else { &selected })
+                                        .show_ui(ui, |ui| {
+                                            for ref_name in &mob_refs {
+                                                if ui.selectable_label(selected == *ref_name, ref_name).clicked() {
+                                                    selected = ref_name.clone();
+                                                }
+                                            }
+                                        });
+                                    if selected != mob_ref {
+                                        set_jointed_mob_field(session, i, "mob_ref", toml::Value::String(selected));
                                         *modified = true;
                                     }
                                 });
@@ -2235,7 +2212,7 @@ fn add_random_chain_to_jointed_mob(session: &mut EditorSession, index: usize) {
 }
 
 /// Render a sprite picker dropdown
-/// Returns a BrowseResult if user clicked browse and selected a file
+/// Returns true if the sprite browser should be opened
 fn render_sprite_picker(
     ui: &mut egui::Ui,
     display_table: &toml::value::Table,
@@ -2244,8 +2221,8 @@ fn render_sprite_picker(
     sprite_registry: &SpriteRegistry,
     is_patch: bool,
     modified: &mut bool,
-) -> Option<BrowseResult> {
-    let mut browse_result: Option<BrowseResult> = None;
+) -> bool {
+    let mut open_browser = false;
 
     let is_patched = is_patch && patch_table.contains_key("sprite");
     let current_sprite = display_table
@@ -2386,21 +2363,15 @@ fn render_sprite_picker(
     ui.horizontal(|ui| {
         ui.add_space(16.0);
 
-        if ui.small_button("Browse & Register...").clicked() {
-            // Open file dialog
-            if let Some(path) = rfd::FileDialog::new()
-                .add_filter("Aseprite Files", &["aseprite", "ase"])
-                .set_title("Select Sprite to Register")
-                .pick_file()
-            {
-                // Analyze the path to determine if it's valid
-                let can_use_extended = session.can_use_extended_sprites();
-                browse_result = Some(analyze_sprite_path(&path, is_patch, can_use_extended));
-            }
+        if ui.small_button("➕ Register New Sprite...")
+            .on_hover_text("Find an aseprite file not yet in the sprite list and add it to game.assets.ron")
+            .clicked()
+        {
+            open_browser = true;
         }
 
         ui.label(
-            egui::RichText::new("Add new sprite to assets")
+            egui::RichText::new("Add unregistered aseprite to game")
                 .small()
                 .color(egui::Color32::GRAY),
         );
@@ -2418,66 +2389,11 @@ fn render_sprite_picker(
         });
     }
 
-    browse_result
-}
-
-/// Analyze a filesystem path to determine its asset path and whether it's base or extended
-fn analyze_sprite_path(
-    filesystem_path: &PathBuf,
-    is_patch: bool,
-    can_use_extended: bool,
-) -> BrowseResult {
-    let Some(cwd) = std::env::current_dir().ok() else {
-        return BrowseResult::InvalidLocation(
-            "Could not determine current directory".to_string()
-        );
-    };
-
-    // Check if it's in extended assets directory
-    let extended_assets_dir = cwd.join("thetawave-test-game/assets");
-    let base_assets_dir = cwd.join("assets");
-
-    if let Ok(relative) = filesystem_path.strip_prefix(&extended_assets_dir) {
-        // Extended asset - check if allowed
-        if !can_use_extended {
-            return BrowseResult::InvalidLocation(
-                "Extended sprites are only available for mobpatches and extended mobs. \
-                 Base game mobs can only use sprites from 'assets/'."
-                    .to_string(),
-            );
-        }
-
-        let asset_path = relative.to_string_lossy().to_string();
-        let mob_path = if is_patch {
-            format!("extended://{}", asset_path)
-        } else {
-            asset_path.clone()
-        };
-        BrowseResult::Register(BrowseRegistrationRequest {
-            asset_path,
-            is_extended: true,
-            mob_path,
-        })
-    } else if let Ok(relative) = filesystem_path.strip_prefix(&base_assets_dir) {
-        // Base asset
-        let asset_path = relative.to_string_lossy().to_string();
-        BrowseResult::Register(BrowseRegistrationRequest {
-            asset_path: asset_path.clone(),
-            is_extended: false,
-            mob_path: asset_path,
-        })
-    } else {
-        // File is not in either assets directory
-        BrowseResult::InvalidLocation(format!(
-            "Sprite must be in 'assets/' or 'thetawave-test-game/assets/'. \
-             Selected file is outside these directories: {}",
-            filesystem_path.display()
-        ))
-    }
+    open_browser
 }
 
 /// Render the decorations section with sprite pickers
-/// Returns a DecorationBrowseResult if user clicked browse on a decoration
+/// Returns Some(decoration_index) if the sprite browser should be opened for a decoration
 fn render_decorations_section(
     ui: &mut egui::Ui,
     display_table: &toml::value::Table,
@@ -2486,8 +2402,8 @@ fn render_decorations_section(
     sprite_registry: &SpriteRegistry,
     is_patch: bool,
     modified: &mut bool,
-) -> Option<DecorationBrowseResult> {
-    let mut browse_result: Option<DecorationBrowseResult> = None;
+) -> Option<usize> {
+    let mut open_decoration_browser: Option<usize> = None;
     let is_patched = is_patch && patch_table.contains_key("decorations");
     // Only allow editing if not a patch OR if decorations are in the patch
     let can_edit = !is_patch || is_patched;
@@ -2582,7 +2498,7 @@ fn render_decorations_section(
                     });
 
                     // Sprite picker for this decoration
-                    if let Some(result) = render_decoration_sprite_picker(
+                    let open_browser_for = render_decoration_sprite_picker(
                         ui,
                         i,
                         sprite_path,
@@ -2591,8 +2507,9 @@ fn render_decorations_section(
                         is_patch,
                         can_edit,
                         modified,
-                    ) {
-                        browse_result = Some(result);
+                    );
+                    if let Some(idx) = open_browser_for {
+                        open_decoration_browser = Some(idx);
                     }
 
                     // Position editors
@@ -2647,11 +2564,11 @@ fn render_decorations_section(
             }
         });
 
-    browse_result
+    open_decoration_browser
 }
 
 /// Render sprite picker for a decoration
-/// Returns a DecorationBrowseResult if user clicked browse
+/// Returns Some(decoration_index) if the sprite browser should be opened
 fn render_decoration_sprite_picker(
     ui: &mut egui::Ui,
     index: usize,
@@ -2661,8 +2578,8 @@ fn render_decoration_sprite_picker(
     is_patch: bool,
     can_edit: bool,
     modified: &mut bool,
-) -> Option<DecorationBrowseResult> {
-    let mut browse_result: Option<DecorationBrowseResult> = None;
+) -> Option<usize> {
+    let mut open_browser_for: Option<usize> = None;
 
     // Normalize for comparison (strip extended:// prefix)
     let normalized_current = current_sprite
@@ -2767,27 +2684,11 @@ fn render_decoration_sprite_picker(
         ui.horizontal(|ui| {
             ui.add_space(16.0);
 
-            if ui.small_button("Browse & Register...").clicked() {
-                // Open file dialog
-                if let Some(path) = rfd::FileDialog::new()
-                    .add_filter("Aseprite Files", &["aseprite", "ase"])
-                    .set_title("Select Sprite to Register")
-                    .pick_file()
-                {
-                    // Analyze the path to determine if it's valid
-                    let can_use_extended = session.can_use_extended_sprites();
-                    match analyze_sprite_path(&path, is_patch, can_use_extended) {
-                        BrowseResult::Register(request) => {
-                            browse_result = Some(DecorationBrowseResult::Register {
-                                index,
-                                request,
-                            });
-                        }
-                        BrowseResult::InvalidLocation(message) => {
-                            browse_result = Some(DecorationBrowseResult::InvalidLocation(message));
-                        }
-                    }
-                }
+            if ui.small_button("➕ Register New Sprite...")
+                .on_hover_text("Find an aseprite file not yet in the sprite list and add it to game.assets.ron")
+                .clicked()
+            {
+                open_browser_for = Some(index);
             }
         });
     }
@@ -2804,7 +2705,7 @@ fn render_decoration_sprite_picker(
         });
     }
 
-    browse_result
+    open_browser_for
 }
 
 /// Update a decoration's sprite path

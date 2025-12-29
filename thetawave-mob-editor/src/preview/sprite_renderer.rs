@@ -45,8 +45,6 @@ pub struct PreviewState {
     pub needs_rebuild: bool,
     /// Information about the current sprite load attempt
     pub sprite_info: SpriteLoadInfo,
-    /// User-specified override path for sprite loading (editor-only, not saved)
-    pub sprite_override_path: Option<PathBuf>,
 }
 
 /// Check if the preview needs to be updated
@@ -66,8 +64,6 @@ pub fn check_preview_update(
         info!("File changed, triggering preview rebuild. Path: {:?}", session.current_path);
         preview_state.needs_rebuild = true;
         preview_state.current_path = session.current_path.clone();
-        // Clear sprite override when switching files
-        preview_state.sprite_override_path = None;
         return;
     }
 
@@ -170,7 +166,6 @@ pub fn update_preview_mob(
     if let Some(ref path) = sprite_path {
         let load_result = try_load_sprite_from_path(
             path,
-            preview_state.sprite_override_path.as_ref(),
             &asset_server,
         );
 
@@ -207,7 +202,6 @@ pub fn update_preview_mob(
                 &mut commands,
                 mob,
                 mob_entity,
-                preview_state.sprite_override_path.as_ref(),
                 &asset_server,
             );
 
@@ -247,7 +241,7 @@ fn spawn_jointed_mob_previews(
             continue;
         };
 
-        let load_result = try_load_sprite_from_path(sprite_path, None, asset_server);
+        let load_result = try_load_sprite_from_path(sprite_path, asset_server);
         if let Some(aseprite_handle) = load_result.handle {
             // Spawn the jointed mob sprite
             commands.spawn((
@@ -270,7 +264,7 @@ fn spawn_jointed_mob_previews(
 
             // Spawn decorations for this jointed mob (also dimmed)
             for (dec_path, dec_pos) in &resolved.decorations {
-                let dec_result = try_load_sprite_from_path(dec_path, None, asset_server);
+                let dec_result = try_load_sprite_from_path(dec_path, asset_server);
                 if let Some(dec_handle) = dec_result.handle {
                     commands.spawn((
                         PreviewJointedMob,
@@ -314,24 +308,8 @@ fn strip_extended_prefix(path: &str) -> &str {
 /// Try to load a sprite from a full path (supports extended:// prefix)
 pub fn try_load_sprite_from_path(
     sprite_path: &str,
-    override_path: Option<&PathBuf>,
     asset_server: &AssetServer,
 ) -> SpriteLoadResult {
-    // If we have an override path, try that first
-    if let Some(override_path) = override_path {
-        if override_path.exists() {
-            let abs_path = override_path.to_string_lossy().to_string();
-            info!("Loading sprite from override path: {:?}", override_path);
-            return SpriteLoadResult {
-                handle: Some(asset_server.load(abs_path)),
-                loaded_from: Some(override_path.clone()),
-                searched_paths: vec![override_path.clone()],
-            };
-        } else {
-            warn!("Override sprite path does not exist: {:?}", override_path);
-        }
-    }
-
     let cwd = std::env::current_dir().unwrap_or_default();
 
     // Check for extended:// prefix
@@ -389,7 +367,6 @@ fn spawn_decorations(
     commands: &mut Commands,
     mob: &toml::Value,
     _parent: Entity,
-    override_path: Option<&PathBuf>,
     asset_server: &AssetServer,
 ) {
     let Some(decorations) = mob.get("decorations").and_then(|v| v.as_array()) else {
@@ -420,7 +397,7 @@ fn spawn_decorations(
         };
 
         // Try to load the decoration sprite using the full path (supports extended:// prefix)
-        let load_result = try_load_sprite_from_path(sprite_path, override_path, asset_server);
+        let load_result = try_load_sprite_from_path(sprite_path, asset_server);
         if let Some(handle) = load_result.handle {
             info!("Loading decoration sprite: {} at {:?}", sprite_path, position);
             commands.spawn((

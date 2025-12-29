@@ -131,4 +131,42 @@ impl FileTreeState {
             }
         }
     }
+
+    /// Get all mob references (paths without extension) for dropdown selection
+    pub fn get_mob_refs(&self) -> Vec<String> {
+        let mut refs = Vec::new();
+        for root in &self.roots {
+            Self::collect_mob_refs(root, "", &mut refs);
+        }
+        refs
+    }
+
+    fn collect_mob_refs(node: &FileNode, prefix: &str, refs: &mut Vec<String>) {
+        if node.is_directory {
+            // Skip root level directory names (base/extended)
+            let new_prefix = if prefix.is_empty() {
+                String::new()
+            } else {
+                format!("{}/{}", prefix, node.name)
+            };
+            for child in &node.children {
+                // For first-level directories under root, use the directory name directly
+                let child_prefix = if prefix.is_empty() {
+                    node.name.clone()
+                } else {
+                    new_prefix.clone()
+                };
+                Self::collect_mob_refs(child, &child_prefix, refs);
+            }
+        } else if node.name.ends_with(".mob") {
+            // Convert to mob_ref format (path without extension)
+            let stem = node.name.strip_suffix(".mob").unwrap_or(&node.name);
+            let mob_ref = if prefix.is_empty() {
+                stem.to_string()
+            } else {
+                format!("{}/{}", prefix, stem)
+            };
+            refs.push(mob_ref);
+        }
+    }
 }
