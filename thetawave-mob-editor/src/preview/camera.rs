@@ -18,6 +18,7 @@ pub struct PreviewSettings {
     pub show_grid: bool,
     pub show_colliders: bool,
     pub show_jointed_mobs: bool,
+    pub show_joint_gizmos: bool,
     /// Target zoom (for smooth zooming)
     target_zoom: f32,
     /// Target pan offset (for smooth panning)
@@ -32,6 +33,7 @@ impl Default for PreviewSettings {
             show_grid: true,
             show_colliders: true,
             show_jointed_mobs: false, // Hidden by default
+            show_joint_gizmos: true,  // Show anchor points when enabled
             target_zoom: 3.0,
             target_pan: Vec2::ZERO,
         }

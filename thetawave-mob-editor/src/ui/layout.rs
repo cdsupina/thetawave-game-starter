@@ -239,6 +239,9 @@ pub fn main_ui_system(
                             preview_settings.show_jointed_mobs = !preview_settings.show_jointed_mobs;
                             preview_state.needs_rebuild = true;
                         }
+                        if ui.selectable_label(preview_settings.show_joint_gizmos, "Joints").clicked() {
+                            preview_settings.show_joint_gizmos = !preview_settings.show_joint_gizmos;
+                        }
 
                         ui.separator();
 

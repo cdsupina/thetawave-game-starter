@@ -15,26 +15,9 @@ pub enum FileType {
 pub struct UndoHistory {
     past: Vec<toml::Value>,
     future: Vec<toml::Value>,
-    max_history: usize,
 }
 
 impl UndoHistory {
-    pub fn new(max_history: usize) -> Self {
-        Self {
-            past: Vec::new(),
-            future: Vec::new(),
-            max_history,
-        }
-    }
-
-    pub fn push(&mut self, state: toml::Value) {
-        self.past.push(state);
-        self.future.clear();
-        if self.past.len() > self.max_history {
-            self.past.remove(0);
-        }
-    }
-
     pub fn undo(&mut self, current: &toml::Value) -> Option<toml::Value> {
         if let Some(prev) = self.past.pop() {
             self.future.push(current.clone());
@@ -100,6 +83,9 @@ pub struct EditorSession {
     /// Selected collider index for editing
     pub selected_collider: Option<usize>,
 
+    /// Selected jointed mob index for editing
+    pub selected_jointed_mob: Option<usize>,
+
     /// Selected behavior node path for editing
     pub selected_behavior_node: Option<Vec<usize>>,
 
@@ -117,8 +103,9 @@ impl Default for EditorSession {
             current_path: None,
             file_type: FileType::Mob,
             is_modified: false,
-            history: UndoHistory::new(50),
+            history: UndoHistory::default(),
             selected_collider: None,
+            selected_jointed_mob: None,
             selected_behavior_node: None,
             status_message: None,
         }

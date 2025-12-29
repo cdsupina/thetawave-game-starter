@@ -18,14 +18,6 @@ pub enum EditingMode {
     /// General properties panel (name, health, spawnable, etc.)
     #[default]
     Properties,
-    /// Collider shape editing
-    Colliders,
-    /// Behavior tree editing
-    Behavior,
-    /// Projectile/Mob spawner configuration
-    Spawners,
-    /// Jointed mob configuration
-    Joints,
 }
 
 /// Dialog states for modal windows
@@ -34,12 +26,4 @@ pub enum DialogState {
     /// No dialog open
     #[default]
     None,
-    /// Creating a new mob file
-    NewFile,
-    /// Save As dialog
-    SaveAs,
-    /// Confirm delete dialog
-    ConfirmDelete,
-    /// Unsaved changes warning
-    UnsavedChanges,
 }

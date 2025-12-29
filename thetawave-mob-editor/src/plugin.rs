@@ -11,10 +11,11 @@ use crate::{
         NewMobEvent, ReloadMobEvent, SaveMobEvent,
     },
     preview::{
-        check_preview_update, draw_collider_gizmos, draw_grid, draw_spawner_gizmos,
-        handle_camera_input, rebuild_jointed_mob_cache, setup_preview_camera,
-        update_decoration_positions, update_preview_camera, update_preview_mob,
-        update_preview_settings, JointedMobCache, PreviewSettings, PreviewState,
+        check_preview_update, draw_collider_gizmos, draw_grid, draw_joint_gizmos,
+        draw_spawner_gizmos, handle_camera_input, rebuild_jointed_mob_cache,
+        setup_preview_camera, update_decoration_positions, update_preview_camera,
+        update_preview_mob, update_preview_settings, JointedMobCache, PreviewSettings,
+        PreviewState,
     },
     states::{DialogState, EditingMode, EditorState},
     ui::{main_ui_system, DeleteDialogState, FileDialogState},
@@ -113,7 +114,7 @@ impl Plugin for MobEditorPlugin {
         // Gizmo systems (run after preview update)
         app.add_systems(
             Update,
-            (draw_grid, draw_collider_gizmos, draw_spawner_gizmos),
+            (draw_grid, draw_collider_gizmos, draw_spawner_gizmos, draw_joint_gizmos),
         );
 
         // Keyboard shortcuts and file operations run in Update
