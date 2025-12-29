@@ -10,16 +10,16 @@ use crate::{
         append_sprite_to_assets_ron, DeleteMobEvent, FileTreeState, LoadMobEvent, NewMobEvent,
         ReloadMobEvent, SaveMobEvent,
     },
-    plugin::{EditorConfig, SpriteRegistrationDialog, SpriteSelectionDialog, DecorationSelectionDialog},
+    plugin::{SpriteRegistrationDialog, SpriteSelectionDialog, DecorationSelectionDialog},
     preview::{JointedMobCache, PreviewSettings, PreviewState},
     states::EditorState,
 };
 
 use super::{
     file_panel_ui, properties_panel_ui, render_delete_dialog, toolbar_ui,
-    DeleteDialogState, ErrorDialog, FileDialogState, FileDialogResult,
-    DecorationBrowseResult, BrowseRegistrationRequest, UnsavedChangesDialog,
-    ValidationDialog, update_decoration_sprite,
+    DeleteDialogState, ErrorDialog, DecorationBrowseResult, BrowseRegistrationRequest,
+    UnsavedChangesDialog, ValidationDialog, update_decoration_sprite,
+    NewFolderDialog, NewMobDialog,
 };
 
 /// Grouped message writers for the main UI system
@@ -36,7 +36,6 @@ pub struct UiMessageWriters<'w> {
 /// Grouped dialog resources for the main UI system
 #[derive(SystemParam)]
 pub struct DialogResources<'w> {
-    pub file_dialog: ResMut<'w, FileDialogState>,
     pub delete_dialog: ResMut<'w, DeleteDialogState>,
     pub unsaved_dialog: ResMut<'w, UnsavedChangesDialog>,
     pub error_dialog: ResMut<'w, ErrorDialog>,
@@ -44,6 +43,8 @@ pub struct DialogResources<'w> {
     pub registration_dialog: ResMut<'w, SpriteRegistrationDialog>,
     pub selection_dialog: ResMut<'w, SpriteSelectionDialog>,
     pub decoration_selection_dialog: ResMut<'w, DecorationSelectionDialog>,
+    pub new_folder_dialog: ResMut<'w, NewFolderDialog>,
+    pub new_mob_dialog: ResMut<'w, NewMobDialog>,
 }
 
 /// Main UI layout system that renders all egui panels
@@ -52,7 +53,6 @@ pub fn main_ui_system(
     mut session: ResMut<EditorSession>,
     mut file_tree: ResMut<FileTreeState>,
     state: Res<State<EditorState>>,
-    config: Res<EditorConfig>,
     time: Res<Time>,
     mut events: UiMessageWriters,
     mut dialogs: DialogResources,
@@ -73,33 +73,6 @@ pub fn main_ui_system(
         return;
     }
 
-    // Poll for file dialog results
-    if let Some(result) = dialogs.file_dialog.poll_result() {
-        match result {
-            FileDialogResult::NewFile { path, is_patch } => {
-                // Extract name from filename (without extension)
-                let name = path
-                    .file_stem()
-                    .and_then(|s| s.to_str())
-                    .unwrap_or("unnamed")
-                    .to_string();
-
-                events.new.write(NewMobEvent {
-                    path,
-                    name,
-                    is_patch,
-                });
-            }
-            FileDialogResult::OpenFile { path } => {
-                // Open the selected file
-                events.load.write(LoadMobEvent { path });
-            }
-            FileDialogResult::Cancelled => {
-                // User cancelled, nothing to do
-            }
-        }
-    }
-
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
@@ -107,11 +80,9 @@ pub fn main_ui_system(
     // Top toolbar
     toolbar_ui(
         ctx,
-        &mut session,
+        &session,
         &mut events.save,
         &mut events.reload,
-        &mut *dialogs.file_dialog,
-        &config,
     );
 
     // Left panel - File browser
@@ -125,10 +96,10 @@ pub fn main_ui_system(
                 &mut file_tree,
                 &session,
                 &mut events.load,
-                &mut *dialogs.file_dialog,
                 &mut *dialogs.delete_dialog,
                 &mut *dialogs.unsaved_dialog,
-                &config,
+                &mut *dialogs.new_folder_dialog,
+                &mut *dialogs.new_mob_dialog,
             );
         });
 
@@ -253,8 +224,8 @@ pub fn main_ui_system(
                         ui.vertical_centered(|ui| {
                             ui.heading("Mob Editor");
                             ui.add_space(20.0);
-                            ui.label("Select a .mob or .mobpatch file from the file browser");
-                            ui.label("or use File → New Mob/Patch to create one.");
+                            ui.label("Select a .mob or .mobpatch file from the file browser,");
+                            ui.label("or right-click a folder to create a new one.");
                         });
                     });
                 }
@@ -362,6 +333,12 @@ pub fn main_ui_system(
 
     // Render validation dialog
     render_validation_dialog(ctx, &mut *dialogs.validation_dialog);
+
+    // Render new folder dialog
+    render_new_folder_dialog(ctx, &mut *dialogs.new_folder_dialog, &mut file_tree);
+
+    // Render new mob dialog
+    render_new_mob_dialog(ctx, &mut *dialogs.new_mob_dialog, &mut events.new, &mut file_tree);
 }
 
 /// Render the validation errors dialog
@@ -517,6 +494,130 @@ fn render_error_dialog(ctx: &egui::Context, dialog: &mut ErrorDialog) {
                 }
             });
         });
+}
+
+/// Render the new folder dialog
+fn render_new_folder_dialog(
+    ctx: &egui::Context,
+    dialog: &mut NewFolderDialog,
+    file_tree: &mut FileTreeState,
+) {
+    if !dialog.is_open {
+        return;
+    }
+
+    let mut should_create = false;
+    let mut should_close = false;
+
+    egui::Window::new("New Folder")
+        .collapsible(false)
+        .resizable(false)
+        .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+        .show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                ui.label("Folder name:");
+                let response = ui.text_edit_singleline(&mut dialog.folder_name);
+                if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+                    should_create = true;
+                }
+                // Focus the text field when dialog opens
+                response.request_focus();
+            });
+
+            ui.add_space(8.0);
+
+            ui.horizontal(|ui| {
+                if ui.button("Cancel").clicked() {
+                    should_close = true;
+                }
+
+                let valid_name = !dialog.folder_name.trim().is_empty()
+                    && !dialog.folder_name.contains(['/', '\\', ':', '*', '?', '"', '<', '>', '|']);
+
+                if ui.add_enabled(valid_name, egui::Button::new("Create")).clicked() {
+                    should_create = true;
+                }
+            });
+        });
+
+    if should_create && !dialog.folder_name.trim().is_empty() {
+        let new_path = dialog.parent_path.join(dialog.folder_name.trim());
+        if let Err(e) = std::fs::create_dir_all(&new_path) {
+            eprintln!("Failed to create folder: {}", e);
+        } else {
+            file_tree.needs_refresh = true;
+        }
+        dialog.close();
+    } else if should_close {
+        dialog.close();
+    }
+}
+
+/// Render the new mob/patch dialog
+fn render_new_mob_dialog(
+    ctx: &egui::Context,
+    dialog: &mut NewMobDialog,
+    new_events: &mut MessageWriter<NewMobEvent>,
+    file_tree: &mut FileTreeState,
+) {
+    if !dialog.is_open {
+        return;
+    }
+
+    let mut should_create = false;
+    let mut should_close = false;
+
+    let title = if dialog.is_patch { "New Patch" } else { "New Mob" };
+    let extension = if dialog.is_patch { "mobpatch" } else { "mob" };
+
+    egui::Window::new(title)
+        .collapsible(false)
+        .resizable(false)
+        .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+        .show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                ui.label("File name:");
+                let response = ui.text_edit_singleline(&mut dialog.file_name);
+                if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+                    should_create = true;
+                }
+                // Focus the text field when dialog opens
+                response.request_focus();
+
+                ui.label(format!(".{}", extension));
+            });
+
+            ui.add_space(8.0);
+
+            ui.horizontal(|ui| {
+                if ui.button("Cancel").clicked() {
+                    should_close = true;
+                }
+
+                let valid_name = !dialog.file_name.trim().is_empty()
+                    && !dialog.file_name.contains(['/', '\\', ':', '*', '?', '"', '<', '>', '|', '.']);
+
+                if ui.add_enabled(valid_name, egui::Button::new("Create")).clicked() {
+                    should_create = true;
+                }
+            });
+        });
+
+    if should_create && !dialog.file_name.trim().is_empty() {
+        let file_name = format!("{}.{}", dialog.file_name.trim(), extension);
+        let path = dialog.parent_path.join(&file_name);
+
+        new_events.write(NewMobEvent {
+            path,
+            name: dialog.file_name.trim().to_string(),
+            is_patch: dialog.is_patch,
+        });
+
+        file_tree.needs_refresh = true;
+        dialog.close();
+    } else if should_close {
+        dialog.close();
+    }
 }
 
 /// Render the sprite registration dialog

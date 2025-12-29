@@ -97,10 +97,7 @@ impl FileTreeState {
             if entry_path.is_dir() {
                 let mut dir_node = FileNode::new_directory(name, entry_path.clone());
                 Self::scan_directory(&mut dir_node, &entry_path);
-                // Only add directories that contain mob files
-                if Self::contains_mob_files(&dir_node) {
-                    dirs.push(dir_node);
-                }
+                dirs.push(dir_node);
             } else if let Some(ext) = entry_path.extension() {
                 let ext_str = ext.to_string_lossy();
                 if ext_str == "mob" || ext_str == "mobpatch" {
@@ -116,13 +113,6 @@ impl FileTreeState {
         // Directories first, then files
         node.children.extend(dirs);
         node.children.extend(files);
-    }
-
-    fn contains_mob_files(node: &FileNode) -> bool {
-        if !node.is_directory {
-            return true;
-        }
-        node.children.iter().any(Self::contains_mob_files)
     }
 
     /// Toggle expansion state of a directory

@@ -18,7 +18,7 @@ use crate::{
         PreviewState,
     },
     states::{DialogState, EditingMode, EditorState},
-    ui::{main_ui_system, DeleteDialogState, ErrorDialog, FileDialogState, UnsavedChangesDialog, ValidationDialog},
+    ui::{main_ui_system, DeleteDialogState, ErrorDialog, NewFolderDialog, NewMobDialog, UnsavedChangesDialog, ValidationDialog},
 };
 
 /// Main plugin for the mob editor
@@ -60,11 +60,12 @@ impl Plugin for MobEditorPlugin {
             .init_resource::<FileTreeState>()
             .init_resource::<PreviewSettings>()
             .init_resource::<PreviewState>()
-            .init_resource::<FileDialogState>()
             .init_resource::<DeleteDialogState>()
             .init_resource::<UnsavedChangesDialog>()
             .init_resource::<ErrorDialog>()
             .init_resource::<ValidationDialog>()
+            .init_resource::<NewFolderDialog>()
+            .init_resource::<NewMobDialog>()
             .init_resource::<SpriteRegistry>()
             .init_resource::<SpriteRegistrationDialog>()
             .init_resource::<SpriteSelectionDialog>()
