@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use bevy_egui::egui;
 
 use crate::data::{EditorSession, FileType, SpriteRegistry, SpriteSource};
+use crate::preview::JointedMobCache;
 
 /// Color for patched/overridden values
 const PATCHED_COLOR: egui::Color32 = egui::Color32::from_rgb(100, 200, 255);
@@ -63,6 +64,7 @@ pub fn properties_panel_ui(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
     sprite_registry: &SpriteRegistry,
+    jointed_cache: &JointedMobCache,
 ) -> PropertiesPanelResult {
     let mut result = PropertiesPanelResult::default();
 
@@ -491,6 +493,49 @@ pub fn properties_panel_ui(
         }
         session.check_modified();
     }
+
+    // Parent mobs list section (shows which mobs use this mob as a jointed part)
+    ui.separator();
+    egui::CollapsingHeader::new("Used By (Parent Mobs)")
+        .default_open(false)
+        .show(ui, |ui| {
+            if jointed_cache.parent_mobs.is_empty() {
+                ui.label(
+                    egui::RichText::new("No parent mobs reference this file")
+                        .italics()
+                        .color(egui::Color32::GRAY),
+                );
+            } else {
+                ui.label(
+                    egui::RichText::new(format!(
+                        "{} mob(s) use this file as a jointed part:",
+                        jointed_cache.parent_mobs.len()
+                    ))
+                    .small()
+                    .color(egui::Color32::GRAY),
+                );
+                ui.add_space(4.0);
+
+                for parent in &jointed_cache.parent_mobs {
+                    ui.horizontal(|ui| {
+                        ui.label("•");
+                        ui.label(egui::RichText::new(&parent.name).strong());
+                        ui.label(
+                            egui::RichText::new(format!("(as \"{}\")", parent.jointed_key))
+                                .small()
+                                .color(egui::Color32::GRAY),
+                        );
+                    });
+                    ui.label(
+                        egui::RichText::new(parent.path.display().to_string())
+                            .small()
+                            .monospace()
+                            .color(egui::Color32::DARK_GRAY),
+                    );
+                    ui.add_space(4.0);
+                }
+            }
+        });
 
     result
 }

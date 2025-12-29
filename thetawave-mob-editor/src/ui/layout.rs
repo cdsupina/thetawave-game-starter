@@ -11,7 +11,7 @@ use crate::{
         ReloadMobEvent, SaveMobEvent,
     },
     plugin::{EditorConfig, SpriteRegistrationDialog, SpriteSelectionDialog, DecorationSelectionDialog},
-    preview::{PreviewSettings, PreviewState},
+    preview::{JointedMobCache, PreviewSettings, PreviewState},
     states::EditorState,
 };
 
@@ -31,6 +31,16 @@ pub struct UiMessageWriters<'w> {
     delete: MessageWriter<'w, DeleteMobEvent>,
 }
 
+/// Grouped dialog resources for the main UI system
+#[derive(SystemParam)]
+pub struct DialogResources<'w> {
+    pub file_dialog: ResMut<'w, FileDialogState>,
+    pub delete_dialog: ResMut<'w, DeleteDialogState>,
+    pub registration_dialog: ResMut<'w, SpriteRegistrationDialog>,
+    pub selection_dialog: ResMut<'w, SpriteSelectionDialog>,
+    pub decoration_selection_dialog: ResMut<'w, DecorationSelectionDialog>,
+}
+
 /// Main UI layout system that renders all egui panels
 pub fn main_ui_system(
     mut contexts: EguiContexts,
@@ -40,14 +50,11 @@ pub fn main_ui_system(
     config: Res<EditorConfig>,
     time: Res<Time>,
     mut events: UiMessageWriters,
-    mut file_dialog: ResMut<FileDialogState>,
-    mut delete_dialog: ResMut<DeleteDialogState>,
+    mut dialogs: DialogResources,
     mut preview_settings: ResMut<PreviewSettings>,
     mut preview_state: ResMut<PreviewState>,
     mut sprite_registry: ResMut<SpriteRegistry>,
-    mut registration_dialog: ResMut<SpriteRegistrationDialog>,
-    mut selection_dialog: ResMut<SpriteSelectionDialog>,
-    mut decoration_selection_dialog: ResMut<DecorationSelectionDialog>,
+    jointed_cache: Res<JointedMobCache>,
     mut frames_passed: Local<u8>,
 ) {
     // Skip first two frames to let egui initialize properly
@@ -62,7 +69,7 @@ pub fn main_ui_system(
     }
 
     // Poll for file dialog results
-    if let Some(result) = file_dialog.poll_result() {
+    if let Some(result) = dialogs.file_dialog.poll_result() {
         match result {
             FileDialogResult::NewFile { path, is_patch } => {
                 // Extract name from filename (without extension)
@@ -101,7 +108,7 @@ pub fn main_ui_system(
         &mut session,
         &mut events.save,
         &mut events.reload,
-        &mut *file_dialog,
+        &mut *dialogs.file_dialog,
         &config,
     );
 
@@ -116,8 +123,8 @@ pub fn main_ui_system(
                 &mut file_tree,
                 &session,
                 &mut events.load,
-                &mut *file_dialog,
-                &mut *delete_dialog,
+                &mut *dialogs.file_dialog,
+                &mut *dialogs.delete_dialog,
                 &config,
             );
         });
@@ -130,7 +137,7 @@ pub fn main_ui_system(
             .min_width(250.0)
             .resizable(true)
             .show(ctx, |ui| {
-                panel_result = properties_panel_ui(ui, &mut session, &sprite_registry);
+                panel_result = properties_panel_ui(ui, &mut session, &sprite_registry, &jointed_cache);
             });
     }
 
@@ -139,7 +146,7 @@ pub fn main_ui_system(
         handle_sprite_browse_result(
             result,
             &mut sprite_registry,
-            &mut selection_dialog,
+            &mut *dialogs.selection_dialog,
             &mut session,
             &time,
         );
@@ -150,7 +157,7 @@ pub fn main_ui_system(
         handle_decoration_browse_result(
             result,
             &mut sprite_registry,
-            &mut decoration_selection_dialog,
+            &mut *dialogs.decoration_selection_dialog,
             &mut session,
             &time,
         );
@@ -207,12 +214,10 @@ pub fn main_ui_system(
                 }
                 EditorState::Editing => {
                     // Preview controls at the top
-                    ui.horizontal(|ui| {
-                        ui.label("Preview Controls:");
-                        ui.separator();
+                    ui.horizontal_wrapped(|ui| {
+                        ui.label("Preview:");
 
                         // Zoom controls
-                        ui.label("Zoom:");
                         if ui.small_button("-").clicked() {
                             preview_settings.adjust_zoom(-0.2);
                         }
@@ -230,22 +235,24 @@ pub fn main_ui_system(
                         if ui.selectable_label(preview_settings.show_colliders, "Colliders").clicked() {
                             preview_settings.show_colliders = !preview_settings.show_colliders;
                         }
-
-                        ui.separator();
-
-                        if ui.button("Reset View").clicked() {
-                            preview_settings.reset_view();
+                        if ui.selectable_label(preview_settings.show_jointed_mobs, "Jointed").clicked() {
+                            preview_settings.show_jointed_mobs = !preview_settings.show_jointed_mobs;
+                            preview_state.needs_rebuild = true;
                         }
 
                         ui.separator();
 
-                        // Help text
-                        ui.label(
-                            egui::RichText::new("Scroll: zoom | Right-drag: pan | Home: reset")
-                                .small()
-                                .color(egui::Color32::GRAY),
-                        );
+                        if ui.small_button("Reset").clicked() {
+                            preview_settings.reset_view();
+                        }
                     });
+
+                    // Help text on separate line
+                    ui.label(
+                        egui::RichText::new("Scroll: zoom | Right-drag: pan | Home: reset")
+                            .small()
+                            .color(egui::Color32::GRAY),
+                    );
 
                     // Sprite info collapsible section
                     egui::CollapsingHeader::new("Sprite Source")
@@ -263,12 +270,12 @@ pub fn main_ui_system(
         });
 
     // Render delete dialog window
-    render_delete_dialog(ctx, &mut *delete_dialog, &mut events.delete);
+    render_delete_dialog(ctx, &mut *dialogs.delete_dialog, &mut events.delete);
 
     // Render sprite registration dialog
     render_registration_dialog(
         ctx,
-        &mut *registration_dialog,
+        &mut *dialogs.registration_dialog,
         &mut *sprite_registry,
         &mut events.save,
         &mut session,
@@ -278,7 +285,7 @@ pub fn main_ui_system(
     // Render sprite selection confirmation dialog
     render_selection_dialog(
         ctx,
-        &mut *selection_dialog,
+        &mut *dialogs.selection_dialog,
         &mut session,
         &time,
     );
@@ -286,7 +293,7 @@ pub fn main_ui_system(
     // Render decoration sprite selection confirmation dialog
     render_decoration_selection_dialog(
         ctx,
-        &mut *decoration_selection_dialog,
+        &mut *dialogs.decoration_selection_dialog,
         &mut session,
         &time,
     );

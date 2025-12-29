@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 
 use crate::{data::EditorSession, states::EditorState};
+use super::{JointedMobCache, PreviewSettings};
 
 /// Marker component for the preview mob entity
 #[derive(Component)]
@@ -15,6 +16,10 @@ pub struct PreviewDecoration {
     /// Index of this decoration in the mob's decorations array
     pub index: usize,
 }
+
+/// Marker component for jointed mob preview entities
+#[derive(Component)]
+pub struct PreviewJointedMob;
 
 /// Result of attempting to load a sprite
 #[derive(Debug, Clone, Default)]
@@ -101,7 +106,10 @@ pub fn update_preview_mob(
     asset_server: Res<AssetServer>,
     existing_mobs: Query<Entity, With<PreviewMob>>,
     existing_decorations: Query<Entity, With<PreviewDecoration>>,
+    existing_jointed: Query<Entity, With<PreviewJointedMob>>,
     state: Res<State<EditorState>>,
+    preview_settings: Res<PreviewSettings>,
+    jointed_cache: Res<JointedMobCache>,
 ) {
     // Despawn preview when not editing
     if *state.get() != EditorState::Editing {
@@ -109,6 +117,9 @@ pub fn update_preview_mob(
             commands.entity(entity).despawn();
         }
         for entity in &existing_decorations {
+            commands.entity(entity).despawn();
+        }
+        for entity in &existing_jointed {
             commands.entity(entity).despawn();
         }
         preview_state.current_sprite_key = None;
@@ -126,6 +137,9 @@ pub fn update_preview_mob(
         commands.entity(entity).despawn();
     }
     for entity in &existing_decorations {
+        commands.entity(entity).despawn();
+    }
+    for entity in &existing_jointed {
         commands.entity(entity).despawn();
     }
 
@@ -196,6 +210,15 @@ pub fn update_preview_mob(
                 preview_state.sprite_override_path.as_ref(),
                 &asset_server,
             );
+
+            // Spawn jointed mobs if toggle is enabled
+            if preview_settings.show_jointed_mobs {
+                spawn_jointed_mob_previews(
+                    &mut commands,
+                    &jointed_cache,
+                    &asset_server,
+                );
+            }
         } else {
             warn!("Could not find sprite: {}", path);
         }
@@ -210,11 +233,72 @@ pub fn update_preview_mob(
     }
 }
 
+/// Spawn jointed mob preview entities with dimmed sprites
+fn spawn_jointed_mob_previews(
+    commands: &mut Commands,
+    cache: &JointedMobCache,
+    asset_server: &AssetServer,
+) {
+    // Dimmed color (50% alpha)
+    let dimmed_color = Color::srgba(1.0, 1.0, 1.0, 0.5);
+
+    for resolved in &cache.resolved_mobs {
+        let Some(sprite_path) = &resolved.sprite_path else {
+            continue;
+        };
+
+        let load_result = try_load_sprite_from_path(sprite_path, None, asset_server);
+        if let Some(aseprite_handle) = load_result.handle {
+            // Spawn the jointed mob sprite
+            commands.spawn((
+                PreviewJointedMob,
+                AseAnimation {
+                    animation: Animation::tag("idle"),
+                    aseprite: aseprite_handle,
+                },
+                Sprite {
+                    color: dimmed_color,
+                    ..default()
+                },
+                Transform::from_xyz(
+                    resolved.offset_pos.x,
+                    resolved.offset_pos.y,
+                    // Layer behind main mob, with depth affecting z-order
+                    resolved.z_level - 0.01 * resolved.depth as f32,
+                ),
+            ));
+
+            // Spawn decorations for this jointed mob (also dimmed)
+            for (dec_path, dec_pos) in &resolved.decorations {
+                let dec_result = try_load_sprite_from_path(dec_path, None, asset_server);
+                if let Some(dec_handle) = dec_result.handle {
+                    commands.spawn((
+                        PreviewJointedMob,
+                        AseAnimation {
+                            animation: Animation::tag("idle"),
+                            aseprite: dec_handle,
+                        },
+                        Sprite {
+                            color: dimmed_color,
+                            ..default()
+                        },
+                        Transform::from_xyz(
+                            resolved.offset_pos.x + dec_pos.x,
+                            resolved.offset_pos.y + dec_pos.y,
+                            resolved.z_level + 0.1 - 0.01 * resolved.depth as f32,
+                        ),
+                    ));
+                }
+            }
+        }
+    }
+}
+
 /// Result of trying to load a sprite
-struct SpriteLoadResult {
-    handle: Option<Handle<Aseprite>>,
-    loaded_from: Option<PathBuf>,
-    searched_paths: Vec<PathBuf>,
+pub struct SpriteLoadResult {
+    pub handle: Option<Handle<Aseprite>>,
+    pub loaded_from: Option<PathBuf>,
+    pub searched_paths: Vec<PathBuf>,
 }
 
 /// Check if a sprite path uses the extended:// prefix
@@ -228,7 +312,7 @@ fn strip_extended_prefix(path: &str) -> &str {
 }
 
 /// Try to load a sprite from a full path (supports extended:// prefix)
-fn try_load_sprite_from_path(
+pub fn try_load_sprite_from_path(
     sprite_path: &str,
     override_path: Option<&PathBuf>,
     asset_server: &AssetServer,

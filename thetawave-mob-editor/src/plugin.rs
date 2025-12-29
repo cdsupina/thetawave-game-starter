@@ -12,9 +12,9 @@ use crate::{
     },
     preview::{
         check_preview_update, draw_collider_gizmos, draw_grid, draw_spawner_gizmos,
-        handle_camera_input, setup_preview_camera, update_decoration_positions,
-        update_preview_camera, update_preview_mob, update_preview_settings, PreviewSettings,
-        PreviewState,
+        handle_camera_input, rebuild_jointed_mob_cache, setup_preview_camera,
+        update_decoration_positions, update_preview_camera, update_preview_mob,
+        update_preview_settings, JointedMobCache, PreviewSettings, PreviewState,
     },
     states::{DialogState, EditingMode, EditorState},
     ui::{main_ui_system, DeleteDialogState, FileDialogState},
@@ -64,7 +64,8 @@ impl Plugin for MobEditorPlugin {
             .init_resource::<SpriteRegistry>()
             .init_resource::<SpriteRegistrationDialog>()
             .init_resource::<SpriteSelectionDialog>()
-            .init_resource::<DecorationSelectionDialog>();
+            .init_resource::<DecorationSelectionDialog>()
+            .init_resource::<JointedMobCache>();
 
         // Store config
         app.insert_resource(EditorConfig {
@@ -102,7 +103,8 @@ impl Plugin for MobEditorPlugin {
             Update,
             (
                 check_preview_update,
-                update_preview_mob.after(check_preview_update),
+                rebuild_jointed_mob_cache.after(check_preview_update),
+                update_preview_mob.after(rebuild_jointed_mob_cache),
                 update_decoration_positions.after(update_preview_mob),
                 update_preview_camera.after(update_preview_settings),
             ),
