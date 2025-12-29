@@ -5,7 +5,7 @@ use bevy::{ecs::message::MessageWriter, prelude::*};
 use bevy_egui::egui;
 
 use crate::{
-    data::{EditorSession, FileType},
+    data::EditorSession,
     file::{DeleteMobEvent, FileNode, FileTreeState, LoadMobEvent},
     plugin::EditorConfig,
 };
@@ -167,7 +167,6 @@ impl DeleteDialogState {
 #[derive(Clone)]
 pub enum UnsavedAction {
     LoadFile(PathBuf),
-    NewFile(PathBuf, FileType),
     Exit,
 }
 
@@ -207,25 +206,6 @@ pub struct ValidationDialog {
 }
 
 impl ErrorDialog {
-    pub fn show(&mut self, title: impl Into<String>, message: impl Into<String>) {
-        self.is_open = true;
-        self.title = title.into();
-        self.message = message.into();
-        self.details = None;
-    }
-
-    pub fn show_with_details(
-        &mut self,
-        title: impl Into<String>,
-        message: impl Into<String>,
-        details: impl Into<String>,
-    ) {
-        self.is_open = true;
-        self.title = title.into();
-        self.message = message.into();
-        self.details = Some(details.into());
-    }
-
     pub fn close(&mut self) {
         self.is_open = false;
     }

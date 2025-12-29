@@ -73,14 +73,6 @@ pub fn toolbar_ui(
                 }
             });
 
-            // View menu
-            ui.menu_button("View", |ui| {
-                if ui.button("Reset Layout").clicked() {
-                    // TODO: Reset panel sizes
-                    ui.close();
-                }
-            });
-
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 // Quick action buttons on the right
                 let save_enabled = session.is_modified && session.current_path.is_some();

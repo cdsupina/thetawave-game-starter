@@ -354,7 +354,6 @@ pub fn main_ui_system(
         &session,
         &mut events.save,
         &mut events.load,
-        &mut events.new,
         &mut events.exit,
     );
 
@@ -410,7 +409,6 @@ fn render_unsaved_changes_dialog(
     session: &EditorSession,
     save_events: &mut MessageWriter<SaveMobEvent>,
     load_events: &mut MessageWriter<LoadMobEvent>,
-    new_events: &mut MessageWriter<crate::file::NewMobEvent>,
     exit_events: &mut MessageWriter<bevy::app::AppExit>,
 ) {
     use super::UnsavedAction;
@@ -466,14 +464,6 @@ fn render_unsaved_changes_dialog(
         match action {
             UnsavedAction::LoadFile(path) => {
                 load_events.write(LoadMobEvent { path });
-            }
-            UnsavedAction::NewFile(path, file_type) => {
-                let is_patch = file_type == crate::data::FileType::MobPatch;
-                let name = path.file_stem()
-                    .and_then(|s| s.to_str())
-                    .unwrap_or("unnamed")
-                    .to_string();
-                new_events.write(crate::file::NewMobEvent { path, name, is_patch });
             }
             UnsavedAction::Exit => {
                 exit_events.write(bevy::app::AppExit::Success);

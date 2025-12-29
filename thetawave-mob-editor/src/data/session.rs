@@ -13,7 +13,6 @@ pub enum FileType {
 /// Status message severity level
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StatusLevel {
-    Info,
     Success,
     Warning,
     Error,
@@ -22,7 +21,6 @@ pub enum StatusLevel {
 impl StatusLevel {
     pub fn color(&self) -> bevy_egui::egui::Color32 {
         match self {
-            StatusLevel::Info => bevy_egui::egui::Color32::WHITE,
             StatusLevel::Success => bevy_egui::egui::Color32::from_rgb(100, 200, 100),
             StatusLevel::Warning => bevy_egui::egui::Color32::YELLOW,
             StatusLevel::Error => bevy_egui::egui::Color32::from_rgb(255, 100, 100),
@@ -281,11 +279,6 @@ impl EditorSession {
             (None, None) => false,
             _ => true,
         };
-    }
-
-    /// Log an info message
-    pub fn log_info(&mut self, message: impl Into<String>, time: &Time) {
-        self.log.push(message, StatusLevel::Info, time.elapsed_secs_f64());
     }
 
     /// Log a success message
