@@ -73,38 +73,6 @@ pub fn toolbar_ui(
                 }
             });
 
-            // Edit menu
-            ui.menu_button("Edit", |ui| {
-                let can_undo = session.history.can_undo();
-                let can_redo = session.history.can_redo();
-
-                if ui
-                    .add_enabled(can_undo, egui::Button::new("Undo"))
-                    .clicked()
-                {
-                    if let Some(mob) = &session.current_mob {
-                        if let Some(prev) = session.history.undo(mob) {
-                            session.current_mob = Some(prev);
-                            session.check_modified();
-                        }
-                    }
-                    ui.close();
-                }
-
-                if ui
-                    .add_enabled(can_redo, egui::Button::new("Redo"))
-                    .clicked()
-                {
-                    if let Some(mob) = &session.current_mob {
-                        if let Some(next) = session.history.redo(mob) {
-                            session.current_mob = Some(next);
-                            session.check_modified();
-                        }
-                    }
-                    ui.close();
-                }
-            });
-
             // View menu
             ui.menu_button("View", |ui| {
                 if ui.button("Reset Layout").clicked() {

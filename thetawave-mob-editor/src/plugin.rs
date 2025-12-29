@@ -308,7 +308,6 @@ fn handle_load_mob(
                 session.current_path = Some(event.path.clone());
                 session.file_type = file_type;
                 session.is_modified = false;
-                session.history.clear();
                 session.selected_collider = None;
                 session.selected_behavior_node = None;
 
@@ -462,7 +461,6 @@ fn handle_new_mob(
                     crate::data::FileType::Mob
                 };
                 session.is_modified = false;
-                session.history.clear();
                 session.log_success(format!("Created: {}", event.path.display()), &time);
 
                 file_tree.needs_refresh = true;
@@ -507,7 +505,7 @@ fn handle_delete_mob(
 /// Handle keyboard shortcuts
 fn handle_keyboard_shortcuts(
     keys: Res<ButtonInput<KeyCode>>,
-    mut session: ResMut<EditorSession>,
+    session: Res<EditorSession>,
     mut save_events: MessageWriter<SaveMobEvent>,
     mut reload_events: MessageWriter<ReloadMobEvent>,
 ) {
@@ -528,27 +526,6 @@ fn handle_keyboard_shortcuts(
             }
         }
 
-        // Ctrl+Z - Undo
-        if keys.just_pressed(KeyCode::KeyZ) && !keys.pressed(KeyCode::ShiftLeft) {
-            if let Some(mob) = session.current_mob.clone() {
-                if let Some(prev) = session.history.undo(&mob) {
-                    session.current_mob = Some(prev);
-                    session.check_modified();
-                }
-            }
-        }
-
-        // Ctrl+Shift+Z or Ctrl+Y - Redo
-        if (keys.just_pressed(KeyCode::KeyZ) && keys.pressed(KeyCode::ShiftLeft))
-            || keys.just_pressed(KeyCode::KeyY)
-        {
-            if let Some(mob) = session.current_mob.clone() {
-                if let Some(next) = session.history.redo(&mob) {
-                    session.current_mob = Some(next);
-                    session.check_modified();
-                }
-            }
-        }
     }
 }
 

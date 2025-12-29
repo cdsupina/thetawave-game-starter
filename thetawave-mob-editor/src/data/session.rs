@@ -10,46 +10,6 @@ pub enum FileType {
     MobPatch,
 }
 
-/// Stores the undo/redo history for the current editing session
-#[derive(Default)]
-pub struct UndoHistory {
-    past: Vec<toml::Value>,
-    future: Vec<toml::Value>,
-}
-
-impl UndoHistory {
-    pub fn undo(&mut self, current: &toml::Value) -> Option<toml::Value> {
-        if let Some(prev) = self.past.pop() {
-            self.future.push(current.clone());
-            Some(prev)
-        } else {
-            None
-        }
-    }
-
-    pub fn redo(&mut self, current: &toml::Value) -> Option<toml::Value> {
-        if let Some(next) = self.future.pop() {
-            self.past.push(current.clone());
-            Some(next)
-        } else {
-            None
-        }
-    }
-
-    pub fn can_undo(&self) -> bool {
-        !self.past.is_empty()
-    }
-
-    pub fn can_redo(&self) -> bool {
-        !self.future.is_empty()
-    }
-
-    pub fn clear(&mut self) {
-        self.past.clear();
-        self.future.clear();
-    }
-}
-
 /// Status message severity level
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StatusLevel {
@@ -282,9 +242,6 @@ pub struct EditorSession {
     /// Has unsaved modifications
     pub is_modified: bool,
 
-    /// Undo/redo history
-    pub history: UndoHistory,
-
     /// Selected collider index for editing
     pub selected_collider: Option<usize>,
 
@@ -308,7 +265,6 @@ impl Default for EditorSession {
             current_path: None,
             file_type: FileType::Mob,
             is_modified: false,
-            history: UndoHistory::default(),
             selected_collider: None,
             selected_jointed_mob: None,
             selected_behavior_node: None,
