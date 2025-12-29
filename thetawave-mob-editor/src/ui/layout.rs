@@ -10,14 +10,15 @@ use crate::{
         append_sprite_to_assets_ron, DeleteMobEvent, FileTreeState, LoadMobEvent, NewMobEvent,
         ReloadMobEvent, SaveMobEvent,
     },
-    plugin::{EditorConfig, SpriteRegistrationDialog, SpriteSelectionDialog},
+    plugin::{EditorConfig, SpriteRegistrationDialog, SpriteSelectionDialog, DecorationSelectionDialog},
     preview::{PreviewSettings, PreviewState},
     states::EditorState,
 };
 
 use super::{
     file_panel_ui, properties_panel_ui, render_delete_dialog, toolbar_ui,
-    DeleteDialogState, FileDialogState, FileDialogResult,
+    DeleteDialogState, FileDialogState, FileDialogResult, DecorationBrowseResult,
+    BrowseRegistrationRequest, update_decoration_sprite,
 };
 
 /// Grouped message writers for the main UI system
@@ -46,6 +47,7 @@ pub fn main_ui_system(
     mut sprite_registry: ResMut<SpriteRegistry>,
     mut registration_dialog: ResMut<SpriteRegistrationDialog>,
     mut selection_dialog: ResMut<SpriteSelectionDialog>,
+    mut decoration_selection_dialog: ResMut<DecorationSelectionDialog>,
     mut frames_passed: Local<u8>,
 ) {
     // Skip first two frames to let egui initialize properly
@@ -121,61 +123,37 @@ pub fn main_ui_system(
         });
 
     // Right panel - Properties (only when editing)
-    let mut browse_result = None;
+    let mut panel_result = super::PropertiesPanelResult::default();
     if *state.get() == EditorState::Editing {
         egui::SidePanel::right("properties_panel")
             .default_width(300.0)
             .min_width(250.0)
             .resizable(true)
             .show(ctx, |ui| {
-                browse_result = properties_panel_ui(ui, &mut session, &sprite_registry);
+                panel_result = properties_panel_ui(ui, &mut session, &sprite_registry);
             });
     }
 
-    // Handle browse & register result
-    if let Some(result) = browse_result {
-        match result {
-            super::BrowseResult::Register(request) => {
-                let cwd = std::env::current_dir().unwrap_or_default();
-                let assets_ron = if request.is_extended {
-                    cwd.join("thetawave-test-game/assets/game.assets.ron")
-                } else {
-                    cwd.join("assets/game.assets.ron")
-                };
+    // Handle main sprite browse & register result
+    if let Some(result) = panel_result.sprite_browse {
+        handle_sprite_browse_result(
+            result,
+            &mut sprite_registry,
+            &mut selection_dialog,
+            &mut session,
+            &time,
+        );
+    }
 
-                // Register the sprite
-                match append_sprite_to_assets_ron(&assets_ron, &request.asset_path, request.is_extended) {
-                    Ok(()) => {
-                        // Mark registry for refresh
-                        sprite_registry.needs_refresh = true;
-
-                        // Extract display name from asset path
-                        let display_name = std::path::Path::new(&request.asset_path)
-                            .file_stem()
-                            .and_then(|s| s.to_str())
-                            .unwrap_or(&request.asset_path)
-                            .to_string();
-
-                        // Show confirmation dialog to set the sprite
-                        selection_dialog.show = true;
-                        selection_dialog.asset_path = request.asset_path.clone();
-                        selection_dialog.mob_path = request.mob_path.clone();
-                        selection_dialog.display_name = display_name;
-
-                        session.set_status(
-                            format!("Registered: {}", request.asset_path),
-                            &time,
-                        );
-                    }
-                    Err(e) => {
-                        session.set_status(format!("Failed to register sprite: {}", e), &time);
-                    }
-                }
-            }
-            super::BrowseResult::InvalidLocation(error_msg) => {
-                session.set_status(error_msg, &time);
-            }
-        }
+    // Handle decoration sprite browse & register result
+    if let Some(result) = panel_result.decoration_browse {
+        handle_decoration_browse_result(
+            result,
+            &mut sprite_registry,
+            &mut decoration_selection_dialog,
+            &mut session,
+            &time,
+        );
     }
 
     // Bottom status bar
@@ -301,6 +279,14 @@ pub fn main_ui_system(
     render_selection_dialog(
         ctx,
         &mut *selection_dialog,
+        &mut session,
+        &time,
+    );
+
+    // Render decoration sprite selection confirmation dialog
+    render_decoration_selection_dialog(
+        ctx,
+        &mut *decoration_selection_dialog,
         &mut session,
         &time,
     );
@@ -578,4 +564,173 @@ fn render_sprite_info(ui: &mut egui::Ui, preview_state: &mut PreviewState) {
             .small()
             .color(egui::Color32::GRAY),
     );
+}
+
+/// Handle a browse result for main sprite registration
+fn handle_sprite_browse_result(
+    result: super::BrowseResult,
+    sprite_registry: &mut SpriteRegistry,
+    selection_dialog: &mut SpriteSelectionDialog,
+    session: &mut EditorSession,
+    time: &Time,
+) {
+    match result {
+        super::BrowseResult::Register(request) => {
+            register_and_show_dialog(
+                &request,
+                sprite_registry,
+                session,
+                time,
+                |display_name, mob_path| {
+                    selection_dialog.show = true;
+                    selection_dialog.asset_path = request.asset_path.clone();
+                    selection_dialog.mob_path = mob_path;
+                    selection_dialog.display_name = display_name;
+                },
+            );
+        }
+        super::BrowseResult::InvalidLocation(error_msg) => {
+            session.set_status(error_msg, time);
+        }
+    }
+}
+
+/// Handle a browse result for decoration sprite registration
+fn handle_decoration_browse_result(
+    result: DecorationBrowseResult,
+    sprite_registry: &mut SpriteRegistry,
+    decoration_dialog: &mut DecorationSelectionDialog,
+    session: &mut EditorSession,
+    time: &Time,
+) {
+    match result {
+        DecorationBrowseResult::Register { index, request } => {
+            register_and_show_dialog(
+                &request,
+                sprite_registry,
+                session,
+                time,
+                |display_name, mob_path| {
+                    decoration_dialog.show = true;
+                    decoration_dialog.decoration_index = index;
+                    decoration_dialog.mob_path = mob_path;
+                    decoration_dialog.display_name = display_name;
+                },
+            );
+        }
+        DecorationBrowseResult::InvalidLocation(message) => {
+            session.set_status(message, time);
+        }
+    }
+}
+
+/// Register a sprite and call the success callback
+fn register_and_show_dialog<F>(
+    request: &BrowseRegistrationRequest,
+    sprite_registry: &mut SpriteRegistry,
+    session: &mut EditorSession,
+    time: &Time,
+    on_success: F,
+) where
+    F: FnOnce(String, String),
+{
+    let cwd = std::env::current_dir().unwrap_or_default();
+    let assets_ron = if request.is_extended {
+        cwd.join("thetawave-test-game/assets/game.assets.ron")
+    } else {
+        cwd.join("assets/game.assets.ron")
+    };
+
+    // Register the sprite
+    match append_sprite_to_assets_ron(&assets_ron, &request.asset_path, request.is_extended) {
+        Ok(()) => {
+            // Mark registry for refresh
+            sprite_registry.needs_refresh = true;
+
+            // Extract display name from asset path
+            let display_name = std::path::Path::new(&request.asset_path)
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or(&request.asset_path)
+                .to_string();
+
+            session.set_status(format!("Registered: {}", request.asset_path), time);
+
+            // Call the success callback
+            on_success(display_name, request.mob_path.clone());
+        }
+        Err(e) => {
+            session.set_status(format!("Failed to register sprite: {}", e), time);
+        }
+    }
+}
+
+/// Render the decoration sprite selection confirmation dialog
+fn render_decoration_selection_dialog(
+    ctx: &egui::Context,
+    dialog: &mut DecorationSelectionDialog,
+    session: &mut EditorSession,
+    time: &Time,
+) {
+    if !dialog.show {
+        return;
+    }
+
+    egui::Window::new("Set Decoration Sprite?")
+        .collapsible(false)
+        .resizable(false)
+        .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+        .show(ctx, |ui| {
+            ui.label("Sprite registered successfully!");
+            ui.add_space(8.0);
+
+            ui.horizontal(|ui| {
+                ui.label("Sprite:");
+                ui.label(egui::RichText::new(&dialog.display_name).monospace().strong());
+            });
+
+            ui.horizontal(|ui| {
+                ui.label("Decoration:");
+                ui.label(format!("#{}", dialog.decoration_index + 1));
+            });
+
+            ui.add_space(8.0);
+            ui.label("Would you like to set this as the sprite for this decoration?");
+            ui.add_space(8.0);
+
+            ui.horizontal(|ui| {
+                if ui.button("Yes, set sprite").clicked() {
+                    // Set the sprite path in the decoration
+                    update_decoration_sprite(session, dialog.decoration_index, &dialog.mob_path);
+                    session.check_modified();
+
+                    // Also update merged preview for patches
+                    if let (Some(base), Some(patch)) = (&session.base_mob, &session.current_mob) {
+                        let mut merged = base.clone();
+                        crate::file::merge_toml_values(&mut merged, patch.clone());
+                        session.merged_for_preview = Some(merged);
+                    }
+
+                    session.set_status(
+                        format!("Decoration {} sprite set to: {}", dialog.decoration_index + 1, dialog.display_name),
+                        time,
+                    );
+
+                    dialog.show = false;
+                    dialog.mob_path.clear();
+                    dialog.display_name.clear();
+                }
+
+                if ui.button("No, just register").clicked() {
+                    session.set_status(
+                        format!("Sprite registered: {}", dialog.display_name),
+                        time,
+                    );
+
+                    dialog.show = false;
+                    dialog.mob_path.clear();
+                    dialog.display_name.clear();
+                }
+            });
+        });
 }

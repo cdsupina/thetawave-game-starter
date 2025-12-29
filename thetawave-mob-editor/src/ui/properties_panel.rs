@@ -34,14 +34,37 @@ pub struct BrowseRegistrationRequest {
     pub mob_path: String,
 }
 
+/// Result of browsing for a decoration sprite to register
+#[derive(Debug, Clone)]
+pub enum DecorationBrowseResult {
+    /// Successfully identified a sprite to register
+    Register {
+        /// The decoration index
+        index: usize,
+        /// The registration request
+        request: BrowseRegistrationRequest,
+    },
+    /// File was selected but is not in a valid assets directory
+    InvalidLocation(String),
+}
+
+/// Results from the properties panel for browse & register actions
+#[derive(Debug, Clone, Default)]
+pub struct PropertiesPanelResult {
+    /// Browse result for main sprite
+    pub sprite_browse: Option<BrowseResult>,
+    /// Browse result for decoration sprite
+    pub decoration_browse: Option<DecorationBrowseResult>,
+}
+
 /// Render the properties editing panel
-/// Returns a BrowseResult if the user clicked browse to add a new sprite
+/// Returns browse results if the user clicked browse to add a new sprite
 pub fn properties_panel_ui(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
     sprite_registry: &SpriteRegistry,
-) -> Option<BrowseResult> {
-    let mut browse_result: Option<BrowseResult> = None;
+) -> PropertiesPanelResult {
+    let mut result = PropertiesPanelResult::default();
 
     ui.heading("Properties");
 
@@ -83,12 +106,12 @@ pub fn properties_panel_ui(
 
     let Some(display_mob) = display_mob else {
         ui.label("No mob loaded");
-        return None;
+        return result;
     };
 
     let Some(display_table) = display_mob.as_table().cloned() else {
         ui.colored_label(egui::Color32::RED, "Invalid mob data");
-        return None;
+        return result;
     };
 
     // Get patch table for checking what's overridden
@@ -150,7 +173,7 @@ pub fn properties_panel_ui(
                     }
 
                     // Sprite (dropdown picker from registered sprites)
-                    if let Some(result) = render_sprite_picker(
+                    if let Some(sprite_result) = render_sprite_picker(
                         ui,
                         &display_table,
                         &patch_table,
@@ -159,12 +182,12 @@ pub fn properties_panel_ui(
                         is_patch,
                         &mut modified,
                     ) {
-                        browse_result = Some(result);
+                        result.sprite_browse = Some(sprite_result);
                     }
                 });
 
             // Decorations section
-            render_decorations_section(
+            if let Some(dec_result) = render_decorations_section(
                 ui,
                 &display_table,
                 &patch_table,
@@ -172,7 +195,9 @@ pub fn properties_panel_ui(
                 sprite_registry,
                 is_patch,
                 &mut modified,
-            );
+            ) {
+                result.decoration_browse = Some(dec_result);
+            }
 
             // Combat section
             egui::CollapsingHeader::new("Combat")
@@ -467,7 +492,7 @@ pub fn properties_panel_ui(
         session.check_modified();
     }
 
-    browse_result
+    result
 }
 
 /// Render a patch indicator (● for patched, ○ for inherited)
@@ -1832,6 +1857,7 @@ fn analyze_sprite_path(
 }
 
 /// Render the decorations section with sprite pickers
+/// Returns a DecorationBrowseResult if user clicked browse on a decoration
 fn render_decorations_section(
     ui: &mut egui::Ui,
     display_table: &toml::value::Table,
@@ -1840,8 +1866,11 @@ fn render_decorations_section(
     sprite_registry: &SpriteRegistry,
     is_patch: bool,
     modified: &mut bool,
-) {
+) -> Option<DecorationBrowseResult> {
+    let mut browse_result: Option<DecorationBrowseResult> = None;
     let is_patched = is_patch && patch_table.contains_key("decorations");
+    // Only allow editing if not a patch OR if decorations are in the patch
+    let can_edit = !is_patch || is_patched;
 
     egui::CollapsingHeader::new("Decorations")
         .default_open(false)
@@ -1854,6 +1883,28 @@ fn render_decorations_section(
                             .small()
                             .color(INHERITED_COLOR),
                     );
+                    // Add "Override" button to copy decorations to patch
+                    if ui.button("Override").clicked() {
+                        if let Some(decorations) = display_table.get("decorations").cloned() {
+                            if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
+                                mob.insert("decorations".to_string(), decorations);
+                                *modified = true;
+                            }
+                        }
+                    }
+                } else if is_patch && is_patched {
+                    ui.label(
+                        egui::RichText::new("(overriding base)")
+                            .small()
+                            .color(PATCHED_COLOR),
+                    );
+                    // Add "Reset" button to remove decorations from patch
+                    if ui.button("Reset to base").clicked() {
+                        if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
+                            mob.remove("decorations");
+                            *modified = true;
+                        }
+                    }
                 }
             });
 
@@ -1897,53 +1948,63 @@ fn render_decorations_section(
                 ui.group(|ui| {
                     ui.horizontal(|ui| {
                         ui.label(format!("#{}", i + 1));
-                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                            if ui
-                                .button(egui::RichText::new("🗑").color(egui::Color32::RED))
-                                .on_hover_text("Delete decoration")
-                                .clicked()
-                            {
-                                delete_index = Some(i);
-                            }
-                        });
+                        if can_edit {
+                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                if ui
+                                    .button(egui::RichText::new("🗑").color(egui::Color32::RED))
+                                    .on_hover_text("Delete decoration")
+                                    .clicked()
+                                {
+                                    delete_index = Some(i);
+                                }
+                            });
+                        }
                     });
 
                     // Sprite picker for this decoration
-                    render_decoration_sprite_picker(
+                    if let Some(result) = render_decoration_sprite_picker(
                         ui,
                         i,
                         sprite_path,
                         sprite_registry,
                         session,
                         is_patch,
+                        can_edit,
                         modified,
-                    );
+                    ) {
+                        browse_result = Some(result);
+                    }
 
                     // Position editors
                     ui.horizontal(|ui| {
                         ui.label("Position:");
                         let mut x = position.0;
                         let mut y = position.1;
-                        let x_changed = ui
-                            .add(
-                                egui::DragValue::new(&mut x)
-                                    .prefix("X: ")
-                                    .range(-500.0..=500.0)
-                                    .speed(0.5),
-                            )
-                            .changed();
-                        let y_changed = ui
-                            .add(
-                                egui::DragValue::new(&mut y)
-                                    .prefix("Y: ")
-                                    .range(-500.0..=500.0)
-                                    .speed(0.5),
-                            )
-                            .changed();
 
-                        if x_changed || y_changed {
-                            update_decoration_position(session, i, x, y);
-                            *modified = true;
+                        if can_edit {
+                            let x_changed = ui
+                                .add(
+                                    egui::DragValue::new(&mut x)
+                                        .prefix("X: ")
+                                        .range(-500.0..=500.0)
+                                        .speed(0.5),
+                                )
+                                .changed();
+                            let y_changed = ui
+                                .add(
+                                    egui::DragValue::new(&mut y)
+                                        .prefix("Y: ")
+                                        .range(-500.0..=500.0)
+                                        .speed(0.5),
+                                )
+                                .changed();
+
+                            if x_changed || y_changed {
+                                update_decoration_position(session, i, x, y);
+                                *modified = true;
+                            }
+                        } else {
+                            ui.label(format!("X: {:.1}  Y: {:.1}", x, y));
                         }
                     });
                 });
@@ -1955,17 +2016,22 @@ fn render_decorations_section(
                 *modified = true;
             }
 
-            ui.separator();
+            if can_edit {
+                ui.separator();
 
-            // Add new decoration button
-            if ui.button("+ Add Decoration").clicked() {
-                add_new_decoration(session, sprite_registry);
-                *modified = true;
+                // Add new decoration button
+                if ui.button("+ Add Decoration").clicked() {
+                    add_new_decoration(session, sprite_registry);
+                    *modified = true;
+                }
             }
         });
+
+    browse_result
 }
 
 /// Render sprite picker for a decoration
+/// Returns a DecorationBrowseResult if user clicked browse
 fn render_decoration_sprite_picker(
     ui: &mut egui::Ui,
     index: usize,
@@ -1973,8 +2039,11 @@ fn render_decoration_sprite_picker(
     sprite_registry: &SpriteRegistry,
     session: &mut EditorSession,
     is_patch: bool,
+    can_edit: bool,
     modified: &mut bool,
-) {
+) -> Option<DecorationBrowseResult> {
+    let mut browse_result: Option<DecorationBrowseResult> = None;
+
     // Normalize for comparison (strip extended:// prefix)
     let normalized_current = current_sprite
         .strip_prefix("extended://")
@@ -1993,77 +2062,115 @@ fn render_decoration_sprite_picker(
             format!("{} ⚠", sprite_registry.display_name_for(current_sprite))
         };
 
-        let mut selected_path = current_sprite.to_string();
+        if can_edit {
+            let mut selected_path = current_sprite.to_string();
 
-        egui::ComboBox::from_id_salt(format!("decoration_sprite_{}", index))
-            .selected_text(&display_text)
-            .width(140.0)
-            .show_ui(ui, |ui| {
-                // Base sprites section
-                let base_sprites: Vec<_> = sprite_registry.base_sprites().collect();
-                if !base_sprites.is_empty() {
-                    ui.label(
-                        egui::RichText::new("Base Sprites")
-                            .small()
-                            .color(egui::Color32::GRAY),
-                    );
-                    for sprite in base_sprites {
-                        let is_selected = normalized_current == sprite.asset_path;
-                        if ui
-                            .selectable_label(is_selected, &sprite.display_name)
-                            .clicked()
-                        {
-                            selected_path = sprite.mob_path();
-                        }
-                    }
-                }
-
-                // Extended sprites section (only for extended mobs or mobpatches)
-                if session.can_use_extended_sprites() {
-                    let extended_sprites: Vec<_> = sprite_registry.extended_sprites().collect();
-                    if !extended_sprites.is_empty() {
-                        ui.separator();
+            egui::ComboBox::from_id_salt(format!("decoration_sprite_{}", index))
+                .selected_text(&display_text)
+                .width(140.0)
+                .show_ui(ui, |ui| {
+                    // Base sprites section
+                    let base_sprites: Vec<_> = sprite_registry.base_sprites().collect();
+                    if !base_sprites.is_empty() {
                         ui.label(
-                            egui::RichText::new("Extended Sprites")
+                            egui::RichText::new("Base Sprites")
                                 .small()
-                                .color(PATCHED_COLOR),
+                                .color(egui::Color32::GRAY),
                         );
-                        for sprite in extended_sprites {
+                        for sprite in base_sprites {
                             let is_selected = normalized_current == sprite.asset_path;
                             if ui
                                 .selectable_label(is_selected, &sprite.display_name)
                                 .clicked()
                             {
-                                // For patches, use extended:// prefix for extended sprites
-                                selected_path = if is_patch && sprite.source == SpriteSource::Extended {
-                                    sprite.mobpatch_path()
-                                } else {
-                                    sprite.mob_path()
-                                };
+                                selected_path = sprite.mob_path();
                             }
                         }
                     }
-                }
 
-                // Show current unregistered sprite at bottom if applicable
-                if !is_registered && !current_sprite.is_empty() {
-                    ui.separator();
-                    ui.label(
-                        egui::RichText::new("Current (Unregistered)")
-                            .small()
-                            .color(egui::Color32::YELLOW),
-                    );
-                    let _ =
-                        ui.selectable_label(true, &sprite_registry.display_name_for(current_sprite));
-                }
-            });
+                    // Extended sprites section (only for extended mobs or mobpatches)
+                    if session.can_use_extended_sprites() {
+                        let extended_sprites: Vec<_> = sprite_registry.extended_sprites().collect();
+                        if !extended_sprites.is_empty() {
+                            ui.separator();
+                            ui.label(
+                                egui::RichText::new("Extended Sprites")
+                                    .small()
+                                    .color(PATCHED_COLOR),
+                            );
+                            for sprite in extended_sprites {
+                                let is_selected = normalized_current == sprite.asset_path;
+                                if ui
+                                    .selectable_label(is_selected, &sprite.display_name)
+                                    .clicked()
+                                {
+                                    // For patches, use extended:// prefix for extended sprites
+                                    selected_path = if is_patch && sprite.source == SpriteSource::Extended {
+                                        sprite.mobpatch_path()
+                                    } else {
+                                        sprite.mob_path()
+                                    };
+                                }
+                            }
+                        }
+                    }
 
-        // Apply change if different
-        if selected_path != current_sprite {
-            update_decoration_sprite(session, index, &selected_path);
-            *modified = true;
+                    // Show current unregistered sprite at bottom if applicable
+                    if !is_registered && !current_sprite.is_empty() {
+                        ui.separator();
+                        ui.label(
+                            egui::RichText::new("Current (Unregistered)")
+                                .small()
+                                .color(egui::Color32::YELLOW),
+                        );
+                        let _ =
+                            ui.selectable_label(true, &sprite_registry.display_name_for(current_sprite));
+                    }
+                });
+
+            // Apply change if different
+            if selected_path != current_sprite {
+                update_decoration_sprite(session, index, &selected_path);
+                *modified = true;
+            }
+        } else {
+            // Display-only mode when not editable
+            ui.label(
+                egui::RichText::new(&display_text)
+                    .color(INHERITED_COLOR),
+            );
         }
     });
+
+    // Browse & Register button row (only when editable)
+    if can_edit {
+        ui.horizontal(|ui| {
+            ui.add_space(16.0);
+
+            if ui.small_button("Browse & Register...").clicked() {
+                // Open file dialog
+                if let Some(path) = rfd::FileDialog::new()
+                    .add_filter("Aseprite Files", &["aseprite", "ase"])
+                    .set_title("Select Sprite to Register")
+                    .pick_file()
+                {
+                    // Analyze the path to determine if it's valid
+                    let can_use_extended = session.can_use_extended_sprites();
+                    match analyze_sprite_path(&path, is_patch, can_use_extended) {
+                        BrowseResult::Register(request) => {
+                            browse_result = Some(DecorationBrowseResult::Register {
+                                index,
+                                request,
+                            });
+                        }
+                        BrowseResult::InvalidLocation(message) => {
+                            browse_result = Some(DecorationBrowseResult::InvalidLocation(message));
+                        }
+                    }
+                }
+            }
+        });
+    }
 
     // Show warning if unregistered
     if !sprite_registry.is_registered(current_sprite) && !current_sprite.is_empty() {
@@ -2076,10 +2183,12 @@ fn render_decoration_sprite_picker(
             );
         });
     }
+
+    browse_result
 }
 
 /// Update a decoration's sprite path
-fn update_decoration_sprite(session: &mut EditorSession, index: usize, sprite_path: &str) {
+pub fn update_decoration_sprite(session: &mut EditorSession, index: usize, sprite_path: &str) {
     if let Some(mob) = session
         .current_mob
         .as_mut()

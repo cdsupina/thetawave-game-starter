@@ -12,8 +12,9 @@ use crate::{
     },
     preview::{
         check_preview_update, draw_collider_gizmos, draw_grid, draw_spawner_gizmos,
-        handle_camera_input, setup_preview_camera, update_preview_camera, update_preview_mob,
-        update_preview_settings, PreviewSettings, PreviewState,
+        handle_camera_input, setup_preview_camera, update_decoration_positions,
+        update_preview_camera, update_preview_mob, update_preview_settings, PreviewSettings,
+        PreviewState,
     },
     states::{DialogState, EditingMode, EditorState},
     ui::{main_ui_system, DeleteDialogState, FileDialogState},
@@ -62,7 +63,8 @@ impl Plugin for MobEditorPlugin {
             .init_resource::<DeleteDialogState>()
             .init_resource::<SpriteRegistry>()
             .init_resource::<SpriteRegistrationDialog>()
-            .init_resource::<SpriteSelectionDialog>();
+            .init_resource::<SpriteSelectionDialog>()
+            .init_resource::<DecorationSelectionDialog>();
 
         // Store config
         app.insert_resource(EditorConfig {
@@ -101,6 +103,7 @@ impl Plugin for MobEditorPlugin {
             (
                 check_preview_update,
                 update_preview_mob.after(check_preview_update),
+                update_decoration_positions.after(update_preview_mob),
                 update_preview_camera.after(update_preview_settings),
             ),
         );
@@ -153,6 +156,19 @@ pub struct SpriteSelectionDialog {
     pub show: bool,
     /// The asset path of the registered sprite
     pub asset_path: String,
+    /// The path to use in the mob file
+    pub mob_path: String,
+    /// Display name for the sprite
+    pub display_name: String,
+}
+
+/// State for the decoration sprite selection confirmation dialog
+#[derive(Resource, Default)]
+pub struct DecorationSelectionDialog {
+    /// Whether the dialog is showing
+    pub show: bool,
+    /// The decoration index to update
+    pub decoration_index: usize,
     /// The path to use in the mob file
     pub mob_path: String,
     /// Display name for the sprite

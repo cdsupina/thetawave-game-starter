@@ -11,7 +11,10 @@ pub struct PreviewMob;
 
 /// Marker component for preview decoration entities
 #[derive(Component)]
-pub struct PreviewDecoration;
+pub struct PreviewDecoration {
+    /// Index of this decoration in the mob's decorations array
+    pub index: usize,
+}
 
 /// Result of attempting to load a sprite
 #[derive(Debug, Clone, Default)]
@@ -309,7 +312,7 @@ fn spawn_decorations(
         return;
     };
 
-    for decoration in decorations {
+    for (index, decoration) in decorations.iter().enumerate() {
         let Some(arr) = decoration.as_array() else {
             continue;
         };
@@ -337,7 +340,7 @@ fn spawn_decorations(
         if let Some(handle) = load_result.handle {
             info!("Loading decoration sprite: {} at {:?}", sprite_path, position);
             commands.spawn((
-                PreviewDecoration,
+                PreviewDecoration { index },
                 AseAnimation {
                     animation: Animation::tag("idle"),
                     aseprite: handle,
@@ -345,6 +348,56 @@ fn spawn_decorations(
                 Sprite::default(),
                 Transform::from_xyz(position.x, position.y, 0.1), // Slightly above main sprite
             ));
+        }
+    }
+}
+
+/// Update decoration positions based on current mob data
+pub fn update_decoration_positions(
+    session: Res<EditorSession>,
+    mut decorations: Query<(&PreviewDecoration, &mut Transform)>,
+    state: Res<State<EditorState>>,
+) {
+    // Only update when editing
+    if *state.get() != EditorState::Editing {
+        return;
+    }
+
+    // Get mob data (use merged for patches)
+    let Some(mob) = session.mob_for_preview() else {
+        return;
+    };
+
+    let Some(decorations_array) = mob.get("decorations").and_then(|v| v.as_array()) else {
+        return;
+    };
+
+    for (decoration, mut transform) in &mut decorations {
+        // Get the decoration data at this index
+        let Some(decoration_data) = decorations_array.get(decoration.index) else {
+            continue;
+        };
+
+        let Some(arr) = decoration_data.as_array() else {
+            continue;
+        };
+
+        if arr.len() < 2 {
+            continue;
+        }
+
+        // Get position from second element
+        if let Some(pos_arr) = arr[1].as_array() {
+            let x = pos_arr.first().and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
+            let y = pos_arr.get(1).and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
+
+            // Update transform if position changed
+            if (transform.translation.x - x).abs() > 0.001
+                || (transform.translation.y - y).abs() > 0.001
+            {
+                transform.translation.x = x;
+                transform.translation.y = y;
+            }
         }
     }
 }
