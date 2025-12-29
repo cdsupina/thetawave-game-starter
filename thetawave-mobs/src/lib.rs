@@ -7,7 +7,10 @@ mod systems;
 // Only export types that are used by other crates
 pub use asset::{MobAsset, MobRef, MobRegistry};
 pub use attributes::{JointsComponent, MobAttributesComponent, MobDeathEvent, MobMarker};
-pub use behavior::{BehaviorActionName, BehaviorReceiverComponent, MobBehaviorComponent};
+pub use behavior::{
+    BehaviorActionName, BehaviorNodeData, BehaviorReceiverComponent, MobBehaviorComponent,
+    MobBehaviorType,
+};
 pub use spawn::MobDebugSettings;
 
 // Internal imports for this crate
