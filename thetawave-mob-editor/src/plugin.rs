@@ -27,6 +27,10 @@ pub struct MobEditorPlugin {
     pub base_assets_dir: PathBuf,
     /// Extended assets directory (for game-specific overrides)
     pub extended_assets_dir: Option<PathBuf>,
+    /// Whether to show base mobs in the file tree.
+    /// When false, only extended mobs are shown and users can only create patches.
+    /// Set to false when using the editor as a library in an external game.
+    pub show_base_mobs: bool,
 }
 
 impl Default for MobEditorPlugin {
@@ -34,6 +38,7 @@ impl Default for MobEditorPlugin {
         Self {
             base_assets_dir: PathBuf::from("assets/mobs"),
             extended_assets_dir: Some(PathBuf::from("thetawave-test-game/assets/mobs")),
+            show_base_mobs: true,
         }
     }
 }
@@ -77,6 +82,7 @@ impl Plugin for MobEditorPlugin {
         app.insert_resource(EditorConfig {
             base_assets_dir: self.base_assets_dir.clone(),
             extended_assets_dir: self.extended_assets_dir.clone(),
+            show_base_mobs: self.show_base_mobs,
         });
 
         // Messages
@@ -147,6 +153,9 @@ pub struct EditorConfig {
     pub base_assets_dir: PathBuf,
     /// Extended mobs directory (e.g., "my-game/assets/mobs")
     pub extended_assets_dir: Option<PathBuf>,
+    /// Whether to show base mobs in the file tree.
+    /// When false, only extended mobs are shown and users can only create patches.
+    pub show_base_mobs: bool,
 }
 
 impl EditorConfig {
@@ -446,7 +455,7 @@ fn initial_scan_system(
     config: Res<EditorConfig>,
     mut next_state: ResMut<NextState<EditorState>>,
 ) {
-    file_tree.scan_directories(&config.base_assets_dir, config.extended_assets_dir.as_ref());
+    file_tree.scan_directories(&config.base_assets_dir, config.extended_assets_dir.as_ref(), config.show_base_mobs);
     next_state.set(EditorState::Browsing);
 }
 
@@ -526,7 +535,7 @@ fn extract_sprite_display_name(path: &str) -> String {
 /// Check if file tree needs refresh
 fn check_file_refresh(mut file_tree: ResMut<FileTreeState>, config: Res<EditorConfig>) {
     if file_tree.needs_refresh {
-        file_tree.scan_directories(&config.base_assets_dir, config.extended_assets_dir.as_ref());
+        file_tree.scan_directories(&config.base_assets_dir, config.extended_assets_dir.as_ref(), config.show_base_mobs);
     }
 }
 

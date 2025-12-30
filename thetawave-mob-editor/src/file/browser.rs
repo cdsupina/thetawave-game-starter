@@ -49,11 +49,11 @@ pub struct FileTreeState {
 
 impl FileTreeState {
     /// Scan the mobs directories and build the file tree
-    pub fn scan_directories(&mut self, base_dir: &PathBuf, extended_dir: Option<&PathBuf>) {
+    pub fn scan_directories(&mut self, base_dir: &PathBuf, extended_dir: Option<&PathBuf>, show_base_mobs: bool) {
         self.roots.clear();
 
-        // Scan base assets directory
-        if base_dir.exists() {
+        // Scan base assets directory (only if show_base_mobs is true)
+        if show_base_mobs && base_dir.exists() {
             let mut base_root = FileNode::new_directory("base".to_string(), base_dir.clone());
             base_root.expanded = true;
             Self::scan_directory(&mut base_root, base_dir);
