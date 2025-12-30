@@ -3,6 +3,10 @@ name = "thetawave-mob-editor"
 version.workspace = true
 edition.workspace = true
 
+[lib]
+name = "thetawave_mob_editor"
+path = "src/lib.rs"
+
 [[bin]]
 name = "mob-editor"
 path = "src/main.rs"

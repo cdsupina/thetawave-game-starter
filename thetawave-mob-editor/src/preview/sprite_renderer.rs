@@ -106,6 +106,7 @@ pub fn update_preview_mob(
     state: Res<State<EditorState>>,
     preview_settings: Res<PreviewSettings>,
     jointed_cache: Res<JointedMobCache>,
+    config: Res<crate::plugin::EditorConfig>,
 ) {
     // Despawn preview when not editing
     if *state.get() != EditorState::Editing {
@@ -167,6 +168,7 @@ pub fn update_preview_mob(
         let load_result = try_load_sprite_from_path(
             path,
             &asset_server,
+            &config,
         );
 
         // Update sprite info for UI display
@@ -203,6 +205,7 @@ pub fn update_preview_mob(
                 mob,
                 mob_entity,
                 &asset_server,
+                &config,
             );
 
             // Spawn jointed mobs if toggle is enabled
@@ -211,6 +214,7 @@ pub fn update_preview_mob(
                     &mut commands,
                     &jointed_cache,
                     &asset_server,
+                    &config,
                 );
             }
         } else {
@@ -232,6 +236,7 @@ fn spawn_jointed_mob_previews(
     commands: &mut Commands,
     cache: &JointedMobCache,
     asset_server: &AssetServer,
+    config: &crate::plugin::EditorConfig,
 ) {
     // Dimmed color (50% alpha)
     let dimmed_color = Color::srgba(1.0, 1.0, 1.0, 0.5);
@@ -241,7 +246,7 @@ fn spawn_jointed_mob_previews(
             continue;
         };
 
-        let load_result = try_load_sprite_from_path(sprite_path, asset_server);
+        let load_result = try_load_sprite_from_path(sprite_path, asset_server, config);
         if let Some(aseprite_handle) = load_result.handle {
             // Spawn the jointed mob sprite
             commands.spawn((
@@ -264,7 +269,7 @@ fn spawn_jointed_mob_previews(
 
             // Spawn decorations for this jointed mob (also dimmed)
             for (dec_path, dec_pos) in &resolved.decorations {
-                let dec_result = try_load_sprite_from_path(dec_path, asset_server);
+                let dec_result = try_load_sprite_from_path(dec_path, asset_server, config);
                 if let Some(dec_handle) = dec_result.handle {
                     commands.spawn((
                         PreviewJointedMob,
@@ -309,6 +314,7 @@ fn strip_extended_prefix(path: &str) -> &str {
 pub fn try_load_sprite_from_path(
     sprite_path: &str,
     asset_server: &AssetServer,
+    config: &crate::plugin::EditorConfig,
 ) -> SpriteLoadResult {
     let cwd = std::env::current_dir().unwrap_or_default();
 
@@ -320,20 +326,26 @@ pub fn try_load_sprite_from_path(
     };
 
     // Build list of filesystem paths to check based on prefix
-    let search_paths: Vec<PathBuf> = if search_extended_first {
-        vec![
-            // Extended assets first (thetawave-test-game)
-            cwd.join("thetawave-test-game/assets").join(relative_path),
-            // Fall back to base assets
-            cwd.join("assets").join(relative_path),
-        ]
+    let mut search_paths: Vec<PathBuf> = Vec::new();
+
+    if search_extended_first {
+        // Extended assets first
+        if let Some(extended_root) = config.extended_assets_root() {
+            search_paths.push(cwd.join(&extended_root).join(relative_path));
+        }
+        // Fall back to base assets
+        if let Some(base_root) = config.base_assets_root() {
+            search_paths.push(cwd.join(&base_root).join(relative_path));
+        }
     } else {
-        vec![
-            // Base assets directory first
-            cwd.join("assets").join(relative_path),
-            // Extended assets (thetawave-test-game)
-            cwd.join("thetawave-test-game/assets").join(relative_path),
-        ]
+        // Base assets directory first
+        if let Some(base_root) = config.base_assets_root() {
+            search_paths.push(cwd.join(&base_root).join(relative_path));
+        }
+        // Extended assets
+        if let Some(extended_root) = config.extended_assets_root() {
+            search_paths.push(cwd.join(&extended_root).join(relative_path));
+        }
     };
 
     // Check each location
@@ -368,6 +380,7 @@ fn spawn_decorations(
     mob: &toml::Value,
     _parent: Entity,
     asset_server: &AssetServer,
+    config: &crate::plugin::EditorConfig,
 ) {
     let Some(decorations) = mob.get("decorations").and_then(|v| v.as_array()) else {
         return;
@@ -397,7 +410,7 @@ fn spawn_decorations(
         };
 
         // Try to load the decoration sprite using the full path (supports extended:// prefix)
-        let load_result = try_load_sprite_from_path(sprite_path, asset_server);
+        let load_result = try_load_sprite_from_path(sprite_path, asset_server, config);
         if let Some(handle) = load_result.handle {
             info!("Loading decoration sprite: {} at {:?}", sprite_path, position);
             commands.spawn((

@@ -51,22 +51,8 @@ pub struct ParentMobRef {
 }
 
 /// Resolve a mob_ref path to an actual file path
-fn resolve_mob_ref(mob_ref: &str) -> Option<PathBuf> {
-    let cwd = std::env::current_dir().ok()?;
-
-    // Try base assets first
-    let base_path = cwd.join("assets").join(mob_ref);
-    if base_path.exists() {
-        return Some(base_path);
-    }
-
-    // Try extended assets
-    let extended_path = cwd.join("thetawave-test-game/assets").join(mob_ref);
-    if extended_path.exists() {
-        return Some(extended_path);
-    }
-
-    None
+fn resolve_mob_ref(mob_ref: &str, config: &crate::plugin::EditorConfig) -> Option<PathBuf> {
+    config.resolve_mob_ref(mob_ref)
 }
 
 /// Parse a Vec2 from a TOML value (array of two floats)
@@ -126,6 +112,7 @@ fn resolve_jointed_mobs(
     parent_offset: Vec2,
     depth: usize,
     results: &mut Vec<ResolvedJointedMob>,
+    config: &crate::plugin::EditorConfig,
 ) {
     if depth >= MAX_RECURSION_DEPTH {
         warn!(
@@ -160,7 +147,7 @@ fn resolve_jointed_mobs(
                 let chain_offset = offset_pos + pos_offset * i as f32;
 
                 // Load the referenced mob
-                if let Some(ref_path) = mob_ref.and_then(resolve_mob_ref) {
+                if let Some(ref_path) = mob_ref.and_then(|r| resolve_mob_ref(r, config)) {
                     if let Ok(ref_mob) = FileOperations::load_file(&ref_path) {
                         let sprite = ref_mob
                             .get("sprite")
@@ -187,6 +174,7 @@ fn resolve_jointed_mobs(
                                 parent_offset + chain_offset,
                                 depth + 1,
                                 results,
+                                config,
                             );
                         }
                     }
@@ -194,7 +182,7 @@ fn resolve_jointed_mobs(
             }
         } else {
             // Non-chain jointed mob
-            if let Some(ref_path) = mob_ref.and_then(resolve_mob_ref) {
+            if let Some(ref_path) = mob_ref.and_then(|r| resolve_mob_ref(r, config)) {
                 if let Ok(ref_mob) = FileOperations::load_file(&ref_path) {
                     let sprite = ref_mob
                         .get("sprite")
@@ -220,6 +208,7 @@ fn resolve_jointed_mobs(
                         parent_offset + offset_pos,
                         depth + 1,
                         results,
+                        config,
                     );
                 }
             }
@@ -312,6 +301,7 @@ pub fn rebuild_jointed_mob_cache(
     file_tree: Res<FileTreeState>,
     mut cache: ResMut<JointedMobCache>,
     state: Res<State<EditorState>>,
+    config: Res<crate::plugin::EditorConfig>,
 ) {
     // Only rebuild when editing
     if *state.get() != EditorState::Editing {
@@ -338,7 +328,7 @@ pub fn rebuild_jointed_mob_cache(
     };
 
     // Resolve jointed mobs hierarchy
-    resolve_jointed_mobs(mob, Vec2::ZERO, 0, &mut cache.resolved_mobs);
+    resolve_jointed_mobs(mob, Vec2::ZERO, 0, &mut cache.resolved_mobs, &config);
 
     // Find parent mobs if we have a current path
     if let Some(path) = &session.current_path {

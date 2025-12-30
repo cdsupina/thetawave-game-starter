@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use bevy::prelude::*;
 
+use crate::plugin::EditorConfig;
+
 /// The type of file being edited
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum FileType {
@@ -297,23 +299,19 @@ impl EditorSession {
     }
 
     /// Check if the current file is from the extended assets directory
-    /// (i.e., in thetawave-test-game/assets/mobs/)
-    pub fn is_extended_mob(&self) -> bool {
+    pub fn is_extended_mob(&self, config: &EditorConfig) -> bool {
         self.current_path
             .as_ref()
-            .map(|p| {
-                let path_str = p.to_string_lossy();
-                path_str.contains("thetawave-test-game")
-            })
+            .map(|p| config.is_extended_path(p))
             .unwrap_or(false)
     }
 
     /// Check if extended sprites should be available for the current file
     /// Extended sprites are available for:
-    /// - Extended mobs (in thetawave-test-game/assets/mobs/)
+    /// - Extended mobs (in the extended assets directory)
     /// - All mobpatches (they can override with extended sprites)
-    pub fn can_use_extended_sprites(&self) -> bool {
-        self.file_type == FileType::MobPatch || self.is_extended_mob()
+    pub fn can_use_extended_sprites(&self, config: &EditorConfig) -> bool {
+        self.file_type == FileType::MobPatch || self.is_extended_mob(config)
     }
 
     /// Create a new empty mob with defaults

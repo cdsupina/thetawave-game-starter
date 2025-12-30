@@ -115,19 +115,19 @@ pub fn main_ui_system(
             .min_width(250.0)
             .resizable(true)
             .show(ctx, |ui| {
-                panel_result = properties_panel_ui(ui, &mut session, &sprite_registry, &jointed_cache, &file_tree);
+                panel_result = properties_panel_ui(ui, &mut session, &sprite_registry, &jointed_cache, &file_tree, &config);
             });
     }
 
     // Open sprite browser for main sprite
     if panel_result.open_sprite_browser {
-        let allow_extended = session.can_use_extended_sprites();
+        let allow_extended = session.can_use_extended_sprites(&config);
         dialogs.sprite_browser.open_for_sprite(allow_extended, &config);
     }
 
     // Open sprite browser for decoration
     if let Some(decoration_index) = panel_result.open_decoration_browser {
-        let allow_extended = session.can_use_extended_sprites();
+        let allow_extended = session.can_use_extended_sprites(&config);
         dialogs.sprite_browser.open_for_decoration(decoration_index, allow_extended, &config);
     }
 
@@ -294,6 +294,7 @@ pub fn main_ui_system(
         &mut events.save,
         &mut session,
         &time,
+        &config,
     );
 
     // Render sprite selection confirmation dialog
@@ -350,9 +351,13 @@ pub fn main_ui_system(
     if let Some((asset_path, is_extended)) = browser_result {
         let cwd = std::env::current_dir().unwrap_or_default();
         let assets_ron = if is_extended {
-            cwd.join("thetawave-test-game/assets/game.assets.ron")
+            config.extended_assets_ron().map(|p| cwd.join(p))
         } else {
-            cwd.join("assets/game.assets.ron")
+            config.base_assets_ron().map(|p| cwd.join(p))
+        };
+        let Some(assets_ron) = assets_ron else {
+            warn!("Could not determine assets.ron path");
+            return;
         };
 
         // Determine the mob path (with extended:// prefix if needed)
@@ -685,6 +690,7 @@ fn render_registration_dialog(
     save_events: &mut MessageWriter<SaveMobEvent>,
     session: &mut EditorSession,
     time: &Time,
+    config: &crate::plugin::EditorConfig,
 ) {
     if !dialog.show {
         return;
@@ -725,9 +731,14 @@ fn render_registration_dialog(
                         let clean_path = sprite.strip_prefix("extended://").unwrap_or(sprite);
 
                         let assets_ron = if is_extended {
-                            cwd.join("thetawave-test-game/assets/game.assets.ron")
+                            config.extended_assets_ron().map(|p| cwd.join(p))
                         } else {
-                            cwd.join("assets/game.assets.ron")
+                            config.base_assets_ron().map(|p| cwd.join(p))
+                        };
+
+                        let Some(assets_ron) = assets_ron else {
+                            session.log_error("Could not determine assets.ron path", time);
+                            continue;
                         };
 
                         if let Err(e) = append_sprite_to_assets_ron(&assets_ron, clean_path, is_extended)

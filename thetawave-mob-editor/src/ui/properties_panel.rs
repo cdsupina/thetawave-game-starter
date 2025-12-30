@@ -31,6 +31,7 @@ pub fn properties_panel_ui(
     sprite_registry: &SpriteRegistry,
     jointed_cache: &JointedMobCache,
     file_tree: &FileTreeState,
+    config: &crate::plugin::EditorConfig,
 ) -> PropertiesPanelResult {
     let mut result = PropertiesPanelResult::default();
 
@@ -99,7 +100,7 @@ pub fn properties_panel_ui(
                     // Name
                     let is_patched = is_patch && patch_table.contains_key("name");
                     match render_string_field(
-                        ui, "Name:", "name",
+                        ui, "Name:",
                         display_table.get("name").and_then(|v| v.as_str()).unwrap_or(""),
                         is_patched, is_patch,
                     ) {
@@ -121,7 +122,7 @@ pub fn properties_panel_ui(
                     // Spawnable
                     let is_patched = is_patch && patch_table.contains_key("spawnable");
                     match render_bool_field(
-                        ui, "Spawnable:", "spawnable",
+                        ui, "Spawnable:",
                         display_table.get("spawnable").and_then(|v| v.as_bool()).unwrap_or(true),
                         is_patched, is_patch,
                     ) {
@@ -149,6 +150,7 @@ pub fn properties_panel_ui(
                         sprite_registry,
                         is_patch,
                         &mut modified,
+                        config,
                     ) {
                         result.open_sprite_browser = true;
                     }
@@ -163,6 +165,7 @@ pub fn properties_panel_ui(
                 sprite_registry,
                 is_patch,
                 &mut modified,
+                config,
             ) {
                 result.open_decoration_browser = Some(idx);
             }
@@ -174,10 +177,9 @@ pub fn properties_panel_ui(
                     // Health
                     let is_patched = is_patch && patch_table.contains_key("health");
                     match render_int_field(
-                        ui, "Health:", "health",
+                        ui, "Health:",
                         display_table.get("health").and_then(|v| v.as_integer()).unwrap_or(50) as i32,
-                        1..=10000,
-                        is_patched, is_patch,
+                        1..=10000, is_patched, is_patch,
                     ) {
                         FieldResult::Changed(new_val) => {
                             if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
@@ -197,10 +199,9 @@ pub fn properties_panel_ui(
                     // Projectile Speed
                     let is_patched = is_patch && patch_table.contains_key("projectile_speed");
                     match render_float_field(
-                        ui, "Proj Speed:", "projectile_speed",
+                        ui, "Proj Speed:",
                         display_table.get("projectile_speed").and_then(|v| v.as_float()).unwrap_or(100.0) as f32,
-                        0.0..=1000.0,
-                        is_patched, is_patch,
+                        0.0..=1000.0, None, is_patched, is_patch,
                     ) {
                         FieldResult::Changed(new_val) => {
                             if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
@@ -220,10 +221,9 @@ pub fn properties_panel_ui(
                     // Projectile Damage
                     let is_patched = is_patch && patch_table.contains_key("projectile_damage");
                     match render_int_field(
-                        ui, "Proj Damage:", "projectile_damage",
+                        ui, "Proj Damage:",
                         display_table.get("projectile_damage").and_then(|v| v.as_integer()).unwrap_or(5) as i32,
-                        0..=1000,
-                        is_patched, is_patch,
+                        0..=1000, is_patched, is_patch,
                     ) {
                         FieldResult::Changed(new_val) => {
                             if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
@@ -248,7 +248,7 @@ pub fn properties_panel_ui(
                     // Max Linear Speed
                     let is_patched = is_patch && patch_table.contains_key("max_linear_speed");
                     let speed = get_vec2_value(&display_table, "max_linear_speed", 20.0, 20.0);
-                    match render_vec2_field(ui, "Max Speed:", "max_linear_speed", speed.0, speed.1, 0.0..=500.0, is_patched, is_patch) {
+                    match render_vec2_field(ui, "Max Speed:", speed.0, speed.1, 0.0..=500.0, None, is_patched, is_patch) {
                         FieldResult::Changed((new_x, new_y)) => {
                             if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
                                 set_vec2_value(mob, "max_linear_speed", new_x, new_y);
@@ -267,7 +267,7 @@ pub fn properties_panel_ui(
                     // Linear Acceleration
                     let is_patched = is_patch && patch_table.contains_key("linear_acceleration");
                     let accel = get_vec2_value(&display_table, "linear_acceleration", 0.1, 0.1);
-                    match render_vec2_field_slow(ui, "Acceleration:", "linear_acceleration", accel.0, accel.1, 0.0..=10.0, 0.01, is_patched, is_patch) {
+                    match render_vec2_field(ui, "Acceleration:", accel.0, accel.1, 0.0..=10.0, Some(0.01), is_patched, is_patch) {
                         FieldResult::Changed((new_x, new_y)) => {
                             if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
                                 set_vec2_value(mob, "linear_acceleration", new_x, new_y);
@@ -286,7 +286,7 @@ pub fn properties_panel_ui(
                     // Linear Deceleration
                     let is_patched = is_patch && patch_table.contains_key("linear_deceleration");
                     let decel = get_vec2_value(&display_table, "linear_deceleration", 0.3, 0.3);
-                    match render_vec2_field_slow(ui, "Deceleration:", "linear_deceleration", decel.0, decel.1, 0.0..=10.0, 0.01, is_patched, is_patch) {
+                    match render_vec2_field(ui, "Deceleration:", decel.0, decel.1, 0.0..=10.0, Some(0.01), is_patched, is_patch) {
                         FieldResult::Changed((new_x, new_y)) => {
                             if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
                                 set_vec2_value(mob, "linear_deceleration", new_x, new_y);
@@ -304,7 +304,7 @@ pub fn properties_panel_ui(
 
                     // Max Angular Speed
                     let is_patched = is_patch && patch_table.contains_key("max_angular_speed");
-                    match render_float_field_slow(ui, "Angular Speed:", "max_angular_speed", display_table.get("max_angular_speed").and_then(|v| v.as_float()).unwrap_or(1.0) as f32, 0.0..=20.0, 0.1, is_patched, is_patch) {
+                    match render_float_field(ui, "Angular Speed:", display_table.get("max_angular_speed").and_then(|v| v.as_float()).unwrap_or(1.0) as f32, 0.0..=20.0, Some(0.1), is_patched, is_patch) {
                         FieldResult::Changed(new_val) => {
                             if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
                                 mob.insert("max_angular_speed".to_string(), toml::Value::Float(new_val as f64));
@@ -327,7 +327,7 @@ pub fn properties_panel_ui(
                 .show(ui, |ui| {
                     // Z Level
                     let is_patched = is_patch && patch_table.contains_key("z_level");
-                    match render_float_field_slow(ui, "Z Level:", "z_level", display_table.get("z_level").and_then(|v| v.as_float()).unwrap_or(0.0) as f32, -10.0..=10.0, 0.1, is_patched, is_patch) {
+                    match render_float_field(ui, "Z Level:", display_table.get("z_level").and_then(|v| v.as_float()).unwrap_or(0.0) as f32, -10.0..=10.0, Some(0.1), is_patched, is_patch) {
                         FieldResult::Changed(new_val) => {
                             if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
                                 mob.insert("z_level".to_string(), toml::Value::Float(new_val as f64));
@@ -345,7 +345,7 @@ pub fn properties_panel_ui(
 
                     // Rotation Locked
                     let is_patched = is_patch && patch_table.contains_key("rotation_locked");
-                    match render_bool_field(ui, "Rot Locked:", "rotation_locked", display_table.get("rotation_locked").and_then(|v| v.as_bool()).unwrap_or(true), is_patched, is_patch) {
+                    match render_bool_field(ui, "Rot Locked:", display_table.get("rotation_locked").and_then(|v| v.as_bool()).unwrap_or(true), is_patched, is_patch) {
                         FieldResult::Changed(new_val) => {
                             if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
                                 mob.insert("rotation_locked".to_string(), toml::Value::Boolean(new_val));
@@ -363,7 +363,7 @@ pub fn properties_panel_ui(
 
                     // Restitution
                     let is_patched = is_patch && patch_table.contains_key("restitution");
-                    match render_float_field_slow(ui, "Restitution:", "restitution", display_table.get("restitution").and_then(|v| v.as_float()).unwrap_or(0.5) as f32, 0.0..=1.0, 0.01, is_patched, is_patch) {
+                    match render_float_field(ui, "Restitution:", display_table.get("restitution").and_then(|v| v.as_float()).unwrap_or(0.5) as f32, 0.0..=1.0, Some(0.01), is_patched, is_patch) {
                         FieldResult::Changed(new_val) => {
                             if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
                                 mob.insert("restitution".to_string(), toml::Value::Float(new_val as f64));
@@ -381,7 +381,7 @@ pub fn properties_panel_ui(
 
                     // Friction
                     let is_patched = is_patch && patch_table.contains_key("friction");
-                    match render_float_field_slow(ui, "Friction:", "friction", display_table.get("friction").and_then(|v| v.as_float()).unwrap_or(0.5) as f32, 0.0..=2.0, 0.01, is_patched, is_patch) {
+                    match render_float_field(ui, "Friction:", display_table.get("friction").and_then(|v| v.as_float()).unwrap_or(0.5) as f32, 0.0..=2.0, Some(0.01), is_patched, is_patch) {
                         FieldResult::Changed(new_val) => {
                             if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
                                 mob.insert("friction".to_string(), toml::Value::Float(new_val as f64));
@@ -399,7 +399,7 @@ pub fn properties_panel_ui(
 
                     // Density
                     let is_patched = is_patch && patch_table.contains_key("collider_density");
-                    match render_float_field_slow(ui, "Density:", "collider_density", display_table.get("collider_density").and_then(|v| v.as_float()).unwrap_or(1.0) as f32, 0.1..=10.0, 0.1, is_patched, is_patch) {
+                    match render_float_field(ui, "Density:", display_table.get("collider_density").and_then(|v| v.as_float()).unwrap_or(1.0) as f32, 0.1..=10.0, Some(0.1), is_patched, is_patch) {
                         FieldResult::Changed(new_val) => {
                             if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
                                 mob.insert("collider_density".to_string(), toml::Value::Float(new_val as f64));
@@ -527,11 +527,19 @@ enum FieldResult<T> {
     Reset, // Remove from patch
 }
 
+/// Get label color based on patch state
+fn label_color(ui: &egui::Ui, is_patch_file: bool, is_patched: bool) -> egui::Color32 {
+    if is_patch_file && !is_patched {
+        INHERITED_COLOR
+    } else {
+        ui.style().visuals.text_color()
+    }
+}
+
 /// Render a string field with patch awareness
 fn render_string_field(
     ui: &mut egui::Ui,
     label: &str,
-    _key: &str,
     current_value: &str,
     is_patched: bool,
     is_patch_file: bool,
@@ -539,19 +547,10 @@ fn render_string_field(
     let mut result = FieldResult::NoChange;
     ui.horizontal(|ui| {
         render_patch_indicator(ui, is_patched, is_patch_file);
-
-        let text_color = if is_patch_file && !is_patched {
-            INHERITED_COLOR
-        } else {
-            ui.style().visuals.text_color()
-        };
-
-        ui.label(egui::RichText::new(label).color(text_color));
+        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched)));
 
         let mut value = current_value.to_string();
-        let response = ui.text_edit_singleline(&mut value);
-
-        if response.changed() {
+        if ui.text_edit_singleline(&mut value).changed() {
             result = FieldResult::Changed(value);
         }
 
@@ -566,7 +565,6 @@ fn render_string_field(
 fn render_bool_field(
     ui: &mut egui::Ui,
     label: &str,
-    _key: &str,
     current_value: bool,
     is_patched: bool,
     is_patch_file: bool,
@@ -574,14 +572,7 @@ fn render_bool_field(
     let mut result = FieldResult::NoChange;
     ui.horizontal(|ui| {
         render_patch_indicator(ui, is_patched, is_patch_file);
-
-        let text_color = if is_patch_file && !is_patched {
-            INHERITED_COLOR
-        } else {
-            ui.style().visuals.text_color()
-        };
-
-        ui.label(egui::RichText::new(label).color(text_color));
+        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched)));
 
         let mut value = current_value;
         if ui.checkbox(&mut value, "").changed() {
@@ -599,7 +590,6 @@ fn render_bool_field(
 fn render_int_field(
     ui: &mut egui::Ui,
     label: &str,
-    _key: &str,
     current_value: i32,
     range: std::ops::RangeInclusive<i32>,
     is_patched: bool,
@@ -608,14 +598,7 @@ fn render_int_field(
     let mut result = FieldResult::NoChange;
     ui.horizontal(|ui| {
         render_patch_indicator(ui, is_patched, is_patch_file);
-
-        let text_color = if is_patch_file && !is_patched {
-            INHERITED_COLOR
-        } else {
-            ui.style().visuals.text_color()
-        };
-
-        ui.label(egui::RichText::new(label).color(text_color));
+        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched)));
 
         let mut value = current_value;
         if ui.add(egui::DragValue::new(&mut value).range(range)).changed() {
@@ -629,30 +612,27 @@ fn render_int_field(
     result
 }
 
-/// Render a float field with patch awareness
+/// Render a float field with patch awareness (optional custom drag speed)
 fn render_float_field(
     ui: &mut egui::Ui,
     label: &str,
-    _key: &str,
     current_value: f32,
     range: std::ops::RangeInclusive<f32>,
+    speed: Option<f64>,
     is_patched: bool,
     is_patch_file: bool,
 ) -> FieldResult<f32> {
     let mut result = FieldResult::NoChange;
     ui.horizontal(|ui| {
         render_patch_indicator(ui, is_patched, is_patch_file);
-
-        let text_color = if is_patch_file && !is_patched {
-            INHERITED_COLOR
-        } else {
-            ui.style().visuals.text_color()
-        };
-
-        ui.label(egui::RichText::new(label).color(text_color));
+        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched)));
 
         let mut value = current_value;
-        if ui.add(egui::DragValue::new(&mut value).range(range)).changed() {
+        let mut drag = egui::DragValue::new(&mut value).range(range);
+        if let Some(s) = speed {
+            drag = drag.speed(s);
+        }
+        if ui.add(drag).changed() {
             result = FieldResult::Changed(value);
         }
 
@@ -663,49 +643,14 @@ fn render_float_field(
     result
 }
 
-/// Render a float field with slower drag speed
-fn render_float_field_slow(
-    ui: &mut egui::Ui,
-    label: &str,
-    _key: &str,
-    current_value: f32,
-    range: std::ops::RangeInclusive<f32>,
-    speed: f64,
-    is_patched: bool,
-    is_patch_file: bool,
-) -> FieldResult<f32> {
-    let mut result = FieldResult::NoChange;
-    ui.horizontal(|ui| {
-        render_patch_indicator(ui, is_patched, is_patch_file);
-
-        let text_color = if is_patch_file && !is_patched {
-            INHERITED_COLOR
-        } else {
-            ui.style().visuals.text_color()
-        };
-
-        ui.label(egui::RichText::new(label).color(text_color));
-
-        let mut value = current_value;
-        if ui.add(egui::DragValue::new(&mut value).range(range).speed(speed)).changed() {
-            result = FieldResult::Changed(value);
-        }
-
-        if render_reset_button(ui, is_patched, is_patch_file) {
-            result = FieldResult::Reset;
-        }
-    });
-    result
-}
-
-/// Render a Vec2 field with patch awareness
+/// Render a Vec2 field with patch awareness (optional custom drag speed)
 fn render_vec2_field(
     ui: &mut egui::Ui,
     label: &str,
-    _key: &str,
     x: f32,
     y: f32,
     range: std::ops::RangeInclusive<f32>,
+    speed: Option<f64>,
     is_patched: bool,
     is_patch_file: bool,
 ) -> FieldResult<(f32, f32)> {
@@ -713,63 +658,7 @@ fn render_vec2_field(
 
     ui.horizontal(|ui| {
         render_patch_indicator(ui, is_patched, is_patch_file);
-
-        let text_color = if is_patch_file && !is_patched {
-            INHERITED_COLOR
-        } else {
-            ui.style().visuals.text_color()
-        };
-
-        ui.label(egui::RichText::new(label).color(text_color));
-
-        if render_reset_button(ui, is_patched, is_patch_file) {
-            result = FieldResult::Reset;
-        }
-    });
-
-    if !matches!(result, FieldResult::Reset) {
-        ui.horizontal(|ui| {
-            ui.add_space(16.0); // Indent
-            ui.label("X:");
-            let mut new_x = x;
-            let x_changed = ui.add(egui::DragValue::new(&mut new_x).range(range.clone())).changed();
-            ui.label("Y:");
-            let mut new_y = y;
-            let y_changed = ui.add(egui::DragValue::new(&mut new_y).range(range)).changed();
-
-            if x_changed || y_changed {
-                result = FieldResult::Changed((new_x, new_y));
-            }
-        });
-    }
-
-    result
-}
-
-/// Render a Vec2 field with slower drag speed
-fn render_vec2_field_slow(
-    ui: &mut egui::Ui,
-    label: &str,
-    _key: &str,
-    x: f32,
-    y: f32,
-    range: std::ops::RangeInclusive<f32>,
-    speed: f64,
-    is_patched: bool,
-    is_patch_file: bool,
-) -> FieldResult<(f32, f32)> {
-    let mut result = FieldResult::NoChange;
-
-    ui.horizontal(|ui| {
-        render_patch_indicator(ui, is_patched, is_patch_file);
-
-        let text_color = if is_patch_file && !is_patched {
-            INHERITED_COLOR
-        } else {
-            ui.style().visuals.text_color()
-        };
-
-        ui.label(egui::RichText::new(label).color(text_color));
+        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched)));
 
         if render_reset_button(ui, is_patched, is_patch_file) {
             result = FieldResult::Reset;
@@ -781,10 +670,19 @@ fn render_vec2_field_slow(
             ui.add_space(16.0);
             ui.label("X:");
             let mut new_x = x;
-            let x_changed = ui.add(egui::DragValue::new(&mut new_x).range(range.clone()).speed(speed)).changed();
+            let mut drag_x = egui::DragValue::new(&mut new_x).range(range.clone());
+            if let Some(s) = speed {
+                drag_x = drag_x.speed(s);
+            }
+            let x_changed = ui.add(drag_x).changed();
+
             ui.label("Y:");
             let mut new_y = y;
-            let y_changed = ui.add(egui::DragValue::new(&mut new_y).range(range).speed(speed)).changed();
+            let mut drag_y = egui::DragValue::new(&mut new_y).range(range);
+            if let Some(s) = speed {
+                drag_y = drag_y.speed(s);
+            }
+            let y_changed = ui.add(drag_y).changed();
 
             if x_changed || y_changed {
                 result = FieldResult::Changed((new_x, new_y));
@@ -991,58 +889,60 @@ fn render_colliders_section(
         });
 }
 
-/// Helper to update collider circle radius
+/// Helper to mutate a collider at a specific index
+fn with_collider_mut<F>(session: &mut EditorSession, index: usize, f: F)
+where
+    F: FnOnce(&mut toml::value::Table),
+{
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
+        if let Some(colliders) = mob.get_mut("colliders").and_then(|v| v.as_array_mut()) {
+            if let Some(collider) = colliders.get_mut(index).and_then(|v| v.as_table_mut()) {
+                f(collider);
+            }
+        }
+    }
+}
+
+/// Helper to mutate a collider's shape at a specific index
+fn with_collider_shape_mut<F>(session: &mut EditorSession, index: usize, f: F)
+where
+    F: FnOnce(&mut toml::value::Table),
+{
+    with_collider_mut(session, index, |collider| {
+        if let Some(shape) = collider.get_mut("shape").and_then(|v| v.as_table_mut()) {
+            f(shape);
+        }
+    });
+}
+
 fn update_collider_circle_radius(session: &mut EditorSession, index: usize, radius: f64) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(colliders) = mob.get_mut("colliders").and_then(|v| v.as_array_mut()) {
-            if let Some(collider) = colliders.get_mut(index).and_then(|v| v.as_table_mut()) {
-                if let Some(shape) = collider.get_mut("shape").and_then(|v| v.as_table_mut()) {
-                    shape.insert("Circle".to_string(), toml::Value::Float(radius));
-                }
-            }
-        }
-    }
+    with_collider_shape_mut(session, index, |shape| {
+        shape.insert("Circle".to_string(), toml::Value::Float(radius));
+    });
 }
 
-/// Helper to update collider rectangle dimensions
 fn update_collider_rectangle_dims(session: &mut EditorSession, index: usize, width: f64, height: f64) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(colliders) = mob.get_mut("colliders").and_then(|v| v.as_array_mut()) {
-            if let Some(collider) = colliders.get_mut(index).and_then(|v| v.as_table_mut()) {
-                if let Some(shape) = collider.get_mut("shape").and_then(|v| v.as_table_mut()) {
-                    shape.insert("Rectangle".to_string(), toml::Value::Array(vec![
-                        toml::Value::Float(width),
-                        toml::Value::Float(height),
-                    ]));
-                }
-            }
-        }
-    }
+    with_collider_shape_mut(session, index, |shape| {
+        shape.insert("Rectangle".to_string(), toml::Value::Array(vec![
+            toml::Value::Float(width),
+            toml::Value::Float(height),
+        ]));
+    });
 }
 
-/// Helper to update collider position
 fn update_collider_position(session: &mut EditorSession, index: usize, x: f64, y: f64) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(colliders) = mob.get_mut("colliders").and_then(|v| v.as_array_mut()) {
-            if let Some(collider) = colliders.get_mut(index).and_then(|v| v.as_table_mut()) {
-                collider.insert("position".to_string(), toml::Value::Array(vec![
-                    toml::Value::Float(x),
-                    toml::Value::Float(y),
-                ]));
-            }
-        }
-    }
+    with_collider_mut(session, index, |collider| {
+        collider.insert("position".to_string(), toml::Value::Array(vec![
+            toml::Value::Float(x),
+            toml::Value::Float(y),
+        ]));
+    });
 }
 
-/// Helper to update collider rotation
 fn update_collider_rotation(session: &mut EditorSession, index: usize, rotation: f64) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(colliders) = mob.get_mut("colliders").and_then(|v| v.as_array_mut()) {
-            if let Some(collider) = colliders.get_mut(index).and_then(|v| v.as_table_mut()) {
-                collider.insert("rotation".to_string(), toml::Value::Float(rotation));
-            }
-        }
-    }
+    with_collider_mut(session, index, |collider| {
+        collider.insert("rotation".to_string(), toml::Value::Float(rotation));
+    });
 }
 
 /// Add a new collider to the mob
@@ -1218,7 +1118,7 @@ fn render_projectile_spawners_section(
                                     // Timer
                                     let field_patched = is_spawner_field_patched(patch_table, "projectile_spawners", &spawner_key, "timer");
                                     let timer = spawner.get("timer").and_then(|v| v.as_float()).unwrap_or(1.0) as f32;
-                                    match render_float_field_slow(ui, "Timer:", "timer", timer, 0.01..=10.0, 0.01, field_patched, is_patch) {
+                                    match render_float_field(ui, "Timer:", timer, 0.01..=10.0, Some(0.01), field_patched, is_patch) {
                                         FieldResult::Changed(new_val) => {
                                             set_spawner_field(session, "projectile_spawners", &spawner_key, "timer", toml::Value::Float(new_val as f64));
                                             *modified = true;
@@ -1235,7 +1135,7 @@ fn render_projectile_spawners_section(
                                     let pos = spawner.get("position").and_then(|v| v.as_array());
                                     let pos_x = pos.and_then(|a| a.first()).and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
                                     let pos_y = pos.and_then(|a| a.get(1)).and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
-                                    match render_vec2_field(ui, "Position:", "position", pos_x, pos_y, -100.0..=100.0, field_patched, is_patch) {
+                                    match render_vec2_field(ui, "Position:", pos_x, pos_y, -100.0..=100.0, None, field_patched, is_patch) {
                                         FieldResult::Changed((x, y)) => {
                                             let arr = toml::Value::Array(vec![toml::Value::Float(x as f64), toml::Value::Float(y as f64)]);
                                             set_spawner_field(session, "projectile_spawners", &spawner_key, "position", arr);
@@ -1251,7 +1151,7 @@ fn render_projectile_spawners_section(
                                     // Rotation
                                     let field_patched = is_spawner_field_patched(patch_table, "projectile_spawners", &spawner_key, "rotation");
                                     let rot = spawner.get("rotation").and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
-                                    match render_float_field(ui, "Rotation:", "rotation", rot, -180.0..=180.0, field_patched, is_patch) {
+                                    match render_float_field(ui, "Rotation:", rot, -180.0..=180.0, None, field_patched, is_patch) {
                                         FieldResult::Changed(new_val) => {
                                             set_spawner_field(session, "projectile_spawners", &spawner_key, "rotation", toml::Value::Float(new_val as f64));
                                             *modified = true;
@@ -1399,7 +1299,7 @@ fn render_mob_spawners_section(
                                     // Timer
                                     let field_patched = is_spawner_field_patched(patch_table, "mob_spawners", &spawner_key, "timer");
                                     let timer = spawner.get("timer").and_then(|v| v.as_float()).unwrap_or(1.0) as f32;
-                                    match render_float_field_slow(ui, "Timer:", "timer", timer, 0.01..=60.0, 0.1, field_patched, is_patch) {
+                                    match render_float_field(ui, "Timer:", timer, 0.01..=60.0, Some(0.1), field_patched, is_patch) {
                                         FieldResult::Changed(new_val) => {
                                             set_spawner_field(session, "mob_spawners", &spawner_key, "timer", toml::Value::Float(new_val as f64));
                                             *modified = true;
@@ -1416,7 +1316,7 @@ fn render_mob_spawners_section(
                                     let pos = spawner.get("position").and_then(|v| v.as_array());
                                     let pos_x = pos.and_then(|a| a.first()).and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
                                     let pos_y = pos.and_then(|a| a.get(1)).and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
-                                    match render_vec2_field(ui, "Position:", "position", pos_x, pos_y, -100.0..=100.0, field_patched, is_patch) {
+                                    match render_vec2_field(ui, "Position:", pos_x, pos_y, -100.0..=100.0, None, field_patched, is_patch) {
                                         FieldResult::Changed((x, y)) => {
                                             let arr = toml::Value::Array(vec![toml::Value::Float(x as f64), toml::Value::Float(y as f64)]);
                                             set_spawner_field(session, "mob_spawners", &spawner_key, "position", arr);
@@ -1432,7 +1332,7 @@ fn render_mob_spawners_section(
                                     // Rotation
                                     let field_patched = is_spawner_field_patched(patch_table, "mob_spawners", &spawner_key, "rotation");
                                     let rot = spawner.get("rotation").and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
-                                    match render_float_field(ui, "Rotation:", "rotation", rot, -180.0..=180.0, field_patched, is_patch) {
+                                    match render_float_field(ui, "Rotation:", rot, -180.0..=180.0, None, field_patched, is_patch) {
                                         FieldResult::Changed(new_val) => {
                                             set_spawner_field(session, "mob_spawners", &spawner_key, "rotation", toml::Value::Float(new_val as f64));
                                             *modified = true;
@@ -1447,7 +1347,7 @@ fn render_mob_spawners_section(
                                     // Mob Ref
                                     let field_patched = is_spawner_field_patched(patch_table, "mob_spawners", &spawner_key, "mob_ref");
                                     let mob_ref = spawner.get("mob_ref").and_then(|v| v.as_str()).unwrap_or("");
-                                    match render_string_field(ui, "Mob Ref:", "mob_ref", mob_ref, field_patched, is_patch) {
+                                    match render_string_field(ui, "Mob Ref:", mob_ref, field_patched, is_patch) {
                                         FieldResult::Changed(new_val) => {
                                             set_spawner_field(session, "mob_spawners", &spawner_key, "mob_ref", toml::Value::String(new_val));
                                             *modified = true;
@@ -2221,6 +2121,7 @@ fn render_sprite_picker(
     sprite_registry: &SpriteRegistry,
     is_patch: bool,
     modified: &mut bool,
+    config: &crate::plugin::EditorConfig,
 ) -> bool {
     let mut open_browser = false;
 
@@ -2292,7 +2193,7 @@ fn render_sprite_picker(
                 }
 
                 // Extended sprites section (only for extended mobs or mobpatches)
-                if session.can_use_extended_sprites() {
+                if session.can_use_extended_sprites(config) {
                     let extended_sprites: Vec<_> = sprite_registry.extended_sprites().collect();
                     if !extended_sprites.is_empty() {
                         ui.separator();
@@ -2402,6 +2303,7 @@ fn render_decorations_section(
     sprite_registry: &SpriteRegistry,
     is_patch: bool,
     modified: &mut bool,
+    config: &crate::plugin::EditorConfig,
 ) -> Option<usize> {
     let mut open_decoration_browser: Option<usize> = None;
     let is_patched = is_patch && patch_table.contains_key("decorations");
@@ -2507,6 +2409,7 @@ fn render_decorations_section(
                         is_patch,
                         can_edit,
                         modified,
+                        config,
                     );
                     if let Some(idx) = open_browser_for {
                         open_decoration_browser = Some(idx);
@@ -2578,6 +2481,7 @@ fn render_decoration_sprite_picker(
     is_patch: bool,
     can_edit: bool,
     modified: &mut bool,
+    config: &crate::plugin::EditorConfig,
 ) -> Option<usize> {
     let mut open_browser_for: Option<usize> = None;
 
@@ -2626,7 +2530,7 @@ fn render_decoration_sprite_picker(
                     }
 
                     // Extended sprites section (only for extended mobs or mobpatches)
-                    if session.can_use_extended_sprites() {
+                    if session.can_use_extended_sprites(config) {
                         let extended_sprites: Vec<_> = sprite_registry.extended_sprites().collect();
                         if !extended_sprites.is_empty() {
                             ui.separator();

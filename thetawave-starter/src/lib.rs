@@ -1,3 +1,6 @@
+// Re-export bevy so games don't need to add it as a separate dependency
+pub use bevy;
+
 use bevy::{
     DefaultPlugins,
     app::Plugin,

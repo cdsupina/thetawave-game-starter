@@ -62,15 +62,20 @@ impl FileTreeState {
             }
         }
 
-        // Scan extended assets directory
+        // Scan extended assets directory (create if needed, always show so users can create mobs)
         if let Some(ext_dir) = extended_dir {
+            // Create the directory if it doesn't exist
+            if !ext_dir.exists() {
+                if let Err(e) = std::fs::create_dir_all(ext_dir) {
+                    bevy::log::warn!("Failed to create extended assets directory {:?}: {}", ext_dir, e);
+                }
+            }
+
             if ext_dir.exists() {
                 let mut ext_root = FileNode::new_directory("extended".to_string(), ext_dir.clone());
                 ext_root.expanded = true;
                 Self::scan_directory(&mut ext_root, ext_dir);
-                if !ext_root.children.is_empty() {
-                    self.roots.push(ext_root);
-                }
+                self.roots.push(ext_root);
             }
         }
 

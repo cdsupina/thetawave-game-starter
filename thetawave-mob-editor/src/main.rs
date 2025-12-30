@@ -4,14 +4,7 @@ use bevy::{
     window::{PresentMode, WindowResolution},
 };
 
-mod data;
-mod file;
-mod plugin;
-mod preview;
-mod states;
-mod ui;
-
-use plugin::MobEditorPlugin;
+use thetawave_mob_editor::MobEditorPlugin;
 
 /// Find the assets directory by searching up from the current working directory
 fn find_assets_path() -> String {

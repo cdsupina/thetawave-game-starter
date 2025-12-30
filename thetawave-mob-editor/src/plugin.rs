@@ -141,10 +141,96 @@ impl Plugin for MobEditorPlugin {
 }
 
 /// Editor configuration resource
-#[derive(Resource)]
+#[derive(Resource, Clone)]
 pub struct EditorConfig {
+    /// Base mobs directory (e.g., "assets/mobs")
     pub base_assets_dir: PathBuf,
+    /// Extended mobs directory (e.g., "my-game/assets/mobs")
     pub extended_assets_dir: Option<PathBuf>,
+}
+
+impl EditorConfig {
+    /// Get the base assets root directory (parent of mobs dir)
+    /// e.g., "assets/mobs" -> "assets"
+    pub fn base_assets_root(&self) -> Option<PathBuf> {
+        self.base_assets_dir.parent().map(|p| p.to_path_buf())
+    }
+
+    /// Get the extended assets root directory (parent of mobs dir)
+    /// e.g., "my-game/assets/mobs" -> "my-game/assets"
+    pub fn extended_assets_root(&self) -> Option<PathBuf> {
+        self.extended_assets_dir.as_ref().and_then(|p| p.parent()).map(|p| p.to_path_buf())
+    }
+
+    /// Get the base game.assets.ron path
+    pub fn base_assets_ron(&self) -> Option<PathBuf> {
+        self.base_assets_root().map(|p| p.join("game.assets.ron"))
+    }
+
+    /// Get the extended game.assets.ron path
+    pub fn extended_assets_ron(&self) -> Option<PathBuf> {
+        self.extended_assets_root().map(|p| p.join("game.assets.ron"))
+    }
+
+    /// Check if a path is within the extended assets directory
+    pub fn is_extended_path(&self, path: &std::path::Path) -> bool {
+        if let Some(extended) = &self.extended_assets_dir {
+            // Normalize paths for comparison
+            let path_str = path.to_string_lossy();
+            let extended_str = extended.to_string_lossy();
+            // Check if path contains the extended directory
+            path_str.contains(extended_str.as_ref())
+        } else {
+            false
+        }
+    }
+
+    /// Resolve a sprite path to a filesystem path, checking extended first then base
+    pub fn resolve_sprite_path(&self, relative_path: &str) -> Option<PathBuf> {
+        let relative_path = relative_path.strip_prefix("extended://").unwrap_or(relative_path);
+        let cwd = std::env::current_dir().ok()?;
+
+        // Try extended first if available
+        if let Some(extended_root) = self.extended_assets_root() {
+            let extended_path = cwd.join(&extended_root).join(relative_path);
+            if extended_path.exists() {
+                return Some(extended_path);
+            }
+        }
+
+        // Try base
+        if let Some(base_root) = self.base_assets_root() {
+            let base_path = cwd.join(&base_root).join(relative_path);
+            if base_path.exists() {
+                return Some(base_path);
+            }
+        }
+
+        None
+    }
+
+    /// Resolve a mob_ref path (e.g., "mobs/enemy.mob") to a filesystem path
+    pub fn resolve_mob_ref(&self, mob_ref: &str) -> Option<PathBuf> {
+        let cwd = std::env::current_dir().ok()?;
+
+        // Try base assets first
+        if let Some(base_root) = self.base_assets_root() {
+            let base_path = cwd.join(&base_root).join(mob_ref);
+            if base_path.exists() {
+                return Some(base_path);
+            }
+        }
+
+        // Try extended assets
+        if let Some(extended_root) = self.extended_assets_root() {
+            let extended_path = cwd.join(&extended_root).join(mob_ref);
+            if extended_path.exists() {
+                return Some(extended_path);
+            }
+        }
+
+        None
+    }
 }
 
 /// State for the sprite registration dialog
@@ -220,10 +306,10 @@ pub struct SpriteBrowserDialog {
 }
 
 impl SpriteBrowserDialog {
-    /// Open the browser for main sprite selection
-    pub fn open_for_sprite(&mut self, allow_extended: bool, config: &EditorConfig) {
+    /// Open the browser for a specific target
+    fn open(&mut self, target: SpriteBrowserTarget, allow_extended: bool, config: &EditorConfig) {
         self.is_open = true;
-        self.target = SpriteBrowserTarget::MainSprite;
+        self.target = target;
         self.allow_extended = allow_extended;
         self.browsing_extended = false;
         // Start in media/aseprite where sprite files are located
@@ -232,16 +318,14 @@ impl SpriteBrowserDialog {
         self.scan_current_directory(config);
     }
 
+    /// Open the browser for main sprite selection
+    pub fn open_for_sprite(&mut self, allow_extended: bool, config: &EditorConfig) {
+        self.open(SpriteBrowserTarget::MainSprite, allow_extended, config);
+    }
+
     /// Open the browser for decoration sprite selection
     pub fn open_for_decoration(&mut self, index: usize, allow_extended: bool, config: &EditorConfig) {
-        self.is_open = true;
-        self.target = SpriteBrowserTarget::Decoration(index);
-        self.allow_extended = allow_extended;
-        self.browsing_extended = false;
-        // Start in media/aseprite where sprite files are located
-        self.current_path = vec!["media".to_string(), "aseprite".to_string()];
-        self.selected = None;
-        self.scan_current_directory(config);
+        self.open(SpriteBrowserTarget::Decoration(index), allow_extended, config);
     }
 
     /// Close the browser
@@ -367,50 +451,54 @@ fn initial_scan_system(
 }
 
 /// Initial scan of sprites from .assets.ron files
-fn initial_sprite_scan(mut sprite_registry: ResMut<SpriteRegistry>) {
-    scan_sprite_registry(&mut sprite_registry);
+fn initial_sprite_scan(mut sprite_registry: ResMut<SpriteRegistry>, config: Res<EditorConfig>) {
+    scan_sprite_registry(&mut sprite_registry, &config);
 }
 
 /// Scan .assets.ron files and populate the sprite registry
-fn scan_sprite_registry(registry: &mut SpriteRegistry) {
+fn scan_sprite_registry(registry: &mut SpriteRegistry, config: &EditorConfig) {
     registry.sprites.clear();
     registry.parse_errors.clear();
 
     let cwd = std::env::current_dir().unwrap_or_default();
 
     // Scan base assets
-    let base_assets_ron = cwd.join("assets/game.assets.ron");
-    if base_assets_ron.exists() {
-        match parse_assets_ron(&base_assets_ron) {
-            Ok(paths) => {
-                for path in paths {
-                    let display_name = extract_sprite_display_name(&path);
-                    registry.sprites.push(RegisteredSprite {
-                        asset_path: path,
-                        display_name,
-                        source: SpriteSource::Base,
-                    });
+    if let Some(base_assets_ron) = config.base_assets_ron() {
+        let base_assets_ron = cwd.join(&base_assets_ron);
+        if base_assets_ron.exists() {
+            match parse_assets_ron(&base_assets_ron) {
+                Ok(paths) => {
+                    for path in paths {
+                        let display_name = extract_sprite_display_name(&path);
+                        registry.sprites.push(RegisteredSprite {
+                            asset_path: path,
+                            display_name,
+                            source: SpriteSource::Base,
+                        });
+                    }
                 }
+                Err(e) => registry.parse_errors.push(e),
             }
-            Err(e) => registry.parse_errors.push(e),
         }
     }
 
     // Scan extended assets
-    let extended_assets_ron = cwd.join("thetawave-test-game/assets/game.assets.ron");
-    if extended_assets_ron.exists() {
-        match parse_assets_ron(&extended_assets_ron) {
-            Ok(paths) => {
-                for path in paths {
-                    let display_name = extract_sprite_display_name(&path);
-                    registry.sprites.push(RegisteredSprite {
-                        asset_path: path,
-                        display_name,
-                        source: SpriteSource::Extended,
-                    });
+    if let Some(extended_assets_ron) = config.extended_assets_ron() {
+        let extended_assets_ron = cwd.join(&extended_assets_ron);
+        if extended_assets_ron.exists() {
+            match parse_assets_ron(&extended_assets_ron) {
+                Ok(paths) => {
+                    for path in paths {
+                        let display_name = extract_sprite_display_name(&path);
+                        registry.sprites.push(RegisteredSprite {
+                            asset_path: path,
+                            display_name,
+                            source: SpriteSource::Extended,
+                        });
+                    }
                 }
+                Err(e) => registry.parse_errors.push(e),
             }
-            Err(e) => registry.parse_errors.push(e),
         }
     }
 
@@ -443,9 +531,9 @@ fn check_file_refresh(mut file_tree: ResMut<FileTreeState>, config: Res<EditorCo
 }
 
 /// Check if sprite registry needs refresh
-fn check_sprite_registry_refresh(mut sprite_registry: ResMut<SpriteRegistry>) {
+fn check_sprite_registry_refresh(mut sprite_registry: ResMut<SpriteRegistry>, config: Res<EditorConfig>) {
     if sprite_registry.needs_refresh {
-        scan_sprite_registry(&mut sprite_registry);
+        scan_sprite_registry(&mut sprite_registry, &config);
     }
 }
 
