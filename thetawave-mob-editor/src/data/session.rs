@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use std::path::PathBuf;
 
 use bevy::prelude::*;
@@ -38,9 +39,11 @@ pub struct LogEntry {
     pub timestamp: f64,
 }
 
-/// Scrolling log of status messages
+/// Scrolling log of status messages.
+///
+/// Uses VecDeque for O(1) removal from the front when at capacity.
 pub struct StatusLog {
-    entries: Vec<LogEntry>,
+    entries: VecDeque<LogEntry>,
     max_entries: usize,
     /// Whether the log panel is expanded
     pub expanded: bool,
@@ -49,7 +52,7 @@ pub struct StatusLog {
 impl Default for StatusLog {
     fn default() -> Self {
         Self {
-            entries: Vec::new(),
+            entries: VecDeque::new(),
             max_entries: 50,
             expanded: false,
         }
@@ -57,37 +60,52 @@ impl Default for StatusLog {
 }
 
 impl StatusLog {
-    /// Add a new entry to the log
+    /// Add a new entry to the log.
+    ///
+    /// If at capacity, the oldest entry is removed (O(1) with VecDeque).
     pub fn push(&mut self, text: impl Into<String>, level: StatusLevel, timestamp: f64) {
-        self.entries.push(LogEntry {
+        self.entries.push_back(LogEntry {
             text: text.into(),
             level,
             timestamp,
         });
-        // Remove oldest entries if over capacity
+        // Remove oldest entries if over capacity (O(1) with VecDeque)
         while self.entries.len() > self.max_entries {
-            self.entries.remove(0);
+            self.entries.pop_front();
         }
     }
 
-    /// Get all log entries
-    pub fn entries(&self) -> &[LogEntry] {
-        &self.entries
+    /// Get all log entries as a slice.
+    ///
+    /// Note: This returns a tuple of two slices since VecDeque may not be contiguous.
+    /// For most UI purposes, use `iter()` instead.
+    pub fn entries(&self) -> (&[LogEntry], &[LogEntry]) {
+        self.entries.as_slices()
     }
 
-    /// Get the most recent entry
+    /// Iterate over all log entries in order.
+    pub fn iter(&self) -> impl Iterator<Item = &LogEntry> {
+        self.entries.iter()
+    }
+
+    /// Get the most recent entry.
     pub fn last(&self) -> Option<&LogEntry> {
-        self.entries.last()
+        self.entries.back()
     }
 
-    /// Clear all entries
+    /// Clear all entries.
     pub fn clear(&mut self) {
         self.entries.clear();
     }
 
-    /// Check if log is empty
+    /// Check if log is empty.
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
+    }
+
+    /// Get the number of entries.
+    pub fn len(&self) -> usize {
+        self.entries.len()
     }
 }
 

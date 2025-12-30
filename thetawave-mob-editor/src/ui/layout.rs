@@ -184,7 +184,7 @@ pub fn main_ui_system(
                 egui::ScrollArea::vertical()
                     .stick_to_bottom(true)
                     .show(ui, |ui| {
-                        for entry in session.log.entries() {
+                        for entry in session.log.iter() {
                             ui.horizontal(|ui| {
                                 // Timestamp (relative seconds)
                                 let elapsed = time.elapsed_secs_f64() - entry.timestamp;

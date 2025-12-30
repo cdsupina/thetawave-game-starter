@@ -1,54 +1,35 @@
 use std::{fs, io, path::PathBuf};
 
 use bevy::prelude::*;
+use thiserror::Error;
 use toml::Value;
 
-/// Errors that can occur during file operations
-#[derive(Debug)]
+/// Errors that can occur during file operations.
+#[derive(Debug, Error)]
 pub enum FileError {
-    Io(io::Error),
-    Toml(toml::de::Error),
-    TomlSer(toml::ser::Error),
-    Trash(trash::Error),
+    /// IO error (reading/writing files).
+    #[error("IO error: {0}")]
+    Io(#[from] io::Error),
+
+    /// TOML parsing error.
+    #[error("TOML parse error: {0}")]
+    Toml(#[from] toml::de::Error),
+
+    /// TOML serialization error.
+    #[error("TOML serialize error: {0}")]
+    TomlSer(#[from] toml::ser::Error),
+
+    /// Error moving file to trash.
+    #[error("Trash error: {0}")]
+    Trash(#[from] trash::Error),
+
+    /// File already exists (when creating new files).
+    #[error("File already exists")]
     AlreadyExists,
+
+    /// File not found.
+    #[error("File not found")]
     NotFound,
-}
-
-impl From<io::Error> for FileError {
-    fn from(e: io::Error) -> Self {
-        FileError::Io(e)
-    }
-}
-
-impl From<toml::de::Error> for FileError {
-    fn from(e: toml::de::Error) -> Self {
-        FileError::Toml(e)
-    }
-}
-
-impl From<toml::ser::Error> for FileError {
-    fn from(e: toml::ser::Error) -> Self {
-        FileError::TomlSer(e)
-    }
-}
-
-impl From<trash::Error> for FileError {
-    fn from(e: trash::Error) -> Self {
-        FileError::Trash(e)
-    }
-}
-
-impl std::fmt::Display for FileError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            FileError::Io(e) => write!(f, "IO error: {}", e),
-            FileError::Toml(e) => write!(f, "TOML parse error: {}", e),
-            FileError::TomlSer(e) => write!(f, "TOML serialize error: {}", e),
-            FileError::Trash(e) => write!(f, "Trash error: {}", e),
-            FileError::AlreadyExists => write!(f, "File already exists"),
-            FileError::NotFound => write!(f, "File not found"),
-        }
-    }
 }
 
 /// File operations for mob files

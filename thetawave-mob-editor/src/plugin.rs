@@ -21,6 +21,19 @@ use crate::{
     ui::{main_ui_system, DeleteDialogState, ErrorDialog, NewFolderDialog, NewMobDialog, UnsavedChangesDialog, ValidationDialog},
 };
 
+// =============================================================================
+// Path constants used throughout the editor
+// =============================================================================
+
+/// Directory containing sprite files relative to assets directory.
+pub const SPRITE_DIR: &str = "media/aseprite";
+
+/// Directory containing mob files relative to assets directory.
+pub const MOBS_DIR: &str = "mobs";
+
+/// Prefix for extended asset paths in .mobpatch files.
+pub const EXTENDED_PREFIX: &str = "extended://";
+
 /// Main plugin for the mob editor
 pub struct MobEditorPlugin {
     /// Base assets directory (where the main game's mobs are)
@@ -181,14 +194,15 @@ impl EditorConfig {
         self.extended_assets_root().map(|p| p.join("game.assets.ron"))
     }
 
-    /// Check if a path is within the extended assets directory
+    /// Check if a path is within the extended assets directory.
+    ///
+    /// Uses `Path::starts_with` for correct path prefix checking,
+    /// avoiding false positives that could occur with string contains.
     pub fn is_extended_path(&self, path: &std::path::Path) -> bool {
         if let Some(extended) = &self.extended_assets_dir {
-            // Normalize paths for comparison
-            let path_str = path.to_string_lossy();
-            let extended_str = extended.to_string_lossy();
-            // Check if path contains the extended directory
-            path_str.contains(extended_str.as_ref())
+            // Use Path::starts_with for proper path prefix checking
+            // This handles path normalization correctly
+            path.starts_with(extended)
         } else {
             false
         }
