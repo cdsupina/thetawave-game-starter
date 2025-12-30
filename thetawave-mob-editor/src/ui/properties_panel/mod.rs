@@ -22,10 +22,9 @@ use bevy_egui::egui;
 use crate::data::{EditorSession, FileType, SpriteRegistry};
 use crate::file::FileTreeState;
 use crate::plugin::EditorConfig;
-use crate::preview::JointedMobCache;
 
 // Re-export commonly used items
-pub use fields::{FieldResult, INHERITED_COLOR, PATCHED_COLOR};
+pub use fields::{FieldResult, ICON_BUTTON_MIN_SIZE, INDENT_SPACING, INHERITED_COLOR, PATCHED_COLOR};
 
 /// Result from rendering the properties panel
 #[derive(Default)]
@@ -50,7 +49,6 @@ pub fn properties_panel_ui(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
     sprite_registry: &SpriteRegistry,
-    _jointed_cache: &JointedMobCache,
     file_tree: &FileTreeState,
     config: &EditorConfig,
 ) -> PropertiesPanelResult {
@@ -58,7 +56,7 @@ pub fn properties_panel_ui(
     let mut modified = false;
 
     // Get the merged display table and patch-only table
-    let (display_table, patch_table) = match get_display_tables(session, config) {
+    let (display_table, patch_table) = match get_display_tables(session) {
         Some(tables) => tables,
         None => {
             ui.label("No mob loaded");
@@ -192,7 +190,6 @@ pub fn properties_panel_ui(
 /// For .mobpatch files, returns merged data for display and patch-only data for checking.
 fn get_display_tables(
     session: &EditorSession,
-    _config: &EditorConfig,
 ) -> Option<(toml::value::Table, toml::value::Table)> {
     let current_mob = session.current_mob.as_ref()?.as_table()?;
 

@@ -14,9 +14,28 @@ use crate::{
         EditorConfig, SpriteBrowserDialog, SpriteBrowserTarget, SpriteRegistrationDialog,
         SpriteSelectionDialog, DecorationSelectionDialog,
     },
-    preview::{JointedMobCache, PreviewSettings, PreviewState},
+    preview::{PreviewSettings, PreviewState},
     states::EditorState,
 };
+
+// =============================================================================
+// UI Layout Constants
+// =============================================================================
+
+/// Number of frames to skip at startup to allow egui to initialize.
+const STARTUP_FRAMES_TO_SKIP: u8 = 2;
+
+/// Default width of the properties panel in pixels.
+const PROPERTIES_PANEL_DEFAULT_WIDTH: f32 = 300.0;
+
+/// Minimum width of the properties panel in pixels.
+const PROPERTIES_PANEL_MIN_WIDTH: f32 = 250.0;
+
+/// Height of the status log panel when expanded.
+const STATUS_LOG_EXPANDED_HEIGHT: f32 = 120.0;
+
+/// Height of the status log panel when collapsed.
+const STATUS_LOG_COLLAPSED_HEIGHT: f32 = 24.0;
 
 use super::{
     file_panel_ui, properties_panel_ui, render_delete_dialog, toolbar_ui,
@@ -62,12 +81,11 @@ pub fn main_ui_system(
     mut preview_settings: ResMut<PreviewSettings>,
     mut preview_state: ResMut<PreviewState>,
     mut sprite_registry: ResMut<SpriteRegistry>,
-    jointed_cache: Res<JointedMobCache>,
     config: Res<EditorConfig>,
     mut frames_passed: Local<u8>,
 ) {
-    // Skip first two frames to let egui initialize properly
-    if *frames_passed < 2 {
+    // Skip initial frames to let egui initialize properly
+    if *frames_passed < STARTUP_FRAMES_TO_SKIP {
         *frames_passed += 1;
         return;
     }
@@ -111,11 +129,11 @@ pub fn main_ui_system(
     let mut panel_result = super::PropertiesPanelResult::default();
     if *state.get() == EditorState::Editing {
         egui::SidePanel::right("properties_panel")
-            .default_width(300.0)
-            .min_width(250.0)
+            .default_width(PROPERTIES_PANEL_DEFAULT_WIDTH)
+            .min_width(PROPERTIES_PANEL_MIN_WIDTH)
             .resizable(true)
             .show(ctx, |ui| {
-                panel_result = properties_panel_ui(ui, &mut session, &sprite_registry, &jointed_cache, &file_tree, &config);
+                panel_result = properties_panel_ui(ui, &mut session, &sprite_registry, &file_tree, &config);
             });
     }
 
@@ -132,7 +150,11 @@ pub fn main_ui_system(
     }
 
     // Bottom status bar / log panel
-    let panel_height = if session.log.expanded { 120.0 } else { 24.0 };
+    let panel_height = if session.log.expanded {
+        STATUS_LOG_EXPANDED_HEIGHT
+    } else {
+        STATUS_LOG_COLLAPSED_HEIGHT
+    };
     egui::TopBottomPanel::bottom("status_bar")
         .exact_height(panel_height)
         .show(ctx, |ui| {
@@ -342,9 +364,7 @@ pub fn main_ui_system(
         ctx,
         &mut *dialogs.sprite_browser,
         &config,
-        &mut sprite_registry,
-        &mut session,
-        &time,
+        &sprite_registry,
     );
 
     // Handle sprite browser selection result
@@ -993,8 +1013,6 @@ fn render_sprite_browser_dialog(
     dialog: &mut SpriteBrowserDialog,
     config: &EditorConfig,
     sprite_registry: &SpriteRegistry,
-    _session: &EditorSession,
-    _time: &Time,
 ) -> Option<(String, bool)> {
     if !dialog.is_open {
         return None;

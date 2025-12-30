@@ -8,7 +8,7 @@ use bevy_egui::egui;
 use crate::data::{EditorSession, SpriteRegistry, SpriteSource};
 use crate::plugin::EditorConfig;
 
-use super::fields::{render_patch_indicator, INHERITED_COLOR, PATCHED_COLOR};
+use super::fields::{render_patch_indicator, ICON_BUTTON_MIN_SIZE, INDENT_SPACING, INHERITED_COLOR, PATCHED_COLOR};
 
 /// Render a sprite picker dropdown.
 ///
@@ -155,7 +155,7 @@ pub fn render_sprite_picker(
 
     // Browse & Register button row
     ui.horizontal(|ui| {
-        ui.add_space(16.0);
+        ui.add_space(INDENT_SPACING);
 
         if ui
             .small_button("➕ Register New Sprite...")
@@ -175,7 +175,7 @@ pub fn render_sprite_picker(
     // Show warning if unregistered
     if !sprite_registry.is_registered(current_sprite) && !current_sprite.is_empty() {
         ui.horizontal(|ui| {
-            ui.add_space(16.0);
+            ui.add_space(INDENT_SPACING);
             ui.label(
                 egui::RichText::new("⚠ Not in game.assets.ron")
                     .small()
@@ -513,7 +513,7 @@ fn render_reset_button(ui: &mut egui::Ui, is_patched: bool, is_patch_file: bool)
         let response = ui.add(
             egui::Button::new(egui::RichText::new("×").color(egui::Color32::WHITE))
                 .fill(egui::Color32::from_rgb(120, 60, 60))
-                .min_size(egui::vec2(16.0, 16.0)),
+                .min_size(ICON_BUTTON_MIN_SIZE),
         );
         if response
             .on_hover_text("Remove from patch (use base value)")

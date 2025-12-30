@@ -187,23 +187,20 @@ pub fn update_preview_mob(
             info!("Loading sprite for mob preview: {}", path);
 
             // Spawn the main mob preview entity
-            let mob_entity = commands
-                .spawn((
-                    PreviewMob,
-                    AseAnimation {
-                        animation: Animation::tag("idle"),
-                        aseprite: aseprite_handle,
-                    },
-                    Sprite::default(),
-                    Transform::from_xyz(0.0, 0.0, z_level),
-                ))
-                .id();
+            commands.spawn((
+                PreviewMob,
+                AseAnimation {
+                    animation: Animation::tag("idle"),
+                    aseprite: aseprite_handle,
+                },
+                Sprite::default(),
+                Transform::from_xyz(0.0, 0.0, z_level),
+            ));
 
             // Spawn decorations
             spawn_decorations(
                 &mut commands,
                 mob,
-                mob_entity,
                 &asset_server,
                 &config,
             );
@@ -378,7 +375,6 @@ pub fn try_load_sprite_from_path(
 fn spawn_decorations(
     commands: &mut Commands,
     mob: &toml::Value,
-    _parent: Entity,
     asset_server: &AssetServer,
     config: &crate::plugin::EditorConfig,
 ) {

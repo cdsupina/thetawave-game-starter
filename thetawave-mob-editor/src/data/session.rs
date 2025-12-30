@@ -5,6 +5,13 @@ use bevy::prelude::*;
 
 use crate::plugin::EditorConfig;
 
+// =============================================================================
+// Constants
+// =============================================================================
+
+/// Maximum number of log entries to keep in the status log.
+const STATUS_LOG_MAX_ENTRIES: usize = 50;
+
 /// The type of file being edited
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum FileType {
@@ -53,7 +60,7 @@ impl Default for StatusLog {
     fn default() -> Self {
         Self {
             entries: VecDeque::new(),
-            max_entries: 50,
+            max_entries: STATUS_LOG_MAX_ENTRIES,
             expanded: false,
         }
     }

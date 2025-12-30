@@ -5,11 +5,21 @@
 
 use bevy_egui::egui;
 
+// =============================================================================
+// UI Constants
+// =============================================================================
+
 /// Color for patched/overridden values in patch files.
 pub const PATCHED_COLOR: egui::Color32 = egui::Color32::from_rgb(100, 200, 255);
 
 /// Color for inherited values (from base mob) in patch files.
 pub const INHERITED_COLOR: egui::Color32 = egui::Color32::from_rgb(140, 140, 140);
+
+/// Minimum button size for icon buttons.
+pub const ICON_BUTTON_MIN_SIZE: egui::Vec2 = egui::vec2(16.0, 16.0);
+
+/// Standard indentation for nested UI elements.
+pub const INDENT_SPACING: f32 = 16.0;
 
 /// Result of editing a field - used to communicate changes back to the caller.
 pub enum FieldResult<T> {
@@ -55,7 +65,7 @@ pub fn render_reset_button(ui: &mut egui::Ui, is_patched: bool, is_patch_file: b
         let response = ui.add(
             egui::Button::new(egui::RichText::new("×").color(egui::Color32::WHITE))
                 .fill(egui::Color32::from_rgb(120, 60, 60))
-                .min_size(egui::vec2(16.0, 16.0)),
+                .min_size(ICON_BUTTON_MIN_SIZE),
         );
         if response
             .on_hover_text("Remove from patch (use base value)")
@@ -268,7 +278,7 @@ pub fn render_vec2_field(
 
     if !matches!(result, FieldResult::Reset) {
         ui.horizontal(|ui| {
-            ui.add_space(16.0);
+            ui.add_space(INDENT_SPACING);
             ui.label("X:");
             let mut new_x = x;
             let mut drag_x = egui::DragValue::new(&mut new_x).range(range.clone());
