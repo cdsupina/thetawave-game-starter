@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use bevy::{
     log::{info, warn},
@@ -6,7 +6,7 @@ use bevy::{
 };
 
 use crate::data::EditorSession;
-use crate::file::{FileNode, FileOperations, FileTreeState};
+use crate::file::FileOperations;
 use crate::states::EditorState;
 
 use super::PreviewState;
@@ -19,8 +19,6 @@ const MAX_RECURSION_DEPTH: usize = 10;
 pub struct JointedMobCache {
     /// Resolved jointed mob hierarchy for the current mob
     pub resolved_mobs: Vec<ResolvedJointedMob>,
-    /// List of parent mobs that reference the current mob
-    pub parent_mobs: Vec<ParentMobRef>,
     /// Whether the cache needs to be rebuilt
     pub needs_rebuild: bool,
     /// Path of the mob this cache was built for
@@ -40,17 +38,6 @@ pub struct ResolvedJointedMob {
     pub depth: usize,
     /// Decorations for this jointed mob: (sprite_path, offset)
     pub decorations: Vec<(String, Vec2)>,
-}
-
-/// Reference to a parent mob that uses this mob
-#[derive(Debug, Clone)]
-pub struct ParentMobRef {
-    /// Path to the parent mob file
-    pub path: PathBuf,
-    /// Name of the parent mob
-    pub name: String,
-    /// The key used in the parent's jointed_mobs array
-    pub jointed_key: String,
 }
 
 /// Resolve a mob_ref path to an actual file path
@@ -217,85 +204,10 @@ fn resolve_jointed_mobs(
     }
 }
 
-/// Extract the relative mob reference path from a full file path
-fn extract_relative_mob_path(full_path: &Path) -> Option<String> {
-    let path_str = full_path.to_string_lossy();
-
-    // Find "mobs/" in the path
-    let mobs_idx = path_str.find("mobs/")?;
-    let relative = &path_str[mobs_idx..];
-
-    Some(relative.to_string())
-}
-
-/// Recursively scan file nodes for parent references
-fn scan_for_parent_refs(node: &FileNode, target_ref: &str, results: &mut Vec<ParentMobRef>) {
-    if node.is_directory {
-        for child in &node.children {
-            scan_for_parent_refs(child, target_ref, results);
-        }
-    } else if node
-        .path
-        .extension()
-        .map(|e| e == "mob")
-        .unwrap_or(false)
-    {
-        // Load and check this mob file
-        if let Ok(mob) = FileOperations::load_file(&node.path)
-            && let Some(jointed_mobs) = mob
-                .get("jointed_mobs")
-                .and_then(|v: &toml::Value| v.as_array())
-            {
-                for jointed in jointed_mobs {
-                    if let Some(table) = jointed.as_table()
-                        && let Some(mob_ref) = table
-                            .get("mob_ref")
-                            .and_then(|v: &toml::Value| v.as_str())
-                            && mob_ref == target_ref {
-                                let name = mob
-                                    .get("name")
-                                    .and_then(|v: &toml::Value| v.as_str())
-                                    .unwrap_or(&node.name)
-                                    .to_string();
-                                let key = table
-                                    .get("key")
-                                    .and_then(|v: &toml::Value| v.as_str())
-                                    .unwrap_or("unknown")
-                                    .to_string();
-
-                                results.push(ParentMobRef {
-                                    path: node.path.clone(),
-                                    name,
-                                    jointed_key: key,
-                                });
-                            }
-                }
-            }
-    }
-}
-
-/// Scan all mob files to find which ones reference the given mob
-fn find_parent_mobs(current_mob_path: &Path, file_tree: &FileTreeState) -> Vec<ParentMobRef> {
-    let mut parents = Vec::new();
-
-    // Get the relative path for the current mob
-    let Some(current_relative) = extract_relative_mob_path(current_mob_path) else {
-        return parents;
-    };
-
-    // Scan all mob files in the file tree
-    for root in &file_tree.roots {
-        scan_for_parent_refs(root, &current_relative, &mut parents);
-    }
-
-    parents
-}
-
 /// System to rebuild the jointed mob cache when needed
 pub fn rebuild_jointed_mob_cache(
     session: Res<EditorSession>,
     preview_state: Res<PreviewState>,
-    file_tree: Res<FileTreeState>,
     mut cache: ResMut<JointedMobCache>,
     state: Res<State<EditorState>>,
     config: Res<crate::plugin::EditorConfig>,
@@ -315,7 +227,6 @@ pub fn rebuild_jointed_mob_cache(
 
     // Clear and rebuild
     cache.resolved_mobs.clear();
-    cache.parent_mobs.clear();
     cache.needs_rebuild = false;
     cache.current_path = session.current_path.clone();
 
@@ -327,11 +238,6 @@ pub fn rebuild_jointed_mob_cache(
     // Resolve jointed mobs hierarchy
     resolve_jointed_mobs(mob, Vec2::ZERO, 0, &mut cache.resolved_mobs, &config);
 
-    // Find parent mobs if we have a current path
-    if let Some(path) = &session.current_path {
-        cache.parent_mobs = find_parent_mobs(path, &file_tree);
-    }
-
     let max_depth = cache
         .resolved_mobs
         .iter()
@@ -340,9 +246,8 @@ pub fn rebuild_jointed_mob_cache(
         .unwrap_or(0);
 
     info!(
-        "Rebuilt jointed mob cache: {} resolved mobs, {} parent refs, max depth {}",
+        "Rebuilt jointed mob cache: {} resolved mobs, max depth {}",
         cache.resolved_mobs.len(),
-        cache.parent_mobs.len(),
         max_depth
     );
 }

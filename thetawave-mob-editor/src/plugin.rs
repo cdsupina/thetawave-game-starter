@@ -28,19 +28,6 @@ use crate::{
     ui::{main_ui_system, DeleteDialogState, ErrorDialog, NewFolderDialog, NewMobDialog, UnsavedChangesDialog, ValidationDialog},
 };
 
-// =============================================================================
-// Path constants used throughout the editor
-// =============================================================================
-
-/// Directory containing sprite files relative to assets directory.
-pub const SPRITE_DIR: &str = "media/aseprite";
-
-/// Directory containing mob files relative to assets directory.
-pub const MOBS_DIR: &str = "mobs";
-
-/// Prefix for extended asset paths in .mobpatch files.
-pub const EXTENDED_PREFIX: &str = "extended://";
-
 /// Main plugin for the mob editor
 pub struct MobEditorPlugin {
     /// Base assets directory (where the main game's mobs are)
@@ -265,44 +252,44 @@ impl EditorConfig {
 
 /// State for the sprite registration dialog
 #[derive(Resource, Default)]
-pub struct SpriteRegistrationDialog {
+pub(crate) struct SpriteRegistrationDialog {
     /// Whether the dialog is showing
-    pub show: bool,
+    pub(crate) show: bool,
     /// Unregistered sprites found in the mob
-    pub unregistered_sprites: Vec<String>,
+    pub(crate) unregistered_sprites: Vec<String>,
     /// Path to save to after handling
-    pub pending_save_path: Option<PathBuf>,
+    pub(crate) pending_save_path: Option<PathBuf>,
 }
 
 /// State for the sprite selection confirmation dialog
 #[derive(Resource, Default)]
-pub struct SpriteSelectionDialog {
+pub(crate) struct SpriteSelectionDialog {
     /// Whether the dialog is showing
-    pub show: bool,
+    pub(crate) show: bool,
     /// The asset path of the registered sprite
-    pub asset_path: String,
+    pub(crate) asset_path: String,
     /// The path to use in the mob file
-    pub mob_path: String,
+    pub(crate) mob_path: String,
     /// Display name for the sprite
-    pub display_name: String,
+    pub(crate) display_name: String,
 }
 
 /// State for the decoration sprite selection confirmation dialog
 #[derive(Resource, Default)]
-pub struct DecorationSelectionDialog {
+pub(crate) struct DecorationSelectionDialog {
     /// Whether the dialog is showing
-    pub show: bool,
+    pub(crate) show: bool,
     /// The decoration index to update
-    pub decoration_index: usize,
+    pub(crate) decoration_index: usize,
     /// The path to use in the mob file
-    pub mob_path: String,
+    pub(crate) mob_path: String,
     /// Display name for the sprite
-    pub display_name: String,
+    pub(crate) display_name: String,
 }
 
 /// Target for sprite browser selection
 #[derive(Clone, Default)]
-pub enum SpriteBrowserTarget {
+pub(crate) enum SpriteBrowserTarget {
     #[default]
     MainSprite,
     Decoration(usize),
@@ -310,29 +297,29 @@ pub enum SpriteBrowserTarget {
 
 /// Entry in the sprite browser file list
 #[derive(Clone)]
-pub struct SpriteBrowserEntry {
-    pub name: String,
-    pub path: PathBuf,
-    pub is_directory: bool,
+pub(crate) struct SpriteBrowserEntry {
+    pub(crate) name: String,
+    pub(crate) path: PathBuf,
+    pub(crate) is_directory: bool,
 }
 
 /// State for the sprite browser dialog
 #[derive(Resource, Default)]
-pub struct SpriteBrowserDialog {
+pub(crate) struct SpriteBrowserDialog {
     /// Whether the dialog is showing
-    pub is_open: bool,
+    pub(crate) is_open: bool,
     /// What we're selecting a sprite for
-    pub target: SpriteBrowserTarget,
+    pub(crate) target: SpriteBrowserTarget,
     /// Currently browsing base (false) or extended (true) assets
-    pub browsing_extended: bool,
+    pub(crate) browsing_extended: bool,
     /// Current directory path relative to assets root
-    pub current_path: Vec<String>,
+    pub(crate) current_path: Vec<String>,
     /// Entries in current directory
-    pub entries: Vec<SpriteBrowserEntry>,
+    pub(crate) entries: Vec<SpriteBrowserEntry>,
     /// Currently selected file (if any)
-    pub selected: Option<PathBuf>,
+    pub(crate) selected: Option<PathBuf>,
     /// Whether extended assets are allowed (based on file type)
-    pub allow_extended: bool,
+    pub(crate) allow_extended: bool,
 }
 
 impl SpriteBrowserDialog {

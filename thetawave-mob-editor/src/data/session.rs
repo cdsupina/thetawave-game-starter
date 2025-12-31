@@ -101,11 +101,6 @@ impl StatusLog {
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
-
-    /// Get the number of entries.
-    pub fn len(&self) -> usize {
-        self.entries.len()
-    }
 }
 
 /// A validation error for a specific field
@@ -623,7 +618,7 @@ mod tests {
         log.push("Test message", StatusLevel::Success, 1.0);
         log.push("Warning", StatusLevel::Warning, 2.0);
 
-        assert_eq!(log.len(), 2);
+        assert_eq!(log.entries.len(), 2);
         assert!(!log.is_empty());
 
         let entries: Vec<_> = log.iter().collect();
@@ -644,7 +639,7 @@ mod tests {
         log.push("Three", StatusLevel::Success, 3.0);
         log.push("Four", StatusLevel::Success, 4.0);
 
-        assert_eq!(log.len(), 3);
+        assert_eq!(log.entries.len(), 3);
         assert_eq!(log.iter().next().unwrap().text, "Two"); // "One" was removed
     }
 

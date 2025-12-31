@@ -23,8 +23,7 @@ use crate::data::{EditorSession, FileType, SpriteRegistry};
 use crate::file::FileTreeState;
 use crate::plugin::EditorConfig;
 
-// Re-export commonly used items
-pub use fields::{FieldResult, ICON_BUTTON_MIN_SIZE, INDENT_SPACING, INHERITED_COLOR, PATCHED_COLOR};
+use fields::{FieldResult, PATCHED_COLOR};
 
 /// Result from rendering the properties panel
 #[derive(Default)]

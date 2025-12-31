@@ -20,12 +20,12 @@
 //!     .run();
 //! ```
 
-pub mod data;
-pub mod file;
+pub(crate) mod data;
+pub(crate) mod file;
 pub mod plugin;
-pub mod preview;
-pub mod states;
-pub mod ui;
+pub(crate) mod preview;
+pub(crate) mod states;
+pub(crate) mod ui;
 
 // Re-export the main plugin for convenience
 pub use plugin::{EditorConfig, MobEditorPlugin};
