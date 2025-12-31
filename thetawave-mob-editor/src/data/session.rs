@@ -371,3 +371,478 @@ impl EditorSession {
         self.merged_for_preview.as_ref().or(self.current_mob.as_ref())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Helper to create a valid mob TOML value
+    fn valid_mob() -> toml::Value {
+        toml::from_str(
+            r#"
+            name = "Test Mob"
+            sprite = "media/aseprite/test.aseprite"
+            spawnable = true
+            health = 50
+
+            [[colliders]]
+            shape = { Rectangle = [10.0, 10.0] }
+            position = [0.0, 0.0]
+            rotation = 0.0
+            "#,
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn validate_mob_valid() {
+        let mob = valid_mob();
+        let result = validate_mob(&mob, false);
+        assert!(!result.has_errors(), "Valid mob should pass: {:?}", result.errors);
+    }
+
+    #[test]
+    fn validate_mob_missing_sprite() {
+        let mob = toml::from_str(
+            r#"
+            name = "No Sprite Mob"
+            spawnable = false
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        assert!(result.has_errors());
+        assert!(result.errors.iter().any(|e| e.field_path == "sprite"));
+    }
+
+    #[test]
+    fn validate_mob_empty_sprite() {
+        let mob = toml::from_str(
+            r#"
+            name = "Empty Sprite Mob"
+            sprite = ""
+            spawnable = false
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        assert!(result.has_errors());
+        assert!(result.errors.iter().any(|e|
+            e.field_path == "sprite" && e.message.contains("empty")
+        ));
+    }
+
+    #[test]
+    fn validate_mob_missing_health_spawnable() {
+        let mob = toml::from_str(
+            r#"
+            name = "No Health Mob"
+            sprite = "media/aseprite/test.aseprite"
+            spawnable = true
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        assert!(result.has_errors());
+        assert!(result.errors.iter().any(|e|
+            e.field_path == "health" && e.message.contains("required")
+        ));
+    }
+
+    #[test]
+    fn validate_mob_negative_health() {
+        let mob = toml::from_str(
+            r#"
+            name = "Negative Health Mob"
+            sprite = "media/aseprite/test.aseprite"
+            spawnable = true
+            health = -10
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        assert!(result.has_errors());
+        assert!(result.errors.iter().any(|e|
+            e.field_path == "health" && e.message.contains("positive")
+        ));
+    }
+
+    #[test]
+    fn validate_mob_zero_health() {
+        let mob = toml::from_str(
+            r#"
+            name = "Zero Health Mob"
+            sprite = "media/aseprite/test.aseprite"
+            spawnable = true
+            health = 0
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        assert!(result.has_errors());
+        assert!(result.errors.iter().any(|e| e.field_path == "health"));
+    }
+
+    #[test]
+    fn validate_mob_invalid_rectangle_negative() {
+        let mob = toml::from_str(
+            r#"
+            name = "Bad Collider Mob"
+            sprite = "media/aseprite/test.aseprite"
+            spawnable = false
+
+            [[colliders]]
+            shape = { Rectangle = [-5.0, 10.0] }
+            position = [0.0, 0.0]
+            rotation = 0.0
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        assert!(result.has_errors());
+        assert!(result.errors.iter().any(|e|
+            e.field_path.contains("Rectangle") && e.message.contains("positive")
+        ));
+    }
+
+    #[test]
+    fn validate_mob_invalid_ball_negative() {
+        let mob = toml::from_str(
+            r#"
+            name = "Bad Ball Mob"
+            sprite = "media/aseprite/test.aseprite"
+            spawnable = false
+
+            [[colliders]]
+            shape = { Ball = -5.0 }
+            position = [0.0, 0.0]
+            rotation = 0.0
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        assert!(result.has_errors());
+        assert!(result.errors.iter().any(|e|
+            e.field_path.contains("Ball") && e.message.contains("positive")
+        ));
+    }
+
+    #[test]
+    fn validate_mob_patch_skips_validation() {
+        // Patches with missing required fields should still pass
+        let patch = toml::from_str(
+            r#"
+            name = "Patch Only"
+            health = 200
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&patch, true);
+        assert!(!result.has_errors(), "Patches should skip validation");
+    }
+
+    #[test]
+    fn validate_mob_multiple_errors() {
+        let mob = toml::from_str(
+            r#"
+            name = "Multiple Errors"
+            spawnable = true
+
+            [[colliders]]
+            shape = { Rectangle = [-5.0, -10.0] }
+            position = [0.0, 0.0]
+            rotation = 0.0
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        assert!(result.has_errors());
+        // Should have errors for: missing sprite, missing health, two negative dimensions
+        assert!(result.errors.len() >= 3, "Expected at least 3 errors, got {}", result.errors.len());
+    }
+
+    #[test]
+    fn validate_mob_non_spawnable_no_health_ok() {
+        // Non-spawnable mobs don't require health
+        let mob = toml::from_str(
+            r#"
+            name = "Non-spawnable Mob"
+            sprite = "media/aseprite/test.aseprite"
+            spawnable = false
+
+            [[colliders]]
+            shape = { Rectangle = [10.0, 10.0] }
+            position = [0.0, 0.0]
+            rotation = 0.0
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        assert!(!result.has_errors(), "Non-spawnable mob without health should be valid");
+    }
+
+    #[test]
+    fn validate_mob_mixed_colliders() {
+        let mob = toml::from_str(
+            r#"
+            name = "Mixed Colliders"
+            sprite = "media/aseprite/test.aseprite"
+            spawnable = false
+
+            [[colliders]]
+            shape = { Rectangle = [10.0, 10.0] }
+            position = [0.0, 0.0]
+            rotation = 0.0
+
+            [[colliders]]
+            shape = { Ball = 5.0 }
+            position = [5.0, 0.0]
+            rotation = 0.0
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        assert!(!result.has_errors(), "Mixed valid colliders should pass");
+    }
+
+    // StatusLog tests
+    #[test]
+    fn status_log_push_and_iter() {
+        let mut log = StatusLog::default();
+        log.push("Test message", StatusLevel::Success, 1.0);
+        log.push("Warning", StatusLevel::Warning, 2.0);
+
+        assert_eq!(log.len(), 2);
+        assert!(!log.is_empty());
+
+        let entries: Vec<_> = log.iter().collect();
+        assert_eq!(entries[0].text, "Test message");
+        assert_eq!(entries[1].text, "Warning");
+    }
+
+    #[test]
+    fn status_log_max_entries() {
+        let mut log = StatusLog {
+            entries: VecDeque::new(),
+            max_entries: 3,
+            expanded: false,
+        };
+
+        log.push("One", StatusLevel::Success, 1.0);
+        log.push("Two", StatusLevel::Success, 2.0);
+        log.push("Three", StatusLevel::Success, 3.0);
+        log.push("Four", StatusLevel::Success, 4.0);
+
+        assert_eq!(log.len(), 3);
+        assert_eq!(log.iter().next().unwrap().text, "Two"); // "One" was removed
+    }
+
+    #[test]
+    fn status_log_last() {
+        let mut log = StatusLog::default();
+        assert!(log.last().is_none());
+
+        log.push("First", StatusLevel::Success, 1.0);
+        log.push("Last", StatusLevel::Error, 2.0);
+
+        assert_eq!(log.last().unwrap().text, "Last");
+    }
+
+    // EditorSession tests
+    #[test]
+    fn editor_session_check_modified() {
+        let mut session = EditorSession::default();
+
+        // No mobs loaded - not modified
+        session.check_modified();
+        assert!(!session.is_modified);
+
+        // Load a mob
+        session.current_mob = Some(valid_mob());
+        session.original_mob = Some(valid_mob());
+        session.check_modified();
+        assert!(!session.is_modified);
+
+        // Modify the mob
+        if let Some(mob) = &mut session.current_mob {
+            mob.as_table_mut().unwrap().insert(
+                "health".to_string(),
+                toml::Value::Integer(999),
+            );
+        }
+        session.check_modified();
+        assert!(session.is_modified);
+    }
+
+    #[test]
+    fn editor_session_new_mob() {
+        let mob = EditorSession::new_mob("Test Enemy");
+
+        assert_eq!(mob.get("name").and_then(|v| v.as_str()), Some("Test Enemy"));
+        assert!(mob.get("sprite").is_some());
+        assert!(mob.get("health").is_some());
+        assert!(mob.get("colliders").is_some());
+        assert_eq!(mob.get("spawnable").and_then(|v| v.as_bool()), Some(true));
+    }
+
+    // Additional edge case tests
+
+    #[test]
+    fn validate_mob_zero_dimensions() {
+        let mob = toml::from_str(
+            r#"
+            name = "Zero Dimensions"
+            sprite = "media/aseprite/test.aseprite"
+            spawnable = false
+
+            [[colliders]]
+            shape = { Rectangle = [0.0, 10.0] }
+            position = [0.0, 0.0]
+            rotation = 0.0
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        assert!(result.has_errors());
+        assert!(result.errors.iter().any(|e| e.field_path.contains("Rectangle")));
+    }
+
+    #[test]
+    fn validate_mob_integer_collider_dimensions() {
+        // Test that integer dimensions are handled correctly
+        let mob = toml::from_str(
+            r#"
+            name = "Integer Dimensions"
+            sprite = "media/aseprite/test.aseprite"
+            spawnable = false
+
+            [[colliders]]
+            shape = { Rectangle = [10, 15] }
+            position = [0.0, 0.0]
+            rotation = 0.0
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        assert!(!result.has_errors(), "Positive integer dimensions should be valid");
+    }
+
+    #[test]
+    fn validate_mob_negative_integer_collider() {
+        let mob = toml::from_str(
+            r#"
+            name = "Negative Integer"
+            sprite = "media/aseprite/test.aseprite"
+            spawnable = false
+
+            [[colliders]]
+            shape = { Rectangle = [-5, 10] }
+            position = [0.0, 0.0]
+            rotation = 0.0
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        assert!(result.has_errors());
+    }
+
+    #[test]
+    fn validate_mob_ball_zero_radius() {
+        let mob = toml::from_str(
+            r#"
+            name = "Zero Ball"
+            sprite = "media/aseprite/test.aseprite"
+            spawnable = false
+
+            [[colliders]]
+            shape = { Ball = 0.0 }
+            position = [0.0, 0.0]
+            rotation = 0.0
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        assert!(result.has_errors());
+        assert!(result.errors.iter().any(|e| e.field_path.contains("Ball")));
+    }
+
+    #[test]
+    fn validate_mob_integer_ball_radius() {
+        let mob = toml::from_str(
+            r#"
+            name = "Integer Ball"
+            sprite = "media/aseprite/test.aseprite"
+            spawnable = false
+
+            [[colliders]]
+            shape = { Ball = 5 }
+            position = [0.0, 0.0]
+            rotation = 0.0
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        assert!(!result.has_errors(), "Positive integer ball radius should be valid");
+    }
+
+    #[test]
+    fn validate_mob_empty_colliders_array() {
+        let mob = toml::from_str(
+            r#"
+            name = "Empty Colliders"
+            sprite = "media/aseprite/test.aseprite"
+            spawnable = false
+            colliders = []
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        // Empty colliders array is allowed - validation doesn't require colliders
+        assert!(!result.has_errors());
+    }
+
+    #[test]
+    fn validate_mob_no_colliders() {
+        let mob = toml::from_str(
+            r#"
+            name = "No Colliders"
+            sprite = "media/aseprite/test.aseprite"
+            spawnable = false
+            "#,
+        )
+        .unwrap();
+
+        let result = validate_mob(&mob, false);
+        assert!(!result.has_errors(), "Mobs without colliders should be valid");
+    }
+
+    #[test]
+    fn validation_result_add_multiple_errors() {
+        let mut result = ValidationResult::default();
+        assert!(!result.has_errors());
+
+        result.add_error("field1", "Error 1");
+        result.add_error("field2", "Error 2");
+        result.add_error("field3", "Error 3");
+
+        assert!(result.has_errors());
+        assert_eq!(result.errors.len(), 3);
+    }
+}

@@ -49,6 +49,9 @@ thiserror = "2"
 # System trash
 trash = "5"
 
+[dev-dependencies]
+tempfile = "3"
+
 [features]
 default = ["dynamic_linking"]
 dynamic_linking = ["bevy/dynamic_linking"]

@@ -193,3 +193,255 @@ pub struct NewMobEvent {
 pub struct DeleteMobEvent {
     pub path: PathBuf,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::TempDir;
+
+    /// Helper to create a valid mob TOML value
+    fn create_test_mob(name: &str) -> toml::Value {
+        let toml_str = format!(
+            r#"
+            name = "{}"
+            sprite = "media/aseprite/test.aseprite"
+            spawnable = true
+            health = 50
+
+            [[colliders]]
+            shape = {{ Rectangle = [10.0, 10.0] }}
+            position = [0.0, 0.0]
+            rotation = 0.0
+            "#,
+            name
+        );
+        toml::from_str(&toml_str).unwrap()
+    }
+
+    #[test]
+    fn load_file_success() {
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path().join("test.mob");
+
+        let content = r#"
+            name = "Test Mob"
+            sprite = "media/aseprite/test.aseprite"
+        "#;
+        fs::write(&path, content).unwrap();
+
+        let result = FileOperations::load_file(&path);
+        assert!(result.is_ok());
+
+        let value = result.unwrap();
+        assert_eq!(
+            value.get("name").and_then(|v| v.as_str()),
+            Some("Test Mob")
+        );
+    }
+
+    #[test]
+    fn load_file_not_found() {
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path().join("nonexistent.mob");
+
+        let result = FileOperations::load_file(&path);
+        assert!(matches!(result, Err(FileError::NotFound)));
+    }
+
+    #[test]
+    fn load_file_invalid_toml() {
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path().join("invalid.mob");
+
+        fs::write(&path, "this is not valid toml [[[").unwrap();
+
+        let result = FileOperations::load_file(&path);
+        assert!(matches!(result, Err(FileError::Toml(_))));
+    }
+
+    #[test]
+    fn save_file_creates_parent_dirs() {
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path().join("nested/dir/test.mob");
+
+        let value = create_test_mob("Test");
+
+        let result = FileOperations::save_file(&path, &value);
+        assert!(result.is_ok());
+        assert!(path.exists());
+
+        // Verify content was written correctly
+        let loaded = FileOperations::load_file(&path).unwrap();
+        assert_eq!(
+            loaded.get("name").and_then(|v| v.as_str()),
+            Some("Test")
+        );
+    }
+
+    #[test]
+    fn save_file_atomic_write() {
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path().join("atomic.mob");
+
+        let value = create_test_mob("Atomic Test");
+
+        let result = FileOperations::save_file(&path, &value);
+        assert!(result.is_ok());
+
+        // Verify temp file was cleaned up
+        let temp_path = path.with_extension("tmp");
+        assert!(!temp_path.exists());
+
+        // Verify main file exists and has correct content
+        assert!(path.exists());
+        let content = fs::read_to_string(&path).unwrap();
+        assert!(content.contains("Atomic Test"));
+    }
+
+    #[test]
+    fn create_new_file_mob() {
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path().join("new_mob.mob");
+
+        let result = FileOperations::create_new_file(&path, "New Mob", false);
+        assert!(result.is_ok());
+        assert!(path.exists());
+
+        let value = result.unwrap();
+        assert_eq!(
+            value.get("name").and_then(|v| v.as_str()),
+            Some("New Mob")
+        );
+        // Full mobs should have default sprite, health, colliders
+        assert!(value.get("sprite").is_some());
+        assert!(value.get("health").is_some());
+        assert!(value.get("colliders").is_some());
+    }
+
+    #[test]
+    fn create_new_file_patch() {
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path().join("new_patch.mobpatch");
+
+        let result = FileOperations::create_new_file(&path, "My Patch", true);
+        assert!(result.is_ok());
+        assert!(path.exists());
+
+        let value = result.unwrap();
+        assert_eq!(
+            value.get("name").and_then(|v| v.as_str()),
+            Some("My Patch")
+        );
+        // Patches should be minimal - only name
+        assert!(value.get("sprite").is_none());
+        assert!(value.get("health").is_none());
+    }
+
+    #[test]
+    fn create_new_file_already_exists() {
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path().join("existing.mob");
+
+        // Create file first
+        fs::write(&path, "name = \"Existing\"").unwrap();
+
+        let result = FileOperations::create_new_file(&path, "Should Fail", false);
+        assert!(matches!(result, Err(FileError::AlreadyExists)));
+    }
+
+    #[test]
+    fn delete_file_not_found() {
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path().join("nonexistent.mob");
+
+        let result = FileOperations::delete_file(&path);
+        assert!(matches!(result, Err(FileError::NotFound)));
+    }
+
+    // Note: delete_file_success test is skipped because trash::delete
+    // behavior varies across platforms and CI environments
+
+    #[test]
+    fn find_base_mob_not_found() {
+        let temp_dir = TempDir::new().unwrap();
+        let patch_path = temp_dir.path().join("mobs/test/enemy.mobpatch");
+
+        // No base mob exists
+        let result = FileOperations::find_base_mob(&patch_path);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn load_patch_with_base_no_base() {
+        let temp_dir = TempDir::new().unwrap();
+        let patch_path = temp_dir.path().join("mobs/test/enemy.mobpatch");
+
+        // Create parent dirs and patch file
+        fs::create_dir_all(patch_path.parent().unwrap()).unwrap();
+        fs::write(&patch_path, "name = \"Patched Enemy\"\nhealth = 200").unwrap();
+
+        let result = FileOperations::load_patch_with_base(&patch_path);
+        assert!(result.is_ok());
+
+        let (patch, base, merged) = result.unwrap();
+        assert_eq!(
+            patch.get("name").and_then(|v| v.as_str()),
+            Some("Patched Enemy")
+        );
+        assert!(base.is_none());
+        assert!(merged.is_none());
+    }
+
+    #[test]
+    fn toml_merge_basic() {
+        let mut base = toml::from_str::<toml::Value>(
+            r#"
+            name = "Base"
+            health = 100
+            speed = 50
+            "#,
+        )
+        .unwrap();
+
+        let patch = toml::from_str::<toml::Value>(
+            r#"
+            name = "Patched"
+            health = 200
+            "#,
+        )
+        .unwrap();
+
+        merge_toml_values(&mut base, patch);
+
+        assert_eq!(base.get("name").and_then(|v| v.as_str()), Some("Patched"));
+        assert_eq!(base.get("health").and_then(|v| v.as_integer()), Some(200));
+        assert_eq!(base.get("speed").and_then(|v| v.as_integer()), Some(50));
+    }
+
+    #[test]
+    fn toml_merge_nested() {
+        let mut base = toml::from_str::<toml::Value>(
+            r#"
+            [spawner]
+            timer = 1.0
+            count = 3
+            "#,
+        )
+        .unwrap();
+
+        let patch = toml::from_str::<toml::Value>(
+            r#"
+            [spawner]
+            timer = 0.5
+            "#,
+        )
+        .unwrap();
+
+        merge_toml_values(&mut base, patch);
+
+        let spawner = base.get("spawner").and_then(|v| v.as_table()).unwrap();
+        assert_eq!(spawner.get("timer").and_then(|v| v.as_float()), Some(0.5));
+        assert_eq!(spawner.get("count").and_then(|v| v.as_integer()), Some(3));
+    }
+}

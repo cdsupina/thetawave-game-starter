@@ -200,11 +200,13 @@ fn get_display_tables(
             Some((merged_table, current_mob.clone()))
         } else {
             // Fallback to just current if no merged data
-            Some((current_mob.clone(), current_mob.clone()))
+            let cloned = current_mob.clone();
+            Some((cloned.clone(), cloned))
         }
     } else {
         // For regular mobs, display = current = patch
-        Some((current_mob.clone(), current_mob.clone()))
+        let cloned = current_mob.clone();
+        Some((cloned.clone(), cloned))
     }
 }
 

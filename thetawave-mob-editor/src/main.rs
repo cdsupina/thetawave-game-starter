@@ -54,10 +54,28 @@ fn main() {
                     ..default()
                 })
                 .set(ImagePlugin::default_nearest())
-                // Allow loading from absolute paths (needed for both base and extended assets)
+                // SECURITY NOTE: UnapprovedPathMode::Allow
+                //
+                // This setting allows the Bevy asset system to load files from any path,
+                // bypassing the default sandboxing. This is required for the mob editor because:
+                //
+                // 1. Editor loads assets from multiple directory trees:
+                //    - Base assets: assets/mobs/
+                //    - Extended assets: thetawave-test-game/assets/mobs/
+                //    - Sprite files: media/aseprite/
+                //
+                // 2. Security mitigations in place:
+                //    - Only used in editor binary (not game binary)
+                //    - File browser only shows .mob/.mobpatch files
+                //    - Path validation rejects traversal characters (/, \, ..)
+                //    - No arbitrary path input - all paths derived from scanned directories
+                //
+                // 3. Risk assessment:
+                //    - Low risk: Editor is a development tool, not end-user facing
+                //    - Asset loading restricted to discovered directory trees
+                //    - No network or remote path support
                 .set(AssetPlugin {
                     file_path: assets_path,
-                    // Allow loading from any path - needed for editor to load from multiple directories
                     unapproved_path_mode: UnapprovedPathMode::Allow,
                     ..default()
                 }),
