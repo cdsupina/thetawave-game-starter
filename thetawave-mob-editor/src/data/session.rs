@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 use std::path::PathBuf;
 
-use bevy::prelude::*;
+use bevy::prelude::{Resource, Time};
 
 use crate::plugin::EditorConfig;
 

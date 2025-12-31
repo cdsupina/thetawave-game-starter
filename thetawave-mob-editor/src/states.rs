@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::prelude::States;
 
 /// Main application states for the mob editor
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash, Default)]

@@ -1,6 +1,9 @@
 use std::path::{Path, PathBuf};
 
-use bevy::prelude::*;
+use bevy::{
+    log::{info, warn},
+    prelude::{Res, ResMut, Resource, State, Vec2},
+};
 
 use crate::data::EditorSession;
 use crate::file::{FileNode, FileOperations, FileTreeState};

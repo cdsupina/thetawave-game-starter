@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::prelude::Resource;
 
 /// Source of a registered sprite
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

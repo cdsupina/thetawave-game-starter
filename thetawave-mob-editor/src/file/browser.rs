@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use bevy::prelude::*;
+use bevy::prelude::Resource;
 
 /// Represents a node in the file tree
 #[derive(Debug, Clone)]

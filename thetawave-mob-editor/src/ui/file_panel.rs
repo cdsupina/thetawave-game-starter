@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use bevy::{ecs::message::MessageWriter, prelude::*};
+use bevy::{ecs::message::MessageWriter, prelude::Resource};
 use bevy_egui::egui;
 
 use crate::{

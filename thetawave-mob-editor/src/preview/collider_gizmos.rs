@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::prelude::{Color, Gizmos, Res, State, Vec2};
 
 use crate::{data::EditorSession, preview::PreviewSettings, states::EditorState};
 

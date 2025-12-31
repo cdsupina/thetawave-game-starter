@@ -1,8 +1,11 @@
 use bevy::{
+    camera::ScalingMode,
     ecs::message::MessageReader,
     input::mouse::{MouseMotion, MouseWheel},
-    prelude::*,
-    camera::ScalingMode,
+    prelude::{
+        ButtonInput, Camera2d, Commands, Component, KeyCode, MouseButton, OrthographicProjection,
+        Projection, Query, Res, ResMut, Resource, Time, Transform, Vec2, Vec3, With,
+    },
 };
 use bevy_egui::EguiContexts;
 
