@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use bevy::prelude::*;
 
@@ -147,8 +147,8 @@ fn resolve_jointed_mobs(
                 let chain_offset = offset_pos + pos_offset * i as f32;
 
                 // Load the referenced mob
-                if let Some(ref_path) = mob_ref.and_then(|r| resolve_mob_ref(r, config)) {
-                    if let Ok(ref_mob) = FileOperations::load_file(&ref_path) {
+                if let Some(ref_path) = mob_ref.and_then(|r| resolve_mob_ref(r, config))
+                    && let Ok(ref_mob) = FileOperations::load_file(&ref_path) {
                         let sprite = ref_mob
                             .get("sprite")
                             .and_then(|v: &toml::Value| v.as_str())
@@ -178,12 +178,11 @@ fn resolve_jointed_mobs(
                             );
                         }
                     }
-                }
             }
         } else {
             // Non-chain jointed mob
-            if let Some(ref_path) = mob_ref.and_then(|r| resolve_mob_ref(r, config)) {
-                if let Ok(ref_mob) = FileOperations::load_file(&ref_path) {
+            if let Some(ref_path) = mob_ref.and_then(|r| resolve_mob_ref(r, config))
+                && let Ok(ref_mob) = FileOperations::load_file(&ref_path) {
                     let sprite = ref_mob
                         .get("sprite")
                         .and_then(|v: &toml::Value| v.as_str())
@@ -211,13 +210,12 @@ fn resolve_jointed_mobs(
                         config,
                     );
                 }
-            }
         }
     }
 }
 
 /// Extract the relative mob reference path from a full file path
-fn extract_relative_mob_path(full_path: &PathBuf) -> Option<String> {
+fn extract_relative_mob_path(full_path: &Path) -> Option<String> {
     let path_str = full_path.to_string_lossy();
 
     // Find "mobs/" in the path
@@ -240,18 +238,17 @@ fn scan_for_parent_refs(node: &FileNode, target_ref: &str, results: &mut Vec<Par
         .unwrap_or(false)
     {
         // Load and check this mob file
-        if let Ok(mob) = FileOperations::load_file(&node.path) {
-            if let Some(jointed_mobs) = mob
+        if let Ok(mob) = FileOperations::load_file(&node.path)
+            && let Some(jointed_mobs) = mob
                 .get("jointed_mobs")
                 .and_then(|v: &toml::Value| v.as_array())
             {
                 for jointed in jointed_mobs {
-                    if let Some(table) = jointed.as_table() {
-                        if let Some(mob_ref) = table
+                    if let Some(table) = jointed.as_table()
+                        && let Some(mob_ref) = table
                             .get("mob_ref")
                             .and_then(|v: &toml::Value| v.as_str())
-                        {
-                            if mob_ref == target_ref {
+                            && mob_ref == target_ref {
                                 let name = mob
                                     .get("name")
                                     .and_then(|v: &toml::Value| v.as_str())
@@ -269,16 +266,13 @@ fn scan_for_parent_refs(node: &FileNode, target_ref: &str, results: &mut Vec<Par
                                     jointed_key: key,
                                 });
                             }
-                        }
-                    }
                 }
             }
-        }
     }
 }
 
 /// Scan all mob files to find which ones reference the given mob
-fn find_parent_mobs(current_mob_path: &PathBuf, file_tree: &FileTreeState) -> Vec<ParentMobRef> {
+fn find_parent_mobs(current_mob_path: &Path, file_tree: &FileTreeState) -> Vec<ParentMobRef> {
     let mut parents = Vec::new();
 
     // Get the relative path for the current mob

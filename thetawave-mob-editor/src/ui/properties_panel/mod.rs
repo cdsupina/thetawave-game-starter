@@ -490,14 +490,11 @@ fn set_vec2_field(session: &mut EditorSession, key: &str, x: f32, y: f32) {
 ///
 /// This is exported for use by the sprite browser dialog.
 pub fn update_decoration_sprite(session: &mut EditorSession, index: usize, sprite_path: &str) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut()) {
-            if let Some(decoration) = decorations.get_mut(index).and_then(|v| v.as_array_mut()) {
-                if !decoration.is_empty() {
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        && let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut())
+            && let Some(decoration) = decorations.get_mut(index).and_then(|v| v.as_array_mut())
+                && !decoration.is_empty() {
                     decoration[0] = toml::Value::String(sprite_path.to_string());
                 }
-            }
-        }
-    }
     session.is_modified = true;
 }

@@ -291,15 +291,14 @@ fn render_file_node(
             // Determine if this is a mob or patch
             let is_mob = node.name.ends_with(".mob");
 
-            if is_mob {
-                if ui.button("📋 Create Patch...").clicked() {
+            if is_mob
+                && ui.button("📋 Create Patch...").clicked() {
                     // Create patch in same directory as the mob file
                     if let Some(parent) = node.path.parent() {
                         new_mob_dialog.open_patch(parent.to_path_buf());
                     }
                     ui.close();
                 }
-            }
 
             ui.separator();
 

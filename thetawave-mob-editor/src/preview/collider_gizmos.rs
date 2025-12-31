@@ -209,8 +209,8 @@ pub fn draw_spawner_gizmos(
     };
 
     // Draw projectile spawners
-    if let Some(proj_spawners) = mob.get("projectile_spawners").and_then(|v| v.as_table()) {
-        if let Some(spawners) = proj_spawners.get("spawners").and_then(|v| v.as_table()) {
+    if let Some(proj_spawners) = mob.get("projectile_spawners").and_then(|v| v.as_table())
+        && let Some(spawners) = proj_spawners.get("spawners").and_then(|v| v.as_table()) {
             for (key, spawner) in spawners {
                 let Some(s) = spawner.as_table() else {
                     continue;
@@ -235,11 +235,10 @@ pub fn draw_spawner_gizmos(
                 draw_spawner_indicator(&mut gizmos, position, rotation, Color::srgba(1.0, 0.5, 0.0, 0.8), key);
             }
         }
-    }
 
     // Draw mob spawners
-    if let Some(mob_spawners) = mob.get("mob_spawners").and_then(|v| v.as_table()) {
-        if let Some(spawners) = mob_spawners.get("spawners").and_then(|v| v.as_table()) {
+    if let Some(mob_spawners) = mob.get("mob_spawners").and_then(|v| v.as_table())
+        && let Some(spawners) = mob_spawners.get("spawners").and_then(|v| v.as_table()) {
             for (key, spawner) in spawners {
                 let Some(s) = spawner.as_table() else {
                     continue;
@@ -264,7 +263,6 @@ pub fn draw_spawner_gizmos(
                 draw_spawner_indicator(&mut gizmos, position, rotation, Color::srgba(0.5, 0.0, 1.0, 0.8), key);
             }
         }
-    }
 }
 
 /// Draw a spawner direction indicator

@@ -46,17 +46,15 @@ pub fn parse_assets_ron(path: &PathBuf) -> Result<Vec<String>, String> {
             }
 
             // Extract quoted strings ending in .aseprite
-            if in_paths_array {
-                if let Some(path_str) = extract_quoted_path(trimmed) {
-                    if path_str.ends_with(".aseprite") || path_str.ends_with(".ase") {
+            if in_paths_array
+                && let Some(path_str) = extract_quoted_path(trimmed)
+                    && (path_str.ends_with(".aseprite") || path_str.ends_with(".ase")) {
                         // Strip extended:// prefix if present to normalize
                         let clean_path = path_str
                             .strip_prefix("extended://")
                             .unwrap_or(&path_str);
                         sprites.push(clean_path.to_string());
                     }
-                }
-            }
 
             // End of section when we close back to depth 0 after entering
             if brace_depth == 0 && in_paths_array {

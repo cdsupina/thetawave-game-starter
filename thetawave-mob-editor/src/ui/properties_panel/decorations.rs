@@ -129,13 +129,13 @@ pub fn render_sprite_picker(
                             .small()
                             .color(egui::Color32::YELLOW),
                     );
-                    let _ = ui.selectable_label(true, &sprite_registry.display_name_for(current_sprite));
+                    let _ = ui.selectable_label(true, sprite_registry.display_name_for(current_sprite));
                 }
             });
 
         // Apply change if different
-        if selected_path != current_sprite {
-            if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
+        if selected_path != current_sprite
+            && let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
                 if selected_path.is_empty() {
                     mob.remove("sprite");
                 } else {
@@ -143,15 +143,13 @@ pub fn render_sprite_picker(
                 }
                 *modified = true;
             }
-        }
 
         // Reset button for patches
-        if render_reset_button(ui, is_patched, is_patch) {
-            if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
+        if render_reset_button(ui, is_patched, is_patch)
+            && let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
                 mob.remove("sprite");
                 *modified = true;
             }
-        }
     });
 
     // Browse & Register button row
@@ -218,16 +216,14 @@ pub fn render_decorations_section(
                             .color(INHERITED_COLOR),
                     );
                     // Add "Override" button to copy decorations to patch
-                    if ui.button("Override").clicked() {
-                        if let Some(decorations) = display_table.get("decorations").cloned() {
-                            if let Some(mob) =
+                    if ui.button("Override").clicked()
+                        && let Some(decorations) = display_table.get("decorations").cloned()
+                            && let Some(mob) =
                                 session.current_mob.as_mut().and_then(|v| v.as_table_mut())
                             {
                                 mob.insert("decorations".to_string(), decorations);
                                 *modified = true;
                             }
-                        }
-                    }
                 } else if is_patch && is_patched {
                     ui.label(
                         egui::RichText::new("(overriding base)")
@@ -235,14 +231,13 @@ pub fn render_decorations_section(
                             .color(PATCHED_COLOR),
                     );
                     // Add "Reset" button to remove decorations from patch
-                    if ui.button("Reset to base").clicked() {
-                        if let Some(mob) =
+                    if ui.button("Reset to base").clicked()
+                        && let Some(mob) =
                             session.current_mob.as_mut().and_then(|v| v.as_table_mut())
                         {
                             mob.remove("decorations");
                             *modified = true;
                         }
-                    }
                 }
             });
 
@@ -477,7 +472,7 @@ fn render_decoration_sprite_picker(
                         );
                         let _ = ui.selectable_label(
                             true,
-                            &sprite_registry.display_name_for(current_sprite),
+                            sprite_registry.display_name_for(current_sprite),
                         );
                     }
                 });
@@ -510,24 +505,21 @@ fn render_decoration_sprite_picker(
 
 /// Update a decoration's position.
 fn update_decoration_position(session: &mut EditorSession, index: usize, x: f32, y: f32) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut()) {
-            if let Some(decoration) = decorations.get_mut(index).and_then(|v| v.as_array_mut()) {
-                if decoration.len() >= 2 {
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        && let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut())
+            && let Some(decoration) = decorations.get_mut(index).and_then(|v| v.as_array_mut())
+                && decoration.len() >= 2 {
                     decoration[1] = toml::Value::Array(vec![
                         toml::Value::Float(x as f64),
                         toml::Value::Float(y as f64),
                     ]);
                 }
-            }
-        }
-    }
 }
 
 /// Delete a decoration by index.
 fn delete_decoration(session: &mut EditorSession, index: usize) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut()) {
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        && let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut()) {
             if index < decorations.len() {
                 decorations.remove(index);
             }
@@ -536,7 +528,6 @@ fn delete_decoration(session: &mut EditorSession, index: usize) {
                 mob.remove("decorations");
             }
         }
-    }
 }
 
 /// Add a new decoration with defaults.

@@ -34,30 +34,27 @@ pub fn render_behavior_section(
                             .small()
                             .color(INHERITED_COLOR),
                     );
-                    if ui.button("Override").clicked() {
-                        if let Some(behavior) = display_table.get("behavior").cloned() {
-                            if let Some(mob) =
+                    if ui.button("Override").clicked()
+                        && let Some(behavior) = display_table.get("behavior").cloned()
+                            && let Some(mob) =
                                 session.current_mob.as_mut().and_then(|v| v.as_table_mut())
                             {
                                 mob.insert("behavior".to_string(), behavior);
                                 *modified = true;
                             }
-                        }
-                    }
                 } else if is_patch && is_patched {
                     ui.label(
                         egui::RichText::new("(overriding base)")
                             .small()
                             .color(PATCHED_COLOR),
                     );
-                    if ui.button("Reset to base").clicked() {
-                        if let Some(mob) =
+                    if ui.button("Reset to base").clicked()
+                        && let Some(mob) =
                             session.current_mob.as_mut().and_then(|v| v.as_table_mut())
                         {
                             mob.remove("behavior");
                             *modified = true;
                         }
-                    }
                 }
             });
 
@@ -129,12 +126,11 @@ fn render_behavior_node(
                                 }
                             }
                         });
-                    if current_type != node_type {
-                        if let Some(new_type) = current_type {
+                    if current_type != node_type
+                        && let Some(new_type) = current_type {
                             change_behavior_node_type(session, path, new_type);
                             *modified = true;
                         }
-                    }
 
                     // Move/delete buttons (only for non-root nodes)
                     if !path.is_empty() {
@@ -250,12 +246,11 @@ fn render_control_node(
         render_behavior_node(ui, session, child, &child_path, can_edit, depth + 1, modified);
     }
 
-    if can_edit {
-        if ui.button("+ Add Child").clicked() {
+    if can_edit
+        && ui.button("+ Add Child").clicked() {
             add_behavior_child(session, path);
             *modified = true;
         }
-    }
 }
 
 /// Render a While node (has condition and child).
@@ -505,12 +500,11 @@ fn render_action_node(
                                 ui.separator();
                             }
                         });
-                    if current_action != action_type {
-                        if let Some(new_action) = current_action {
+                    if current_action != action_type
+                        && let Some(new_action) = current_action {
                             change_action_behavior_type(session, path, i, new_action);
                             *modified = true;
                         }
-                    }
 
                     // Render action-specific parameters
                     render_action_parameters(
@@ -885,8 +879,8 @@ fn render_transmit_nested_behaviors(
                             ui.separator();
                         }
                     });
-                    if current_nested != nested_action {
-                        if let Some(new_action) = current_nested {
+                    if current_nested != nested_action
+                        && let Some(new_action) = current_nested {
                             change_transmit_nested_behavior_type(
                                 session,
                                 path,
@@ -896,7 +890,6 @@ fn render_transmit_nested_behaviors(
                             );
                             *modified = true;
                         }
-                    }
 
                     // Render parameters for nested behavior
                     render_transmit_nested_params(
@@ -1120,11 +1113,10 @@ fn set_behavior_node_field(
     field: &str,
     value: toml::Value,
 ) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut() {
             table.insert(field.to_string(), value);
         }
-    }
 }
 
 /// Get the number of children for a control node at the given path.
@@ -1198,8 +1190,8 @@ fn get_children_count(session: &EditorSession, path: &[usize]) -> usize {
 
 /// Add a child to a control node (Forever, Sequence, Fallback).
 fn add_behavior_child(session: &mut EditorSession, path: &[usize]) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut() {
             // Create a default Action child
             let mut action = toml::value::Table::new();
             action.insert(
@@ -1221,7 +1213,6 @@ fn add_behavior_child(session: &mut EditorSession, path: &[usize]) {
                 );
             }
         }
-    }
 }
 
 /// Delete a behavior node at the given path.
@@ -1234,18 +1225,16 @@ fn delete_behavior_node(session: &mut EditorSession, path: &[usize]) {
     let parent_path = &path[..path.len() - 1];
     let index = path[path.len() - 1];
 
-    if let Some(parent) = get_behavior_node_mut(session, parent_path) {
-        if let Some(table) = parent.as_table_mut() {
+    if let Some(parent) = get_behavior_node_mut(session, parent_path)
+        && let Some(table) = parent.as_table_mut() {
             let node_type = table.get("type").and_then(|v| v.as_str()).unwrap_or("");
 
             match node_type {
                 "Forever" | "Sequence" | "Fallback" => {
                     if let Some(children) = table.get_mut("children").and_then(|v| v.as_array_mut())
-                    {
-                        if index < children.len() {
+                        && index < children.len() {
                             children.remove(index);
                         }
-                    }
                 }
                 "While" => {
                     if index == 0 {
@@ -1262,7 +1251,6 @@ fn delete_behavior_node(session: &mut EditorSession, path: &[usize]) {
                 _ => {}
             }
         }
-    }
 }
 
 /// Move a behavior node up or down within its parent.
@@ -1274,26 +1262,24 @@ fn move_behavior_node(session: &mut EditorSession, path: &[usize], direction: i3
     let parent_path = &path[..path.len() - 1];
     let index = path[path.len() - 1];
 
-    if let Some(parent) = get_behavior_node_mut(session, parent_path) {
-        if let Some(table) = parent.as_table_mut() {
+    if let Some(parent) = get_behavior_node_mut(session, parent_path)
+        && let Some(table) = parent.as_table_mut() {
             let node_type = table.get("type").and_then(|v| v.as_str()).unwrap_or("");
 
-            if matches!(node_type, "Forever" | "Sequence" | "Fallback") {
-                if let Some(children) = table.get_mut("children").and_then(|v| v.as_array_mut()) {
+            if matches!(node_type, "Forever" | "Sequence" | "Fallback")
+                && let Some(children) = table.get_mut("children").and_then(|v| v.as_array_mut()) {
                     let new_index = (index as i32 + direction) as usize;
                     if new_index < children.len() {
                         children.swap(index, new_index);
                     }
                 }
-            }
         }
-    }
 }
 
 /// Change the type of a behavior node.
 fn change_behavior_node_type(session: &mut EditorSession, path: &[usize], new_type: BehaviorNodeType) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut() {
             let old_type_str = table
                 .get("type")
                 .and_then(|v| v.as_str())
@@ -1328,7 +1314,6 @@ fn change_behavior_node_type(session: &mut EditorSession, path: &[usize], new_ty
                 add_fields_for_node_type(table, new_type);
             }
         }
-    }
 }
 
 /// Remove leaf-specific fields from a node.
@@ -1394,19 +1379,18 @@ fn add_fields_for_node_type(table: &mut toml::value::Table, node_type: BehaviorN
 // While/IfThen specific helpers
 
 fn add_while_condition(session: &mut EditorSession, path: &[usize]) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut() {
             let mut cond = toml::value::Table::new();
             cond.insert("type".to_string(), toml::Value::String("Wait".to_string()));
             cond.insert("seconds".to_string(), toml::Value::Float(1.0));
             table.insert("condition".to_string(), toml::Value::Table(cond));
         }
-    }
 }
 
 fn add_while_child(session: &mut EditorSession, path: &[usize]) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut() {
             let mut child = toml::value::Table::new();
             child.insert(
                 "type".to_string(),
@@ -1416,23 +1400,21 @@ fn add_while_child(session: &mut EditorSession, path: &[usize]) {
             child.insert("behaviors".to_string(), toml::Value::Array(vec![]));
             table.insert("child".to_string(), toml::Value::Table(child));
         }
-    }
 }
 
 fn add_if_then_condition(session: &mut EditorSession, path: &[usize]) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut() {
             let mut cond = toml::value::Table::new();
             cond.insert("type".to_string(), toml::Value::String("Wait".to_string()));
             cond.insert("seconds".to_string(), toml::Value::Float(1.0));
             table.insert("condition".to_string(), toml::Value::Table(cond));
         }
-    }
 }
 
 fn add_if_then_child(session: &mut EditorSession, path: &[usize]) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut() {
             let mut child = toml::value::Table::new();
             child.insert(
                 "type".to_string(),
@@ -1442,12 +1424,11 @@ fn add_if_then_child(session: &mut EditorSession, path: &[usize]) {
             child.insert("behaviors".to_string(), toml::Value::Array(vec![]));
             table.insert("then_child".to_string(), toml::Value::Table(child));
         }
-    }
 }
 
 fn add_if_else_child(session: &mut EditorSession, path: &[usize]) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut() {
             let mut child = toml::value::Table::new();
             child.insert(
                 "type".to_string(),
@@ -1457,22 +1438,20 @@ fn add_if_else_child(session: &mut EditorSession, path: &[usize]) {
             child.insert("behaviors".to_string(), toml::Value::Array(vec![]));
             table.insert("else_child".to_string(), toml::Value::Table(child));
         }
-    }
 }
 
 fn remove_if_else_child(session: &mut EditorSession, path: &[usize]) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut() {
             table.remove("else_child");
         }
-    }
 }
 
 // Action behavior manipulation helpers
 
 fn add_action_behavior(session: &mut EditorSession, path: &[usize]) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut() {
             let mut behavior = toml::value::Table::new();
             behavior.insert(
                 "action".to_string(),
@@ -1488,32 +1467,26 @@ fn add_action_behavior(session: &mut EditorSession, path: &[usize]) {
                 );
             }
         }
-    }
 }
 
 fn delete_action_behavior(session: &mut EditorSession, path: &[usize], index: usize) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
-            if let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut()) {
-                if index < behaviors.len() {
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut()
+            && let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut())
+                && index < behaviors.len() {
                     behaviors.remove(index);
                 }
-            }
-        }
-    }
 }
 
 fn move_action_behavior(session: &mut EditorSession, path: &[usize], index: usize, direction: i32) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
-            if let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut()) {
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut()
+            && let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut()) {
                 let new_index = (index as i32 + direction) as usize;
                 if new_index < behaviors.len() {
                     behaviors.swap(index, new_index);
                 }
             }
-        }
-    }
 }
 
 fn change_action_behavior_type(
@@ -1522,10 +1495,10 @@ fn change_action_behavior_type(
     index: usize,
     new_action: MobBehaviorVariant,
 ) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
-            if let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut()) {
-                if let Some(behavior) = behaviors.get_mut(index).and_then(|v| v.as_table_mut()) {
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut()
+            && let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut())
+                && let Some(behavior) = behaviors.get_mut(index).and_then(|v| v.as_table_mut()) {
                     // Clear old fields except action
                     let keys_to_remove: Vec<_> = behavior
                         .keys()
@@ -1554,9 +1527,6 @@ fn change_action_behavior_type(
                         _ => {}
                     }
                 }
-            }
-        }
-    }
 }
 
 fn set_action_behavior_param(
@@ -1566,15 +1536,12 @@ fn set_action_behavior_param(
     param: &str,
     value: toml::Value,
 ) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
-            if let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut()) {
-                if let Some(behavior) = behaviors.get_mut(index).and_then(|v| v.as_table_mut()) {
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut()
+            && let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut())
+                && let Some(behavior) = behaviors.get_mut(index).and_then(|v| v.as_table_mut()) {
                     behavior.insert(param.to_string(), value);
                 }
-            }
-        }
-    }
 }
 
 fn remove_action_behavior_param(
@@ -1583,15 +1550,12 @@ fn remove_action_behavior_param(
     index: usize,
     param: &str,
 ) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
-            if let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut()) {
-                if let Some(behavior) = behaviors.get_mut(index).and_then(|v| v.as_table_mut()) {
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut()
+            && let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut())
+                && let Some(behavior) = behaviors.get_mut(index).and_then(|v| v.as_table_mut()) {
                     behavior.remove(param);
                 }
-            }
-        }
-    }
 }
 
 // =============================================================================
@@ -1603,10 +1567,10 @@ fn add_transmit_nested_behavior(
     path: &[usize],
     behavior_index: usize,
 ) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
-            if let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut()) {
-                if let Some(behavior) = behaviors
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut()
+            && let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut())
+                && let Some(behavior) = behaviors
                     .get_mut(behavior_index)
                     .and_then(|v| v.as_table_mut())
                 {
@@ -1627,9 +1591,6 @@ fn add_transmit_nested_behavior(
                         );
                     }
                 }
-            }
-        }
-    }
 }
 
 fn delete_transmit_nested_behavior(
@@ -1638,24 +1599,17 @@ fn delete_transmit_nested_behavior(
     behavior_index: usize,
     nested_index: usize,
 ) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
-            if let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut()) {
-                if let Some(behavior) = behaviors
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut()
+            && let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut())
+                && let Some(behavior) = behaviors
                     .get_mut(behavior_index)
                     .and_then(|v| v.as_table_mut())
-                {
-                    if let Some(nested_arr) =
+                    && let Some(nested_arr) =
                         behavior.get_mut("behaviors").and_then(|v| v.as_array_mut())
-                    {
-                        if nested_index < nested_arr.len() {
+                        && nested_index < nested_arr.len() {
                             nested_arr.remove(nested_index);
                         }
-                    }
-                }
-            }
-        }
-    }
 }
 
 fn move_transmit_nested_behavior(
@@ -1665,14 +1619,13 @@ fn move_transmit_nested_behavior(
     nested_index: usize,
     direction: i32,
 ) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
-            if let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut()) {
-                if let Some(behavior) = behaviors
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut()
+            && let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut())
+                && let Some(behavior) = behaviors
                     .get_mut(behavior_index)
                     .and_then(|v| v.as_table_mut())
-                {
-                    if let Some(nested_arr) =
+                    && let Some(nested_arr) =
                         behavior.get_mut("behaviors").and_then(|v| v.as_array_mut())
                     {
                         let new_index = (nested_index as i32 + direction) as usize;
@@ -1680,10 +1633,6 @@ fn move_transmit_nested_behavior(
                             nested_arr.swap(nested_index, new_index);
                         }
                     }
-                }
-            }
-        }
-    }
 }
 
 fn change_transmit_nested_behavior_type(
@@ -1693,17 +1642,15 @@ fn change_transmit_nested_behavior_type(
     nested_index: usize,
     new_action: MobBehaviorVariant,
 ) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
-            if let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut()) {
-                if let Some(behavior) = behaviors
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut()
+            && let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut())
+                && let Some(behavior) = behaviors
                     .get_mut(behavior_index)
                     .and_then(|v| v.as_table_mut())
-                {
-                    if let Some(nested_arr) =
+                    && let Some(nested_arr) =
                         behavior.get_mut("behaviors").and_then(|v| v.as_array_mut())
-                    {
-                        if let Some(nested) =
+                        && let Some(nested) =
                             nested_arr.get_mut(nested_index).and_then(|v| v.as_table_mut())
                         {
                             // Clear old fields except action
@@ -1734,11 +1681,6 @@ fn change_transmit_nested_behavior_type(
                                 _ => {}
                             }
                         }
-                    }
-                }
-            }
-        }
-    }
 }
 
 fn set_transmit_nested_param(
@@ -1749,24 +1691,17 @@ fn set_transmit_nested_param(
     param: &str,
     value: toml::Value,
 ) {
-    if let Some(node) = get_behavior_node_mut(session, path) {
-        if let Some(table) = node.as_table_mut() {
-            if let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut()) {
-                if let Some(behavior) = behaviors
+    if let Some(node) = get_behavior_node_mut(session, path)
+        && let Some(table) = node.as_table_mut()
+            && let Some(behaviors) = table.get_mut("behaviors").and_then(|v| v.as_array_mut())
+                && let Some(behavior) = behaviors
                     .get_mut(behavior_index)
                     .and_then(|v| v.as_table_mut())
-                {
-                    if let Some(nested_arr) =
+                    && let Some(nested_arr) =
                         behavior.get_mut("behaviors").and_then(|v| v.as_array_mut())
-                    {
-                        if let Some(nested) =
+                        && let Some(nested) =
                             nested_arr.get_mut(nested_index).and_then(|v| v.as_table_mut())
                         {
                             nested.insert(param.to_string(), value);
                         }
-                    }
-                }
-            }
-        }
-    }
 }

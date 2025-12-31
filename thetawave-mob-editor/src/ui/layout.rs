@@ -118,10 +118,10 @@ pub fn main_ui_system(
                 &mut file_tree,
                 &session,
                 &mut events.load,
-                &mut *dialogs.delete_dialog,
-                &mut *dialogs.unsaved_dialog,
-                &mut *dialogs.new_folder_dialog,
-                &mut *dialogs.new_mob_dialog,
+                &mut dialogs.delete_dialog,
+                &mut dialogs.unsaved_dialog,
+                &mut dialogs.new_folder_dialog,
+                &mut dialogs.new_mob_dialog,
             );
         });
 
@@ -176,21 +176,19 @@ pub fn main_ui_system(
                 }
 
                 // When collapsed, show last message
-                if !session.log.expanded {
-                    if let Some(entry) = session.log.last() {
+                if !session.log.expanded
+                    && let Some(entry) = session.log.last() {
                         ui.separator();
                         ui.colored_label(entry.level.color(), &entry.text);
                     }
-                }
 
                 // Right-aligned expand/collapse and clear buttons
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     // Clear button (only when there are entries)
-                    if !session.log.is_empty() {
-                        if ui.small_button("Clear").clicked() {
+                    if !session.log.is_empty()
+                        && ui.small_button("Clear").clicked() {
                             session.log.clear();
                         }
-                    }
 
                     // Expand/collapse toggle
                     let toggle_text = if session.log.expanded { "Collapse" } else { "Log" };
@@ -306,13 +304,13 @@ pub fn main_ui_system(
         });
 
     // Render delete dialog window
-    render_delete_dialog(ctx, &mut *dialogs.delete_dialog, &mut events.delete);
+    render_delete_dialog(ctx, &mut dialogs.delete_dialog, &mut events.delete);
 
     // Render sprite registration dialog
     render_registration_dialog(
         ctx,
-        &mut *dialogs.registration_dialog,
-        &mut *sprite_registry,
+        &mut dialogs.registration_dialog,
+        &mut sprite_registry,
         &mut events.save,
         &mut session,
         &time,
@@ -322,7 +320,7 @@ pub fn main_ui_system(
     // Render sprite selection confirmation dialog
     render_selection_dialog(
         ctx,
-        &mut *dialogs.selection_dialog,
+        &mut dialogs.selection_dialog,
         &mut session,
         &time,
         &mut preview_state,
@@ -331,7 +329,7 @@ pub fn main_ui_system(
     // Render decoration sprite selection confirmation dialog
     render_decoration_selection_dialog(
         ctx,
-        &mut *dialogs.decoration_selection_dialog,
+        &mut dialogs.decoration_selection_dialog,
         &mut session,
         &time,
         &mut preview_state,
@@ -340,7 +338,7 @@ pub fn main_ui_system(
     // Render unsaved changes dialog
     render_unsaved_changes_dialog(
         ctx,
-        &mut *dialogs.unsaved_dialog,
+        &mut dialogs.unsaved_dialog,
         &session,
         &mut events.save,
         &mut events.load,
@@ -348,21 +346,21 @@ pub fn main_ui_system(
     );
 
     // Render error dialog
-    render_error_dialog(ctx, &mut *dialogs.error_dialog);
+    render_error_dialog(ctx, &mut dialogs.error_dialog);
 
     // Render validation dialog
-    render_validation_dialog(ctx, &mut *dialogs.validation_dialog);
+    render_validation_dialog(ctx, &mut dialogs.validation_dialog);
 
     // Render new folder dialog
-    render_new_folder_dialog(ctx, &mut *dialogs.new_folder_dialog, &mut file_tree);
+    render_new_folder_dialog(ctx, &mut dialogs.new_folder_dialog, &mut file_tree);
 
     // Render new mob dialog
-    render_new_mob_dialog(ctx, &mut *dialogs.new_mob_dialog, &mut events.new, &mut file_tree);
+    render_new_mob_dialog(ctx, &mut dialogs.new_mob_dialog, &mut events.new, &mut file_tree);
 
     // Render sprite browser dialog
     let browser_result = render_sprite_browser_dialog(
         ctx,
-        &mut *dialogs.sprite_browser,
+        &mut dialogs.sprite_browser,
         &config,
         &sprite_registry,
     );
@@ -1039,13 +1037,11 @@ fn render_sprite_browser_dialog(
                     dialog.switch_assets_source(false, config);
                 }
 
-                if dialog.allow_extended {
-                    if let Some(_) = &config.extended_assets_dir {
-                        if ui.selectable_label(dialog.browsing_extended, "📂 Extended Assets").clicked() {
+                if dialog.allow_extended
+                    && config.extended_assets_dir.is_some()
+                        && ui.selectable_label(dialog.browsing_extended, "📂 Extended Assets").clicked() {
                             dialog.switch_assets_source(true, config);
                         }
-                    }
-                }
             });
 
             ui.separator();
@@ -1075,11 +1071,10 @@ fn render_sprite_browser_dialog(
                 .max_height(280.0)
                 .show(ui, |ui| {
                     // Parent directory button
-                    if !dialog.current_path.is_empty() {
-                        if ui.selectable_label(false, "📁 ..").clicked() {
+                    if !dialog.current_path.is_empty()
+                        && ui.selectable_label(false, "📁 ..").clicked() {
                             dialog.navigate_up(config);
                         }
-                    }
 
                     // List entries
                     let entries = dialog.entries.clone();
@@ -1142,14 +1137,12 @@ fn render_sprite_browser_dialog(
                 }
 
                 let can_select = dialog.selected.is_some();
-                if ui.add_enabled(can_select, egui::Button::new("Register & Use")).clicked() {
-                    if let Some(selected_path) = &dialog.selected {
-                        if let Some(asset_path) = dialog.get_asset_path(selected_path, config) {
+                if ui.add_enabled(can_select, egui::Button::new("Register & Use")).clicked()
+                    && let Some(selected_path) = &dialog.selected
+                        && let Some(asset_path) = dialog.get_asset_path(selected_path, config) {
                             result = Some((asset_path, dialog.browsing_extended));
                             dialog.close();
                         }
-                    }
-                }
             });
         });
 

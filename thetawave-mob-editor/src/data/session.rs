@@ -82,14 +82,6 @@ impl StatusLog {
         }
     }
 
-    /// Get all log entries as a slice.
-    ///
-    /// Note: This returns a tuple of two slices since VecDeque may not be contiguous.
-    /// For most UI purposes, use `iter()` instead.
-    pub fn entries(&self) -> (&[LogEntry], &[LogEntry]) {
-        self.entries.as_slices()
-    }
-
     /// Iterate over all log entries in order.
     pub fn iter(&self) -> impl Iterator<Item = &LogEntry> {
         self.entries.iter()
@@ -191,8 +183,8 @@ pub fn validate_mob(mob: &toml::Value, is_patch: bool) -> ValidationResult {
     // Check colliders (dimensions must be positive)
     if let Some(colliders) = table.get("colliders").and_then(|v| v.as_array()) {
         for (i, collider) in colliders.iter().enumerate() {
-            if let Some(table) = collider.as_table() {
-                if let Some(shape) = table.get("shape").and_then(|v| v.as_table()) {
+            if let Some(table) = collider.as_table()
+                && let Some(shape) = table.get("shape").and_then(|v| v.as_table()) {
                     // Check Rectangle dimensions
                     if let Some(dims) = shape.get("Rectangle").and_then(|v| v.as_array()) {
                         for (j, dim) in dims.iter().enumerate() {
@@ -203,14 +195,13 @@ pub fn validate_mob(mob: &toml::Value, is_patch: bool) -> ValidationResult {
                                         "Collider dimension must be positive",
                                     );
                                 }
-                            } else if let Some(v) = dim.as_integer() {
-                                if v <= 0 {
+                            } else if let Some(v) = dim.as_integer()
+                                && v <= 0 {
                                     result.add_error(
                                         format!("colliders[{}].shape.Rectangle[{}]", i, j),
                                         "Collider dimension must be positive",
                                     );
                                 }
-                            }
                         }
                     }
 
@@ -223,17 +214,15 @@ pub fn validate_mob(mob: &toml::Value, is_patch: bool) -> ValidationResult {
                                     "Ball radius must be positive",
                                 );
                             }
-                        } else if let Some(r) = radius.as_integer() {
-                            if r <= 0 {
+                        } else if let Some(r) = radius.as_integer()
+                            && r <= 0 {
                                 result.add_error(
                                     format!("colliders[{}].shape.Ball", i),
                                     "Ball radius must be positive",
                                 );
                             }
-                        }
                     }
                 }
-            }
         }
     }
 

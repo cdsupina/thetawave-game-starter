@@ -456,7 +456,7 @@ impl SpriteBrowserDialog {
     }
 
     /// Get the asset path for a selected file (relative to assets root)
-    pub fn get_asset_path(&self, file_path: &PathBuf, config: &EditorConfig) -> Option<String> {
+    pub fn get_asset_path(&self, file_path: &std::path::Path, config: &EditorConfig) -> Option<String> {
         let assets_dir = self.get_assets_dir(config)?;
         let relative = file_path.strip_prefix(&assets_dir).ok()?;
         Some(relative.to_string_lossy().to_string())
@@ -579,7 +579,6 @@ fn handle_load_mob(
         // Load file (with merging for patches)
         let load_result = if is_patch {
             FileOperations::load_patch_with_base(&event.path)
-                .map(|(patch, base, merged)| (patch, base, merged))
         } else {
             FileOperations::load_file(&event.path).map(|v| (v, None, None))
         };
@@ -688,25 +687,22 @@ fn find_unregistered_sprites(mob: &toml::Value, registry: &SpriteRegistry) -> Ve
     let mut unregistered = Vec::new();
 
     // Check main sprite
-    if let Some(sprite) = mob.get("sprite").and_then(|v| v.as_str()) {
-        if !sprite.is_empty() && !registry.is_registered(sprite) {
+    if let Some(sprite) = mob.get("sprite").and_then(|v| v.as_str())
+        && !sprite.is_empty() && !registry.is_registered(sprite) {
             unregistered.push(sprite.to_string());
         }
-    }
 
     // Check decorations
     if let Some(decorations) = mob.get("decorations").and_then(|v| v.as_array()) {
         for dec in decorations {
-            if let Some(arr) = dec.as_array() {
-                if let Some(sprite) = arr.first().and_then(|v| v.as_str()) {
-                    if !sprite.is_empty()
+            if let Some(arr) = dec.as_array()
+                && let Some(sprite) = arr.first().and_then(|v| v.as_str())
+                    && !sprite.is_empty()
                         && !registry.is_registered(sprite)
                         && !unregistered.contains(&sprite.to_string())
                     {
                         unregistered.push(sprite.to_string());
                     }
-                }
-            }
         }
     }
 
@@ -798,18 +794,16 @@ fn handle_keyboard_shortcuts(
 
     if ctrl {
         // Ctrl+S - Save
-        if keys.just_pressed(KeyCode::KeyS) {
-            if session.current_path.is_some() && session.is_modified {
+        if keys.just_pressed(KeyCode::KeyS)
+            && session.current_path.is_some() && session.is_modified {
                 save_events.write(SaveMobEvent { path: None });
             }
-        }
 
         // Ctrl+R - Reload
-        if keys.just_pressed(KeyCode::KeyR) {
-            if session.current_path.is_some() {
+        if keys.just_pressed(KeyCode::KeyR)
+            && session.current_path.is_some() {
                 reload_events.write(ReloadMobEvent);
             }
-        }
 
     }
 }

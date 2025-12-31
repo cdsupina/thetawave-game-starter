@@ -1,8 +1,11 @@
-use std::{fs, io, path::PathBuf};
+use std::{fs, io, path::{Path, PathBuf}};
 
 use bevy::prelude::*;
 use thiserror::Error;
 use toml::Value;
+
+// Re-export from thetawave_core to avoid duplication
+pub use thetawave_core::merge_toml_values;
 
 /// Errors that can occur during file operations.
 #[derive(Debug, Error)]
@@ -37,7 +40,7 @@ pub struct FileOperations;
 
 impl FileOperations {
     /// Load a .mob or .mobpatch file and return its TOML value
-    pub fn load_file(path: &PathBuf) -> Result<toml::Value, FileError> {
+    pub fn load_file(path: &Path) -> Result<toml::Value, FileError> {
         if !path.exists() {
             return Err(FileError::NotFound);
         }
@@ -48,7 +51,7 @@ impl FileOperations {
     }
 
     /// Save a TOML value to a file
-    pub fn save_file(path: &PathBuf, value: &toml::Value) -> Result<(), FileError> {
+    pub fn save_file(path: &Path, value: &toml::Value) -> Result<(), FileError> {
         // Serialize to TOML string
         let content = toml::to_string_pretty(value)?;
 
@@ -66,7 +69,7 @@ impl FileOperations {
     }
 
     /// Delete a file (moves to system trash for recovery)
-    pub fn delete_file(path: &PathBuf) -> Result<(), FileError> {
+    pub fn delete_file(path: &Path) -> Result<(), FileError> {
         if !path.exists() {
             return Err(FileError::NotFound);
         }
@@ -77,7 +80,7 @@ impl FileOperations {
 
     /// Create a new mob file with default content
     pub fn create_new_file(
-        path: &PathBuf,
+        path: &Path,
         name: &str,
         is_patch: bool,
     ) -> Result<toml::Value, FileError> {
@@ -106,7 +109,7 @@ impl FileOperations {
 
     /// Find the base .mob file for a .mobpatch file
     /// Looks for a .mob file with the same relative path in the base assets directory
-    pub fn find_base_mob(patch_path: &PathBuf) -> Option<PathBuf> {
+    pub fn find_base_mob(patch_path: &Path) -> Option<PathBuf> {
         let path_str = patch_path.to_string_lossy();
 
         // Extract the relative path after "mobs/"
@@ -136,7 +139,7 @@ impl FileOperations {
 
     /// Load a .mobpatch file and merge it with its base .mob file
     /// Returns (patch_value, base_value, merged_value)
-    pub fn load_patch_with_base(patch_path: &PathBuf) -> Result<(Value, Option<Value>, Option<Value>), FileError> {
+    pub fn load_patch_with_base(patch_path: &Path) -> Result<(Value, Option<Value>, Option<Value>), FileError> {
         let patch = Self::load_file(patch_path)?;
 
         // Try to find and load the base mob
@@ -157,32 +160,6 @@ impl FileOperations {
         } else {
             warn!("No base mob found for patch: {:?}", patch_path);
             Ok((patch, None, None))
-        }
-    }
-}
-
-/// Recursively merge TOML values, with extended values taking precedence over base values.
-/// This handles tables, arrays, and primitive values correctly.
-pub fn merge_toml_values(base: &mut Value, extended: Value) {
-    match (base, extended) {
-        // Both are tables - merge recursively
-        (Value::Table(base_table), Value::Table(extended_table)) => {
-            for (key, extended_value) in extended_table {
-                match base_table.get_mut(&key) {
-                    Some(base_value) => {
-                        // Key exists in base - merge recursively
-                        merge_toml_values(base_value, extended_value);
-                    }
-                    None => {
-                        // Key doesn't exist in base - add it
-                        base_table.insert(key, extended_value);
-                    }
-                }
-            }
-        }
-        // For non-table values, extended completely replaces base
-        (base, extended) => {
-            *base = extended;
         }
     }
 }

@@ -88,8 +88,8 @@ fn remove_spawner_field(
     spawner_name: &str,
     field: &str,
 ) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(spawners_section) = mob.get_mut(spawner_type).and_then(|v| v.as_table_mut()) {
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        && let Some(spawners_section) = mob.get_mut(spawner_type).and_then(|v| v.as_table_mut()) {
             if let Some(spawners) = spawners_section
                 .get_mut("spawners")
                 .and_then(|v| v.as_table_mut())
@@ -113,7 +113,6 @@ fn remove_spawner_field(
                 mob.remove(spawner_type);
             }
         }
-    }
 }
 
 /// Render the projectile spawners section.
@@ -801,8 +800,8 @@ fn add_new_mob_spawner(session: &mut EditorSession, display_table: &toml::value:
 
 /// Delete a spawner by name.
 fn delete_spawner_by_name(session: &mut EditorSession, spawner_type: &str, name: &str) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(spawners_section) = mob.get_mut(spawner_type).and_then(|v| v.as_table_mut()) {
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        && let Some(spawners_section) = mob.get_mut(spawner_type).and_then(|v| v.as_table_mut()) {
             if let Some(spawners) = spawners_section
                 .get_mut("spawners")
                 .and_then(|v| v.as_table_mut())
@@ -818,7 +817,6 @@ fn delete_spawner_by_name(session: &mut EditorSession, spawner_type: &str, name:
                 mob.remove(spawner_type);
             }
         }
-    }
 }
 
 /// Rename a spawner.
@@ -828,9 +826,9 @@ fn rename_spawner_by_name(
     old_name: &str,
     new_name: &str,
 ) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(spawners_section) = mob.get_mut(spawner_type).and_then(|v| v.as_table_mut()) {
-            if let Some(spawners) = spawners_section
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        && let Some(spawners_section) = mob.get_mut(spawner_type).and_then(|v| v.as_table_mut())
+            && let Some(spawners) = spawners_section
                 .get_mut("spawners")
                 .and_then(|v| v.as_table_mut())
             {
@@ -843,6 +841,4 @@ fn rename_spawner_by_name(
                     spawners.insert(new_name.to_string(), data);
                 }
             }
-        }
-    }
 }

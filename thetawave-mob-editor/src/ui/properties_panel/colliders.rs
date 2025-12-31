@@ -40,16 +40,14 @@ pub fn render_colliders_section(
                             .color(INHERITED_COLOR),
                     );
                     // Add "Override" button to copy colliders to patch
-                    if ui.button("Override").clicked() {
-                        if let Some(colliders) = display_table.get("colliders").cloned() {
-                            if let Some(mob) =
+                    if ui.button("Override").clicked()
+                        && let Some(colliders) = display_table.get("colliders").cloned()
+                            && let Some(mob) =
                                 session.current_mob.as_mut().and_then(|v| v.as_table_mut())
                             {
                                 mob.insert("colliders".to_string(), colliders);
                                 *modified = true;
                             }
-                        }
-                    }
                 } else if is_patch && is_patched {
                     ui.label(
                         egui::RichText::new("(overriding base)")
@@ -57,14 +55,13 @@ pub fn render_colliders_section(
                             .color(PATCHED_COLOR),
                     );
                     // Add "Reset" button to remove colliders from patch
-                    if ui.button("Reset to base").clicked() {
-                        if let Some(mob) =
+                    if ui.button("Reset to base").clicked()
+                        && let Some(mob) =
                             session.current_mob.as_mut().and_then(|v| v.as_table_mut())
                         {
                             mob.remove("colliders");
                             *modified = true;
                         }
-                    }
                 }
             });
 
@@ -272,13 +269,11 @@ fn with_collider_mut<F>(session: &mut EditorSession, index: usize, f: F)
 where
     F: FnOnce(&mut toml::value::Table),
 {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(colliders) = mob.get_mut("colliders").and_then(|v| v.as_array_mut()) {
-            if let Some(collider) = colliders.get_mut(index).and_then(|v| v.as_table_mut()) {
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        && let Some(colliders) = mob.get_mut("colliders").and_then(|v| v.as_array_mut())
+            && let Some(collider) = colliders.get_mut(index).and_then(|v| v.as_table_mut()) {
                 f(collider);
             }
-        }
-    }
 }
 
 /// Helper to mutate a collider's shape at a specific index.
@@ -384,11 +379,10 @@ fn add_new_collider(session: &mut EditorSession, shape_type: &str) {
 /// Delete a collider by index.
 fn delete_collider(session: &mut EditorSession, index: usize) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(colliders) = mob.get_mut("colliders").and_then(|v| v.as_array_mut()) {
-            if index < colliders.len() {
+        if let Some(colliders) = mob.get_mut("colliders").and_then(|v| v.as_array_mut())
+            && index < colliders.len() {
                 colliders.remove(index);
             }
-        }
         // If colliders array is now empty, remove it entirely
         // This is important for patches - empty array overrides base, removing inherits from base
         if mob

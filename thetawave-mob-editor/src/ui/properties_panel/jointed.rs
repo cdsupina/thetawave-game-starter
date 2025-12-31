@@ -34,30 +34,27 @@ pub fn render_jointed_mobs_section(
                             .small()
                             .color(INHERITED_COLOR),
                     );
-                    if ui.button("Override").clicked() {
-                        if let Some(jointed_mobs) = display_table.get("jointed_mobs").cloned() {
-                            if let Some(mob) =
+                    if ui.button("Override").clicked()
+                        && let Some(jointed_mobs) = display_table.get("jointed_mobs").cloned()
+                            && let Some(mob) =
                                 session.current_mob.as_mut().and_then(|v| v.as_table_mut())
                             {
                                 mob.insert("jointed_mobs".to_string(), jointed_mobs);
                                 *modified = true;
                             }
-                        }
-                    }
                 } else if is_patch && is_patched {
                     ui.label(
                         egui::RichText::new("(overriding base)")
                             .small()
                             .color(PATCHED_COLOR),
                     );
-                    if ui.button("Reset to base").clicked() {
-                        if let Some(mob) =
+                    if ui.button("Reset to base").clicked()
+                        && let Some(mob) =
                             session.current_mob.as_mut().and_then(|v| v.as_table_mut())
                         {
                             mob.remove("jointed_mobs");
                             *modified = true;
                         }
-                    }
                 }
             });
 
@@ -104,8 +101,8 @@ pub fn render_jointed_mobs_section(
                                         if is_selected { None } else { Some(i) };
                                 }
 
-                                if can_edit {
-                                    if ui
+                                if can_edit
+                                    && ui
                                         .add(
                                             egui::Button::new("🗑")
                                                 .fill(egui::Color32::from_rgb(120, 60, 60)),
@@ -115,7 +112,6 @@ pub fn render_jointed_mobs_section(
                                     {
                                         delete_index = Some(i);
                                     }
-                                }
                             });
                             ui.separator();
 
@@ -139,11 +135,10 @@ pub fn render_jointed_mobs_section(
                     delete_jointed_mob(session, idx);
                     if session.selected_jointed_mob == Some(idx) {
                         session.selected_jointed_mob = None;
-                    } else if let Some(selected) = session.selected_jointed_mob {
-                        if selected > idx {
+                    } else if let Some(selected) = session.selected_jointed_mob
+                        && selected > idx {
                             session.selected_jointed_mob = Some(selected - 1);
                         }
-                    }
                     *modified = true;
                 }
             }
@@ -611,13 +606,11 @@ fn set_jointed_mob_field(
     field: &str,
     value: toml::Value,
 ) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut()) {
-            if let Some(joint) = arr.get_mut(index).and_then(|v| v.as_table_mut()) {
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        && let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut())
+            && let Some(joint) = arr.get_mut(index).and_then(|v| v.as_table_mut()) {
                 joint.insert(field.to_string(), value);
             }
-        }
-    }
 }
 
 /// Set a Vec2 field on a jointed mob.
@@ -631,13 +624,11 @@ fn set_jointed_mob_vec2(session: &mut EditorSession, index: usize, field: &str, 
 
 /// Remove a field from a jointed mob at the given index.
 fn remove_jointed_mob_field(session: &mut EditorSession, index: usize, field: &str) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut()) {
-            if let Some(joint) = arr.get_mut(index).and_then(|v| v.as_table_mut()) {
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        && let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut())
+            && let Some(joint) = arr.get_mut(index).and_then(|v| v.as_table_mut()) {
                 joint.remove(field);
             }
-        }
-    }
 }
 
 /// Set a nested field on a jointed mob (e.g., angle_limit_range.min).
@@ -648,15 +639,12 @@ fn set_jointed_nested_field(
     field: &str,
     value: toml::Value,
 ) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut()) {
-            if let Some(joint) = arr.get_mut(index).and_then(|v| v.as_table_mut()) {
-                if let Some(parent_table) = joint.get_mut(parent).and_then(|v| v.as_table_mut()) {
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        && let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut())
+            && let Some(joint) = arr.get_mut(index).and_then(|v| v.as_table_mut())
+                && let Some(parent_table) = joint.get_mut(parent).and_then(|v| v.as_table_mut()) {
                     parent_table.insert(field.to_string(), value);
                 }
-            }
-        }
-    }
 }
 
 /// Set a nested Vec2 field on a jointed mob (e.g., chain.pos_offset).
@@ -682,15 +670,12 @@ fn remove_jointed_nested_field(
     parent: &str,
     field: &str,
 ) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut()) {
-            if let Some(joint) = arr.get_mut(index).and_then(|v| v.as_table_mut()) {
-                if let Some(parent_table) = joint.get_mut(parent).and_then(|v| v.as_table_mut()) {
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        && let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut())
+            && let Some(joint) = arr.get_mut(index).and_then(|v| v.as_table_mut())
+                && let Some(parent_table) = joint.get_mut(parent).and_then(|v| v.as_table_mut()) {
                     parent_table.remove(field);
                 }
-            }
-        }
-    }
 }
 
 /// Set a deeply nested field (e.g., chain.random_chain.min_length).
@@ -702,25 +687,21 @@ fn set_jointed_deep_nested_field(
     field: &str,
     value: toml::Value,
 ) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut()) {
-            if let Some(joint) = arr.get_mut(index).and_then(|v| v.as_table_mut()) {
-                if let Some(parent_table) = joint.get_mut(parent).and_then(|v| v.as_table_mut()) {
-                    if let Some(nested_table) =
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        && let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut())
+            && let Some(joint) = arr.get_mut(index).and_then(|v| v.as_table_mut())
+                && let Some(parent_table) = joint.get_mut(parent).and_then(|v| v.as_table_mut())
+                    && let Some(nested_table) =
                         parent_table.get_mut(nested).and_then(|v| v.as_table_mut())
                     {
                         nested_table.insert(field.to_string(), value);
                     }
-                }
-            }
-        }
-    }
 }
 
 /// Delete a jointed mob at the given index.
 fn delete_jointed_mob(session: &mut EditorSession, index: usize) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut()) {
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        && let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut()) {
             if index < arr.len() {
                 arr.remove(index);
             }
@@ -729,7 +710,6 @@ fn delete_jointed_mob(session: &mut EditorSession, index: usize) {
                 mob.remove("jointed_mobs");
             }
         }
-    }
 }
 
 /// Add a new jointed mob with defaults.
@@ -770,9 +750,9 @@ fn add_new_jointed_mob(session: &mut EditorSession) {
 
 /// Add angle_limit_range to a jointed mob.
 fn add_angle_limit_to_jointed_mob(session: &mut EditorSession, index: usize) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut()) {
-            if let Some(joint) = arr.get_mut(index).and_then(|v| v.as_table_mut()) {
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        && let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut())
+            && let Some(joint) = arr.get_mut(index).and_then(|v| v.as_table_mut()) {
                 let mut angle_table = toml::value::Table::new();
                 angle_table.insert("min".to_string(), toml::Value::Float(-45.0));
                 angle_table.insert("max".to_string(), toml::Value::Float(45.0));
@@ -782,15 +762,13 @@ fn add_angle_limit_to_jointed_mob(session: &mut EditorSession, index: usize) {
                     toml::Value::Table(angle_table),
                 );
             }
-        }
-    }
 }
 
 /// Add chain configuration to a jointed mob.
 fn add_chain_to_jointed_mob(session: &mut EditorSession, index: usize) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut()) {
-            if let Some(joint) = arr.get_mut(index).and_then(|v| v.as_table_mut()) {
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        && let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut())
+            && let Some(joint) = arr.get_mut(index).and_then(|v| v.as_table_mut()) {
                 let mut chain_table = toml::value::Table::new();
                 chain_table.insert("length".to_string(), toml::Value::Integer(3));
                 chain_table.insert(
@@ -803,22 +781,17 @@ fn add_chain_to_jointed_mob(session: &mut EditorSession, index: usize) {
                 );
                 joint.insert("chain".to_string(), toml::Value::Table(chain_table));
             }
-        }
-    }
 }
 
 /// Add random_chain to a jointed mob's chain config.
 fn add_random_chain_to_jointed_mob(session: &mut EditorSession, index: usize) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut()) {
-            if let Some(joint) = arr.get_mut(index).and_then(|v| v.as_table_mut()) {
-                if let Some(chain) = joint.get_mut("chain").and_then(|v| v.as_table_mut()) {
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        && let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut())
+            && let Some(joint) = arr.get_mut(index).and_then(|v| v.as_table_mut())
+                && let Some(chain) = joint.get_mut("chain").and_then(|v| v.as_table_mut()) {
                     let mut random_table = toml::value::Table::new();
                     random_table.insert("min_length".to_string(), toml::Value::Integer(1));
                     random_table.insert("end_chance".to_string(), toml::Value::Float(0.15));
                     chain.insert("random_chain".to_string(), toml::Value::Table(random_table));
                 }
-            }
-        }
-    }
 }
