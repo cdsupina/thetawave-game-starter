@@ -3,6 +3,9 @@
 //! This module handles rendering and editing of projectile spawners and mob spawners.
 
 use bevy_egui::egui;
+use strum::IntoEnumIterator;
+use thetawave_core::Faction;
+use thetawave_projectiles::ProjectileType;
 
 use crate::data::EditorSession;
 
@@ -10,12 +13,6 @@ use super::fields::{
     render_float_field, render_patch_indicator, render_reset_button, render_string_field,
     render_vec2_field, FieldResult, INHERITED_COLOR, PATCHED_COLOR,
 };
-
-/// Valid projectile types for spawners.
-const PROJECTILE_TYPES: &[&str] = &["Bullet", "Blast"];
-
-/// Valid faction types.
-const FACTIONS: &[&str] = &["Enemy", "Ally"];
 
 /// Check if a specific spawner field is patched.
 fn is_spawner_field_patched(
@@ -363,9 +360,10 @@ fn render_projectile_spawner_fields(
         egui::ComboBox::from_id_salt(format!("proj_type_{}", spawner_key))
             .selected_text(&selected)
             .show_ui(ui, |ui| {
-                for &ptype in PROJECTILE_TYPES {
-                    if ui.selectable_label(selected == ptype, ptype).clicked() {
-                        selected = ptype.to_string();
+                for ptype in ProjectileType::iter() {
+                    let ptype_str = ptype.as_ref();
+                    if ui.selectable_label(selected == ptype_str, ptype_str).clicked() {
+                        selected = ptype_str.to_string();
                     }
                 }
             });
@@ -409,9 +407,10 @@ fn render_projectile_spawner_fields(
         egui::ComboBox::from_id_salt(format!("proj_faction_{}", spawner_key))
             .selected_text(&selected)
             .show_ui(ui, |ui| {
-                for &f in FACTIONS {
-                    if ui.selectable_label(selected == f, f).clicked() {
-                        selected = f.to_string();
+                for f in Faction::iter() {
+                    let f_str = f.as_ref();
+                    if ui.selectable_label(selected == f_str, f_str).clicked() {
+                        selected = f_str.to_string();
                     }
                 }
             });

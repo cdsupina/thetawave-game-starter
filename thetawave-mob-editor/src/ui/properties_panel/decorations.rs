@@ -8,7 +8,8 @@ use bevy_egui::egui;
 use crate::data::{EditorSession, SpriteRegistry, SpriteSource};
 use crate::plugin::EditorConfig;
 
-use super::fields::{render_patch_indicator, ICON_BUTTON_MIN_SIZE, INDENT_SPACING, INHERITED_COLOR, PATCHED_COLOR};
+use super::fields::{render_patch_indicator, render_reset_button, INDENT_SPACING, INHERITED_COLOR, PATCHED_COLOR};
+use super::update_decoration_sprite;
 
 /// Render a sprite picker dropdown.
 ///
@@ -506,37 +507,6 @@ fn render_decoration_sprite_picker(
 // =============================================================================
 // Helper functions for decoration manipulation
 // =============================================================================
-
-/// Helper to render reset button for patches.
-fn render_reset_button(ui: &mut egui::Ui, is_patched: bool, is_patch_file: bool) -> bool {
-    if is_patch_file && is_patched {
-        let response = ui.add(
-            egui::Button::new(egui::RichText::new("×").color(egui::Color32::WHITE))
-                .fill(egui::Color32::from_rgb(120, 60, 60))
-                .min_size(ICON_BUTTON_MIN_SIZE),
-        );
-        if response
-            .on_hover_text("Remove from patch (use base value)")
-            .clicked()
-        {
-            return true;
-        }
-    }
-    false
-}
-
-/// Update a decoration's sprite path.
-fn update_decoration_sprite(session: &mut EditorSession, index: usize, sprite_path: &str) {
-    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        if let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut()) {
-            if let Some(decoration) = decorations.get_mut(index).and_then(|v| v.as_array_mut()) {
-                if !decoration.is_empty() {
-                    decoration[0] = toml::Value::String(sprite_path.to_string());
-                }
-            }
-        }
-    }
-}
 
 /// Update a decoration's position.
 fn update_decoration_position(session: &mut EditorSession, index: usize, x: f32, y: f32) {

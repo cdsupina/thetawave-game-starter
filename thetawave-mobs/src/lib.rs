@@ -8,8 +8,8 @@ mod systems;
 pub use asset::{MobAsset, MobRef, MobRegistry};
 pub use attributes::{JointsComponent, MobAttributesComponent, MobDeathEvent, MobMarker};
 pub use behavior::{
-    BehaviorActionName, BehaviorNodeData, BehaviorReceiverComponent, MobBehaviorComponent,
-    MobBehaviorType,
+    BehaviorActionName, BehaviorNodeData, BehaviorNodeType, BehaviorReceiverComponent,
+    MobBehaviorCategory, MobBehaviorComponent, MobBehaviorType, MobBehaviorVariant, BY_CATEGORY,
 };
 pub use spawn::MobDebugSettings;
 

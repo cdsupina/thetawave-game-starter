@@ -5,238 +5,12 @@
 //! While, IfThen, Wait, Action, Trigger).
 
 use bevy_egui::egui;
+use strum::IntoEnumIterator;
+use thetawave_mobs::{BehaviorNodeType, MobBehaviorCategory, MobBehaviorVariant, BY_CATEGORY};
 
 use crate::data::EditorSession;
 
 use super::fields::{render_patch_indicator, INDENT_SPACING, INHERITED_COLOR, PATCHED_COLOR};
-
-// =============================================================================
-// Typed Enums for Behavior Tree
-// =============================================================================
-
-/// Behavior node types with proper type safety.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum BehaviorNodeType {
-    Forever,
-    Sequence,
-    Fallback,
-    While,
-    IfThen,
-    Wait,
-    Action,
-    Trigger,
-}
-
-impl BehaviorNodeType {
-    /// All available node types.
-    pub const ALL: &'static [BehaviorNodeType] = &[
-        BehaviorNodeType::Forever,
-        BehaviorNodeType::Sequence,
-        BehaviorNodeType::Fallback,
-        BehaviorNodeType::While,
-        BehaviorNodeType::IfThen,
-        BehaviorNodeType::Wait,
-        BehaviorNodeType::Action,
-        BehaviorNodeType::Trigger,
-    ];
-
-    /// Convert from string (for TOML parsing).
-    pub fn from_str(s: &str) -> Option<Self> {
-        match s {
-            "Forever" => Some(Self::Forever),
-            "Sequence" => Some(Self::Sequence),
-            "Fallback" => Some(Self::Fallback),
-            "While" => Some(Self::While),
-            "IfThen" => Some(Self::IfThen),
-            "Wait" => Some(Self::Wait),
-            "Action" => Some(Self::Action),
-            "Trigger" => Some(Self::Trigger),
-            _ => None,
-        }
-    }
-
-    /// Convert to string (for TOML serialization).
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Forever => "Forever",
-            Self::Sequence => "Sequence",
-            Self::Fallback => "Fallback",
-            Self::While => "While",
-            Self::IfThen => "IfThen",
-            Self::Wait => "Wait",
-            Self::Action => "Action",
-            Self::Trigger => "Trigger",
-        }
-    }
-
-    /// Check if this is a control node (has children array).
-    pub fn is_control_node(&self) -> bool {
-        matches!(self, Self::Forever | Self::Sequence | Self::Fallback)
-    }
-
-    /// Check if this is a leaf node (no children).
-    pub fn is_leaf_node(&self) -> bool {
-        matches!(self, Self::Wait | Self::Action | Self::Trigger)
-    }
-}
-
-impl std::fmt::Display for BehaviorNodeType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.as_str())
-    }
-}
-
-/// Action types that can be used in Action nodes.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum BehaviorActionType {
-    // Movement
-    MoveDown,
-    MoveUp,
-    MoveLeft,
-    MoveRight,
-    MoveTowardsPlayer,
-    MoveAwayFromPlayer,
-    MoveTo,
-    BrakeHorizontal,
-    BrakeVertical,
-    DoForTime,
-    // Combat
-    SpawnMob,
-    SpawnProjectile,
-    AimAtPlayer,
-    RotateTowardsPlayer,
-    // Communication
-    TransmitMobBehavior,
-}
-
-/// Category of action types for UI organization.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ActionCategory {
-    Movement,
-    Combat,
-    Communication,
-}
-
-impl ActionCategory {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Movement => "Movement",
-            Self::Combat => "Combat",
-            Self::Communication => "Communication",
-        }
-    }
-}
-
-impl BehaviorActionType {
-    /// All available action types organized by category.
-    pub const BY_CATEGORY: &'static [(ActionCategory, &'static [BehaviorActionType])] = &[
-        (
-            ActionCategory::Movement,
-            &[
-                BehaviorActionType::MoveDown,
-                BehaviorActionType::MoveUp,
-                BehaviorActionType::MoveLeft,
-                BehaviorActionType::MoveRight,
-                BehaviorActionType::MoveTowardsPlayer,
-                BehaviorActionType::MoveAwayFromPlayer,
-                BehaviorActionType::MoveTo,
-                BehaviorActionType::BrakeHorizontal,
-                BehaviorActionType::BrakeVertical,
-                BehaviorActionType::DoForTime,
-            ],
-        ),
-        (
-            ActionCategory::Combat,
-            &[
-                BehaviorActionType::SpawnMob,
-                BehaviorActionType::SpawnProjectile,
-                BehaviorActionType::AimAtPlayer,
-                BehaviorActionType::RotateTowardsPlayer,
-            ],
-        ),
-        (
-            ActionCategory::Communication,
-            &[BehaviorActionType::TransmitMobBehavior],
-        ),
-    ];
-
-    /// Convert from string (for TOML parsing).
-    pub fn from_str(s: &str) -> Option<Self> {
-        match s {
-            "MoveDown" => Some(Self::MoveDown),
-            "MoveUp" => Some(Self::MoveUp),
-            "MoveLeft" => Some(Self::MoveLeft),
-            "MoveRight" => Some(Self::MoveRight),
-            "MoveTowardsPlayer" => Some(Self::MoveTowardsPlayer),
-            "MoveAwayFromPlayer" => Some(Self::MoveAwayFromPlayer),
-            "MoveTo" => Some(Self::MoveTo),
-            "BrakeHorizontal" => Some(Self::BrakeHorizontal),
-            "BrakeVertical" => Some(Self::BrakeVertical),
-            "DoForTime" => Some(Self::DoForTime),
-            "SpawnMob" => Some(Self::SpawnMob),
-            "SpawnProjectile" => Some(Self::SpawnProjectile),
-            "AimAtPlayer" => Some(Self::AimAtPlayer),
-            "RotateTowardsPlayer" => Some(Self::RotateTowardsPlayer),
-            "TransmitMobBehavior" => Some(Self::TransmitMobBehavior),
-            _ => None,
-        }
-    }
-
-    /// Convert to string (for TOML serialization).
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::MoveDown => "MoveDown",
-            Self::MoveUp => "MoveUp",
-            Self::MoveLeft => "MoveLeft",
-            Self::MoveRight => "MoveRight",
-            Self::MoveTowardsPlayer => "MoveTowardsPlayer",
-            Self::MoveAwayFromPlayer => "MoveAwayFromPlayer",
-            Self::MoveTo => "MoveTo",
-            Self::BrakeHorizontal => "BrakeHorizontal",
-            Self::BrakeVertical => "BrakeVertical",
-            Self::DoForTime => "DoForTime",
-            Self::SpawnMob => "SpawnMob",
-            Self::SpawnProjectile => "SpawnProjectile",
-            Self::AimAtPlayer => "AimAtPlayer",
-            Self::RotateTowardsPlayer => "RotateTowardsPlayer",
-            Self::TransmitMobBehavior => "TransmitMobBehavior",
-        }
-    }
-
-    /// Check if this action has parameters.
-    pub fn has_parameters(&self) -> bool {
-        matches!(
-            self,
-            Self::MoveTo | Self::DoForTime | Self::SpawnMob | Self::SpawnProjectile | Self::TransmitMobBehavior
-        )
-    }
-
-    /// Get the category of this action.
-    pub fn category(&self) -> ActionCategory {
-        match self {
-            Self::MoveDown
-            | Self::MoveUp
-            | Self::MoveLeft
-            | Self::MoveRight
-            | Self::MoveTowardsPlayer
-            | Self::MoveAwayFromPlayer
-            | Self::MoveTo
-            | Self::BrakeHorizontal
-            | Self::BrakeVertical
-            | Self::DoForTime => ActionCategory::Movement,
-            Self::SpawnMob | Self::SpawnProjectile | Self::AimAtPlayer | Self::RotateTowardsPlayer => {
-                ActionCategory::Combat
-            }
-            Self::TransmitMobBehavior => ActionCategory::Communication,
-        }
-    }
-}
-
-impl std::fmt::Display for BehaviorActionType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.as_str())
-    }
-}
 
 /// Render the behavior section of the properties panel.
 pub fn render_behavior_section(
@@ -325,7 +99,7 @@ fn render_behavior_node(
         .get("type")
         .and_then(|v| v.as_str())
         .unwrap_or("Unknown");
-    let node_type = BehaviorNodeType::from_str(node_type_str);
+    let node_type: Option<BehaviorNodeType> = node_type_str.parse().ok();
 
     // Create collapsible header for the node
     let header_text = format_node_header(table, node_type);
@@ -340,14 +114,17 @@ fn render_behavior_node(
                     // Type selector
                     ui.label("Type:");
                     let mut current_type = node_type;
-                    let display_text = current_type.map(|t| t.as_str()).unwrap_or("Unknown");
+                    let display_text = match &current_type {
+                        Some(t) => t.as_ref(),
+                        None => "Unknown",
+                    };
                     egui::ComboBox::from_id_salt(format!("node_type_{:?}", path))
                         .selected_text(display_text)
                         .width(100.0)
                         .show_ui(ui, |ui| {
-                            for &t in BehaviorNodeType::ALL {
+                            for t in BehaviorNodeType::iter() {
                                 let is_selected = current_type == Some(t);
-                                if ui.selectable_label(is_selected, t.as_str()).clicked() {
+                                if ui.selectable_label(is_selected, t.as_ref()).clicked() {
                                     current_type = Some(t);
                                 }
                             }
@@ -382,7 +159,10 @@ fn render_behavior_node(
                         }
                     }
                 } else {
-                    let type_display = node_type.map(|t| t.as_str()).unwrap_or(node_type_str);
+                    let type_display = match &node_type {
+                        Some(t) => t.as_ref(),
+                        None => node_type_str,
+                    };
                     ui.label(format!("Type: {}", type_display));
                 }
             });
@@ -437,7 +217,7 @@ fn format_node_header(table: &toml::value::Table, node_type: Option<BehaviorNode
                 .unwrap_or(1.0);
             format!("Wait: {:.1}s", seconds)
         }
-        Some(t) => t.as_str().to_string(),
+        Some(t) => t.as_ref().to_string(),
         None => "Unknown".to_string(),
     }
 }
@@ -692,7 +472,7 @@ fn render_action_node(
                 .get("action")
                 .and_then(|v| v.as_str())
                 .unwrap_or("Unknown");
-            let action_type = BehaviorActionType::from_str(action_type_str);
+            let action_type: Option<MobBehaviorVariant> = action_type_str.parse().ok();
 
             ui.horizontal(|ui| {
                 ui.add_space(INDENT_SPACING);
@@ -701,20 +481,23 @@ fn render_action_node(
                 if can_edit {
                     // Action type combo
                     let mut current_action = action_type;
-                    let display_text = current_action.map(|a| a.as_str()).unwrap_or("Unknown");
+                    let display_text = match &current_action {
+                        Some(a) => a.as_ref(),
+                        None => "Unknown",
+                    };
                     egui::ComboBox::from_id_salt(format!("action_combo_{:?}_{}", path, i))
                         .selected_text(display_text)
                         .width(120.0)
                         .show_ui(ui, |ui| {
-                            for (category, actions) in BehaviorActionType::BY_CATEGORY {
+                            for (category, actions) in BY_CATEGORY.iter() {
                                 ui.label(
                                     egui::RichText::new(category.as_str())
                                         .small()
                                         .color(INHERITED_COLOR),
                                 );
-                                for action in *actions {
+                                for action in actions {
                                     let is_selected = current_action == Some(*action);
-                                    if ui.selectable_label(is_selected, action.as_str()).clicked()
+                                    if ui.selectable_label(is_selected, action.as_ref()).clicked()
                                     {
                                         current_action = Some(*action);
                                     }
@@ -755,14 +538,17 @@ fn render_action_node(
                         delete_index = Some(i);
                     }
                 } else {
-                    let display_text = action_type.map(|a| a.as_str()).unwrap_or(action_type_str);
+                    let display_text = match &action_type {
+                        Some(a) => a.as_ref(),
+                        None => action_type_str,
+                    };
                     ui.label(display_text);
                     render_action_parameters_readonly(ui, behavior_table, action_type);
                 }
             });
 
             // Render nested behaviors for TransmitMobBehavior
-            if action_type == Some(BehaviorActionType::TransmitMobBehavior) {
+            if action_type == Some(MobBehaviorVariant::TransmitMobBehavior) {
                 render_transmit_nested_behaviors(
                     ui,
                     session,
@@ -798,11 +584,11 @@ fn render_action_parameters(
     behavior_table: &toml::value::Table,
     path: &[usize],
     behavior_index: usize,
-    action_type: Option<BehaviorActionType>,
+    action_type: Option<MobBehaviorVariant>,
     modified: &mut bool,
 ) {
     match action_type {
-        Some(BehaviorActionType::MoveTo) => {
+        Some(MobBehaviorVariant::MoveTo) => {
             let x = behavior_table
                 .get("x")
                 .and_then(|v| v.as_float().or_else(|| v.as_integer().map(|i| i as f64)))
@@ -838,7 +624,7 @@ fn render_action_parameters(
                 *modified = true;
             }
         }
-        Some(BehaviorActionType::DoForTime) => {
+        Some(MobBehaviorVariant::DoForTime) => {
             let seconds = behavior_table
                 .get("seconds")
                 .and_then(|v| v.as_float().or_else(|| v.as_integer().map(|i| i as f64)))
@@ -864,7 +650,7 @@ fn render_action_parameters(
                 *modified = true;
             }
         }
-        Some(BehaviorActionType::SpawnMob | BehaviorActionType::SpawnProjectile) => {
+        Some(MobBehaviorVariant::SpawnMob | MobBehaviorVariant::SpawnProjectile) => {
             let keys = behavior_table
                 .get("keys")
                 .and_then(|v| v.as_array())
@@ -904,7 +690,7 @@ fn render_action_parameters(
                 *modified = true;
             }
         }
-        Some(BehaviorActionType::TransmitMobBehavior) => {
+        Some(MobBehaviorVariant::TransmitMobBehavior) => {
             let mob_type = behavior_table
                 .get("mob_type")
                 .and_then(|v| v.as_str())
@@ -940,10 +726,10 @@ fn render_action_parameters(
 fn render_action_parameters_readonly(
     ui: &mut egui::Ui,
     behavior_table: &toml::value::Table,
-    action_type: Option<BehaviorActionType>,
+    action_type: Option<MobBehaviorVariant>,
 ) {
     match action_type {
-        Some(BehaviorActionType::MoveTo) => {
+        Some(MobBehaviorVariant::MoveTo) => {
             let x = behavior_table
                 .get("x")
                 .and_then(|v| v.as_float())
@@ -954,20 +740,20 @@ fn render_action_parameters_readonly(
                 .unwrap_or(0.0);
             ui.label(format!("({:.1}, {:.1})", x, y));
         }
-        Some(BehaviorActionType::DoForTime) => {
+        Some(MobBehaviorVariant::DoForTime) => {
             let seconds = behavior_table
                 .get("seconds")
                 .and_then(|v| v.as_float())
                 .unwrap_or(1.0);
             ui.label(format!("{:.1}s", seconds));
         }
-        Some(BehaviorActionType::SpawnMob | BehaviorActionType::SpawnProjectile) => {
+        Some(MobBehaviorVariant::SpawnMob | MobBehaviorVariant::SpawnProjectile) => {
             if let Some(keys) = behavior_table.get("keys").and_then(|v| v.as_array()) {
                 let keys_str: Vec<_> = keys.iter().filter_map(|v| v.as_str()).collect();
                 ui.label(format!("[{}]", keys_str.join(", ")));
             }
         }
-        Some(BehaviorActionType::TransmitMobBehavior) => {
+        Some(MobBehaviorVariant::TransmitMobBehavior) => {
             let mob_type = behavior_table
                 .get("mob_type")
                 .and_then(|v| v.as_str())
@@ -1060,7 +846,7 @@ fn render_transmit_nested_behaviors(
                 .get("action")
                 .and_then(|v| v.as_str())
                 .unwrap_or("Unknown");
-            let nested_action = BehaviorActionType::from_str(nested_action_str);
+            let nested_action: Option<MobBehaviorVariant> = nested_action_str.parse().ok();
 
             ui.horizontal(|ui| {
                 ui.add_space(40.0);
@@ -1069,7 +855,10 @@ fn render_transmit_nested_behaviors(
                 if can_edit {
                     // Action type combo for nested behavior
                     let mut current_nested = nested_action;
-                    let display_text = current_nested.map(|a| a.as_str()).unwrap_or("Unknown");
+                    let display_text = match &current_nested {
+                        Some(a) => a.as_ref(),
+                        None => "Unknown",
+                    };
                     egui::ComboBox::from_id_salt(format!(
                         "nested_action_{:?}_{}_{}",
                         path, behavior_index, j
@@ -1078,8 +867,8 @@ fn render_transmit_nested_behaviors(
                     .width(100.0)
                     .show_ui(ui, |ui| {
                         // Only show simple actions for nested behaviors (no TransmitMobBehavior)
-                        for (category, actions) in BehaviorActionType::BY_CATEGORY {
-                            if *category == ActionCategory::Communication {
+                        for (category, actions) in BY_CATEGORY.iter() {
+                            if *category == MobBehaviorCategory::Communication {
                                 continue; // Skip TransmitMobBehavior
                             }
                             ui.label(
@@ -1087,9 +876,9 @@ fn render_transmit_nested_behaviors(
                                     .small()
                                     .color(INHERITED_COLOR),
                             );
-                            for action in *actions {
+                            for action in actions {
                                 let is_selected = current_nested == Some(*action);
-                                if ui.selectable_label(is_selected, action.as_str()).clicked() {
+                                if ui.selectable_label(is_selected, action.as_ref()).clicked() {
                                     current_nested = Some(*action);
                                 }
                             }
@@ -1136,7 +925,10 @@ fn render_transmit_nested_behaviors(
                         delete_nested = Some(j);
                     }
                 } else {
-                    let display = nested_action.map(|a| a.as_str()).unwrap_or(nested_action_str);
+                    let display = match &nested_action {
+                        Some(a) => a.as_ref(),
+                        None => nested_action_str,
+                    };
                     ui.label(display);
                 }
             });
@@ -1167,11 +959,11 @@ fn render_transmit_nested_params(
     path: &[usize],
     behavior_index: usize,
     nested_index: usize,
-    action_type: Option<BehaviorActionType>,
+    action_type: Option<MobBehaviorVariant>,
     modified: &mut bool,
 ) {
     match action_type {
-        Some(BehaviorActionType::MoveTo) => {
+        Some(MobBehaviorVariant::MoveTo) => {
             let x = nested_table
                 .get("x")
                 .and_then(|v| v.as_float().or_else(|| v.as_integer().map(|i| i as f64)))
@@ -1209,7 +1001,7 @@ fn render_transmit_nested_params(
                 *modified = true;
             }
         }
-        Some(BehaviorActionType::DoForTime) => {
+        Some(MobBehaviorVariant::DoForTime) => {
             let seconds = nested_table
                 .get("seconds")
                 .and_then(|v| v.as_float().or_else(|| v.as_integer().map(|i| i as f64)))
@@ -1506,7 +1298,7 @@ fn change_behavior_node_type(session: &mut EditorSession, path: &[usize], new_ty
                 .get("type")
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            let old_type = BehaviorNodeType::from_str(old_type_str);
+            let old_type: Option<BehaviorNodeType> = old_type_str.parse().ok();
 
             // Only proceed if type is actually changing
             if old_type == Some(new_type) {
@@ -1514,10 +1306,10 @@ fn change_behavior_node_type(session: &mut EditorSession, path: &[usize], new_ty
             }
 
             // Update type
-            table.insert("type".to_string(), toml::Value::String(new_type.as_str().to_string()));
+            table.insert("type".to_string(), toml::Value::String(new_type.as_ref().to_string()));
 
             // Handle structure changes based on old/new type categories
-            let old_is_control = old_type.map(|t| t.is_control_node()).unwrap_or(false);
+            let old_is_control = old_type.map(|t: BehaviorNodeType| t.is_control_node()).unwrap_or(false);
             let new_is_control = new_type.is_control_node();
 
             if old_is_control && new_is_control {
@@ -1728,7 +1520,7 @@ fn change_action_behavior_type(
     session: &mut EditorSession,
     path: &[usize],
     index: usize,
-    new_action: BehaviorActionType,
+    new_action: MobBehaviorVariant,
 ) {
     if let Some(node) = get_behavior_node_mut(session, path) {
         if let Some(table) = node.as_table_mut() {
@@ -1747,16 +1539,16 @@ fn change_action_behavior_type(
                     // Set new action type
                     behavior.insert(
                         "action".to_string(),
-                        toml::Value::String(new_action.as_str().to_string()),
+                        toml::Value::String(new_action.as_ref().to_string()),
                     );
 
                     // Add default parameters for actions that need them
                     match new_action {
-                        BehaviorActionType::MoveTo => {
+                        MobBehaviorVariant::MoveTo => {
                             behavior.insert("x".to_string(), toml::Value::Float(0.0));
                             behavior.insert("y".to_string(), toml::Value::Float(0.0));
                         }
-                        BehaviorActionType::DoForTime => {
+                        MobBehaviorVariant::DoForTime => {
                             behavior.insert("seconds".to_string(), toml::Value::Float(1.0));
                         }
                         _ => {}
@@ -1899,7 +1691,7 @@ fn change_transmit_nested_behavior_type(
     path: &[usize],
     behavior_index: usize,
     nested_index: usize,
-    new_action: BehaviorActionType,
+    new_action: MobBehaviorVariant,
 ) {
     if let Some(node) = get_behavior_node_mut(session, path) {
         if let Some(table) = node.as_table_mut() {
@@ -1927,16 +1719,16 @@ fn change_transmit_nested_behavior_type(
                             // Set new action type
                             nested.insert(
                                 "action".to_string(),
-                                toml::Value::String(new_action.as_str().to_string()),
+                                toml::Value::String(new_action.as_ref().to_string()),
                             );
 
                             // Add default parameters
                             match new_action {
-                                BehaviorActionType::MoveTo => {
+                                MobBehaviorVariant::MoveTo => {
                                     nested.insert("x".to_string(), toml::Value::Float(0.0));
                                     nested.insert("y".to_string(), toml::Value::Float(0.0));
                                 }
-                                BehaviorActionType::DoForTime => {
+                                MobBehaviorVariant::DoForTime => {
                                     nested.insert("seconds".to_string(), toml::Value::Float(1.0));
                                 }
                                 _ => {}

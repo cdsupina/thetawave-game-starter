@@ -7,10 +7,13 @@ use bevy::{
     time::{Timer, TimerMode},
 };
 use serde::{Deserialize, Serialize};
+use strum_macros::{AsRefStr, EnumIter, EnumString};
 use thetawave_core::Faction;
 use thetawave_physics::ThetawaveCollider;
 
-#[derive(Component, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, Reflect, Clone)]
+#[derive(
+    Component, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, Reflect, Clone, EnumIter, AsRefStr, EnumString,
+)]
 pub enum ProjectileType {
     Bullet,
     Blast,

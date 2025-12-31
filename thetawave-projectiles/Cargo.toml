@@ -16,6 +16,8 @@ bevy = { workspace = true, features = [
     "async_executor",
 ] }
 serde.workspace = true
+strum.workspace = true
+strum_macros.workspace = true
 bevy_aseprite_ultra.workspace = true
 avian2d.workspace = true
 rand.workspace = true

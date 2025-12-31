@@ -15,6 +15,7 @@ path = "src/main.rs"
 # Workspace crates (reuse existing infrastructure)
 thetawave-mobs = { path = "../thetawave-mobs", default-features = false }
 thetawave-core = { path = "../thetawave-core", default-features = false }
+thetawave-projectiles = { path = "../thetawave-projectiles", default-features = false }
 thetawave-physics = { path = "../thetawave-physics" }
 
 # Bevy core (minimal features for editor)
@@ -40,6 +41,7 @@ bevy_aseprite_ultra.workspace = true
 # Serialization
 toml.workspace = true
 serde = { workspace = true, features = ["derive"] }
+strum.workspace = true
 
 # Error handling
 thiserror = "2"
