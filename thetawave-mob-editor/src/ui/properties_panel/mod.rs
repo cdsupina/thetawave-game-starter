@@ -17,10 +17,11 @@ pub mod fields;
 pub mod jointed;
 pub mod spawners;
 
+use bevy::ecs::message::MessageWriter;
 use bevy_egui::egui;
 
 use crate::data::{EditorSession, FileType, SpriteRegistry};
-use crate::file::FileTreeState;
+use crate::file::{FileTreeState, ReloadMobEvent, SaveMobEvent};
 use crate::plugin::EditorConfig;
 
 use fields::{FieldResult, PATCHED_COLOR};
@@ -37,6 +38,7 @@ pub struct PropertiesPanelResult {
 /// Render the complete properties panel
 ///
 /// This is the main entry point for rendering all mob properties. It handles:
+/// - Save/Reload action buttons
 /// - General properties (name, spawnable, faction, etc.)
 /// - Combat properties (health, damage, speed)
 /// - Sprite and decorations
@@ -50,9 +52,19 @@ pub fn properties_panel_ui(
     sprite_registry: &SpriteRegistry,
     file_tree: &FileTreeState,
     config: &EditorConfig,
+    save_events: &mut MessageWriter<SaveMobEvent>,
+    reload_events: &mut MessageWriter<ReloadMobEvent>,
 ) -> PropertiesPanelResult {
     let mut result = PropertiesPanelResult::default();
     let mut modified = false;
+
+    // File info header
+    render_file_info(ui, session);
+
+    // Action buttons below the title
+    render_action_buttons(ui, session, save_events, reload_events);
+
+    ui.separator();
 
     // Get the merged display table and patch-only table
     let (display_table, patch_table) = match get_display_tables(session) {
@@ -68,11 +80,6 @@ pub fn properties_panel_ui(
     egui::ScrollArea::vertical()
         .auto_shrink([false; 2])
         .show(ui, |ui| {
-            // File info header
-            render_file_info(ui, session);
-
-            ui.separator();
-
             // General Properties
             render_general_properties(ui, &display_table, &patch_table, session, is_patch);
 
@@ -177,7 +184,7 @@ pub fn properties_panel_ui(
 
     // Mark session modified if any section made changes
     if modified {
-        session.is_modified = true;
+        session.check_modified();
     }
 
     result
@@ -191,12 +198,15 @@ fn get_display_tables(session: &EditorSession) -> Option<(toml::value::Table, to
     let current_mob = session.current_mob.as_ref()?.as_table()?;
 
     if session.file_type == FileType::MobPatch {
-        // For patches, use merged_for_preview if available
-        if let Some(merged) = session.merged_for_preview.as_ref() {
+        // For patches, compute merged data on-the-fly from base + current patch
+        // This ensures display is always in sync with edits
+        if let Some(base) = session.base_mob.as_ref() {
+            let mut merged = base.clone();
+            crate::file::merge_toml_values(&mut merged, session.current_mob.clone().unwrap());
             let merged_table = merged.as_table()?.clone();
             Some((merged_table, current_mob.clone()))
         } else {
-            // Fallback to just current if no merged data
+            // Fallback to just current if no base data
             let cloned = current_mob.clone();
             Some((cloned.clone(), cloned))
         }
@@ -205,6 +215,32 @@ fn get_display_tables(session: &EditorSession) -> Option<(toml::value::Table, to
         let cloned = current_mob.clone();
         Some((cloned.clone(), cloned))
     }
+}
+
+/// Render the save and reload action buttons
+fn render_action_buttons(
+    ui: &mut egui::Ui,
+    session: &EditorSession,
+    save_events: &mut MessageWriter<SaveMobEvent>,
+    reload_events: &mut MessageWriter<ReloadMobEvent>,
+) {
+    ui.horizontal(|ui| {
+        let save_enabled = session.is_modified && session.current_path.is_some();
+        if ui
+            .add_enabled(save_enabled, egui::Button::new("💾 Save"))
+            .clicked()
+        {
+            save_events.write(SaveMobEvent { path: None });
+        }
+
+        let reload_enabled = session.current_path.is_some();
+        if ui
+            .add_enabled(reload_enabled, egui::Button::new("🔄 Reload"))
+            .clicked()
+        {
+            reload_events.write(ReloadMobEvent);
+        }
+    });
 }
 
 /// Render file information header
@@ -263,11 +299,11 @@ fn render_general_properties(
             match fields::render_string_field(ui, "Name:", name, name_patched, is_patch) {
                 FieldResult::Changed(new_val) => {
                     set_field(session, "name", toml::Value::String(new_val));
-                    session.is_modified = true;
+                    session.check_modified();
                 }
                 FieldResult::Reset => {
                     remove_field(session, "name");
-                    session.is_modified = true;
+                    session.check_modified();
                 }
                 FieldResult::NoChange => {}
             }
@@ -287,11 +323,11 @@ fn render_general_properties(
             ) {
                 FieldResult::Changed(new_val) => {
                     set_field(session, "spawnable", toml::Value::Boolean(new_val));
-                    session.is_modified = true;
+                    session.check_modified();
                 }
                 FieldResult::Reset => {
                     remove_field(session, "spawnable");
-                    session.is_modified = true;
+                    session.check_modified();
                 }
                 FieldResult::NoChange => {}
             }
@@ -313,11 +349,11 @@ fn render_general_properties(
             ) {
                 FieldResult::Changed(new_val) => {
                     set_field(session, "z_level", toml::Value::Float(new_val as f64));
-                    session.is_modified = true;
+                    session.check_modified();
                 }
                 FieldResult::Reset => {
                     remove_field(session, "z_level");
-                    session.is_modified = true;
+                    session.check_modified();
                 }
                 FieldResult::NoChange => {}
             }
@@ -351,11 +387,11 @@ fn render_combat_properties(
             ) {
                 FieldResult::Changed(new_val) => {
                     set_field(session, "health", toml::Value::Integer(new_val as i64));
-                    session.is_modified = true;
+                    session.check_modified();
                 }
                 FieldResult::Reset => {
                     remove_field(session, "health");
-                    session.is_modified = true;
+                    session.check_modified();
                 }
                 FieldResult::NoChange => {}
             }
@@ -380,11 +416,11 @@ fn render_combat_properties(
                         "collision_damage",
                         toml::Value::Integer(new_val as i64),
                     );
-                    session.is_modified = true;
+                    session.check_modified();
                 }
                 FieldResult::Reset => {
                     remove_field(session, "collision_damage");
-                    session.is_modified = true;
+                    session.check_modified();
                 }
                 FieldResult::NoChange => {}
             }
@@ -405,11 +441,11 @@ fn render_combat_properties(
             ) {
                 FieldResult::Changed((x, y)) => {
                     set_vec2_field(session, "max_linear_speed", x, y);
-                    session.is_modified = true;
+                    session.check_modified();
                 }
                 FieldResult::Reset => {
                     remove_field(session, "max_linear_speed");
-                    session.is_modified = true;
+                    session.check_modified();
                 }
                 FieldResult::NoChange => {}
             }
@@ -430,11 +466,11 @@ fn render_combat_properties(
             ) {
                 FieldResult::Changed((x, y)) => {
                     set_vec2_field(session, "linear_acceleration", x, y);
-                    session.is_modified = true;
+                    session.check_modified();
                 }
                 FieldResult::Reset => {
                     remove_field(session, "linear_acceleration");
-                    session.is_modified = true;
+                    session.check_modified();
                 }
                 FieldResult::NoChange => {}
             }
@@ -460,11 +496,11 @@ fn render_combat_properties(
                         "projectile_speed",
                         toml::Value::Float(new_val as f64),
                     );
-                    session.is_modified = true;
+                    session.check_modified();
                 }
                 FieldResult::Reset => {
                     remove_field(session, "projectile_speed");
-                    session.is_modified = true;
+                    session.check_modified();
                 }
                 FieldResult::NoChange => {}
             }
@@ -507,5 +543,5 @@ pub fn update_decoration_sprite(session: &mut EditorSession, index: usize, sprit
     {
         decoration[0] = toml::Value::String(sprite_path.to_string());
     }
-    session.is_modified = true;
+    session.check_modified();
 }

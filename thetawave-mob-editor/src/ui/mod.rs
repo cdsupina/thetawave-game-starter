@@ -1,7 +1,6 @@
 mod file_panel;
 mod layout;
 mod properties_panel;
-mod toolbar;
 
 pub(crate) use file_panel::{
     DeleteDialogState, ErrorDialog, NewFolderDialog, NewMobDialog, UnsavedAction,
@@ -11,4 +10,3 @@ pub(crate) use layout::main_ui_system;
 pub(crate) use properties_panel::{
     PropertiesPanelResult, properties_panel_ui, update_decoration_sprite,
 };
-pub(crate) use toolbar::toolbar_ui;

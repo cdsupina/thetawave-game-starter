@@ -138,10 +138,9 @@ pub fn file_panel_ui(
     new_folder_dialog: &mut NewFolderDialog,
     new_mob_dialog: &mut NewMobDialog,
 ) {
-    ui.heading("Files");
-    ui.separator();
+    ui.heading("Mob Files");
 
-    // Refresh button only
+    // Refresh button
     if ui.button("🔄 Refresh").clicked() {
         file_tree.needs_refresh = true;
     }

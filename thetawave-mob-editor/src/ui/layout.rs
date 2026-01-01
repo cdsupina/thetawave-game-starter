@@ -40,7 +40,7 @@ const STATUS_LOG_COLLAPSED_HEIGHT: f32 = 24.0;
 
 use super::{
     DeleteDialogState, ErrorDialog, NewFolderDialog, NewMobDialog, UnsavedChangesDialog,
-    ValidationDialog, file_panel_ui, properties_panel_ui, render_delete_dialog, toolbar_ui,
+    ValidationDialog, file_panel_ui, properties_panel_ui, render_delete_dialog,
     update_decoration_sprite,
 };
 
@@ -100,9 +100,6 @@ pub fn main_ui_system(
         return;
     };
 
-    // Top toolbar
-    toolbar_ui(ctx, &session, &mut events.save, &mut events.reload);
-
     // Left panel - File browser
     egui::SidePanel::left("file_panel")
         .default_width(250.0)
@@ -129,8 +126,15 @@ pub fn main_ui_system(
             .min_width(PROPERTIES_PANEL_MIN_WIDTH)
             .resizable(true)
             .show(ctx, |ui| {
-                panel_result =
-                    properties_panel_ui(ui, &mut session, &sprite_registry, &file_tree, &config);
+                panel_result = properties_panel_ui(
+                    ui,
+                    &mut session,
+                    &sprite_registry,
+                    &file_tree,
+                    &config,
+                    &mut events.save,
+                    &mut events.reload,
+                );
             });
     }
 
