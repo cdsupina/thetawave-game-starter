@@ -1,4 +1,7 @@
-use std::{fs, io, path::{Path, PathBuf}};
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+};
 
 use bevy::log::{info, warn};
 use thiserror::Error;
@@ -139,7 +142,9 @@ impl FileOperations {
 
     /// Load a .mobpatch file and merge it with its base .mob file
     /// Returns (patch_value, base_value, merged_value)
-    pub fn load_patch_with_base(patch_path: &Path) -> Result<(Value, Option<Value>, Option<Value>), FileError> {
+    pub fn load_patch_with_base(
+        patch_path: &Path,
+    ) -> Result<(Value, Option<Value>, Option<Value>), FileError> {
         let patch = Self::load_file(patch_path)?;
 
         // Try to find and load the base mob
@@ -234,10 +239,7 @@ mod tests {
         assert!(result.is_ok());
 
         let value = result.unwrap();
-        assert_eq!(
-            value.get("name").and_then(|v| v.as_str()),
-            Some("Test Mob")
-        );
+        assert_eq!(value.get("name").and_then(|v| v.as_str()), Some("Test Mob"));
     }
 
     #[test]
@@ -273,10 +275,7 @@ mod tests {
 
         // Verify content was written correctly
         let loaded = FileOperations::load_file(&path).unwrap();
-        assert_eq!(
-            loaded.get("name").and_then(|v| v.as_str()),
-            Some("Test")
-        );
+        assert_eq!(loaded.get("name").and_then(|v| v.as_str()), Some("Test"));
     }
 
     #[test]
@@ -309,10 +308,7 @@ mod tests {
         assert!(path.exists());
 
         let value = result.unwrap();
-        assert_eq!(
-            value.get("name").and_then(|v| v.as_str()),
-            Some("New Mob")
-        );
+        assert_eq!(value.get("name").and_then(|v| v.as_str()), Some("New Mob"));
         // Full mobs should have default sprite, health, colliders
         assert!(value.get("sprite").is_some());
         assert!(value.get("health").is_some());
@@ -329,10 +325,7 @@ mod tests {
         assert!(path.exists());
 
         let value = result.unwrap();
-        assert_eq!(
-            value.get("name").and_then(|v| v.as_str()),
-            Some("My Patch")
-        );
+        assert_eq!(value.get("name").and_then(|v| v.as_str()), Some("My Patch"));
         // Patches should be minimal - only name
         assert!(value.get("sprite").is_none());
         assert!(value.get("health").is_none());

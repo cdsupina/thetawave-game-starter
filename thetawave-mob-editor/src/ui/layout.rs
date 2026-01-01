@@ -8,12 +8,12 @@ use bevy_egui::{EguiContexts, egui};
 use crate::{
     data::{EditorSession, SpriteRegistry},
     file::{
-        append_sprite_to_assets_ron, DeleteMobEvent, FileTreeState, LoadMobEvent, NewMobEvent,
-        ReloadMobEvent, SaveMobEvent,
+        DeleteMobEvent, FileTreeState, LoadMobEvent, NewMobEvent, ReloadMobEvent, SaveMobEvent,
+        append_sprite_to_assets_ron,
     },
     plugin::{
-        EditorConfig, SpriteBrowserDialog, SpriteBrowserTarget, SpriteRegistrationDialog,
-        SpriteSelectionDialog, DecorationSelectionDialog,
+        DecorationSelectionDialog, EditorConfig, SpriteBrowserDialog, SpriteBrowserTarget,
+        SpriteRegistrationDialog, SpriteSelectionDialog,
     },
     preview::{PreviewSettings, PreviewState},
     states::EditorState,
@@ -39,9 +39,9 @@ const STATUS_LOG_EXPANDED_HEIGHT: f32 = 120.0;
 const STATUS_LOG_COLLAPSED_HEIGHT: f32 = 24.0;
 
 use super::{
-    file_panel_ui, properties_panel_ui, render_delete_dialog, toolbar_ui,
-    DeleteDialogState, ErrorDialog, UnsavedChangesDialog, ValidationDialog,
-    update_decoration_sprite, NewFolderDialog, NewMobDialog,
+    DeleteDialogState, ErrorDialog, NewFolderDialog, NewMobDialog, UnsavedChangesDialog,
+    ValidationDialog, file_panel_ui, properties_panel_ui, render_delete_dialog, toolbar_ui,
+    update_decoration_sprite,
 };
 
 /// Grouped message writers for the main UI system
@@ -101,12 +101,7 @@ pub fn main_ui_system(
     };
 
     // Top toolbar
-    toolbar_ui(
-        ctx,
-        &session,
-        &mut events.save,
-        &mut events.reload,
-    );
+    toolbar_ui(ctx, &session, &mut events.save, &mut events.reload);
 
     // Left panel - File browser
     egui::SidePanel::left("file_panel")
@@ -134,20 +129,25 @@ pub fn main_ui_system(
             .min_width(PROPERTIES_PANEL_MIN_WIDTH)
             .resizable(true)
             .show(ctx, |ui| {
-                panel_result = properties_panel_ui(ui, &mut session, &sprite_registry, &file_tree, &config);
+                panel_result =
+                    properties_panel_ui(ui, &mut session, &sprite_registry, &file_tree, &config);
             });
     }
 
     // Open sprite browser for main sprite
     if panel_result.open_sprite_browser {
         let allow_extended = session.can_use_extended_sprites(&config);
-        dialogs.sprite_browser.open_for_sprite(allow_extended, &config);
+        dialogs
+            .sprite_browser
+            .open_for_sprite(allow_extended, &config);
     }
 
     // Open sprite browser for decoration
     if let Some(decoration_index) = panel_result.open_decoration_browser {
         let allow_extended = session.can_use_extended_sprites(&config);
-        dialogs.sprite_browser.open_for_decoration(decoration_index, allow_extended, &config);
+        dialogs
+            .sprite_browser
+            .open_for_decoration(decoration_index, allow_extended, &config);
     }
 
     // Bottom status bar / log panel
@@ -178,21 +178,25 @@ pub fn main_ui_system(
 
                 // When collapsed, show last message
                 if !session.log.expanded
-                    && let Some(entry) = session.log.last() {
-                        ui.separator();
-                        ui.colored_label(entry.level.color(), &entry.text);
-                    }
+                    && let Some(entry) = session.log.last()
+                {
+                    ui.separator();
+                    ui.colored_label(entry.level.color(), &entry.text);
+                }
 
                 // Right-aligned expand/collapse and clear buttons
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     // Clear button (only when there are entries)
-                    if !session.log.is_empty()
-                        && ui.small_button("Clear").clicked() {
-                            session.log.clear();
-                        }
+                    if !session.log.is_empty() && ui.small_button("Clear").clicked() {
+                        session.log.clear();
+                    }
 
                     // Expand/collapse toggle
-                    let toggle_text = if session.log.expanded { "Collapse" } else { "Log" };
+                    let toggle_text = if session.log.expanded {
+                        "Collapse"
+                    } else {
+                        "Log"
+                    };
                     if ui.small_button(toggle_text).clicked() {
                         session.log.expanded = !session.log.expanded;
                     }
@@ -216,7 +220,11 @@ pub fn main_ui_system(
                                 } else {
                                     format!("{:.0}h ago", elapsed / 3600.0)
                                 };
-                                ui.label(egui::RichText::new(time_str).small().color(egui::Color32::GRAY));
+                                ui.label(
+                                    egui::RichText::new(time_str)
+                                        .small()
+                                        .color(egui::Color32::GRAY),
+                                );
                                 ui.colored_label(entry.level.color(), &entry.text);
                             });
                         }
@@ -261,18 +269,32 @@ pub fn main_ui_system(
                         ui.separator();
 
                         // Toggle buttons
-                        if ui.selectable_label(preview_settings.show_grid, "Grid").clicked() {
+                        if ui
+                            .selectable_label(preview_settings.show_grid, "Grid")
+                            .clicked()
+                        {
                             preview_settings.show_grid = !preview_settings.show_grid;
                         }
-                        if ui.selectable_label(preview_settings.show_colliders, "Colliders").clicked() {
+                        if ui
+                            .selectable_label(preview_settings.show_colliders, "Colliders")
+                            .clicked()
+                        {
                             preview_settings.show_colliders = !preview_settings.show_colliders;
                         }
-                        if ui.selectable_label(preview_settings.show_jointed_mobs, "Jointed").clicked() {
-                            preview_settings.show_jointed_mobs = !preview_settings.show_jointed_mobs;
+                        if ui
+                            .selectable_label(preview_settings.show_jointed_mobs, "Jointed")
+                            .clicked()
+                        {
+                            preview_settings.show_jointed_mobs =
+                                !preview_settings.show_jointed_mobs;
                             preview_state.needs_rebuild = true;
                         }
-                        if ui.selectable_label(preview_settings.show_joint_gizmos, "Joints").clicked() {
-                            preview_settings.show_joint_gizmos = !preview_settings.show_joint_gizmos;
+                        if ui
+                            .selectable_label(preview_settings.show_joint_gizmos, "Joints")
+                            .clicked()
+                        {
+                            preview_settings.show_joint_gizmos =
+                                !preview_settings.show_joint_gizmos;
                         }
 
                         ui.separator();
@@ -356,15 +378,16 @@ pub fn main_ui_system(
     render_new_folder_dialog(ctx, &mut dialogs.new_folder_dialog, &mut file_tree);
 
     // Render new mob dialog
-    render_new_mob_dialog(ctx, &mut dialogs.new_mob_dialog, &mut events.new, &mut file_tree);
+    render_new_mob_dialog(
+        ctx,
+        &mut dialogs.new_mob_dialog,
+        &mut events.new,
+        &mut file_tree,
+    );
 
     // Render sprite browser dialog
-    let browser_result = render_sprite_browser_dialog(
-        ctx,
-        &mut dialogs.sprite_browser,
-        &config,
-        &sprite_registry,
-    );
+    let browser_result =
+        render_sprite_browser_dialog(ctx, &mut dialogs.sprite_browser, &config, &sprite_registry);
 
     // Handle sprite browser selection result
     if let Some((asset_path, is_extended)) = browser_result {
@@ -450,7 +473,11 @@ fn render_validation_dialog(ctx: &egui::Context, dialog: &mut ValidationDialog) 
                 });
 
             ui.add_space(12.0);
-            ui.label(egui::RichText::new("Please fix these issues before saving.").small().color(egui::Color32::GRAY));
+            ui.label(
+                egui::RichText::new("Please fix these issues before saving.")
+                    .small()
+                    .color(egui::Color32::GRAY),
+            );
 
             ui.add_space(8.0);
             if ui.button("OK").clicked() {
@@ -480,7 +507,11 @@ fn render_unsaved_changes_dialog(
 
     // Determine dialog message based on action
     let is_exit = matches!(&dialog.pending_action, Some(UnsavedAction::Exit));
-    let title = if is_exit { "Exit with Unsaved Changes?" } else { "Unsaved Changes" };
+    let title = if is_exit {
+        "Exit with Unsaved Changes?"
+    } else {
+        "Unsaved Changes"
+    };
 
     egui::Window::new(title)
         .collapsible(false)
@@ -491,13 +522,21 @@ fn render_unsaved_changes_dialog(
 
             if let Some(path) = &session.current_path {
                 ui.add_space(4.0);
-                ui.label(egui::RichText::new(format!("File: {}", path.display())).small().color(egui::Color32::GRAY));
+                ui.label(
+                    egui::RichText::new(format!("File: {}", path.display()))
+                        .small()
+                        .color(egui::Color32::GRAY),
+                );
             }
 
             ui.add_space(12.0);
 
             ui.horizontal(|ui| {
-                let continue_text = if is_exit { "Save & Exit" } else { "Save & Continue" };
+                let continue_text = if is_exit {
+                    "Save & Exit"
+                } else {
+                    "Save & Continue"
+                };
                 if ui.button(continue_text).clicked() {
                     // Save first, then perform action
                     save_events.write(crate::file::SaveMobEvent { path: None });
@@ -505,7 +544,11 @@ fn render_unsaved_changes_dialog(
                     close_dialog = true;
                 }
 
-                let discard_text = if is_exit { "Exit Without Saving" } else { "Discard Changes" };
+                let discard_text = if is_exit {
+                    "Exit Without Saving"
+                } else {
+                    "Discard Changes"
+                };
                 if ui.button(discard_text).clicked() {
                     // Perform action without saving
                     action_to_take = dialog.pending_action.clone();
@@ -562,7 +605,7 @@ fn render_error_dialog(ctx: &egui::Context, dialog: &mut ErrorDialog) {
                                 ui.add(
                                     egui::TextEdit::multiline(&mut details.as_str())
                                         .font(egui::TextStyle::Monospace)
-                                        .desired_width(f32::INFINITY)
+                                        .desired_width(f32::INFINITY),
                                 );
                             });
                     });
@@ -613,9 +656,14 @@ fn render_new_folder_dialog(
                 }
 
                 let valid_name = !dialog.folder_name.trim().is_empty()
-                    && !dialog.folder_name.contains(['/', '\\', ':', '*', '?', '"', '<', '>', '|']);
+                    && !dialog
+                        .folder_name
+                        .contains(['/', '\\', ':', '*', '?', '"', '<', '>', '|']);
 
-                if ui.add_enabled(valid_name, egui::Button::new("Create")).clicked() {
+                if ui
+                    .add_enabled(valid_name, egui::Button::new("Create"))
+                    .clicked()
+                {
                     should_create = true;
                 }
             });
@@ -648,7 +696,11 @@ fn render_new_mob_dialog(
     let mut should_create = false;
     let mut should_close = false;
 
-    let title = if dialog.is_patch { "New Patch" } else { "New Mob" };
+    let title = if dialog.is_patch {
+        "New Patch"
+    } else {
+        "New Mob"
+    };
     let extension = if dialog.is_patch { "mobpatch" } else { "mob" };
 
     egui::Window::new(title)
@@ -676,9 +728,14 @@ fn render_new_mob_dialog(
                 }
 
                 let valid_name = !dialog.file_name.trim().is_empty()
-                    && !dialog.file_name.contains(['/', '\\', ':', '*', '?', '"', '<', '>', '|', '.']);
+                    && !dialog
+                        .file_name
+                        .contains(['/', '\\', ':', '*', '?', '"', '<', '>', '|', '.']);
 
-                if ui.add_enabled(valid_name, egui::Button::new("Create")).clicked() {
+                if ui
+                    .add_enabled(valid_name, egui::Button::new("Create"))
+                    .clicked()
+                {
                     should_create = true;
                 }
             });
@@ -760,7 +817,8 @@ fn render_registration_dialog(
                             continue;
                         };
 
-                        if let Err(e) = append_sprite_to_assets_ron(&assets_ron, clean_path, is_extended)
+                        if let Err(e) =
+                            append_sprite_to_assets_ron(&assets_ron, clean_path, is_extended)
                         {
                             session.log_error(format!("Error registering sprite: {}", e), time);
                         }
@@ -816,7 +874,11 @@ fn render_selection_dialog(
         .show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.label("Sprite:");
-                ui.label(egui::RichText::new(&dialog.display_name).monospace().strong());
+                ui.label(
+                    egui::RichText::new(&dialog.display_name)
+                        .monospace()
+                        .strong(),
+                );
             });
 
             ui.add_space(8.0);
@@ -826,10 +888,8 @@ fn render_selection_dialog(
             ui.horizontal(|ui| {
                 if ui.button("Yes, use sprite").clicked() {
                     // Set the sprite path in the mob
-                    let success = if let Some(mob) = session
-                        .current_mob
-                        .as_mut()
-                        .and_then(|v| v.as_table_mut())
+                    let success = if let Some(mob) =
+                        session.current_mob.as_mut().and_then(|v| v.as_table_mut())
                     {
                         mob.insert(
                             "sprite".to_string(),
@@ -838,7 +898,8 @@ fn render_selection_dialog(
                         session.check_modified();
 
                         // Also update merged preview for patches
-                        if let (Some(base), Some(patch)) = (&session.base_mob, &session.current_mob) {
+                        if let (Some(base), Some(patch)) = (&session.base_mob, &session.current_mob)
+                        {
                             let mut merged = base.clone();
                             crate::file::merge_toml_values(&mut merged, patch.clone());
                             session.merged_for_preview = Some(merged);
@@ -853,10 +914,8 @@ fn render_selection_dialog(
                     };
 
                     if success {
-                        session.log_success(
-                            format!("Sprite set to: {}", dialog.display_name),
-                            time,
-                        );
+                        session
+                            .log_success(format!("Sprite set to: {}", dialog.display_name), time);
                     } else {
                         session.log_error(
                             "Error: Could not set sprite - no mob loaded".to_string(),
@@ -871,10 +930,8 @@ fn render_selection_dialog(
                 }
 
                 if ui.button("No, just register").clicked() {
-                    session.log_success(
-                        format!("Sprite registered: {}", dialog.display_name),
-                        time,
-                    );
+                    session
+                        .log_success(format!("Sprite registered: {}", dialog.display_name), time);
 
                     dialog.show = false;
                     dialog.asset_path.clear();
@@ -895,7 +952,11 @@ fn render_sprite_info(ui: &mut egui::Ui, preview_state: &mut PreviewState) {
         if let Some(key) = &sprite_info.sprite_key {
             ui.label(egui::RichText::new(key).monospace());
         } else {
-            ui.label(egui::RichText::new("(none)").italics().color(egui::Color32::GRAY));
+            ui.label(
+                egui::RichText::new("(none)")
+                    .italics()
+                    .color(egui::Color32::GRAY),
+            );
         }
     });
 
@@ -913,7 +974,11 @@ fn render_sprite_info(ui: &mut egui::Ui, preview_state: &mut PreviewState) {
     if let Some(path) = &sprite_info.loaded_from {
         ui.horizontal(|ui| {
             ui.label("Source:");
-            ui.label(egui::RichText::new(path.display().to_string()).small().monospace());
+            ui.label(
+                egui::RichText::new(path.display().to_string())
+                    .small()
+                    .monospace(),
+            );
         });
     }
 
@@ -927,11 +992,15 @@ fn render_sprite_info(ui: &mut egui::Ui, preview_state: &mut PreviewState) {
                 } else {
                     egui::Color32::GRAY
                 };
-                ui.label(egui::RichText::new(path.display().to_string()).small().monospace().color(color));
+                ui.label(
+                    egui::RichText::new(path.display().to_string())
+                        .small()
+                        .monospace()
+                        .color(color),
+                );
             }
         });
     }
-
 }
 
 /// Render the decoration sprite selection confirmation dialog
@@ -953,7 +1022,11 @@ fn render_decoration_selection_dialog(
         .show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.label("Sprite:");
-                ui.label(egui::RichText::new(&dialog.display_name).monospace().strong());
+                ui.label(
+                    egui::RichText::new(&dialog.display_name)
+                        .monospace()
+                        .strong(),
+                );
             });
 
             ui.horizontal(|ui| {
@@ -982,7 +1055,11 @@ fn render_decoration_selection_dialog(
                     preview_state.needs_rebuild = true;
 
                     session.log_success(
-                        format!("Decoration {} sprite set to: {}", dialog.decoration_index + 1, dialog.display_name),
+                        format!(
+                            "Decoration {} sprite set to: {}",
+                            dialog.decoration_index + 1,
+                            dialog.display_name
+                        ),
                         time,
                     );
 
@@ -992,10 +1069,8 @@ fn render_decoration_selection_dialog(
                 }
 
                 if ui.button("No, just register").clicked() {
-                    session.log_success(
-                        format!("Sprite registered: {}", dialog.display_name),
-                        time,
-                    );
+                    session
+                        .log_success(format!("Sprite registered: {}", dialog.display_name), time);
 
                     dialog.show = false;
                     dialog.mob_path.clear();
@@ -1029,27 +1104,37 @@ fn render_sprite_browser_dialog(
             ui.label(
                 egui::RichText::new("Browse for an aseprite file to register in game.assets.ron")
                     .small()
-                    .color(egui::Color32::GRAY)
+                    .color(egui::Color32::GRAY),
             );
             ui.add_space(4.0);
             // Asset source tabs
             ui.horizontal(|ui| {
-                if ui.selectable_label(!dialog.browsing_extended, "📦 Base Assets").clicked() {
+                if ui
+                    .selectable_label(!dialog.browsing_extended, "📦 Base Assets")
+                    .clicked()
+                {
                     dialog.switch_assets_source(false, config);
                 }
 
                 if dialog.allow_extended
                     && config.extended_assets_dir.is_some()
-                        && ui.selectable_label(dialog.browsing_extended, "📂 Extended Assets").clicked() {
-                            dialog.switch_assets_source(true, config);
-                        }
+                    && ui
+                        .selectable_label(dialog.browsing_extended, "📂 Extended Assets")
+                        .clicked()
+                {
+                    dialog.switch_assets_source(true, config);
+                }
             });
 
             ui.separator();
 
             // Breadcrumb navigation
             ui.horizontal(|ui| {
-                let source_name = if dialog.browsing_extended { "extended" } else { "base" };
+                let source_name = if dialog.browsing_extended {
+                    "extended"
+                } else {
+                    "base"
+                };
                 if ui.small_button(source_name).clicked() {
                     dialog.current_path.clear();
                     dialog.scan_current_directory(config);
@@ -1073,9 +1158,10 @@ fn render_sprite_browser_dialog(
                 .show(ui, |ui| {
                     // Parent directory button
                     if !dialog.current_path.is_empty()
-                        && ui.selectable_label(false, "📁 ..").clicked() {
-                            dialog.navigate_up(config);
-                        }
+                        && ui.selectable_label(false, "📁 ..").clicked()
+                    {
+                        dialog.navigate_up(config);
+                    }
 
                     // List entries
                     let entries = dialog.entries.clone();
@@ -1084,7 +1170,8 @@ fn render_sprite_browser_dialog(
 
                         if entry.is_directory {
                             // Directory - double click to navigate
-                            let response = ui.selectable_label(is_selected, format!("📁 {}", entry.name));
+                            let response =
+                                ui.selectable_label(is_selected, format!("📁 {}", entry.name));
                             if response.double_clicked() {
                                 dialog.navigate_into(&entry.name, config);
                             }
@@ -1118,7 +1205,8 @@ fn render_sprite_browser_dialog(
 
             // Selected file info
             if let Some(selected) = &dialog.selected {
-                let file_name = selected.file_name()
+                let file_name = selected
+                    .file_name()
                     .map(|n| n.to_string_lossy().to_string())
                     .unwrap_or_default();
                 ui.horizontal(|ui| {
@@ -1126,7 +1214,11 @@ fn render_sprite_browser_dialog(
                     ui.label(egui::RichText::new(&file_name).monospace().strong());
                 });
             } else {
-                ui.label(egui::RichText::new("Click a sprite file to select it").italics().color(egui::Color32::GRAY));
+                ui.label(
+                    egui::RichText::new("Click a sprite file to select it")
+                        .italics()
+                        .color(egui::Color32::GRAY),
+                );
             }
 
             ui.separator();
@@ -1138,12 +1230,15 @@ fn render_sprite_browser_dialog(
                 }
 
                 let can_select = dialog.selected.is_some();
-                if ui.add_enabled(can_select, egui::Button::new("Register & Use")).clicked()
+                if ui
+                    .add_enabled(can_select, egui::Button::new("Register & Use"))
+                    .clicked()
                     && let Some(selected_path) = &dialog.selected
-                        && let Some(asset_path) = dialog.get_asset_path(selected_path, config) {
-                            result = Some((asset_path, dialog.browsing_extended));
-                            dialog.close();
-                        }
+                    && let Some(asset_path) = dialog.get_asset_path(selected_path, config)
+                {
+                    result = Some((asset_path, dialog.browsing_extended));
+                    dialog.close();
+                }
             });
         });
 

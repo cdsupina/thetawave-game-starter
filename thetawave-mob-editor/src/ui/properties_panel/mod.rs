@@ -187,9 +187,7 @@ pub fn properties_panel_ui(
 ///
 /// For regular .mob files, returns the mob data for both
 /// For .mobpatch files, returns merged data for display and patch-only data for checking
-fn get_display_tables(
-    session: &EditorSession,
-) -> Option<(toml::value::Table, toml::value::Table)> {
+fn get_display_tables(session: &EditorSession) -> Option<(toml::value::Table, toml::value::Table)> {
     let current_mob = session.current_mob.as_ref()?.as_table()?;
 
     if session.file_type == FileType::MobPatch {
@@ -280,8 +278,13 @@ fn render_general_properties(
                 .get("spawnable")
                 .and_then(|v| v.as_bool())
                 .unwrap_or(true);
-            match fields::render_bool_field(ui, "Spawnable:", spawnable, spawnable_patched, is_patch)
-            {
+            match fields::render_bool_field(
+                ui,
+                "Spawnable:",
+                spawnable,
+                spawnable_patched,
+                is_patch,
+            ) {
                 FieldResult::Changed(new_val) => {
                     set_field(session, "spawnable", toml::Value::Boolean(new_val));
                     session.is_modified = true;
@@ -338,8 +341,14 @@ fn render_combat_properties(
                 .get("health")
                 .and_then(|v| v.as_integer())
                 .unwrap_or(100) as i32;
-            match fields::render_int_field(ui, "Health:", health, 1..=10000, health_patched, is_patch)
-            {
+            match fields::render_int_field(
+                ui,
+                "Health:",
+                health,
+                1..=10000,
+                health_patched,
+                is_patch,
+            ) {
                 FieldResult::Changed(new_val) => {
                     set_field(session, "health", toml::Value::Integer(new_val as i64));
                     session.is_modified = true;
@@ -493,9 +502,10 @@ fn set_vec2_field(session: &mut EditorSession, key: &str, x: f32, y: f32) {
 pub fn update_decoration_sprite(session: &mut EditorSession, index: usize, sprite_path: &str) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
         && let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut())
-            && let Some(decoration) = decorations.get_mut(index).and_then(|v| v.as_array_mut())
-                && !decoration.is_empty() {
-                    decoration[0] = toml::Value::String(sprite_path.to_string());
-                }
+        && let Some(decoration) = decorations.get_mut(index).and_then(|v| v.as_array_mut())
+        && !decoration.is_empty()
+    {
+        decoration[0] = toml::Value::String(sprite_path.to_string());
+    }
     session.is_modified = true;
 }

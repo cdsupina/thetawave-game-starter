@@ -210,63 +210,77 @@ pub fn draw_spawner_gizmos(
 
     // Draw projectile spawners
     if let Some(proj_spawners) = mob.get("projectile_spawners").and_then(|v| v.as_table())
-        && let Some(spawners) = proj_spawners.get("spawners").and_then(|v| v.as_table()) {
-            for (key, spawner) in spawners {
-                let Some(s) = spawner.as_table() else {
-                    continue;
-                };
+        && let Some(spawners) = proj_spawners.get("spawners").and_then(|v| v.as_table())
+    {
+        for (key, spawner) in spawners {
+            let Some(s) = spawner.as_table() else {
+                continue;
+            };
 
-                let position = s
-                    .get("position")
-                    .and_then(|v| v.as_array())
-                    .map(|arr| {
-                        let x = arr.first().and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
-                        let y = arr.get(1).and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
-                        Vec2::new(x, y)
-                    })
-                    .unwrap_or(Vec2::ZERO);
+            let position = s
+                .get("position")
+                .and_then(|v| v.as_array())
+                .map(|arr| {
+                    let x = arr.first().and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
+                    let y = arr.get(1).and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
+                    Vec2::new(x, y)
+                })
+                .unwrap_or(Vec2::ZERO);
 
-                let rotation = s
-                    .get("rotation")
-                    .and_then(|v| v.as_float())
-                    .unwrap_or(0.0) as f32;
+            let rotation = s.get("rotation").and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
 
-                // Draw a small triangle pointing in the spawn direction
-                draw_spawner_indicator(&mut gizmos, position, rotation, Color::srgba(1.0, 0.5, 0.0, 0.8), key);
-            }
+            // Draw a small triangle pointing in the spawn direction
+            draw_spawner_indicator(
+                &mut gizmos,
+                position,
+                rotation,
+                Color::srgba(1.0, 0.5, 0.0, 0.8),
+                key,
+            );
         }
+    }
 
     // Draw mob spawners
     if let Some(mob_spawners) = mob.get("mob_spawners").and_then(|v| v.as_table())
-        && let Some(spawners) = mob_spawners.get("spawners").and_then(|v| v.as_table()) {
-            for (key, spawner) in spawners {
-                let Some(s) = spawner.as_table() else {
-                    continue;
-                };
+        && let Some(spawners) = mob_spawners.get("spawners").and_then(|v| v.as_table())
+    {
+        for (key, spawner) in spawners {
+            let Some(s) = spawner.as_table() else {
+                continue;
+            };
 
-                let position = s
-                    .get("position")
-                    .and_then(|v| v.as_array())
-                    .map(|arr| {
-                        let x = arr.first().and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
-                        let y = arr.get(1).and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
-                        Vec2::new(x, y)
-                    })
-                    .unwrap_or(Vec2::ZERO);
+            let position = s
+                .get("position")
+                .and_then(|v| v.as_array())
+                .map(|arr| {
+                    let x = arr.first().and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
+                    let y = arr.get(1).and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
+                    Vec2::new(x, y)
+                })
+                .unwrap_or(Vec2::ZERO);
 
-                let rotation = s
-                    .get("rotation")
-                    .and_then(|v| v.as_float())
-                    .unwrap_or(0.0) as f32;
+            let rotation = s.get("rotation").and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
 
-                // Draw a diamond for mob spawners
-                draw_spawner_indicator(&mut gizmos, position, rotation, Color::srgba(0.5, 0.0, 1.0, 0.8), key);
-            }
+            // Draw a diamond for mob spawners
+            draw_spawner_indicator(
+                &mut gizmos,
+                position,
+                rotation,
+                Color::srgba(0.5, 0.0, 1.0, 0.8),
+                key,
+            );
         }
+    }
 }
 
 /// Draw a spawner direction indicator
-fn draw_spawner_indicator(gizmos: &mut Gizmos, position: Vec2, rotation_deg: f32, color: Color, _key: &str) {
+fn draw_spawner_indicator(
+    gizmos: &mut Gizmos,
+    position: Vec2,
+    rotation_deg: f32,
+    color: Color,
+    _key: &str,
+) {
     let rotation = rotation_deg.to_radians();
     let size = 5.0;
 

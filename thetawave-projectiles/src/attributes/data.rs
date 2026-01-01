@@ -12,7 +12,18 @@ use thetawave_core::Faction;
 use thetawave_physics::ThetawaveCollider;
 
 #[derive(
-    Component, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, Reflect, Clone, EnumIter, AsRefStr, EnumString,
+    Component,
+    Debug,
+    Serialize,
+    Deserialize,
+    Eq,
+    PartialEq,
+    Hash,
+    Reflect,
+    Clone,
+    EnumIter,
+    AsRefStr,
+    EnumString,
 )]
 pub enum ProjectileType {
     Bullet,
@@ -215,8 +226,14 @@ impl Serialize for ProjectileSpawner {
         state.serialize_field("speed_multiplier", &self.speed_multiplier)?;
         state.serialize_field("damage_multiplier", &self.damage_multiplier)?;
         state.serialize_field("range_seconds_multiplier", &self.range_seconds_multiplier)?;
-        state.serialize_field("pre_spawn_animation_start_time", &self.pre_spawn_animation_start_time)?;
-        state.serialize_field("pre_spawn_animation_end_time", &self.pre_spawn_animation_end_time)?;
+        state.serialize_field(
+            "pre_spawn_animation_start_time",
+            &self.pre_spawn_animation_start_time,
+        )?;
+        state.serialize_field(
+            "pre_spawn_animation_end_time",
+            &self.pre_spawn_animation_end_time,
+        )?;
         state.serialize_field("count", &self.count)?;
         state.serialize_field("projectile_spread", &self.projectile_spread)?;
         state.end()

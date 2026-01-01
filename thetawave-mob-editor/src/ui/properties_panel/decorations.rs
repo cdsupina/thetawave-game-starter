@@ -8,7 +8,9 @@ use bevy_egui::egui;
 use crate::data::{EditorSession, SpriteRegistry, SpriteSource};
 use crate::plugin::EditorConfig;
 
-use super::fields::{render_patch_indicator, render_reset_button, INDENT_SPACING, INHERITED_COLOR, PATCHED_COLOR};
+use super::fields::{
+    INDENT_SPACING, INHERITED_COLOR, PATCHED_COLOR, render_patch_indicator, render_reset_button,
+};
 use super::update_decoration_sprite;
 
 /// Render a sprite picker dropdown
@@ -129,27 +131,30 @@ pub fn render_sprite_picker(
                             .small()
                             .color(egui::Color32::YELLOW),
                     );
-                    let _ = ui.selectable_label(true, sprite_registry.display_name_for(current_sprite));
+                    let _ =
+                        ui.selectable_label(true, sprite_registry.display_name_for(current_sprite));
                 }
             });
 
         // Apply change if different
         if selected_path != current_sprite
-            && let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-                if selected_path.is_empty() {
-                    mob.remove("sprite");
-                } else {
-                    mob.insert("sprite".to_string(), toml::Value::String(selected_path));
-                }
-                *modified = true;
+            && let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        {
+            if selected_path.is_empty() {
+                mob.remove("sprite");
+            } else {
+                mob.insert("sprite".to_string(), toml::Value::String(selected_path));
             }
+            *modified = true;
+        }
 
         // Reset button for patches
         if render_reset_button(ui, is_patched, is_patch)
-            && let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-                mob.remove("sprite");
-                *modified = true;
-            }
+            && let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+        {
+            mob.remove("sprite");
+            *modified = true;
+        }
     });
 
     // Browse & Register button row
@@ -158,7 +163,9 @@ pub fn render_sprite_picker(
 
         if ui
             .small_button("➕ Register New Sprite...")
-            .on_hover_text("Find an aseprite file not yet in the sprite list and add it to game.assets.ron")
+            .on_hover_text(
+                "Find an aseprite file not yet in the sprite list and add it to game.assets.ron",
+            )
             .clicked()
         {
             open_browser = true;
@@ -218,12 +225,12 @@ pub fn render_decorations_section(
                     // Add "Override" button to copy decorations to patch
                     if ui.button("Override").clicked()
                         && let Some(decorations) = display_table.get("decorations").cloned()
-                            && let Some(mob) =
-                                session.current_mob.as_mut().and_then(|v| v.as_table_mut())
-                            {
-                                mob.insert("decorations".to_string(), decorations);
-                                *modified = true;
-                            }
+                        && let Some(mob) =
+                            session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+                    {
+                        mob.insert("decorations".to_string(), decorations);
+                        *modified = true;
+                    }
                 } else if is_patch && is_patched {
                     ui.label(
                         egui::RichText::new("(overriding base)")
@@ -234,10 +241,10 @@ pub fn render_decorations_section(
                     if ui.button("Reset to base").clicked()
                         && let Some(mob) =
                             session.current_mob.as_mut().and_then(|v| v.as_table_mut())
-                        {
-                            mob.remove("decorations");
-                            *modified = true;
-                        }
+                    {
+                        mob.remove("decorations");
+                        *modified = true;
+                    }
                 }
             });
 
@@ -268,10 +275,7 @@ pub fn render_decorations_section(
 
                 let sprite_path = arr[0].as_str().unwrap_or("");
                 let position = if let Some(pos_arr) = arr[1].as_array() {
-                    let x = pos_arr
-                        .first()
-                        .and_then(|v| v.as_float())
-                        .unwrap_or(0.0) as f32;
+                    let x = pos_arr.first().and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
                     let y = pos_arr.get(1).and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
                     (x, y)
                 } else {
@@ -282,15 +286,18 @@ pub fn render_decorations_section(
                     ui.horizontal(|ui| {
                         ui.label(format!("#{}", i + 1));
                         if can_edit {
-                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                                if ui
-                                    .button(egui::RichText::new("🗑").color(egui::Color32::RED))
-                                    .on_hover_text("Delete decoration")
-                                    .clicked()
-                                {
-                                    delete_index = Some(i);
-                                }
-                            });
+                            ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::Center),
+                                |ui| {
+                                    if ui
+                                        .button(egui::RichText::new("🗑").color(egui::Color32::RED))
+                                        .on_hover_text("Delete decoration")
+                                        .clicked()
+                                    {
+                                        delete_index = Some(i);
+                                    }
+                                },
+                            );
                         }
                     });
 
@@ -507,27 +514,29 @@ fn render_decoration_sprite_picker(
 fn update_decoration_position(session: &mut EditorSession, index: usize, x: f32, y: f32) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
         && let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut())
-            && let Some(decoration) = decorations.get_mut(index).and_then(|v| v.as_array_mut())
-                && decoration.len() >= 2 {
-                    decoration[1] = toml::Value::Array(vec![
-                        toml::Value::Float(x as f64),
-                        toml::Value::Float(y as f64),
-                    ]);
-                }
+        && let Some(decoration) = decorations.get_mut(index).and_then(|v| v.as_array_mut())
+        && decoration.len() >= 2
+    {
+        decoration[1] = toml::Value::Array(vec![
+            toml::Value::Float(x as f64),
+            toml::Value::Float(y as f64),
+        ]);
+    }
 }
 
 /// Delete a decoration by index
 fn delete_decoration(session: &mut EditorSession, index: usize) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
-        && let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut()) {
-            if index < decorations.len() {
-                decorations.remove(index);
-            }
-            // Clean up empty array
-            if decorations.is_empty() {
-                mob.remove("decorations");
-            }
+        && let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut())
+    {
+        if index < decorations.len() {
+            decorations.remove(index);
         }
+        // Clean up empty array
+        if decorations.is_empty() {
+            mob.remove("decorations");
+        }
+    }
 }
 
 /// Add a new decoration with defaults

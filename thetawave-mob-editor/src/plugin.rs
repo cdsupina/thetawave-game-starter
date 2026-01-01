@@ -14,18 +14,20 @@ use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
 use crate::{
     data::{EditorSession, RegisteredSprite, SpriteRegistry, SpriteSource},
     file::{
-        parse_assets_ron, DeleteMobEvent, FileOperations, FileTreeState, LoadMobEvent,
-        NewMobEvent, ReloadMobEvent, SaveMobEvent,
+        DeleteMobEvent, FileOperations, FileTreeState, LoadMobEvent, NewMobEvent, ReloadMobEvent,
+        SaveMobEvent, parse_assets_ron,
     },
     preview::{
-        check_preview_update, draw_collider_gizmos, draw_grid, draw_joint_gizmos,
-        draw_spawner_gizmos, handle_camera_input, rebuild_jointed_mob_cache,
-        setup_preview_camera, update_decoration_positions, update_preview_camera,
-        update_preview_mob, update_preview_settings, JointedMobCache, PreviewSettings,
-        PreviewState,
+        JointedMobCache, PreviewSettings, PreviewState, check_preview_update, draw_collider_gizmos,
+        draw_grid, draw_joint_gizmos, draw_spawner_gizmos, handle_camera_input,
+        rebuild_jointed_mob_cache, setup_preview_camera, update_decoration_positions,
+        update_preview_camera, update_preview_mob, update_preview_settings,
     },
     states::{DialogState, EditingMode, EditorState},
-    ui::{main_ui_system, DeleteDialogState, ErrorDialog, NewFolderDialog, NewMobDialog, UnsavedChangesDialog, ValidationDialog},
+    ui::{
+        DeleteDialogState, ErrorDialog, NewFolderDialog, NewMobDialog, UnsavedChangesDialog,
+        ValidationDialog, main_ui_system,
+    },
 };
 
 /// Main plugin for the mob editor
@@ -102,7 +104,11 @@ impl Plugin for MobEditorPlugin {
         // Startup systems
         app.add_systems(
             Startup,
-            (setup_preview_camera, initial_scan_system, initial_sprite_scan),
+            (
+                setup_preview_camera,
+                initial_scan_system,
+                initial_sprite_scan,
+            ),
         );
 
         // UI system runs in EguiPrimaryContextPass schedule (required for egui input handling)
@@ -110,13 +116,7 @@ impl Plugin for MobEditorPlugin {
         app.add_systems(EguiPrimaryContextPass, main_ui_system);
 
         // Preview update systems (order matters)
-        app.add_systems(
-            Update,
-            (
-                update_preview_settings,
-                handle_camera_input,
-            ),
-        );
+        app.add_systems(Update, (update_preview_settings, handle_camera_input));
 
         app.add_systems(
             Update,
@@ -132,7 +132,12 @@ impl Plugin for MobEditorPlugin {
         // Gizmo systems (run after preview update)
         app.add_systems(
             Update,
-            (draw_grid, draw_collider_gizmos, draw_spawner_gizmos, draw_joint_gizmos),
+            (
+                draw_grid,
+                draw_collider_gizmos,
+                draw_spawner_gizmos,
+                draw_joint_gizmos,
+            ),
         );
 
         // Keyboard shortcuts and file operations run in Update
@@ -175,7 +180,10 @@ impl EditorConfig {
     /// Get the extended assets root directory (parent of mobs dir)
     /// e.g., "my-game/assets/mobs" -> "my-game/assets"
     pub fn extended_assets_root(&self) -> Option<PathBuf> {
-        self.extended_assets_dir.as_ref().and_then(|p| p.parent()).map(|p| p.to_path_buf())
+        self.extended_assets_dir
+            .as_ref()
+            .and_then(|p| p.parent())
+            .map(|p| p.to_path_buf())
     }
 
     /// Get the base game.assets.ron path
@@ -185,7 +193,8 @@ impl EditorConfig {
 
     /// Get the extended game.assets.ron path
     pub fn extended_assets_ron(&self) -> Option<PathBuf> {
-        self.extended_assets_root().map(|p| p.join("game.assets.ron"))
+        self.extended_assets_root()
+            .map(|p| p.join("game.assets.ron"))
     }
 
     /// Check if a path is within the extended assets directory.
@@ -204,7 +213,9 @@ impl EditorConfig {
 
     /// Resolve a sprite path to a filesystem path, checking extended first then base
     pub fn resolve_sprite_path(&self, relative_path: &str) -> Option<PathBuf> {
-        let relative_path = relative_path.strip_prefix("extended://").unwrap_or(relative_path);
+        let relative_path = relative_path
+            .strip_prefix("extended://")
+            .unwrap_or(relative_path);
         let cwd = std::env::current_dir().ok()?;
 
         // Try extended first if available
@@ -341,8 +352,17 @@ impl SpriteBrowserDialog {
     }
 
     /// Open the browser for decoration sprite selection
-    pub fn open_for_decoration(&mut self, index: usize, allow_extended: bool, config: &EditorConfig) {
-        self.open(SpriteBrowserTarget::Decoration(index), allow_extended, config);
+    pub fn open_for_decoration(
+        &mut self,
+        index: usize,
+        allow_extended: bool,
+        config: &EditorConfig,
+    ) {
+        self.open(
+            SpriteBrowserTarget::Decoration(index),
+            allow_extended,
+            config,
+        );
     }
 
     /// Close the browser
@@ -358,7 +378,11 @@ impl SpriteBrowserDialog {
         if self.browsing_extended {
             // extended_assets_dir is like "thetawave-test-game/assets/mobs"
             // We need "thetawave-test-game/assets"
-            config.extended_assets_dir.as_ref().and_then(|p| p.parent()).map(|p| p.to_path_buf())
+            config
+                .extended_assets_dir
+                .as_ref()
+                .and_then(|p| p.parent())
+                .map(|p| p.to_path_buf())
         } else {
             // base_assets_dir is like "assets/mobs"
             // We need "assets"
@@ -450,7 +474,11 @@ impl SpriteBrowserDialog {
     }
 
     /// Get the asset path for a selected file (relative to assets root)
-    pub fn get_asset_path(&self, file_path: &std::path::Path, config: &EditorConfig) -> Option<String> {
+    pub fn get_asset_path(
+        &self,
+        file_path: &std::path::Path,
+        config: &EditorConfig,
+    ) -> Option<String> {
         let assets_dir = self.get_assets_dir(config)?;
         let relative = file_path.strip_prefix(&assets_dir).ok()?;
         Some(relative.to_string_lossy().to_string())
@@ -463,7 +491,11 @@ fn initial_scan_system(
     config: Res<EditorConfig>,
     mut next_state: ResMut<NextState<EditorState>>,
 ) {
-    file_tree.scan_directories(&config.base_assets_dir, config.extended_assets_dir.as_ref(), config.show_base_mobs);
+    file_tree.scan_directories(
+        &config.base_assets_dir,
+        config.extended_assets_dir.as_ref(),
+        config.show_base_mobs,
+    );
     next_state.set(EditorState::Browsing);
 }
 
@@ -520,7 +552,9 @@ fn scan_sprite_registry(registry: &mut SpriteRegistry, config: &EditorConfig) {
     }
 
     // Sort by display name
-    registry.sprites.sort_by(|a, b| a.display_name.cmp(&b.display_name));
+    registry
+        .sprites
+        .sort_by(|a, b| a.display_name.cmp(&b.display_name));
     registry.needs_refresh = false;
 
     info!(
@@ -543,12 +577,19 @@ fn extract_sprite_display_name(path: &str) -> String {
 /// Check if file tree needs refresh
 fn check_file_refresh(mut file_tree: ResMut<FileTreeState>, config: Res<EditorConfig>) {
     if file_tree.needs_refresh {
-        file_tree.scan_directories(&config.base_assets_dir, config.extended_assets_dir.as_ref(), config.show_base_mobs);
+        file_tree.scan_directories(
+            &config.base_assets_dir,
+            config.extended_assets_dir.as_ref(),
+            config.show_base_mobs,
+        );
     }
 }
 
 /// Check if sprite registry needs refresh
-fn check_sprite_registry_refresh(mut sprite_registry: ResMut<SpriteRegistry>, config: Res<EditorConfig>) {
+fn check_sprite_registry_refresh(
+    mut sprite_registry: ResMut<SpriteRegistry>,
+    config: Res<EditorConfig>,
+) {
     if sprite_registry.needs_refresh {
         scan_sprite_registry(&mut sprite_registry, &config);
     }
@@ -620,10 +661,7 @@ fn handle_save_mob(
 
     for event in events.read() {
         // Clone the path to avoid borrow checker issues
-        let path = event
-            .path
-            .clone()
-            .or_else(|| session.current_path.clone());
+        let path = event.path.clone().or_else(|| session.current_path.clone());
 
         let Some(path) = path else {
             session.log_warning("No file path specified", &time);
@@ -682,21 +720,23 @@ fn find_unregistered_sprites(mob: &toml::Value, registry: &SpriteRegistry) -> Ve
 
     // Check main sprite
     if let Some(sprite) = mob.get("sprite").and_then(|v| v.as_str())
-        && !sprite.is_empty() && !registry.is_registered(sprite) {
-            unregistered.push(sprite.to_string());
-        }
+        && !sprite.is_empty()
+        && !registry.is_registered(sprite)
+    {
+        unregistered.push(sprite.to_string());
+    }
 
     // Check decorations
     if let Some(decorations) = mob.get("decorations").and_then(|v| v.as_array()) {
         for dec in decorations {
             if let Some(arr) = dec.as_array()
                 && let Some(sprite) = arr.first().and_then(|v| v.as_str())
-                    && !sprite.is_empty()
-                        && !registry.is_registered(sprite)
-                        && !unregistered.contains(&sprite.to_string())
-                    {
-                        unregistered.push(sprite.to_string());
-                    }
+                && !sprite.is_empty()
+                && !registry.is_registered(sprite)
+                && !unregistered.contains(&sprite.to_string())
+            {
+                unregistered.push(sprite.to_string());
+            }
         }
     }
 
@@ -788,17 +828,15 @@ fn handle_keyboard_shortcuts(
 
     if ctrl {
         // Ctrl+S - Save
-        if keys.just_pressed(KeyCode::KeyS)
-            && session.current_path.is_some() && session.is_modified {
-                save_events.write(SaveMobEvent { path: None });
-            }
+        if keys.just_pressed(KeyCode::KeyS) && session.current_path.is_some() && session.is_modified
+        {
+            save_events.write(SaveMobEvent { path: None });
+        }
 
         // Ctrl+R - Reload
-        if keys.just_pressed(KeyCode::KeyR)
-            && session.current_path.is_some() {
-                reload_events.write(ReloadMobEvent);
-            }
-
+        if keys.just_pressed(KeyCode::KeyR) && session.current_path.is_some() {
+            reload_events.write(ReloadMobEvent);
+        }
     }
 }
 

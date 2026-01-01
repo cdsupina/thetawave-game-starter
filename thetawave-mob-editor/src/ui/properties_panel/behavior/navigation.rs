@@ -15,10 +15,9 @@ pub fn get_behavior_node_mut<'a>(
         let node_type = table.get("type").and_then(|v| v.as_str())?;
 
         current = match node_type {
-            "Forever" | "Sequence" | "Fallback" => table
-                .get_mut("children")?
-                .as_array_mut()?
-                .get_mut(index)?,
+            "Forever" | "Sequence" | "Fallback" => {
+                table.get_mut("children")?.as_array_mut()?.get_mut(index)?
+            }
             "While" => {
                 if index == 0 {
                     table.get_mut("condition")?

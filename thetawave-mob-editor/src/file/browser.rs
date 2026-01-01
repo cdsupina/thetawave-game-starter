@@ -49,7 +49,12 @@ pub struct FileTreeState {
 
 impl FileTreeState {
     /// Scan the mobs directories and build the file tree
-    pub fn scan_directories(&mut self, base_dir: &PathBuf, extended_dir: Option<&PathBuf>, show_base_mobs: bool) {
+    pub fn scan_directories(
+        &mut self,
+        base_dir: &PathBuf,
+        extended_dir: Option<&PathBuf>,
+        show_base_mobs: bool,
+    ) {
         self.roots.clear();
 
         // Scan base assets directory (only if show_base_mobs is true)
@@ -66,9 +71,14 @@ impl FileTreeState {
         if let Some(ext_dir) = extended_dir {
             // Create the directory if it doesn't exist
             if !ext_dir.exists()
-                && let Err(e) = std::fs::create_dir_all(ext_dir) {
-                    bevy::log::warn!("Failed to create extended assets directory {:?}: {}", ext_dir, e);
-                }
+                && let Err(e) = std::fs::create_dir_all(ext_dir)
+            {
+                bevy::log::warn!(
+                    "Failed to create extended assets directory {:?}: {}",
+                    ext_dir,
+                    e
+                );
+            }
 
             if ext_dir.exists() {
                 let mut ext_root = FileNode::new_directory("extended".to_string(), ext_dir.clone());

@@ -10,8 +10,8 @@ use thetawave_projectiles::ProjectileType;
 use crate::data::EditorSession;
 
 use super::fields::{
-    render_float_field, render_patch_indicator, render_reset_button, render_string_field,
-    render_vec2_field, FieldResult, INHERITED_COLOR, PATCHED_COLOR,
+    FieldResult, INHERITED_COLOR, PATCHED_COLOR, render_float_field, render_patch_indicator,
+    render_reset_button, render_string_field, render_vec2_field,
 };
 
 /// Check if a specific spawner field is patched
@@ -89,30 +89,31 @@ fn remove_spawner_field(
     field: &str,
 ) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
-        && let Some(spawners_section) = mob.get_mut(spawner_type).and_then(|v| v.as_table_mut()) {
-            if let Some(spawners) = spawners_section
-                .get_mut("spawners")
+        && let Some(spawners_section) = mob.get_mut(spawner_type).and_then(|v| v.as_table_mut())
+    {
+        if let Some(spawners) = spawners_section
+            .get_mut("spawners")
+            .and_then(|v| v.as_table_mut())
+        {
+            if let Some(spawner) = spawners
+                .get_mut(spawner_name)
                 .and_then(|v| v.as_table_mut())
             {
-                if let Some(spawner) = spawners
-                    .get_mut(spawner_name)
-                    .and_then(|v| v.as_table_mut())
-                {
-                    spawner.remove(field);
+                spawner.remove(field);
 
-                    // Clean up empty tables
-                    if spawner.is_empty() {
-                        spawners.remove(spawner_name);
-                    }
-                }
-                if spawners.is_empty() {
-                    spawners_section.remove("spawners");
+                // Clean up empty tables
+                if spawner.is_empty() {
+                    spawners.remove(spawner_name);
                 }
             }
-            if spawners_section.is_empty() {
-                mob.remove(spawner_type);
+            if spawners.is_empty() {
+                spawners_section.remove("spawners");
             }
         }
+        if spawners_section.is_empty() {
+            mob.remove(spawner_type);
+        }
+    }
 }
 
 /// Render the projectile spawners section
@@ -361,7 +362,10 @@ fn render_projectile_spawner_fields(
             .show_ui(ui, |ui| {
                 for ptype in ProjectileType::iter() {
                     let ptype_str = ptype.as_ref();
-                    if ui.selectable_label(selected == ptype_str, ptype_str).clicked() {
+                    if ui
+                        .selectable_label(selected == ptype_str, ptype_str)
+                        .clicked()
+                    {
                         selected = ptype_str.to_string();
                     }
                 }
@@ -547,8 +551,7 @@ fn render_mob_spawner_fields(
     ui.separator();
 
     // Timer
-    let field_patched =
-        is_spawner_field_patched(patch_table, "mob_spawners", spawner_key, "timer");
+    let field_patched = is_spawner_field_patched(patch_table, "mob_spawners", spawner_key, "timer");
     let timer = spawner
         .get("timer")
         .and_then(|v| v.as_float())
@@ -782,11 +785,7 @@ fn add_new_mob_spawner(session: &mut EditorSession, display_table: &toml::value:
                 toml::Value::Table(toml::value::Table::new()),
             );
         }
-        let ms = mob
-            .get_mut("mob_spawners")
-            .unwrap()
-            .as_table_mut()
-            .unwrap();
+        let ms = mob.get_mut("mob_spawners").unwrap().as_table_mut().unwrap();
         if !ms.contains_key("spawners") {
             ms.insert(
                 "spawners".to_string(),
@@ -801,22 +800,23 @@ fn add_new_mob_spawner(session: &mut EditorSession, display_table: &toml::value:
 /// Delete a spawner by name
 fn delete_spawner_by_name(session: &mut EditorSession, spawner_type: &str, name: &str) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
-        && let Some(spawners_section) = mob.get_mut(spawner_type).and_then(|v| v.as_table_mut()) {
-            if let Some(spawners) = spawners_section
-                .get_mut("spawners")
-                .and_then(|v| v.as_table_mut())
-            {
-                spawners.remove(name);
+        && let Some(spawners_section) = mob.get_mut(spawner_type).and_then(|v| v.as_table_mut())
+    {
+        if let Some(spawners) = spawners_section
+            .get_mut("spawners")
+            .and_then(|v| v.as_table_mut())
+        {
+            spawners.remove(name);
 
-                // Clean up empty tables
-                if spawners.is_empty() {
-                    spawners_section.remove("spawners");
-                }
-            }
-            if spawners_section.is_empty() {
-                mob.remove(spawner_type);
+            // Clean up empty tables
+            if spawners.is_empty() {
+                spawners_section.remove("spawners");
             }
         }
+        if spawners_section.is_empty() {
+            mob.remove(spawner_type);
+        }
+    }
 }
 
 /// Rename a spawner
@@ -828,17 +828,17 @@ fn rename_spawner_by_name(
 ) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
         && let Some(spawners_section) = mob.get_mut(spawner_type).and_then(|v| v.as_table_mut())
-            && let Some(spawners) = spawners_section
-                .get_mut("spawners")
-                .and_then(|v| v.as_table_mut())
-            {
-                // Check if new name already exists
-                if spawners.contains_key(new_name) {
-                    return; // Don't overwrite existing spawner
-                }
-                // Move the spawner data to the new key
-                if let Some(data) = spawners.remove(old_name) {
-                    spawners.insert(new_name.to_string(), data);
-                }
-            }
+        && let Some(spawners) = spawners_section
+            .get_mut("spawners")
+            .and_then(|v| v.as_table_mut())
+    {
+        // Check if new name already exists
+        if spawners.contains_key(new_name) {
+            return; // Don't overwrite existing spawner
+        }
+        // Move the spawner data to the new key
+        if let Some(data) = spawners.remove(old_name) {
+            spawners.insert(new_name.to_string(), data);
+        }
+    }
 }

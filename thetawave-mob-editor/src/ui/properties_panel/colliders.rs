@@ -7,7 +7,7 @@ use bevy_egui::egui;
 
 use crate::data::EditorSession;
 
-use super::fields::{render_patch_indicator, INHERITED_COLOR, PATCHED_COLOR};
+use super::fields::{INHERITED_COLOR, PATCHED_COLOR, render_patch_indicator};
 
 /// Render the colliders section of the properties panel
 ///
@@ -51,12 +51,12 @@ pub fn render_colliders_section(
                     // "Override" copies base colliders into patch, enabling editing
                     if ui.button("Override").clicked()
                         && let Some(colliders) = display_table.get("colliders").cloned()
-                            && let Some(mob) =
-                                session.current_mob.as_mut().and_then(|v| v.as_table_mut())
-                            {
-                                mob.insert("colliders".to_string(), colliders);
-                                *modified = true;
-                            }
+                        && let Some(mob) =
+                            session.current_mob.as_mut().and_then(|v| v.as_table_mut())
+                    {
+                        mob.insert("colliders".to_string(), colliders);
+                        *modified = true;
+                    }
                 } else if is_patch && is_patched {
                     // Patch file has its own colliders - editable
                     ui.label(
@@ -68,10 +68,10 @@ pub fn render_colliders_section(
                     if ui.button("Reset to base").clicked()
                         && let Some(mob) =
                             session.current_mob.as_mut().and_then(|v| v.as_table_mut())
-                        {
-                            mob.remove("colliders");
-                            *modified = true;
-                        }
+                    {
+                        mob.remove("colliders");
+                        *modified = true;
+                    }
                 }
             });
 
@@ -148,10 +148,8 @@ pub fn render_colliders_section(
                                     } else if let Some(dims) =
                                         shape.get("Rectangle").and_then(|v| v.as_array())
                                     {
-                                        let w = dims
-                                            .first()
-                                            .and_then(|v| v.as_float())
-                                            .unwrap_or(10.0);
+                                        let w =
+                                            dims.first().and_then(|v| v.as_float()).unwrap_or(10.0);
                                         let h =
                                             dims.get(1).and_then(|v| v.as_float()).unwrap_or(10.0);
                                         ui.label("Shape: Rectangle");
@@ -222,7 +220,9 @@ pub fn render_colliders_section(
                                             )
                                             .changed();
                                         if x_changed || y_changed {
-                                            update_collider_position(session, i, x as f64, y as f64);
+                                            update_collider_position(
+                                                session, i, x as f64, y as f64,
+                                            );
                                             *modified = true;
                                         }
                                     });
@@ -304,9 +304,10 @@ where
 {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
         && let Some(colliders) = mob.get_mut("colliders").and_then(|v| v.as_array_mut())
-            && let Some(collider) = colliders.get_mut(index).and_then(|v| v.as_table_mut()) {
-                f(collider);
-            }
+        && let Some(collider) = colliders.get_mut(index).and_then(|v| v.as_table_mut())
+    {
+        f(collider);
+    }
 }
 
 /// Helper to mutate a collider's shape at a specific index
@@ -338,10 +339,7 @@ fn update_collider_rectangle_dims(
     with_collider_shape_mut(session, index, |shape| {
         shape.insert(
             "Rectangle".to_string(),
-            toml::Value::Array(vec![
-                toml::Value::Float(width),
-                toml::Value::Float(height),
-            ]),
+            toml::Value::Array(vec![toml::Value::Float(width), toml::Value::Float(height)]),
         );
     });
 }
@@ -414,9 +412,10 @@ fn add_new_collider(session: &mut EditorSession, shape_type: &str) {
 fn delete_collider(session: &mut EditorSession, index: usize) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
         if let Some(colliders) = mob.get_mut("colliders").and_then(|v| v.as_array_mut())
-            && index < colliders.len() {
-                colliders.remove(index);
-            }
+            && index < colliders.len()
+        {
+            colliders.remove(index);
+        }
 
         // Remove empty colliders array to revert to base inheritance (for patches)
         if mob

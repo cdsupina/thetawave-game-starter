@@ -179,45 +179,48 @@ pub fn validate_mob(mob: &toml::Value, is_patch: bool) -> ValidationResult {
     if let Some(colliders) = table.get("colliders").and_then(|v| v.as_array()) {
         for (i, collider) in colliders.iter().enumerate() {
             if let Some(table) = collider.as_table()
-                && let Some(shape) = table.get("shape").and_then(|v| v.as_table()) {
-                    // Check Rectangle dimensions
-                    if let Some(dims) = shape.get("Rectangle").and_then(|v| v.as_array()) {
-                        for (j, dim) in dims.iter().enumerate() {
-                            if let Some(v) = dim.as_float() {
-                                if v <= 0.0 {
-                                    result.add_error(
-                                        format!("colliders[{}].shape.Rectangle[{}]", i, j),
-                                        "Collider dimension must be positive",
-                                    );
-                                }
-                            } else if let Some(v) = dim.as_integer()
-                                && v <= 0 {
-                                    result.add_error(
-                                        format!("colliders[{}].shape.Rectangle[{}]", i, j),
-                                        "Collider dimension must be positive",
-                                    );
-                                }
+                && let Some(shape) = table.get("shape").and_then(|v| v.as_table())
+            {
+                // Check Rectangle dimensions
+                if let Some(dims) = shape.get("Rectangle").and_then(|v| v.as_array()) {
+                    for (j, dim) in dims.iter().enumerate() {
+                        if let Some(v) = dim.as_float() {
+                            if v <= 0.0 {
+                                result.add_error(
+                                    format!("colliders[{}].shape.Rectangle[{}]", i, j),
+                                    "Collider dimension must be positive",
+                                );
+                            }
+                        } else if let Some(v) = dim.as_integer()
+                            && v <= 0
+                        {
+                            result.add_error(
+                                format!("colliders[{}].shape.Rectangle[{}]", i, j),
+                                "Collider dimension must be positive",
+                            );
                         }
                     }
+                }
 
-                    // Check Ball radius
-                    if let Some(radius) = shape.get("Ball") {
-                        if let Some(r) = radius.as_float() {
-                            if r <= 0.0 {
-                                result.add_error(
-                                    format!("colliders[{}].shape.Ball", i),
-                                    "Ball radius must be positive",
-                                );
-                            }
-                        } else if let Some(r) = radius.as_integer()
-                            && r <= 0 {
-                                result.add_error(
-                                    format!("colliders[{}].shape.Ball", i),
-                                    "Ball radius must be positive",
-                                );
-                            }
+                // Check Ball radius
+                if let Some(radius) = shape.get("Ball") {
+                    if let Some(r) = radius.as_float() {
+                        if r <= 0.0 {
+                            result.add_error(
+                                format!("colliders[{}].shape.Ball", i),
+                                "Ball radius must be positive",
+                            );
+                        }
+                    } else if let Some(r) = radius.as_integer()
+                        && r <= 0
+                    {
+                        result.add_error(
+                            format!("colliders[{}].shape.Ball", i),
+                            "Ball radius must be positive",
+                        );
                     }
                 }
+            }
         }
     }
 
@@ -294,17 +297,20 @@ impl EditorSession {
 
     /// Log a success message
     pub fn log_success(&mut self, message: impl Into<String>, time: &Time) {
-        self.log.push(message, StatusLevel::Success, time.elapsed_secs_f64());
+        self.log
+            .push(message, StatusLevel::Success, time.elapsed_secs_f64());
     }
 
     /// Log a warning message
     pub fn log_warning(&mut self, message: impl Into<String>, time: &Time) {
-        self.log.push(message, StatusLevel::Warning, time.elapsed_secs_f64());
+        self.log
+            .push(message, StatusLevel::Warning, time.elapsed_secs_f64());
     }
 
     /// Log an error message
     pub fn log_error(&mut self, message: impl Into<String>, time: &Time) {
-        self.log.push(message, StatusLevel::Error, time.elapsed_secs_f64());
+        self.log
+            .push(message, StatusLevel::Error, time.elapsed_secs_f64());
     }
 
     /// Check if the current file is from the extended assets directory
@@ -330,7 +336,10 @@ impl EditorSession {
         // Default sprite path - user should update this
         table.insert(
             "sprite".to_string(),
-            toml::Value::String(format!("media/aseprite/{}_mob.aseprite", name.to_lowercase().replace(' ', "_"))),
+            toml::Value::String(format!(
+                "media/aseprite/{}_mob.aseprite",
+                name.to_lowercase().replace(' ', "_")
+            )),
         );
         table.insert("spawnable".to_string(), toml::Value::Boolean(true));
         table.insert("health".to_string(), toml::Value::Integer(50));
@@ -340,10 +349,7 @@ impl EditorSession {
         let mut shape = toml::value::Table::new();
         shape.insert(
             "Rectangle".to_string(),
-            toml::Value::Array(vec![
-                toml::Value::Float(10.0),
-                toml::Value::Float(10.0),
-            ]),
+            toml::Value::Array(vec![toml::Value::Float(10.0), toml::Value::Float(10.0)]),
         );
         collider.insert("shape".to_string(), toml::Value::Table(shape));
         collider.insert(
@@ -363,7 +369,9 @@ impl EditorSession {
     /// Get the mob data to use for preview rendering
     /// Returns merged data for .mobpatch files, or current_mob for .mob files
     pub fn mob_for_preview(&self) -> Option<&toml::Value> {
-        self.merged_for_preview.as_ref().or(self.current_mob.as_ref())
+        self.merged_for_preview
+            .as_ref()
+            .or(self.current_mob.as_ref())
     }
 }
 
@@ -393,7 +401,11 @@ mod tests {
     fn validate_mob_valid() {
         let mob = valid_mob();
         let result = validate_mob(&mob, false);
-        assert!(!result.has_errors(), "Valid mob should pass: {:?}", result.errors);
+        assert!(
+            !result.has_errors(),
+            "Valid mob should pass: {:?}",
+            result.errors
+        );
     }
 
     #[test]
@@ -424,9 +436,12 @@ mod tests {
 
         let result = validate_mob(&mob, false);
         assert!(result.has_errors());
-        assert!(result.errors.iter().any(|e|
-            e.field_path == "sprite" && e.message.contains("empty")
-        ));
+        assert!(
+            result
+                .errors
+                .iter()
+                .any(|e| e.field_path == "sprite" && e.message.contains("empty"))
+        );
     }
 
     #[test]
@@ -442,9 +457,12 @@ mod tests {
 
         let result = validate_mob(&mob, false);
         assert!(result.has_errors());
-        assert!(result.errors.iter().any(|e|
-            e.field_path == "health" && e.message.contains("required")
-        ));
+        assert!(
+            result
+                .errors
+                .iter()
+                .any(|e| e.field_path == "health" && e.message.contains("required"))
+        );
     }
 
     #[test]
@@ -461,9 +479,12 @@ mod tests {
 
         let result = validate_mob(&mob, false);
         assert!(result.has_errors());
-        assert!(result.errors.iter().any(|e|
-            e.field_path == "health" && e.message.contains("positive")
-        ));
+        assert!(
+            result
+                .errors
+                .iter()
+                .any(|e| e.field_path == "health" && e.message.contains("positive"))
+        );
     }
 
     #[test]
@@ -501,9 +522,12 @@ mod tests {
 
         let result = validate_mob(&mob, false);
         assert!(result.has_errors());
-        assert!(result.errors.iter().any(|e|
-            e.field_path.contains("Rectangle") && e.message.contains("positive")
-        ));
+        assert!(
+            result
+                .errors
+                .iter()
+                .any(|e| e.field_path.contains("Rectangle") && e.message.contains("positive"))
+        );
     }
 
     #[test]
@@ -524,9 +548,12 @@ mod tests {
 
         let result = validate_mob(&mob, false);
         assert!(result.has_errors());
-        assert!(result.errors.iter().any(|e|
-            e.field_path.contains("Ball") && e.message.contains("positive")
-        ));
+        assert!(
+            result
+                .errors
+                .iter()
+                .any(|e| e.field_path.contains("Ball") && e.message.contains("positive"))
+        );
     }
 
     #[test]
@@ -562,7 +589,11 @@ mod tests {
         let result = validate_mob(&mob, false);
         assert!(result.has_errors());
         // Should have errors for: missing sprite, missing health, two negative dimensions
-        assert!(result.errors.len() >= 3, "Expected at least 3 errors, got {}", result.errors.len());
+        assert!(
+            result.errors.len() >= 3,
+            "Expected at least 3 errors, got {}",
+            result.errors.len()
+        );
     }
 
     #[test]
@@ -583,7 +614,10 @@ mod tests {
         .unwrap();
 
         let result = validate_mob(&mob, false);
-        assert!(!result.has_errors(), "Non-spawnable mob without health should be valid");
+        assert!(
+            !result.has_errors(),
+            "Non-spawnable mob without health should be valid"
+        );
     }
 
     #[test]
@@ -671,10 +705,9 @@ mod tests {
 
         // Modify the mob
         if let Some(mob) = &mut session.current_mob {
-            mob.as_table_mut().unwrap().insert(
-                "health".to_string(),
-                toml::Value::Integer(999),
-            );
+            mob.as_table_mut()
+                .unwrap()
+                .insert("health".to_string(), toml::Value::Integer(999));
         }
         session.check_modified();
         assert!(session.is_modified);
@@ -711,7 +744,12 @@ mod tests {
 
         let result = validate_mob(&mob, false);
         assert!(result.has_errors());
-        assert!(result.errors.iter().any(|e| e.field_path.contains("Rectangle")));
+        assert!(
+            result
+                .errors
+                .iter()
+                .any(|e| e.field_path.contains("Rectangle"))
+        );
     }
 
     #[test]
@@ -732,7 +770,10 @@ mod tests {
         .unwrap();
 
         let result = validate_mob(&mob, false);
-        assert!(!result.has_errors(), "Positive integer dimensions should be valid");
+        assert!(
+            !result.has_errors(),
+            "Positive integer dimensions should be valid"
+        );
     }
 
     #[test]
@@ -793,7 +834,10 @@ mod tests {
         .unwrap();
 
         let result = validate_mob(&mob, false);
-        assert!(!result.has_errors(), "Positive integer ball radius should be valid");
+        assert!(
+            !result.has_errors(),
+            "Positive integer ball radius should be valid"
+        );
     }
 
     #[test]
@@ -825,7 +869,10 @@ mod tests {
         .unwrap();
 
         let result = validate_mob(&mob, false);
-        assert!(!result.has_errors(), "Mobs without colliders should be valid");
+        assert!(
+            !result.has_errors(),
+            "Mobs without colliders should be valid"
+        );
     }
 
     #[test]

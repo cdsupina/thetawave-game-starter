@@ -69,7 +69,8 @@ impl PreviewSettings {
     pub fn update(&mut self, dt: f32) {
         let smoothing = 10.0 * dt;
         self.zoom = self.zoom + (self.target_zoom - self.zoom) * smoothing.min(1.0);
-        self.pan_offset = self.pan_offset + (self.target_pan - self.pan_offset) * smoothing.min(1.0);
+        self.pan_offset =
+            self.pan_offset + (self.target_pan - self.pan_offset) * smoothing.min(1.0);
     }
 }
 
@@ -108,10 +109,7 @@ pub fn update_preview_camera(
 }
 
 /// System to update preview settings (called before camera update)
-pub fn update_preview_settings(
-    mut settings: ResMut<PreviewSettings>,
-    time: Res<Time>,
-) {
+pub fn update_preview_settings(mut settings: ResMut<PreviewSettings>, time: Res<Time>) {
     settings.update(time.delta_secs());
 }
 
@@ -125,10 +123,13 @@ pub fn handle_camera_input(
     mut contexts: EguiContexts,
 ) {
     // Check if egui has any popup open (like dropdown menus)
-    let egui_wants_scroll = contexts.ctx_mut().map(|ctx| {
-        // Check if any popup is open (dropdowns, menus, etc.)
-        bevy_egui::egui::Popup::is_any_open(ctx)
-    }).unwrap_or(false);
+    let egui_wants_scroll = contexts
+        .ctx_mut()
+        .map(|ctx| {
+            // Check if any popup is open (dropdowns, menus, etc.)
+            bevy_egui::egui::Popup::is_any_open(ctx)
+        })
+        .unwrap_or(false);
 
     if !egui_wants_scroll {
         // Zoom with scroll wheel

@@ -1,14 +1,14 @@
 //! Type-specific rendering functions for behavior tree nodes.
 
 use bevy_egui::egui;
-use thetawave_mobs::{BehaviorNodeType, MobBehaviorCategory, MobBehaviorVariant, BY_CATEGORY};
+use thetawave_mobs::{BY_CATEGORY, BehaviorNodeType, MobBehaviorCategory, MobBehaviorVariant};
 
 use crate::data::EditorSession;
 
 use super::super::fields::{INDENT_SPACING, INHERITED_COLOR};
 use super::action_ops::{
-    add_action_behavior, change_action_behavior_type, delete_action_behavior,
-    move_action_behavior, remove_action_behavior_param, set_action_behavior_param,
+    add_action_behavior, change_action_behavior_type, delete_action_behavior, move_action_behavior,
+    remove_action_behavior_param, set_action_behavior_param,
 };
 use super::navigation::set_behavior_node_field;
 use super::transmit_ops::{
@@ -80,7 +80,15 @@ pub fn render_control_node(
     for (i, child) in children.iter().enumerate() {
         let mut child_path = path.to_vec();
         child_path.push(i);
-        render_fn(ui, session, child, &child_path, can_edit, depth + 1, modified);
+        render_fn(
+            ui,
+            session,
+            child,
+            &child_path,
+            can_edit,
+            depth + 1,
+            modified,
+        );
     }
 
     if can_edit && ui.button("+ Add Child").clicked() {
@@ -113,7 +121,15 @@ pub fn render_while_node(
     if let Some(condition) = table.get("condition") {
         let mut cond_path = path.to_vec();
         cond_path.push(0); // Use index 0 for condition
-        render_fn(ui, session, condition, &cond_path, can_edit, depth + 1, modified);
+        render_fn(
+            ui,
+            session,
+            condition,
+            &cond_path,
+            can_edit,
+            depth + 1,
+            modified,
+        );
     } else {
         ui.label(
             egui::RichText::new("(no condition)")
@@ -133,7 +149,15 @@ pub fn render_while_node(
     if let Some(child) = table.get("child") {
         let mut child_path = path.to_vec();
         child_path.push(1); // Use index 1 for child
-        render_fn(ui, session, child, &child_path, can_edit, depth + 1, modified);
+        render_fn(
+            ui,
+            session,
+            child,
+            &child_path,
+            can_edit,
+            depth + 1,
+            modified,
+        );
     } else {
         ui.label(
             egui::RichText::new("(no child)")
@@ -171,7 +195,15 @@ pub fn render_if_then_node(
     if let Some(condition) = table.get("condition") {
         let mut cond_path = path.to_vec();
         cond_path.push(0);
-        render_fn(ui, session, condition, &cond_path, can_edit, depth + 1, modified);
+        render_fn(
+            ui,
+            session,
+            condition,
+            &cond_path,
+            can_edit,
+            depth + 1,
+            modified,
+        );
     } else {
         ui.label(
             egui::RichText::new("(no condition)")
@@ -191,7 +223,15 @@ pub fn render_if_then_node(
     if let Some(then_child) = table.get("then_child") {
         let mut then_path = path.to_vec();
         then_path.push(1);
-        render_fn(ui, session, then_child, &then_path, can_edit, depth + 1, modified);
+        render_fn(
+            ui,
+            session,
+            then_child,
+            &then_path,
+            can_edit,
+            depth + 1,
+            modified,
+        );
     } else {
         ui.label(
             egui::RichText::new("(no then branch)")
@@ -211,7 +251,15 @@ pub fn render_if_then_node(
     if let Some(else_child) = table.get("else_child") {
         let mut else_path = path.to_vec();
         else_path.push(2);
-        render_fn(ui, session, else_child, &else_path, can_edit, depth + 1, modified);
+        render_fn(
+            ui,
+            session,
+            else_child,
+            &else_path,
+            can_edit,
+            depth + 1,
+            modified,
+        );
 
         if can_edit && ui.small_button("Remove else branch").clicked() {
             remove_if_else_child(session, path);
@@ -346,8 +394,7 @@ pub fn render_action_node(
                                 );
                                 for action in actions {
                                     let is_selected = current_action == Some(*action);
-                                    if ui.selectable_label(is_selected, action.as_ref()).clicked()
-                                    {
+                                    if ui.selectable_label(is_selected, action.as_ref()).clicked() {
                                         current_action = Some(*action);
                                     }
                                 }
@@ -633,12 +680,7 @@ pub fn render_trigger_node(
         if can_edit {
             let mut value = trigger_type;
             if ui.text_edit_singleline(&mut value).changed() {
-                set_behavior_node_field(
-                    session,
-                    path,
-                    "trigger_type",
-                    toml::Value::String(value),
-                );
+                set_behavior_node_field(session, path, "trigger_type", toml::Value::String(value));
                 *modified = true;
             }
         } else {

@@ -4,14 +4,14 @@ use bevy::{
     asset::Handle,
     log::{info, warn},
     prelude::{
-        default, AssetServer, Color, Commands, Component, Entity, Query, Res, ResMut, Resource,
-        Sprite, State, Transform, Vec2, With,
+        AssetServer, Color, Commands, Component, Entity, Query, Res, ResMut, Resource, Sprite,
+        State, Transform, Vec2, With, default,
     },
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 
-use crate::{data::EditorSession, states::EditorState};
 use super::{JointedMobCache, PreviewSettings};
+use crate::{data::EditorSession, states::EditorState};
 
 /// Marker component for the preview mob entity
 #[derive(Component)]
@@ -68,7 +68,10 @@ pub fn check_preview_update(
 
     // Check if we switched files
     if preview_state.current_path != session.current_path {
-        info!("File changed, triggering preview rebuild. Path: {:?}", session.current_path);
+        info!(
+            "File changed, triggering preview rebuild. Path: {:?}",
+            session.current_path
+        );
         preview_state.needs_rebuild = true;
         preview_state.current_path = session.current_path.clone();
         return;
@@ -80,7 +83,10 @@ pub fn check_preview_update(
         let sprite_key = sprite_path.as_ref().map(|p| sprite_path_to_key(p));
 
         if sprite_key != preview_state.current_sprite_key {
-            info!("Sprite changed: {:?} -> {:?}", preview_state.current_sprite_key, sprite_key);
+            info!(
+                "Sprite changed: {:?} -> {:?}",
+                preview_state.current_sprite_key, sprite_key
+            );
             preview_state.needs_rebuild = true;
         }
     }
@@ -161,22 +167,17 @@ pub fn update_preview_mob(
     // Get sprite path from mob data
     let sprite_path = get_sprite_path(mob);
     // For change detection, use the path with extended:// stripped
-    let sprite_key = sprite_path.as_ref().map(|p| sprite_path_to_key(strip_extended_prefix(p)));
+    let sprite_key = sprite_path
+        .as_ref()
+        .map(|p| sprite_path_to_key(strip_extended_prefix(p)));
     preview_state.current_sprite_key = sprite_key.clone();
 
     // Get z_level
-    let z_level = mob
-        .get("z_level")
-        .and_then(|v| v.as_float())
-        .unwrap_or(0.0) as f32;
+    let z_level = mob.get("z_level").and_then(|v| v.as_float()).unwrap_or(0.0) as f32;
 
     // Try to load the sprite
     if let Some(ref path) = sprite_path {
-        let load_result = try_load_sprite_from_path(
-            path,
-            &asset_server,
-            &config,
-        );
+        let load_result = try_load_sprite_from_path(path, &asset_server, &config);
 
         // Update sprite info for UI display
         preview_state.sprite_info = SpriteLoadInfo {
@@ -205,21 +206,11 @@ pub fn update_preview_mob(
             ));
 
             // Spawn decorations
-            spawn_decorations(
-                &mut commands,
-                mob,
-                &asset_server,
-                &config,
-            );
+            spawn_decorations(&mut commands, mob, &asset_server, &config);
 
             // Spawn jointed mobs if toggle is enabled
             if preview_settings.show_jointed_mobs {
-                spawn_jointed_mob_previews(
-                    &mut commands,
-                    &jointed_cache,
-                    &asset_server,
-                    &config,
-                );
+                spawn_jointed_mob_previews(&mut commands, &jointed_cache, &asset_server, &config);
             }
         } else {
             warn!("Could not find sprite: {}", path);
@@ -367,8 +358,7 @@ pub fn try_load_sprite_from_path(
 
     warn!(
         "Sprite '{}' not found. Searched: {:?}",
-        sprite_path,
-        search_paths
+        sprite_path, search_paths
     );
 
     SpriteLoadResult {
@@ -415,7 +405,10 @@ fn spawn_decorations(
         // Try to load the decoration sprite using the full path (supports extended:// prefix)
         let load_result = try_load_sprite_from_path(sprite_path, asset_server, config);
         if let Some(handle) = load_result.handle {
-            info!("Loading decoration sprite: {} at {:?}", sprite_path, position);
+            info!(
+                "Loading decoration sprite: {} at {:?}",
+                sprite_path, position
+            );
             commands.spawn((
                 PreviewDecoration { index },
                 AseAnimation {

@@ -96,14 +96,12 @@ pub fn change_transmit_nested_behavior_type(
             .get_mut(behavior_index)
             .and_then(|v| v.as_table_mut())
         && let Some(nested_arr) = behavior.get_mut("behaviors").and_then(|v| v.as_array_mut())
-        && let Some(nested) = nested_arr.get_mut(nested_index).and_then(|v| v.as_table_mut())
+        && let Some(nested) = nested_arr
+            .get_mut(nested_index)
+            .and_then(|v| v.as_table_mut())
     {
         // Clear old fields except action
-        let keys_to_remove: Vec<_> = nested
-            .keys()
-            .filter(|k| *k != "action")
-            .cloned()
-            .collect();
+        let keys_to_remove: Vec<_> = nested.keys().filter(|k| *k != "action").cloned().collect();
         for key in keys_to_remove {
             nested.remove(&key);
         }
@@ -144,7 +142,9 @@ pub fn set_transmit_nested_param(
             .get_mut(behavior_index)
             .and_then(|v| v.as_table_mut())
         && let Some(nested_arr) = behavior.get_mut("behaviors").and_then(|v| v.as_array_mut())
-        && let Some(nested) = nested_arr.get_mut(nested_index).and_then(|v| v.as_table_mut())
+        && let Some(nested) = nested_arr
+            .get_mut(nested_index)
+            .and_then(|v| v.as_table_mut())
     {
         nested.insert(param.to_string(), value);
     }

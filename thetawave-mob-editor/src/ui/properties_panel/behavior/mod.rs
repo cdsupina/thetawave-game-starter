@@ -16,7 +16,7 @@ use thetawave_mobs::BehaviorNodeType;
 
 use crate::data::EditorSession;
 
-use super::fields::{render_patch_indicator, INHERITED_COLOR, PATCHED_COLOR};
+use super::fields::{INHERITED_COLOR, PATCHED_COLOR, render_patch_indicator};
 use navigation::get_children_count;
 use node_rendering::{
     format_node_header, render_action_node, render_control_node, render_if_then_node,

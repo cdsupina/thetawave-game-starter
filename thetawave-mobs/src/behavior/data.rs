@@ -116,15 +116,18 @@ pub static BY_CATEGORY: LazyLock<Vec<(MobBehaviorCategory, Vec<MobBehaviorVarian
         vec![
             (
                 MobBehaviorCategory::Movement,
-                map.remove(&MobBehaviorCategory::Movement).unwrap_or_default(),
+                map.remove(&MobBehaviorCategory::Movement)
+                    .unwrap_or_default(),
             ),
             (
                 MobBehaviorCategory::Targeting,
-                map.remove(&MobBehaviorCategory::Targeting).unwrap_or_default(),
+                map.remove(&MobBehaviorCategory::Targeting)
+                    .unwrap_or_default(),
             ),
             (
                 MobBehaviorCategory::Spawning,
-                map.remove(&MobBehaviorCategory::Spawning).unwrap_or_default(),
+                map.remove(&MobBehaviorCategory::Spawning)
+                    .unwrap_or_default(),
             ),
             (
                 MobBehaviorCategory::Timing,
