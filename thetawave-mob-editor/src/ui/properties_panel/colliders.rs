@@ -9,15 +9,18 @@ use crate::data::EditorSession;
 
 use super::fields::{render_patch_indicator, INHERITED_COLOR, PATCHED_COLOR};
 
-/// Render the colliders section of the properties panel.
+/// Render the colliders section of the properties panel
 ///
-/// # Arguments
-/// * `ui` - The egui UI context
-/// * `display_table` - The merged mob data for display
-/// * `patch_table` - The patch-only data (for checking what's overridden)
-/// * `session` - The editor session
-/// * `is_patch` - Whether we're editing a patch file
-/// * `modified` - Set to true if any value was modified
+/// This function handles the full UI for editing mob colliders, with special handling
+/// for patch files. The key concepts are:
+///
+/// - **display_table**: The merged view (base + patch) used for showing values
+/// - **patch_table**: Only the patch's own data, used to check what's overridden
+/// - **is_patched**: True if colliders exist in the patch (not just inherited from base)
+/// - **can_edit**: Only true for .mob files OR patches that have overridden colliders
+///
+/// For patch files, users must click "Override" to copy base colliders into the patch
+/// before they can edit. This prevents accidental modifications to inherited values
 pub fn render_colliders_section(
     ui: &mut egui::Ui,
     display_table: &toml::value::Table,
@@ -26,20 +29,26 @@ pub fn render_colliders_section(
     is_patch: bool,
     modified: &mut bool,
 ) {
+    // Check if this patch file has its own colliders (not inherited from base)
     let is_patched = is_patch && patch_table.contains_key("colliders");
 
     egui::CollapsingHeader::new("Colliders")
         .default_open(false)
         .show(ui, |ui| {
+            // =================================================================
+            // Patch status indicator and Override/Reset buttons
+            // =================================================================
             ui.horizontal(|ui| {
                 render_patch_indicator(ui, is_patched, is_patch);
+
                 if is_patch && !is_patched {
+                    // Patch file is inheriting colliders from base - show read-only
                     ui.label(
                         egui::RichText::new("(inherited from base)")
                             .small()
                             .color(INHERITED_COLOR),
                     );
-                    // Add "Override" button to copy colliders to patch
+                    // "Override" copies base colliders into patch, enabling editing
                     if ui.button("Override").clicked()
                         && let Some(colliders) = display_table.get("colliders").cloned()
                             && let Some(mob) =
@@ -49,12 +58,13 @@ pub fn render_colliders_section(
                                 *modified = true;
                             }
                 } else if is_patch && is_patched {
+                    // Patch file has its own colliders - editable
                     ui.label(
                         egui::RichText::new("(overriding base)")
                             .small()
                             .color(PATCHED_COLOR),
                     );
-                    // Add "Reset" button to remove colliders from patch
+                    // "Reset to base" removes colliders from patch, reverting to inheritance
                     if ui.button("Reset to base").clicked()
                         && let Some(mob) =
                             session.current_mob.as_mut().and_then(|v| v.as_table_mut())
@@ -65,6 +75,9 @@ pub fn render_colliders_section(
                 }
             });
 
+            // =================================================================
+            // Collider list - display from merged view (display_table)
+            // =================================================================
             let colliders = display_table
                 .get("colliders")
                 .and_then(|v| v.as_array())
@@ -74,16 +87,20 @@ pub fn render_colliders_section(
             if colliders.is_empty() {
                 ui.label("No colliders defined");
             } else {
-                // Only allow editing if not a patch OR if colliders are in the patch
+                // Editing is allowed for .mob files, or .mobpatch files that have overridden
                 let can_edit = !is_patch || is_patched;
+                // Track deletion separately to avoid mutating while iterating
                 let mut delete_index: Option<usize> = None;
 
+                // =============================================================
+                // Render each collider as a collapsible sub-section
+                // =============================================================
                 for (i, collider) in colliders.iter().enumerate() {
                     egui::CollapsingHeader::new(format!("Collider {}", i + 1))
                         .id_salt(format!("collider_{}", i))
                         .default_open(false)
                         .show(ui, |ui| {
-                            // Delete button at top of collider
+                            // Delete button (only shown when editing is allowed)
                             if can_edit {
                                 ui.horizontal(|ui| {
                                     if ui
@@ -97,8 +114,11 @@ pub fn render_colliders_section(
                                     }
                                 });
                             }
+
                             if let Some(table) = collider.as_table() {
-                                // Shape info (read-only - changing shape type is complex)
+                                // Shape editing - supports Circle and Rectangle
+                                // Note: changing shape type (Circle <-> Rectangle) is not
+                                // supported; user must delete and add a new collider
                                 if let Some(shape) = table.get("shape").and_then(|s| s.as_table()) {
                                     if let Some(radius) =
                                         shape.get("Circle").and_then(|v| v.as_float())
@@ -239,14 +259,19 @@ pub fn render_colliders_section(
                         });
                 }
 
-                // Handle deletion after the loop
+                // =============================================================
+                // Handle deletion after the loop to avoid borrow issues
+                // =============================================================
                 if let Some(idx) = delete_index {
                     delete_collider(session, idx);
                     *modified = true;
                 }
             }
 
-            // Add new collider button (only when can_edit is true)
+            // =================================================================
+            // Add new collider buttons
+            // =================================================================
+            // Only show add buttons when editing is allowed
             let can_add = !is_patch || is_patched;
             if can_add {
                 ui.separator();
@@ -264,7 +289,15 @@ pub fn render_colliders_section(
         });
 }
 
-/// Helper to mutate a collider at a specific index.
+// =============================================================================
+// Helper functions for mutating deeply nested TOML structures
+// =============================================================================
+// These helpers safely navigate through the TOML structure:
+// session.current_mob -> "colliders" array -> collider[index] -> fields
+//
+// They use let-chains to gracefully handle missing intermediate values.
+
+/// Helper to mutate a collider at a specific index
 fn with_collider_mut<F>(session: &mut EditorSession, index: usize, f: F)
 where
     F: FnOnce(&mut toml::value::Table),
@@ -276,7 +309,7 @@ where
             }
 }
 
-/// Helper to mutate a collider's shape at a specific index.
+/// Helper to mutate a collider's shape at a specific index
 fn with_collider_shape_mut<F>(session: &mut EditorSession, index: usize, f: F)
 where
     F: FnOnce(&mut toml::value::Table),
@@ -288,14 +321,14 @@ where
     });
 }
 
-/// Update a circle collider's radius.
+/// Update a circle collider's radius
 fn update_collider_circle_radius(session: &mut EditorSession, index: usize, radius: f64) {
     with_collider_shape_mut(session, index, |shape| {
         shape.insert("Circle".to_string(), toml::Value::Float(radius));
     });
 }
 
-/// Update a rectangle collider's dimensions.
+/// Update a rectangle collider's dimensions
 fn update_collider_rectangle_dims(
     session: &mut EditorSession,
     index: usize,
@@ -313,7 +346,7 @@ fn update_collider_rectangle_dims(
     });
 }
 
-/// Update a collider's position.
+/// Update a collider's position
 fn update_collider_position(session: &mut EditorSession, index: usize, x: f64, y: f64) {
     with_collider_mut(session, index, |collider| {
         collider.insert(
@@ -323,18 +356,14 @@ fn update_collider_position(session: &mut EditorSession, index: usize, x: f64, y
     });
 }
 
-/// Update a collider's rotation.
+/// Update a collider's rotation
 fn update_collider_rotation(session: &mut EditorSession, index: usize, rotation: f64) {
     with_collider_mut(session, index, |collider| {
         collider.insert("rotation".to_string(), toml::Value::Float(rotation));
     });
 }
 
-/// Add a new collider to the mob.
-///
-/// # Arguments
-/// * `session` - The editor session
-/// * `shape_type` - Either "Rectangle" or "Circle"
+/// Add a new collider to the mob with the given shape type ("Rectangle" or "Circle")
 fn add_new_collider(session: &mut EditorSession, shape_type: &str) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
         // Ensure colliders array exists
@@ -376,15 +405,20 @@ fn add_new_collider(session: &mut EditorSession, shape_type: &str) {
     }
 }
 
-/// Delete a collider by index.
+/// Delete a collider by index
+///
+/// After deletion, if the colliders array becomes empty, it is removed entirely
+/// This is important for patch files:
+/// - `colliders = []` (empty array) would override the base with no colliders
+/// - Removing the key entirely means "inherit colliders from base"
 fn delete_collider(session: &mut EditorSession, index: usize) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
         if let Some(colliders) = mob.get_mut("colliders").and_then(|v| v.as_array_mut())
             && index < colliders.len() {
                 colliders.remove(index);
             }
-        // If colliders array is now empty, remove it entirely
-        // This is important for patches - empty array overrides base, removing inherits from base
+
+        // Remove empty colliders array to revert to base inheritance (for patches)
         if mob
             .get("colliders")
             .and_then(|v| v.as_array())

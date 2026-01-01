@@ -8,7 +8,7 @@ use crate::data::EditorSession;
 
 use super::navigation::get_behavior_node_mut;
 
-/// Add a nested behavior to a TransmitMobBehavior action.
+/// Add a nested behavior to a TransmitMobBehavior action
 pub fn add_transmit_nested_behavior(
     session: &mut EditorSession,
     path: &[usize],
@@ -38,7 +38,7 @@ pub fn add_transmit_nested_behavior(
     }
 }
 
-/// Delete a nested behavior from a TransmitMobBehavior action.
+/// Delete a nested behavior from a TransmitMobBehavior action
 pub fn delete_transmit_nested_behavior(
     session: &mut EditorSession,
     path: &[usize],
@@ -58,7 +58,7 @@ pub fn delete_transmit_nested_behavior(
     }
 }
 
-/// Move a nested behavior up or down within a TransmitMobBehavior action.
+/// Move a nested behavior up or down within a TransmitMobBehavior action
 pub fn move_transmit_nested_behavior(
     session: &mut EditorSession,
     path: &[usize],
@@ -81,7 +81,7 @@ pub fn move_transmit_nested_behavior(
     }
 }
 
-/// Change the type of a nested behavior in a TransmitMobBehavior action.
+/// Change the type of a nested behavior in a TransmitMobBehavior action
 pub fn change_transmit_nested_behavior_type(
     session: &mut EditorSession,
     path: &[usize],
@@ -128,7 +128,7 @@ pub fn change_transmit_nested_behavior_type(
     }
 }
 
-/// Set a parameter on a nested behavior in a TransmitMobBehavior action.
+/// Set a parameter on a nested behavior in a TransmitMobBehavior action
 pub fn set_transmit_nested_param(
     session: &mut EditorSession,
     path: &[usize],

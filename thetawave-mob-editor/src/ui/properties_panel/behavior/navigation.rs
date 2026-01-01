@@ -2,7 +2,7 @@
 
 use crate::data::EditorSession;
 
-/// Get a mutable reference to a behavior node at the given path.
+/// Get a mutable reference to a behavior node at the given path
 pub fn get_behavior_node_mut<'a>(
     session: &'a mut EditorSession,
     path: &[usize],
@@ -39,7 +39,7 @@ pub fn get_behavior_node_mut<'a>(
     Some(current)
 }
 
-/// Set a field on a behavior node at the given path.
+/// Set a field on a behavior node at the given path
 pub fn set_behavior_node_field(
     session: &mut EditorSession,
     path: &[usize],
@@ -53,7 +53,7 @@ pub fn set_behavior_node_field(
     }
 }
 
-/// Get the number of children for a control node at the given path.
+/// Get the number of children for a control node at the given path
 pub fn get_children_count(session: &EditorSession, path: &[usize]) -> usize {
     let Some(mob) = session.current_mob.as_ref().and_then(|v| v.as_table()) else {
         return 0;

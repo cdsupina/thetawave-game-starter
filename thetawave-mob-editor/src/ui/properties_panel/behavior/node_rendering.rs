@@ -20,7 +20,7 @@ use super::tree_ops::{
     add_while_child, add_while_condition, remove_if_else_child,
 };
 
-/// Format a header string for a behavior node.
+/// Format a header string for a behavior node
 pub fn format_node_header(
     table: &toml::value::Table,
     node_type: Option<BehaviorNodeType>,
@@ -46,7 +46,7 @@ pub fn format_node_header(
     }
 }
 
-/// Render a control node (Forever, Sequence, Fallback) with children.
+/// Render a control node (Forever, Sequence, Fallback) with children
 pub fn render_control_node(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
@@ -89,7 +89,7 @@ pub fn render_control_node(
     }
 }
 
-/// Render a While node (has condition and child).
+/// Render a While node (has condition and child)
 pub fn render_while_node(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
@@ -147,7 +147,7 @@ pub fn render_while_node(
     }
 }
 
-/// Render an IfThen node (has condition, then_child, and optional else_child).
+/// Render an IfThen node (has condition, then_child, and optional else_child)
 pub fn render_if_then_node(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
@@ -230,7 +230,7 @@ pub fn render_if_then_node(
     }
 }
 
-/// Render a Wait node.
+/// Render a Wait node
 pub fn render_wait_node(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
@@ -265,7 +265,7 @@ pub fn render_wait_node(
     });
 }
 
-/// Render an Action node with its behaviors list.
+/// Render an Action node with its behaviors list
 pub fn render_action_node(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
@@ -426,7 +426,7 @@ pub fn render_action_node(
     }
 }
 
-/// Render parameters for specific action types.
+/// Render parameters for specific action types
 fn render_action_parameters(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
@@ -571,7 +571,7 @@ fn render_action_parameters(
     }
 }
 
-/// Render parameters in read-only mode.
+/// Render parameters in read-only mode
 fn render_action_parameters_readonly(
     ui: &mut egui::Ui,
     behavior_table: &toml::value::Table,
@@ -613,7 +613,7 @@ fn render_action_parameters_readonly(
     }
 }
 
-/// Render a Trigger node.
+/// Render a Trigger node
 pub fn render_trigger_node(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
@@ -653,7 +653,7 @@ pub fn render_trigger_node(
     );
 }
 
-/// Render the nested behaviors list for a TransmitMobBehavior action.
+/// Render the nested behaviors list for a TransmitMobBehavior action
 fn render_transmit_nested_behaviors(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
@@ -800,7 +800,7 @@ fn render_transmit_nested_behaviors(
     }
 }
 
-/// Render parameters for a nested behavior in TransmitMobBehavior.
+/// Render parameters for a nested behavior in TransmitMobBehavior
 fn render_transmit_nested_params(
     ui: &mut egui::Ui,
     session: &mut EditorSession,

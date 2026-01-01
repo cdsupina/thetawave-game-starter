@@ -34,7 +34,7 @@ pub struct PropertiesPanelResult {
     pub open_decoration_browser: Option<usize>,
 }
 
-/// Render the complete properties panel.
+/// Render the complete properties panel
 ///
 /// This is the main entry point for rendering all mob properties. It handles:
 /// - General properties (name, spawnable, faction, etc.)
@@ -183,10 +183,10 @@ pub fn properties_panel_ui(
     result
 }
 
-/// Get the display tables for rendering.
+/// Get the display tables for rendering
 ///
-/// For regular .mob files, returns the mob data for both.
-/// For .mobpatch files, returns merged data for display and patch-only data for checking.
+/// For regular .mob files, returns the mob data for both
+/// For .mobpatch files, returns merged data for display and patch-only data for checking
 fn get_display_tables(
     session: &EditorSession,
 ) -> Option<(toml::value::Table, toml::value::Table)> {
@@ -209,7 +209,7 @@ fn get_display_tables(
     }
 }
 
-/// Render file information header.
+/// Render file information header
 fn render_file_info(ui: &mut egui::Ui, session: &EditorSession) {
     if let Some(path) = &session.current_path {
         let filename = path
@@ -245,7 +245,7 @@ fn render_file_info(ui: &mut egui::Ui, session: &EditorSession) {
     }
 }
 
-/// Render general properties section.
+/// Render general properties section
 fn render_general_properties(
     ui: &mut egui::Ui,
     display_table: &toml::value::Table,
@@ -321,7 +321,7 @@ fn render_general_properties(
         });
 }
 
-/// Render combat properties section.
+/// Render combat properties section
 fn render_combat_properties(
     ui: &mut egui::Ui,
     display_table: &toml::value::Table,
@@ -466,30 +466,30 @@ fn render_combat_properties(
 // Helper functions for field manipulation
 // =============================================================================
 
-/// Set a field on the current mob.
+/// Set a field on the current mob
 fn set_field(session: &mut EditorSession, key: &str, value: toml::Value) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
         mob.insert(key.to_string(), value);
     }
 }
 
-/// Remove a field from the current mob.
+/// Remove a field from the current mob
 fn remove_field(session: &mut EditorSession, key: &str) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
         mob.remove(key);
     }
 }
 
-/// Set a Vec2 field on the current mob.
+/// Set a Vec2 field on the current mob
 fn set_vec2_field(session: &mut EditorSession, key: &str, x: f32, y: f32) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
         fields::set_vec2_value(mob, key, x, y);
     }
 }
 
-/// Update a decoration's sprite path.
+/// Update a decoration's sprite path
 ///
-/// This is exported for use by the sprite browser dialog.
+/// This is exported for use by the sprite browser dialog
 pub fn update_decoration_sprite(session: &mut EditorSession, index: usize, sprite_path: &str) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
         && let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut())

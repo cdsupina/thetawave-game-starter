@@ -23,19 +23,19 @@ use crate::{
 // UI Layout Constants
 // =============================================================================
 
-/// Number of frames to skip at startup to allow egui to initialize.
+/// Number of frames to skip at startup to allow egui to initialize
 const STARTUP_FRAMES_TO_SKIP: u8 = 2;
 
-/// Default width of the properties panel in pixels.
+/// Default width of the properties panel in pixels
 const PROPERTIES_PANEL_DEFAULT_WIDTH: f32 = 300.0;
 
-/// Minimum width of the properties panel in pixels.
+/// Minimum width of the properties panel in pixels
 const PROPERTIES_PANEL_MIN_WIDTH: f32 = 250.0;
 
-/// Height of the status log panel when expanded.
+/// Height of the status log panel when expanded
 const STATUS_LOG_EXPANDED_HEIGHT: f32 = 120.0;
 
-/// Height of the status log panel when collapsed.
+/// Height of the status log panel when collapsed
 const STATUS_LOG_COLLAPSED_HEIGHT: f32 = 24.0;
 
 use super::{

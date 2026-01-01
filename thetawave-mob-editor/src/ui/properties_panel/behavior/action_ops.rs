@@ -8,7 +8,7 @@ use crate::data::EditorSession;
 
 use super::navigation::get_behavior_node_mut;
 
-/// Add a new behavior to an Action node.
+/// Add a new behavior to an Action node
 pub fn add_action_behavior(session: &mut EditorSession, path: &[usize]) {
     if let Some(node) = get_behavior_node_mut(session, path)
         && let Some(table) = node.as_table_mut()
@@ -30,7 +30,7 @@ pub fn add_action_behavior(session: &mut EditorSession, path: &[usize]) {
     }
 }
 
-/// Delete a behavior from an Action node.
+/// Delete a behavior from an Action node
 pub fn delete_action_behavior(session: &mut EditorSession, path: &[usize], index: usize) {
     if let Some(node) = get_behavior_node_mut(session, path)
         && let Some(table) = node.as_table_mut()
@@ -41,7 +41,7 @@ pub fn delete_action_behavior(session: &mut EditorSession, path: &[usize], index
     }
 }
 
-/// Move a behavior up or down within an Action node.
+/// Move a behavior up or down within an Action node
 pub fn move_action_behavior(
     session: &mut EditorSession,
     path: &[usize],
@@ -59,7 +59,7 @@ pub fn move_action_behavior(
     }
 }
 
-/// Change the type of a behavior in an Action node.
+/// Change the type of a behavior in an Action node
 pub fn change_action_behavior_type(
     session: &mut EditorSession,
     path: &[usize],
@@ -101,7 +101,7 @@ pub fn change_action_behavior_type(
     }
 }
 
-/// Set a parameter on a behavior in an Action node.
+/// Set a parameter on a behavior in an Action node
 pub fn set_action_behavior_param(
     session: &mut EditorSession,
     path: &[usize],
@@ -118,7 +118,7 @@ pub fn set_action_behavior_param(
     }
 }
 
-/// Remove a parameter from a behavior in an Action node.
+/// Remove a parameter from a behavior in an Action node
 pub fn remove_action_behavior_param(
     session: &mut EditorSession,
     path: &[usize],

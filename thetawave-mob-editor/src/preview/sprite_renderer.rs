@@ -91,7 +91,7 @@ fn get_sprite_path(mob: &toml::Value) -> Option<String> {
     mob.get("sprite").and_then(|v| v.as_str()).map(String::from)
 }
 
-/// Extract asset key from sprite path.
+/// Extract asset key from sprite path
 /// "media/aseprite/xhitara_grunt_mob.aseprite" → "xhitara_grunt_mob"
 fn sprite_path_to_key(path: &str) -> String {
     std::path::Path::new(path)

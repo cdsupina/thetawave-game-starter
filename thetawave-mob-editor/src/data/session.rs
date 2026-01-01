@@ -9,7 +9,7 @@ use crate::plugin::EditorConfig;
 // Constants
 // =============================================================================
 
-/// Maximum number of log entries to keep in the status log.
+/// Maximum number of log entries to keep in the status log
 const STATUS_LOG_MAX_ENTRIES: usize = 50;
 
 /// The type of file being edited
@@ -46,9 +46,9 @@ pub struct LogEntry {
     pub timestamp: f64,
 }
 
-/// Scrolling log of status messages.
+/// Scrolling log of status messages
 ///
-/// Uses VecDeque for O(1) removal from the front when at capacity.
+/// Uses VecDeque for O(1) removal from the front when at capacity
 pub struct StatusLog {
     entries: VecDeque<LogEntry>,
     max_entries: usize,

@@ -9,19 +9,19 @@ use bevy_egui::egui;
 // UI Constants
 // =============================================================================
 
-/// Color for patched/overridden values in patch files.
+/// Color for patched/overridden values in patch files
 pub const PATCHED_COLOR: egui::Color32 = egui::Color32::from_rgb(100, 200, 255);
 
-/// Color for inherited values (from base mob) in patch files.
+/// Color for inherited values (from base mob) in patch files
 pub const INHERITED_COLOR: egui::Color32 = egui::Color32::from_rgb(140, 140, 140);
 
-/// Minimum button size for icon buttons.
+/// Minimum button size for icon buttons
 pub const ICON_BUTTON_MIN_SIZE: egui::Vec2 = egui::vec2(16.0, 16.0);
 
-/// Standard indentation for nested UI elements.
+/// Standard indentation for nested UI elements
 pub const INDENT_SPACING: f32 = 16.0;
 
-/// Result of editing a field - used to communicate changes back to the caller.
+/// Result of editing a field - used to communicate changes back to the caller
 pub enum FieldResult<T> {
     /// No change was made to the field.
     NoChange,
@@ -31,15 +31,7 @@ pub enum FieldResult<T> {
     Reset,
 }
 
-/// Render a patch indicator (● for patched, ○ for inherited).
-///
-/// # Arguments
-/// * `ui` - The egui UI context
-/// * `is_patched` - Whether this field is overridden in the patch
-/// * `show_indicator` - Whether to show the indicator (usually true for patch files)
-///
-/// # Returns
-/// Always returns false (indicator doesn't have click behavior).
+/// Render a patch indicator (● for patched, ○ for inherited)
 pub fn render_patch_indicator(ui: &mut egui::Ui, is_patched: bool, show_indicator: bool) -> bool {
     if show_indicator {
         if is_patched {
@@ -51,15 +43,7 @@ pub fn render_patch_indicator(ui: &mut egui::Ui, is_patched: bool, show_indicato
     false
 }
 
-/// Render a reset button for patched fields.
-///
-/// # Arguments
-/// * `ui` - The egui UI context
-/// * `is_patched` - Whether this field is overridden in the patch
-/// * `is_patch_file` - Whether we're editing a patch file
-///
-/// # Returns
-/// True if the reset button was clicked.
+/// Render a reset button for patched fields. Returns true if clicked
 pub fn render_reset_button(ui: &mut egui::Ui, is_patched: bool, is_patch_file: bool) -> bool {
     if is_patch_file && is_patched {
         let response = ui.add(
@@ -77,9 +61,9 @@ pub fn render_reset_button(ui: &mut egui::Ui, is_patched: bool, is_patch_file: b
     false
 }
 
-/// Get label color based on patch state.
+/// Get label color based on patch state
 ///
-/// Returns dimmed color for inherited values in patch files.
+/// Returns dimmed color for inherited values in patch files
 pub fn label_color(ui: &egui::Ui, is_patch_file: bool, is_patched: bool) -> egui::Color32 {
     if is_patch_file && !is_patched {
         INHERITED_COLOR
@@ -88,17 +72,7 @@ pub fn label_color(ui: &egui::Ui, is_patch_file: bool, is_patched: bool) -> egui
     }
 }
 
-/// Render a string field with patch awareness.
-///
-/// # Arguments
-/// * `ui` - The egui UI context
-/// * `label` - The field label to display
-/// * `current_value` - The current string value
-/// * `is_patched` - Whether this field is overridden in the patch
-/// * `is_patch_file` - Whether we're editing a patch file
-///
-/// # Returns
-/// `FieldResult::Changed` with new value, `FieldResult::Reset` if reset clicked, or `FieldResult::NoChange`.
+/// Render a string field with patch awareness
 pub fn render_string_field(
     ui: &mut egui::Ui,
     label: &str,
@@ -123,17 +97,7 @@ pub fn render_string_field(
     result
 }
 
-/// Render a boolean field with patch awareness.
-///
-/// # Arguments
-/// * `ui` - The egui UI context
-/// * `label` - The field label to display
-/// * `current_value` - The current boolean value
-/// * `is_patched` - Whether this field is overridden in the patch
-/// * `is_patch_file` - Whether we're editing a patch file
-///
-/// # Returns
-/// `FieldResult::Changed` with new value, `FieldResult::Reset` if reset clicked, or `FieldResult::NoChange`.
+/// Render a boolean field with patch awareness
 pub fn render_bool_field(
     ui: &mut egui::Ui,
     label: &str,
@@ -158,18 +122,7 @@ pub fn render_bool_field(
     result
 }
 
-/// Render an integer field with patch awareness.
-///
-/// # Arguments
-/// * `ui` - The egui UI context
-/// * `label` - The field label to display
-/// * `current_value` - The current integer value
-/// * `range` - The valid range for the value
-/// * `is_patched` - Whether this field is overridden in the patch
-/// * `is_patch_file` - Whether we're editing a patch file
-///
-/// # Returns
-/// `FieldResult::Changed` with new value, `FieldResult::Reset` if reset clicked, or `FieldResult::NoChange`.
+/// Render an integer field with patch awareness
 pub fn render_int_field(
     ui: &mut egui::Ui,
     label: &str,
@@ -198,19 +151,7 @@ pub fn render_int_field(
     result
 }
 
-/// Render a float field with patch awareness.
-///
-/// # Arguments
-/// * `ui` - The egui UI context
-/// * `label` - The field label to display
-/// * `current_value` - The current float value
-/// * `range` - The valid range for the value
-/// * `speed` - Optional drag speed (default if None)
-/// * `is_patched` - Whether this field is overridden in the patch
-/// * `is_patch_file` - Whether we're editing a patch file
-///
-/// # Returns
-/// `FieldResult::Changed` with new value, `FieldResult::Reset` if reset clicked, or `FieldResult::NoChange`.
+/// Render a float field with patch awareness
 pub fn render_float_field(
     ui: &mut egui::Ui,
     label: &str,
@@ -241,20 +182,7 @@ pub fn render_float_field(
     result
 }
 
-/// Render a Vec2 field with patch awareness.
-///
-/// # Arguments
-/// * `ui` - The egui UI context
-/// * `label` - The field label to display
-/// * `x` - The current X value
-/// * `y` - The current Y value
-/// * `range` - The valid range for both values
-/// * `speed` - Optional drag speed (default if None)
-/// * `is_patched` - Whether this field is overridden in the patch
-/// * `is_patch_file` - Whether we're editing a patch file
-///
-/// # Returns
-/// `FieldResult::Changed` with new (x, y) tuple, `FieldResult::Reset` if reset clicked, or `FieldResult::NoChange`.
+/// Render a Vec2 field with patch awareness
 pub fn render_vec2_field(
     ui: &mut egui::Ui,
     label: &str,
@@ -304,16 +232,7 @@ pub fn render_vec2_field(
     result
 }
 
-/// Helper to get a Vec2 value from a TOML table.
-///
-/// # Arguments
-/// * `table` - The TOML table to read from
-/// * `key` - The key to look up
-/// * `default_x` - Default X value if not found
-/// * `default_y` - Default Y value if not found
-///
-/// # Returns
-/// A tuple of (x, y) values.
+/// Helper to get a Vec2 value from a TOML table, returning defaults if not found
 pub fn get_vec2_value(
     table: &toml::value::Table,
     key: &str,
@@ -335,13 +254,7 @@ pub fn get_vec2_value(
     }
 }
 
-/// Helper to set a Vec2 value in a TOML table.
-///
-/// # Arguments
-/// * `table` - The TOML table to modify
-/// * `key` - The key to set
-/// * `x` - The X value
-/// * `y` - The Y value
+/// Helper to set a Vec2 value in a TOML table
 pub fn set_vec2_value(table: &mut toml::value::Table, key: &str, x: f32, y: f32) {
     table.insert(
         key.to_string(),

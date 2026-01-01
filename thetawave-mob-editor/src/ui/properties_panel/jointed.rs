@@ -10,7 +10,7 @@ use crate::file::FileTreeState;
 
 use super::fields::{render_patch_indicator, INHERITED_COLOR, PATCHED_COLOR};
 
-/// Render the jointed mobs section.
+/// Render the jointed mobs section
 pub fn render_jointed_mobs_section(
     ui: &mut egui::Ui,
     display_table: &toml::value::Table,
@@ -155,7 +155,7 @@ pub fn render_jointed_mobs_section(
         });
 }
 
-/// Render editable fields for a single jointed mob.
+/// Render editable fields for a single jointed mob
 fn render_jointed_mob_fields(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
@@ -289,7 +289,7 @@ fn render_jointed_mob_fields(
     render_chain_subsection(ui, session, index, table, modified);
 }
 
-/// Render angle limit subsection for a jointed mob.
+/// Render angle limit subsection for a jointed mob
 fn render_angle_limit_subsection(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
@@ -407,7 +407,7 @@ fn render_angle_limit_subsection(
         });
 }
 
-/// Render chain configuration subsection for a jointed mob.
+/// Render chain configuration subsection for a jointed mob
 fn render_chain_subsection(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
@@ -582,7 +582,7 @@ fn render_chain_subsection(
 // Helper functions for jointed mob manipulation
 // =============================================================================
 
-/// Get Vec2 from a jointed mob table.
+/// Get Vec2 from a jointed mob table
 pub fn get_jointed_vec2(table: &toml::value::Table, key: &str) -> (f32, f32) {
     if let Some(arr) = table.get(key).and_then(|v| v.as_array()) {
         let x = arr
@@ -599,7 +599,7 @@ pub fn get_jointed_vec2(table: &toml::value::Table, key: &str) -> (f32, f32) {
     }
 }
 
-/// Set a field on a jointed mob at the given index.
+/// Set a field on a jointed mob at the given index
 fn set_jointed_mob_field(
     session: &mut EditorSession,
     index: usize,
@@ -613,7 +613,7 @@ fn set_jointed_mob_field(
             }
 }
 
-/// Set a Vec2 field on a jointed mob.
+/// Set a Vec2 field on a jointed mob
 fn set_jointed_mob_vec2(session: &mut EditorSession, index: usize, field: &str, x: f32, y: f32) {
     let arr = toml::Value::Array(vec![
         toml::Value::Float(x as f64),
@@ -622,7 +622,7 @@ fn set_jointed_mob_vec2(session: &mut EditorSession, index: usize, field: &str, 
     set_jointed_mob_field(session, index, field, arr);
 }
 
-/// Remove a field from a jointed mob at the given index.
+/// Remove a field from a jointed mob at the given index
 fn remove_jointed_mob_field(session: &mut EditorSession, index: usize, field: &str) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
         && let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut())
@@ -631,7 +631,7 @@ fn remove_jointed_mob_field(session: &mut EditorSession, index: usize, field: &s
             }
 }
 
-/// Set a nested field on a jointed mob (e.g., angle_limit_range.min).
+/// Set a nested field on a jointed mob (e.g., angle_limit_range.min)
 fn set_jointed_nested_field(
     session: &mut EditorSession,
     index: usize,
@@ -647,7 +647,7 @@ fn set_jointed_nested_field(
                 }
 }
 
-/// Set a nested Vec2 field on a jointed mob (e.g., chain.pos_offset).
+/// Set a nested Vec2 field on a jointed mob (e.g., chain.pos_offset)
 fn set_jointed_nested_vec2(
     session: &mut EditorSession,
     index: usize,
@@ -663,7 +663,7 @@ fn set_jointed_nested_vec2(
     set_jointed_nested_field(session, index, parent, field, arr);
 }
 
-/// Remove a nested field from a jointed mob.
+/// Remove a nested field from a jointed mob
 fn remove_jointed_nested_field(
     session: &mut EditorSession,
     index: usize,
@@ -678,7 +678,7 @@ fn remove_jointed_nested_field(
                 }
 }
 
-/// Set a deeply nested field (e.g., chain.random_chain.min_length).
+/// Set a deeply nested field (e.g., chain.random_chain.min_length)
 fn set_jointed_deep_nested_field(
     session: &mut EditorSession,
     index: usize,
@@ -698,7 +698,7 @@ fn set_jointed_deep_nested_field(
                     }
 }
 
-/// Delete a jointed mob at the given index.
+/// Delete a jointed mob at the given index
 fn delete_jointed_mob(session: &mut EditorSession, index: usize) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
         && let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut()) {
@@ -712,7 +712,7 @@ fn delete_jointed_mob(session: &mut EditorSession, index: usize) {
         }
 }
 
-/// Add a new jointed mob with defaults.
+/// Add a new jointed mob with defaults
 fn add_new_jointed_mob(session: &mut EditorSession) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
         if !mob.contains_key("jointed_mobs") {
@@ -748,7 +748,7 @@ fn add_new_jointed_mob(session: &mut EditorSession) {
     }
 }
 
-/// Add angle_limit_range to a jointed mob.
+/// Add angle_limit_range to a jointed mob
 fn add_angle_limit_to_jointed_mob(session: &mut EditorSession, index: usize) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
         && let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut())
@@ -764,7 +764,7 @@ fn add_angle_limit_to_jointed_mob(session: &mut EditorSession, index: usize) {
             }
 }
 
-/// Add chain configuration to a jointed mob.
+/// Add chain configuration to a jointed mob
 fn add_chain_to_jointed_mob(session: &mut EditorSession, index: usize) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
         && let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut())
@@ -783,7 +783,7 @@ fn add_chain_to_jointed_mob(session: &mut EditorSession, index: usize) {
             }
 }
 
-/// Add random_chain to a jointed mob's chain config.
+/// Add random_chain to a jointed mob's chain config
 fn add_random_chain_to_jointed_mob(session: &mut EditorSession, index: usize) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
         && let Some(arr) = mob.get_mut("jointed_mobs").and_then(|v| v.as_array_mut())

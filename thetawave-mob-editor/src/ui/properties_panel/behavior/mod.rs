@@ -26,7 +26,7 @@ use tree_ops::{
     add_default_behavior_tree, change_behavior_node_type, delete_behavior_node, move_behavior_node,
 };
 
-/// Render the behavior section of the properties panel.
+/// Render the behavior section of the properties panel
 pub fn render_behavior_section(
     ui: &mut egui::Ui,
     display_table: &toml::value::Table,
@@ -91,7 +91,7 @@ pub fn render_behavior_section(
         });
 }
 
-/// Render a single behavior node recursively.
+/// Render a single behavior node recursively
 fn render_behavior_node(
     ui: &mut egui::Ui,
     session: &mut EditorSession,

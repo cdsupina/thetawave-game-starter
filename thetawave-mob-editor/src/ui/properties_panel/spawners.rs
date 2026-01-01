@@ -14,7 +14,7 @@ use super::fields::{
     render_vec2_field, FieldResult, INHERITED_COLOR, PATCHED_COLOR,
 };
 
-/// Check if a specific spawner field is patched.
+/// Check if a specific spawner field is patched
 fn is_spawner_field_patched(
     patch_table: &toml::value::Table,
     spawner_type: &str,
@@ -32,7 +32,7 @@ fn is_spawner_field_patched(
         .unwrap_or(false)
 }
 
-/// Set a spawner field value in the patch.
+/// Set a spawner field value in the patch
 fn set_spawner_field(
     session: &mut EditorSession,
     spawner_type: &str,
@@ -81,7 +81,7 @@ fn set_spawner_field(
     }
 }
 
-/// Remove a spawner field from the patch.
+/// Remove a spawner field from the patch
 fn remove_spawner_field(
     session: &mut EditorSession,
     spawner_type: &str,
@@ -115,7 +115,7 @@ fn remove_spawner_field(
         }
 }
 
-/// Render the projectile spawners section.
+/// Render the projectile spawners section
 pub fn render_projectile_spawners_section(
     ui: &mut egui::Ui,
     display_table: &toml::value::Table,
@@ -203,7 +203,7 @@ pub fn render_projectile_spawners_section(
         });
 }
 
-/// Render fields for a single projectile spawner.
+/// Render fields for a single projectile spawner
 fn render_projectile_spawner_fields(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
@@ -430,7 +430,7 @@ fn render_projectile_spawner_fields(
     });
 }
 
-/// Render the mob spawners section.
+/// Render the mob spawners section
 pub fn render_mob_spawners_section(
     ui: &mut egui::Ui,
     display_table: &toml::value::Table,
@@ -516,7 +516,7 @@ pub fn render_mob_spawners_section(
         });
 }
 
-/// Render fields for a single mob spawner.
+/// Render fields for a single mob spawner
 fn render_mob_spawner_fields(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
@@ -675,7 +675,7 @@ fn render_mob_spawner_fields(
     }
 }
 
-/// Generate a unique spawner name.
+/// Generate a unique spawner name
 fn generate_unique_spawner_name(
     existing_spawners: Option<&toml::value::Table>,
     prefix: &str,
@@ -703,7 +703,7 @@ fn generate_unique_spawner_name(
     format!("{}_new", prefix)
 }
 
-/// Add a new projectile spawner.
+/// Add a new projectile spawner
 fn add_new_projectile_spawner(session: &mut EditorSession, display_table: &toml::value::Table) {
     let existing = display_table
         .get("projectile_spawners")
@@ -754,7 +754,7 @@ fn add_new_projectile_spawner(session: &mut EditorSession, display_table: &toml:
     }
 }
 
-/// Add a new mob spawner.
+/// Add a new mob spawner
 fn add_new_mob_spawner(session: &mut EditorSession, display_table: &toml::value::Table) {
     let existing = display_table
         .get("mob_spawners")
@@ -798,7 +798,7 @@ fn add_new_mob_spawner(session: &mut EditorSession, display_table: &toml::value:
     }
 }
 
-/// Delete a spawner by name.
+/// Delete a spawner by name
 fn delete_spawner_by_name(session: &mut EditorSession, spawner_type: &str, name: &str) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
         && let Some(spawners_section) = mob.get_mut(spawner_type).and_then(|v| v.as_table_mut()) {
@@ -819,7 +819,7 @@ fn delete_spawner_by_name(session: &mut EditorSession, spawner_type: &str, name:
         }
 }
 
-/// Rename a spawner.
+/// Rename a spawner
 fn rename_spawner_by_name(
     session: &mut EditorSession,
     spawner_type: &str,

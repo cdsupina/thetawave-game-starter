@@ -11,9 +11,9 @@ use crate::plugin::EditorConfig;
 use super::fields::{render_patch_indicator, render_reset_button, INDENT_SPACING, INHERITED_COLOR, PATCHED_COLOR};
 use super::update_decoration_sprite;
 
-/// Render a sprite picker dropdown.
+/// Render a sprite picker dropdown
 ///
-/// Returns true if the sprite browser should be opened.
+/// Returns true if the sprite browser should be opened
 pub fn render_sprite_picker(
     ui: &mut egui::Ui,
     display_table: &toml::value::Table,
@@ -186,9 +186,9 @@ pub fn render_sprite_picker(
     open_browser
 }
 
-/// Render the decorations section with sprite pickers.
+/// Render the decorations section with sprite pickers
 ///
-/// Returns Some(decoration_index) if the sprite browser should be opened for a decoration.
+/// Returns Some(decoration_index) if the sprite browser should be opened for a decoration
 pub fn render_decorations_section(
     ui: &mut egui::Ui,
     display_table: &toml::value::Table,
@@ -365,9 +365,9 @@ pub fn render_decorations_section(
     open_decoration_browser
 }
 
-/// Render sprite picker for a decoration.
+/// Render sprite picker for a decoration
 ///
-/// Returns Some(decoration_index) if the sprite browser should be opened.
+/// Returns Some(decoration_index) if the sprite browser should be opened
 fn render_decoration_sprite_picker(
     ui: &mut egui::Ui,
     index: usize,
@@ -503,7 +503,7 @@ fn render_decoration_sprite_picker(
 // Helper functions for decoration manipulation
 // =============================================================================
 
-/// Update a decoration's position.
+/// Update a decoration's position
 fn update_decoration_position(session: &mut EditorSession, index: usize, x: f32, y: f32) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
         && let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut())
@@ -516,7 +516,7 @@ fn update_decoration_position(session: &mut EditorSession, index: usize, x: f32,
                 }
 }
 
-/// Delete a decoration by index.
+/// Delete a decoration by index
 fn delete_decoration(session: &mut EditorSession, index: usize) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
         && let Some(decorations) = mob.get_mut("decorations").and_then(|v| v.as_array_mut()) {
@@ -530,7 +530,7 @@ fn delete_decoration(session: &mut EditorSession, index: usize) {
         }
 }
 
-/// Add a new decoration with defaults.
+/// Add a new decoration with defaults
 fn add_new_decoration(session: &mut EditorSession, sprite_registry: &SpriteRegistry) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
         // Ensure decorations array exists

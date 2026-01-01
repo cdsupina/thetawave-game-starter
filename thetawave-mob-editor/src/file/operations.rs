@@ -7,7 +7,7 @@ use toml::Value;
 // Re-export from thetawave_core to avoid duplication
 pub use thetawave_core::merge_toml_values;
 
-/// Errors that can occur during file operations.
+/// Errors that can occur during file operations
 #[derive(Debug, Error)]
 pub enum FileError {
     /// IO error (reading/writing files).

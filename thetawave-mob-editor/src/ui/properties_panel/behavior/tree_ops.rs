@@ -8,7 +8,7 @@ use crate::data::EditorSession;
 
 use super::navigation::get_behavior_node_mut;
 
-/// Add a default behavior tree (Forever with one Action child).
+/// Add a default behavior tree (Forever with one Action child)
 pub fn add_default_behavior_tree(session: &mut EditorSession) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
         let mut action = toml::value::Table::new();
@@ -46,7 +46,7 @@ pub fn add_default_behavior_tree(session: &mut EditorSession) {
     }
 }
 
-/// Add a child to a control node (Forever, Sequence, Fallback).
+/// Add a child to a control node (Forever, Sequence, Fallback)
 pub fn add_behavior_child(session: &mut EditorSession, path: &[usize]) {
     if let Some(node) = get_behavior_node_mut(session, path)
         && let Some(table) = node.as_table_mut()
@@ -74,7 +74,7 @@ pub fn add_behavior_child(session: &mut EditorSession, path: &[usize]) {
     }
 }
 
-/// Delete a behavior node at the given path.
+/// Delete a behavior node at the given path
 pub fn delete_behavior_node(session: &mut EditorSession, path: &[usize]) {
     if path.is_empty() {
         // Can't delete root via this function
@@ -114,7 +114,7 @@ pub fn delete_behavior_node(session: &mut EditorSession, path: &[usize]) {
     }
 }
 
-/// Move a behavior node up or down within its parent.
+/// Move a behavior node up or down within its parent
 pub fn move_behavior_node(session: &mut EditorSession, path: &[usize], direction: i32) {
     if path.is_empty() {
         return;
@@ -139,7 +139,7 @@ pub fn move_behavior_node(session: &mut EditorSession, path: &[usize], direction
     }
 }
 
-/// Change the type of a behavior node.
+/// Change the type of a behavior node
 pub fn change_behavior_node_type(
     session: &mut EditorSession,
     path: &[usize],
@@ -189,7 +189,7 @@ pub fn change_behavior_node_type(
     }
 }
 
-/// Remove leaf-specific fields from a node.
+/// Remove leaf-specific fields from a node
 fn remove_leaf_fields(table: &mut toml::value::Table) {
     table.remove("seconds");
     table.remove("name");
@@ -202,7 +202,7 @@ fn remove_leaf_fields(table: &mut toml::value::Table) {
     table.remove("children");
 }
 
-/// Add required fields for a new node type.
+/// Add required fields for a new node type
 fn add_fields_for_node_type(table: &mut toml::value::Table, node_type: BehaviorNodeType) {
     match node_type {
         BehaviorNodeType::Wait => {
