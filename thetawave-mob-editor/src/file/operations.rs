@@ -110,29 +110,37 @@ impl FileOperations {
         Ok(value)
     }
 
-    /// Find the base .mob file for a .mobpatch file
-    /// Looks for a .mob file with the same relative path in the base assets directory
-    pub fn find_base_mob(patch_path: &Path) -> Option<PathBuf> {
+    /// Get the expected base mob relative path for a .mobpatch file
+    /// Returns the relative path like "xhitara/spitter.mob" (without "mobs/" prefix)
+    pub fn expected_base_path(patch_path: &Path) -> Option<String> {
         let path_str = patch_path.to_string_lossy();
 
         // Extract the relative path after "mobs/"
         let mobs_idx = path_str.find("mobs/")?;
-        let relative = &path_str[mobs_idx..]; // e.g., "mobs/xhitara/spitter.mobpatch"
+        let relative = &path_str[mobs_idx + 5..]; // Skip "mobs/", e.g., "xhitara/spitter.mobpatch"
 
         // Convert to .mob extension
         let base_relative = relative.strip_suffix(".mobpatch")?.to_string() + ".mob";
+        Some(base_relative)
+    }
+
+    /// Find the base .mob file for a .mobpatch file
+    /// Looks for a .mob file with the same relative path in the base assets directory
+    pub fn find_base_mob(patch_path: &Path) -> Option<PathBuf> {
+        let base_relative = Self::expected_base_path(patch_path)?;
+        let base_relative_with_mobs = format!("mobs/{}", base_relative);
 
         // Get current working directory
         let cwd = std::env::current_dir().ok()?;
 
         // Search in base assets directory
-        let base_path = cwd.join("assets").join(&base_relative);
+        let base_path = cwd.join("assets").join(&base_relative_with_mobs);
         if base_path.exists() {
             return Some(base_path);
         }
 
         // Also check parent directory's assets (workspace root)
-        let parent_base = cwd.parent()?.join("assets").join(&base_relative);
+        let parent_base = cwd.parent()?.join("assets").join(&base_relative_with_mobs);
         if parent_base.exists() {
             return Some(parent_base);
         }
@@ -141,11 +149,12 @@ impl FileOperations {
     }
 
     /// Load a .mobpatch file and merge it with its base .mob file
-    /// Returns (patch_value, base_value, merged_value)
+    /// Returns (patch_value, base_value, merged_value, expected_base_path)
     pub fn load_patch_with_base(
         patch_path: &Path,
-    ) -> Result<(Value, Option<Value>, Option<Value>), FileError> {
+    ) -> Result<(Value, Option<Value>, Option<Value>, Option<String>), FileError> {
         let patch = Self::load_file(patch_path)?;
+        let expected_path = Self::expected_base_path(patch_path);
 
         // Try to find and load the base mob
         if let Some(base_path) = Self::find_base_mob(patch_path) {
@@ -155,16 +164,16 @@ impl FileOperations {
                     let mut merged = base.clone();
                     merge_toml_values(&mut merged, patch.clone());
                     info!("Merged patch with base mob from: {:?}", base_path);
-                    Ok((patch, Some(base), Some(merged)))
+                    Ok((patch, Some(base), Some(merged), expected_path))
                 }
                 Err(e) => {
                     warn!("Failed to load base mob {:?}: {}", base_path, e);
-                    Ok((patch, None, None))
+                    Ok((patch, None, None, expected_path))
                 }
             }
         } else {
             warn!("No base mob found for patch: {:?}", patch_path);
-            Ok((patch, None, None))
+            Ok((patch, None, None, expected_path))
         }
     }
 }

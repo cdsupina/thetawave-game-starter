@@ -387,6 +387,7 @@ pub fn main_ui_system(
         &mut dialogs.new_mob_dialog,
         &mut events.new,
         &mut file_tree,
+        &config,
     );
 
     // Render sprite browser dialog
@@ -692,6 +693,7 @@ fn render_new_mob_dialog(
     dialog: &mut NewMobDialog,
     new_events: &mut MessageWriter<NewMobEvent>,
     file_tree: &mut FileTreeState,
+    config: &crate::plugin::EditorConfig,
 ) {
     if !dialog.is_open {
         return;
@@ -700,14 +702,44 @@ fn render_new_mob_dialog(
     let mut should_create = false;
     let mut should_close = false;
 
-    let title = if dialog.is_patch {
-        "New Patch"
+    if dialog.is_patch {
+        // Patch dialog with mob selector
+        render_new_patch_dialog(
+            ctx,
+            dialog,
+            new_events,
+            file_tree,
+            config,
+            &mut should_create,
+            &mut should_close,
+        );
     } else {
-        "New Mob"
-    };
-    let extension = if dialog.is_patch { "mobpatch" } else { "mob" };
+        // Regular mob dialog with text input
+        render_new_mob_text_dialog(
+            ctx,
+            dialog,
+            new_events,
+            file_tree,
+            &mut should_create,
+            &mut should_close,
+        );
+    }
 
-    egui::Window::new(title)
+    if should_close {
+        dialog.close();
+    }
+}
+
+/// Render the new mob dialog (text input for filename)
+fn render_new_mob_text_dialog(
+    ctx: &egui::Context,
+    dialog: &mut NewMobDialog,
+    new_events: &mut MessageWriter<NewMobEvent>,
+    file_tree: &mut FileTreeState,
+    should_create: &mut bool,
+    should_close: &mut bool,
+) {
+    egui::Window::new("New Mob")
         .collapsible(false)
         .resizable(false)
         .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
@@ -716,19 +748,17 @@ fn render_new_mob_dialog(
                 ui.label("File name:");
                 let response = ui.text_edit_singleline(&mut dialog.file_name);
                 if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-                    should_create = true;
+                    *should_create = true;
                 }
-                // Focus the text field when dialog opens
                 response.request_focus();
-
-                ui.label(format!(".{}", extension));
+                ui.label(".mob");
             });
 
             ui.add_space(8.0);
 
             ui.horizontal(|ui| {
                 if ui.button("Cancel").clicked() {
-                    should_close = true;
+                    *should_close = true;
                 }
 
                 let valid_name = !dialog.file_name.trim().is_empty()
@@ -740,25 +770,135 @@ fn render_new_mob_dialog(
                     .add_enabled(valid_name, egui::Button::new("Create"))
                     .clicked()
                 {
-                    should_create = true;
+                    *should_create = true;
                 }
             });
         });
 
-    if should_create && !dialog.file_name.trim().is_empty() {
-        let file_name = format!("{}.{}", dialog.file_name.trim(), extension);
+    if *should_create && !dialog.file_name.trim().is_empty() {
+        let file_name = format!("{}.mob", dialog.file_name.trim());
         let path = dialog.parent_path.join(&file_name);
 
         new_events.write(NewMobEvent {
             path,
             name: dialog.file_name.trim().to_string(),
-            is_patch: dialog.is_patch,
+            is_patch: false,
         });
 
         file_tree.needs_refresh = true;
         dialog.close();
-    } else if should_close {
+        *should_create = false; // Prevent double close
+    }
+}
+
+/// Render the new patch dialog (dropdown selector for base mobs)
+fn render_new_patch_dialog(
+    ctx: &egui::Context,
+    dialog: &mut NewMobDialog,
+    new_events: &mut MessageWriter<NewMobEvent>,
+    file_tree: &mut FileTreeState,
+    config: &crate::plugin::EditorConfig,
+    should_create: &mut bool,
+    should_close: &mut bool,
+) {
+    // Get available base mobs and existing patches
+    let base_mobs = file_tree.get_base_mob_refs();
+    let existing_patches = file_tree.get_existing_patch_refs();
+
+    egui::Window::new("New Patch")
+        .collapsible(false)
+        .resizable(false)
+        .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+        .show(ctx, |ui| {
+            ui.label("Select a base mob to patch:");
+            ui.add_space(4.0);
+
+            // Dropdown for selecting base mob
+            let selected_display = dialog
+                .selected_mob_ref
+                .as_ref()
+                .map(|s| s.as_str())
+                .unwrap_or("(select a mob)");
+
+            egui::ComboBox::from_label("")
+                .selected_text(selected_display)
+                .width(250.0)
+                .show_ui(ui, |ui| {
+                    for mob_ref in &base_mobs {
+                        let has_patch = existing_patches.contains(mob_ref);
+                        let display_text = if has_patch {
+                            format!("{} (patch exists)", mob_ref)
+                        } else {
+                            mob_ref.clone()
+                        };
+
+                        // Greyed out if patch exists
+                        let text = if has_patch {
+                            egui::RichText::new(&display_text).color(egui::Color32::GRAY)
+                        } else {
+                            egui::RichText::new(&display_text)
+                        };
+
+                        let is_selected = dialog.selected_mob_ref.as_ref() == Some(mob_ref);
+                        let response = ui.selectable_label(is_selected, text);
+
+                        // Only allow selection if no patch exists
+                        if response.clicked() && !has_patch {
+                            dialog.selected_mob_ref = Some(mob_ref.clone());
+                        }
+                    }
+                });
+
+            ui.add_space(8.0);
+
+            ui.horizontal(|ui| {
+                if ui.button("Cancel").clicked() {
+                    *should_close = true;
+                }
+
+                // Check if selection is valid (has a selection and no existing patch)
+                let valid_selection = dialog
+                    .selected_mob_ref
+                    .as_ref()
+                    .is_some_and(|s| !existing_patches.contains(s));
+
+                if ui
+                    .add_enabled(valid_selection, egui::Button::new("Create"))
+                    .clicked()
+                {
+                    *should_create = true;
+                }
+            });
+        });
+
+    if *should_create
+        && let Some(mob_ref) = &dialog.selected_mob_ref
+        && let Some(extended_dir) = &config.extended_assets_dir
+    {
+        // Construct path: extended_dir/mob_ref.mobpatch
+        let patch_path = extended_dir.join(format!("{}.mobpatch", mob_ref));
+
+        // Create parent directories if needed
+        if let Some(parent) = patch_path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+
+        // Extract the mob name from the ref (last component)
+        let name = mob_ref
+            .rsplit('/')
+            .next()
+            .unwrap_or(mob_ref)
+            .to_string();
+
+        new_events.write(NewMobEvent {
+            path: patch_path,
+            name,
+            is_patch: true,
+        });
+
+        file_tree.needs_refresh = true;
         dialog.close();
+        *should_create = false;
     }
 }
 

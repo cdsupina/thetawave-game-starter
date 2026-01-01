@@ -245,6 +245,10 @@ pub struct EditorSession {
     /// Used to show inherited values in the properties panel
     pub base_mob: Option<toml::Value>,
 
+    /// Expected base mob relative path (for .mobpatch files)
+    /// e.g., "xhitara/spitter.mob" - set even if base mob not found
+    pub expected_base_path: Option<String>,
+
     /// Path to the current file being edited
     pub current_path: Option<PathBuf>,
 
@@ -274,6 +278,7 @@ impl Default for EditorSession {
             original_mob: None,
             merged_for_preview: None,
             base_mob: None,
+            expected_base_path: None,
             current_path: None,
             file_type: FileType::Mob,
             is_modified: false,

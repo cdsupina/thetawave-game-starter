@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::path::PathBuf;
 
 use bevy::prelude::Resource;
@@ -181,6 +182,78 @@ impl FileTreeState {
                 format!("{}/{}", prefix, stem)
             };
             refs.push(mob_ref);
+        }
+    }
+
+    /// Get mob refs from only the "base" root (mobs that can be patched)
+    /// Returns refs without the "base/" prefix (e.g., "xhitara/spitter")
+    pub fn get_base_mob_refs(&self) -> Vec<String> {
+        let mut refs = Vec::new();
+        for root in &self.roots {
+            if root.name == "base" {
+                // Collect from children of "base" root, skipping the root name
+                for child in &root.children {
+                    Self::collect_mob_refs_no_root(child, "", &mut refs);
+                }
+            }
+        }
+        refs
+    }
+
+    fn collect_mob_refs_no_root(node: &FileNode, prefix: &str, refs: &mut Vec<String>) {
+        if node.is_directory {
+            let new_prefix = if prefix.is_empty() {
+                node.name.clone()
+            } else {
+                format!("{}/{}", prefix, node.name)
+            };
+            for child in &node.children {
+                Self::collect_mob_refs_no_root(child, &new_prefix, refs);
+            }
+        } else if node.name.ends_with(".mob") {
+            let stem = node.name.strip_suffix(".mob").unwrap_or(&node.name);
+            let mob_ref = if prefix.is_empty() {
+                stem.to_string()
+            } else {
+                format!("{}/{}", prefix, stem)
+            };
+            refs.push(mob_ref);
+        }
+    }
+
+    /// Get existing patch refs from "extended" root
+    /// Returns refs without the "extended/" prefix (e.g., "xhitara/spitter")
+    pub fn get_existing_patch_refs(&self) -> HashSet<String> {
+        let mut refs = HashSet::new();
+        for root in &self.roots {
+            if root.name == "extended" {
+                // Collect from children of "extended" root, skipping the root name
+                for child in &root.children {
+                    Self::collect_patch_refs_no_root(child, "", &mut refs);
+                }
+            }
+        }
+        refs
+    }
+
+    fn collect_patch_refs_no_root(node: &FileNode, prefix: &str, refs: &mut HashSet<String>) {
+        if node.is_directory {
+            let new_prefix = if prefix.is_empty() {
+                node.name.clone()
+            } else {
+                format!("{}/{}", prefix, node.name)
+            };
+            for child in &node.children {
+                Self::collect_patch_refs_no_root(child, &new_prefix, refs);
+            }
+        } else if node.name.ends_with(".mobpatch") {
+            let stem = node.name.strip_suffix(".mobpatch").unwrap_or(&node.name);
+            let mob_ref = if prefix.is_empty() {
+                stem.to_string()
+            } else {
+                format!("{}/{}", prefix, stem)
+            };
+            refs.insert(mob_ref);
         }
     }
 }

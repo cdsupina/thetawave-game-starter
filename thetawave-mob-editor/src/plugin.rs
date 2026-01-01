@@ -615,15 +615,16 @@ fn handle_load_mob(
         let load_result = if is_patch {
             FileOperations::load_patch_with_base(&event.path)
         } else {
-            FileOperations::load_file(&event.path).map(|v| (v, None, None))
+            FileOperations::load_file(&event.path).map(|v| (v, None, None, None))
         };
 
         match load_result {
-            Ok((value, base, merged)) => {
+            Ok((value, base, merged, expected_base)) => {
                 session.current_mob = Some(value.clone());
                 session.original_mob = Some(value);
                 session.base_mob = base;
                 session.merged_for_preview = merged;
+                session.expected_base_path = expected_base;
                 session.current_path = Some(event.path.clone());
                 session.file_type = file_type;
                 session.is_modified = false;
@@ -768,7 +769,7 @@ fn handle_new_mob(
         match FileOperations::create_new_file(&event.path, &event.name, event.is_patch) {
             Ok(value) => {
                 session.current_mob = Some(value.clone());
-                session.original_mob = Some(value);
+                session.original_mob = Some(value.clone());
                 session.current_path = Some(event.path.clone());
                 session.file_type = if event.is_patch {
                     crate::data::FileType::MobPatch
@@ -776,6 +777,25 @@ fn handle_new_mob(
                     crate::data::FileType::Mob
                 };
                 session.is_modified = false;
+
+                // For patches, look up the base mob
+                if event.is_patch {
+                    session.expected_base_path = FileOperations::expected_base_path(&event.path);
+                    if let Some(base_path) = FileOperations::find_base_mob(&event.path) {
+                        if let Ok(base) = FileOperations::load_file(&base_path) {
+                            // Merge patch with base for preview
+                            let mut merged = base.clone();
+                            thetawave_core::merge_toml_values(&mut merged, value);
+                            session.base_mob = Some(base);
+                            session.merged_for_preview = Some(merged);
+                        }
+                    }
+                } else {
+                    session.base_mob = None;
+                    session.merged_for_preview = None;
+                    session.expected_base_path = None;
+                }
+
                 session.log_success(format!("Created: {}", event.path.display()), &time);
 
                 file_tree.needs_refresh = true;

@@ -24,7 +24,7 @@ use crate::data::{EditorSession, FileType, SpriteRegistry};
 use crate::file::{FileTreeState, ReloadMobEvent, SaveMobEvent};
 use crate::plugin::EditorConfig;
 
-use fields::{FieldResult, PATCHED_COLOR};
+use fields::FieldResult;
 
 /// Result from rendering the properties panel
 #[derive(Default)]
@@ -264,16 +264,29 @@ fn render_file_info(ui: &mut egui::Ui, session: &EditorSession) {
 
         // Show patch info if applicable
         if session.file_type == FileType::MobPatch {
-            // For patches, show that it's patching something
-            // The base mob reference is stored in the base_mob field
             if session.base_mob.is_some() {
-                ui.horizontal(|ui| {
+                // Base mob was found - show which mob this patches
+                if let Some(base_path) = &session.expected_base_path {
                     ui.label(
-                        egui::RichText::new("(patch file)")
+                        egui::RichText::new(format!("Patches: {}", base_path))
                             .small()
-                            .color(PATCHED_COLOR),
+                            .color(egui::Color32::from_rgb(100, 200, 100)),
                     );
-                });
+                }
+            } else {
+                // Base mob not found - show warning with advice
+                ui.label(
+                    egui::RichText::new("Base mob not found")
+                        .small()
+                        .color(egui::Color32::from_rgb(255, 180, 50)),
+                );
+                if let Some(expected) = &session.expected_base_path {
+                    ui.label(
+                        egui::RichText::new(format!("Expected: assets/mobs/{}", expected))
+                            .small()
+                            .color(egui::Color32::GRAY),
+                    );
+                }
             }
         }
     }

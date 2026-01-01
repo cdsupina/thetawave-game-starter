@@ -104,6 +104,8 @@ pub struct NewMobDialog {
     pub parent_path: PathBuf,
     pub file_name: String,
     pub is_patch: bool,
+    /// Selected base mob reference for patches (e.g., "xhitara/spitter")
+    pub selected_mob_ref: Option<String>,
 }
 
 impl NewMobDialog {
@@ -112,18 +114,30 @@ impl NewMobDialog {
         self.parent_path = parent_path;
         self.file_name = String::new();
         self.is_patch = false;
+        self.selected_mob_ref = None;
     }
 
-    pub fn open_patch(&mut self, parent_path: PathBuf) {
+    pub fn open_patch(&mut self) {
         self.is_open = true;
-        self.parent_path = parent_path;
+        self.parent_path = PathBuf::new(); // Not used for patches
         self.file_name = String::new();
         self.is_patch = true;
+        self.selected_mob_ref = None;
+    }
+
+    /// Open patch dialog with a pre-selected base mob
+    pub fn open_patch_for_mob(&mut self, mob_ref: String) {
+        self.is_open = true;
+        self.parent_path = PathBuf::new(); // Not used for patches
+        self.file_name = String::new();
+        self.is_patch = true;
+        self.selected_mob_ref = Some(mob_ref);
     }
 
     pub fn close(&mut self) {
         self.is_open = false;
         self.file_name.clear();
+        self.selected_mob_ref = None;
     }
 }
 
@@ -224,7 +238,7 @@ fn render_file_node(
             }
 
             if ui.button("📋 New Patch...").clicked() {
-                new_mob_dialog.open_patch(node.path.clone());
+                new_mob_dialog.open_patch();
                 ui.close();
             }
 
@@ -291,9 +305,17 @@ fn render_file_node(
             let is_mob = node.name.ends_with(".mob");
 
             if is_mob && ui.button("📋 Create Patch...").clicked() {
-                // Create patch in same directory as the mob file
-                if let Some(parent) = node.path.parent() {
-                    new_mob_dialog.open_patch(parent.to_path_buf());
+                // Extract mob reference from path (e.g., "xhitara/spitter" from ".../mobs/xhitara/spitter.mob")
+                let path_str = node.path.to_string_lossy();
+                if let Some(mobs_idx) = path_str.find("mobs/") {
+                    let relative = &path_str[mobs_idx + 5..]; // Skip "mobs/"
+                    if let Some(mob_ref) = relative.strip_suffix(".mob") {
+                        new_mob_dialog.open_patch_for_mob(mob_ref.to_string());
+                    } else {
+                        new_mob_dialog.open_patch();
+                    }
+                } else {
+                    new_mob_dialog.open_patch();
                 }
                 ui.close();
             }
