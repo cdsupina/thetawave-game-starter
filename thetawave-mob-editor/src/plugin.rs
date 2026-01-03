@@ -798,11 +798,11 @@ fn handle_load_mob(
         let load_result = if is_patch {
             FileOperations::load_patch_with_base(&event.path)
         } else {
-            FileOperations::load_file(&event.path).map(|v| (v, None, None, None))
+            FileOperations::load_file(&event.path).map(|v| (v, None, None, None, None))
         };
 
         match load_result {
-            Ok((value, base, merged, expected_base)) => {
+            Ok((value, base, merged, expected_base, base_warning)) => {
                 session.current_mob = Some(value.clone());
                 session.original_mob = Some(value);
                 session.base_mob = base;
@@ -816,6 +816,11 @@ fn handle_load_mob(
                 session.selected_jointed_mob = None;
                 // Trigger preview rebuild (important for reload case where path is unchanged)
                 session.preview_needs_rebuild = true;
+
+                // Log warning if base mob couldn't be loaded
+                if let Some(warning) = base_warning {
+                    session.log_warning(warning, &time);
+                }
 
                 let status = if is_patch && session.merged_for_preview.is_some() {
                     format!("Loaded patch (merged with base): {}", event.path.display())

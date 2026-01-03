@@ -115,6 +115,8 @@ pub struct NewFolderDialog {
     pub is_open: bool,
     pub parent_path: PathBuf,
     pub folder_name: String,
+    /// Error message to display in the dialog
+    pub error_message: Option<String>,
 }
 
 impl NewFolderDialog {
@@ -122,11 +124,13 @@ impl NewFolderDialog {
         self.is_open = true;
         self.parent_path = parent_path;
         self.folder_name = String::new();
+        self.error_message = None;
     }
 
     pub fn close(&mut self) {
         self.is_open = false;
         self.folder_name.clear();
+        self.error_message = None;
     }
 }
 
@@ -139,6 +143,8 @@ pub struct NewMobDialog {
     pub is_patch: bool,
     /// Selected base mob reference for patches (e.g., "xhitara/spitter")
     pub selected_mob_ref: Option<String>,
+    /// Error message to display in the dialog
+    pub error_message: Option<String>,
 }
 
 impl NewMobDialog {
@@ -148,6 +154,7 @@ impl NewMobDialog {
         self.file_name = String::new();
         self.is_patch = false;
         self.selected_mob_ref = None;
+        self.error_message = None;
     }
 
     pub fn open_patch(&mut self) {
@@ -156,6 +163,7 @@ impl NewMobDialog {
         self.file_name = String::new();
         self.is_patch = true;
         self.selected_mob_ref = None;
+        self.error_message = None;
     }
 
     /// Open patch dialog with a pre-selected base mob

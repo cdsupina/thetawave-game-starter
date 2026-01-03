@@ -384,11 +384,13 @@ impl EditorSession {
     }
 
     /// Create a new empty mob with defaults
+    ///
+    /// Note: Does not include a sprite - user must add one via the editor.
+    /// The MobAsset.sprite field has a serde default, so mobs without sprites
+    /// can be saved, but they must have a sprite added before use in-game.
     pub fn new_mob(name: &str) -> toml::Value {
         let mut table = toml::value::Table::new();
         table.insert("name".to_string(), toml::Value::String(name.to_string()));
-        // No default sprite - user must register one explicitly
-        // This avoids creating references to non-existent files
         table.insert("spawnable".to_string(), toml::Value::Boolean(true));
         table.insert("health".to_string(), toml::Value::Integer(50));
 

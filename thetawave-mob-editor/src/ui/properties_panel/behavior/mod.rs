@@ -113,7 +113,9 @@ fn render_behavior_node(
         .get("type")
         .and_then(|v| v.as_str())
         .unwrap_or("Unknown");
-    let node_type: Option<BehaviorNodeType> = node_type_str.parse().ok();
+    let node_type: Option<BehaviorNodeType> = node_type_str.parse().map_err(|e| {
+        bevy::log::debug!("Unknown behavior node type '{}': {}", node_type_str, e);
+    }).ok();
 
     // Create collapsible header for the node
     let header_text = format_node_header(table, node_type);

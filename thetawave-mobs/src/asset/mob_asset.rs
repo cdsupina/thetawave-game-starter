@@ -126,6 +126,8 @@ pub struct MobAsset {
     // === Visual ===
     /// Sprite file path relative to assets directory.
     /// Example: "media/aseprite/xhitara_grunt_mob.aseprite"
+    /// Defaults to empty string for new mobs - must be set before spawning in game.
+    #[serde(default)]
     pub sprite: String,
 
     /// Decorative sprites attached to this mob

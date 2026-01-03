@@ -771,6 +771,15 @@ fn render_new_folder_dialog(
                 );
             }
 
+            // Show error message if present
+            if let Some(error) = &dialog.error_message {
+                ui.label(
+                    egui::RichText::new(error)
+                        .small()
+                        .color(egui::Color32::from_rgb(255, 100, 100)),
+                );
+            }
+
             ui.add_space(4.0);
 
             ui.horizontal(|ui| {
@@ -792,9 +801,8 @@ fn render_new_folder_dialog(
     if should_create && !dialog.folder_name.trim().is_empty() {
         let new_path = dialog.parent_path.join(dialog.folder_name.trim());
         if let Err(e) = std::fs::create_dir_all(&new_path) {
-            // Log error - will be visible in console/logs rather than silently hidden
+            dialog.error_message = Some(format!("Failed to create folder: {}", e));
             bevy::log::error!("Failed to create folder {:?}: {}", new_path, e);
-            // Don't close dialog on error - user can see the path and try again
             return;
         }
         file_tree.needs_refresh = true;
@@ -979,6 +987,16 @@ fn render_new_patch_dialog(
 
             ui.add_space(8.0);
 
+            // Show error message if present
+            if let Some(error) = &dialog.error_message {
+                ui.label(
+                    egui::RichText::new(error)
+                        .small()
+                        .color(egui::Color32::from_rgb(255, 100, 100)),
+                );
+                ui.add_space(4.0);
+            }
+
             ui.horizontal(|ui| {
                 if ui.button("Cancel").clicked() {
                     *should_close = true;
@@ -1009,11 +1027,13 @@ fn render_new_patch_dialog(
         // Create parent directories if needed
         if let Some(parent) = patch_path.parent() {
             if let Err(e) = std::fs::create_dir_all(parent) {
+                dialog.error_message = Some(format!("Failed to create directory: {}", e));
                 bevy::log::error!(
                     "Failed to create parent directory for patch {:?}: {}",
                     patch_path,
                     e
                 );
+                *should_create = false;
                 return;
             }
         }

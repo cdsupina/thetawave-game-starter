@@ -68,8 +68,8 @@ impl FileOperations {
             fs::create_dir_all(parent)?;
         }
 
-        // Write atomically using temp file
-        let temp_path = path.with_extension("tmp");
+        // Write atomically using temp file with unique name to avoid race conditions
+        let temp_path = path.with_extension(format!("tmp.{}", std::process::id()));
         fs::write(&temp_path, &content)?;
         if let Err(e) = fs::rename(&temp_path, path) {
             // Attempt to clean up temp file on rename failure
@@ -159,10 +159,12 @@ impl FileOperations {
     }
 
     /// Load a .mobpatch file and merge it with its base .mob file
-    /// Returns (patch_value, base_value, merged_value, expected_base_path)
+    /// Returns (patch_value, base_value, merged_value, expected_base_path, base_load_warning)
+    /// The base_load_warning is set when a base mob file exists but couldn't be loaded
     pub fn load_patch_with_base(
         patch_path: &Path,
-    ) -> Result<(Value, Option<Value>, Option<Value>, Option<String>), FileError> {
+    ) -> Result<(Value, Option<Value>, Option<Value>, Option<String>, Option<String>), FileError>
+    {
         let patch = Self::load_file(patch_path)?;
         let expected_path = Self::expected_base_path(patch_path);
 
@@ -174,16 +176,20 @@ impl FileOperations {
                     let mut merged = base.clone();
                     merge_toml_values(&mut merged, patch.clone());
                     debug!("Merged patch with base mob from: {:?}", base_path);
-                    Ok((patch, Some(base), Some(merged), expected_path))
+                    Ok((patch, Some(base), Some(merged), expected_path, None))
                 }
                 Err(e) => {
-                    warn!("Failed to load base mob {:?}: {}", base_path, e);
-                    Ok((patch, None, None, expected_path))
+                    let warning = format!(
+                        "Base mob exists but couldn't be loaded: {:?} - {}",
+                        base_path, e
+                    );
+                    warn!("{}", warning);
+                    Ok((patch, None, None, expected_path, Some(warning)))
                 }
             }
         } else {
-            warn!("No base mob found for patch: {:?}", patch_path);
-            Ok((patch, None, None, expected_path))
+            debug!("No base mob found for patch: {:?}", patch_path);
+            Ok((patch, None, None, expected_path, None))
         }
     }
 }
@@ -405,13 +411,14 @@ mod tests {
         let result = FileOperations::load_patch_with_base(&patch_path);
         assert!(result.is_ok());
 
-        let (patch, base, merged, _expected_path) = result.unwrap();
+        let (patch, base, merged, _expected_path, base_warning) = result.unwrap();
         assert_eq!(
             patch.get("name").and_then(|v: &toml::Value| v.as_str()),
             Some("Patched Enemy")
         );
         assert!(base.is_none());
         assert!(merged.is_none());
+        assert!(base_warning.is_none()); // No warning when base simply doesn't exist
     }
 
     #[test]

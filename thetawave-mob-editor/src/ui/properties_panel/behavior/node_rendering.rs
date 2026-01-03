@@ -369,7 +369,9 @@ pub fn render_action_node(
                 .get("action")
                 .and_then(|v| v.as_str())
                 .unwrap_or("Unknown");
-            let action_type: Option<MobBehaviorVariant> = action_type_str.parse().ok();
+            let action_type: Option<MobBehaviorVariant> = action_type_str.parse().map_err(|e| {
+                bevy::log::debug!("Unknown behavior action type '{}': {}", action_type_str, e);
+            }).ok();
 
             ui.horizontal(|ui| {
                 ui.add_space(INDENT_SPACING);
@@ -737,7 +739,9 @@ fn render_transmit_nested_behaviors(
                 .get("action")
                 .and_then(|v| v.as_str())
                 .unwrap_or("Unknown");
-            let nested_action: Option<MobBehaviorVariant> = nested_action_str.parse().ok();
+            let nested_action: Option<MobBehaviorVariant> = nested_action_str.parse().map_err(|e| {
+                bevy::log::debug!("Unknown nested behavior action type '{}': {}", nested_action_str, e);
+            }).ok();
 
             ui.horizontal(|ui| {
                 ui.add_space(40.0);
