@@ -25,7 +25,7 @@ use super::truncate_filename;
 /// Maximum length for displayed filenames in the properties panel header
 const MAX_FILENAME_DISPLAY_LEN: usize = 24;
 
-use crate::data::{EditorSession, FileType, SpriteRegistry};
+use crate::data::{EditorSession, FileType, MobAssetRegistry, SpriteRegistry};
 use crate::file::{FileTreeState, ReloadMobEvent, SaveMobEvent};
 use crate::plugin::EditorConfig;
 
@@ -38,6 +38,8 @@ pub struct PropertiesPanelResult {
     pub open_sprite_browser: bool,
     /// If Some, the decoration index that needs a sprite browser
     pub open_decoration_browser: Option<usize>,
+    /// Whether mob registration was triggered
+    pub register_mob: bool,
 }
 
 /// Render the complete properties panel
@@ -55,6 +57,7 @@ pub fn properties_panel_ui(
     ui: &mut egui::Ui,
     session: &mut EditorSession,
     sprite_registry: &SpriteRegistry,
+    mob_registry: &MobAssetRegistry,
     file_tree: &FileTreeState,
     config: &EditorConfig,
     save_events: &mut MessageWriter<SaveMobEvent>,
@@ -63,8 +66,10 @@ pub fn properties_panel_ui(
     let mut result = PropertiesPanelResult::default();
     let mut modified = false;
 
-    // File info header
-    render_file_info(ui, session);
+    // File info header with registration status
+    if render_file_info(ui, session, mob_registry, config) {
+        result.register_mob = true;
+    }
 
     // Action buttons below the title
     render_action_buttons(ui, session, save_events, reload_events);
@@ -255,7 +260,16 @@ fn render_action_buttons(
 }
 
 /// Render file information header
-fn render_file_info(ui: &mut egui::Ui, session: &EditorSession) {
+///
+/// Returns true if the "Register" button was clicked
+fn render_file_info(
+    ui: &mut egui::Ui,
+    session: &EditorSession,
+    mob_registry: &MobAssetRegistry,
+    config: &EditorConfig,
+) -> bool {
+    let mut register_clicked = false;
+
     if let Some(path) = &session.current_path {
         let filename = path
             .file_name()
@@ -279,6 +293,27 @@ fn render_file_info(ui: &mut egui::Ui, session: &EditorSession) {
 
             if session.is_modified {
                 ui.label(egui::RichText::new("*").color(egui::Color32::YELLOW));
+            }
+        });
+
+        // Show registration status
+        let is_registered = mob_registry.is_registered(path, config);
+        ui.horizontal(|ui| {
+            if is_registered {
+                ui.label(
+                    egui::RichText::new("✔ Registered")
+                        .small()
+                        .color(egui::Color32::from_rgb(100, 200, 100)),
+                );
+            } else {
+                ui.label(
+                    egui::RichText::new("⚠ Not registered")
+                        .small()
+                        .color(egui::Color32::YELLOW),
+                );
+                if ui.small_button("Register").clicked() {
+                    register_clicked = true;
+                }
             }
         });
 
@@ -310,6 +345,8 @@ fn render_file_info(ui: &mut egui::Ui, session: &EditorSession) {
             }
         }
     }
+
+    register_clicked
 }
 
 /// Render general properties section

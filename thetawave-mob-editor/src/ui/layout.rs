@@ -11,7 +11,7 @@ use bevy::{
 use bevy_egui::{EguiContexts, egui};
 
 use crate::{
-    data::{EditorSession, SpriteRegistry},
+    data::{EditorSession, MobAssetRegistry, SpriteRegistry},
     file::{
         DeleteDirectoryEvent, DeleteMobEvent, FileTreeState, LoadMobEvent, NewMobEvent,
         ReloadMobEvent, SaveMobEvent, append_sprite_to_assets_ron,
@@ -104,6 +104,7 @@ pub fn main_ui_system(
     mut preview_settings: ResMut<PreviewSettings>,
     mut preview_state: ResMut<PreviewState>,
     mut sprite_registry: ResMut<SpriteRegistry>,
+    mut mob_registry: ResMut<MobAssetRegistry>,
     config: Res<EditorConfig>,
     mut frames_passed: Local<u8>,
 ) {
@@ -132,7 +133,9 @@ pub fn main_ui_system(
                 ui,
                 &mut file_tree,
                 &mut sprite_registry,
+                &mut mob_registry,
                 &session,
+                &config,
                 &mut events.load,
                 &mut dialogs.delete_dialog,
                 &mut dialogs.delete_dir_dialog,
@@ -154,6 +157,7 @@ pub fn main_ui_system(
                     ui,
                     &mut session,
                     &sprite_registry,
+                    &mob_registry,
                     &file_tree,
                     &config,
                     &mut events.save,
@@ -176,6 +180,57 @@ pub fn main_ui_system(
         dialogs
             .sprite_browser
             .open_for_decoration(decoration_index, allow_extended, &config);
+    }
+
+    // Handle mob registration
+    if panel_result.register_mob {
+        if let Some(path) = &session.current_path {
+            let is_extended = config.is_extended_path(path);
+            let is_patch = path.extension().is_some_and(|e| e == "mobpatch");
+
+            // Get the mobs.assets.ron path
+            let mobs_assets_path = if is_extended {
+                config.extended_mobs_assets_ron()
+            } else {
+                config.base_mobs_assets_ron()
+            };
+
+            if let Some(mobs_assets_path) = mobs_assets_path {
+                // Calculate relative path for the assets.ron file
+                let assets_root = if is_extended {
+                    config.extended_assets_root()
+                } else {
+                    config.base_assets_root()
+                };
+
+                if let Some(assets_root) = assets_root {
+                    if let Ok(relative) = path.strip_prefix(&assets_root) {
+                        let relative_str = relative.to_string_lossy().to_string();
+                        match crate::file::append_to_mobs_assets_ron(
+                            &mobs_assets_path,
+                            &relative_str,
+                            is_patch,
+                            is_extended,
+                        ) {
+                            Ok(()) => {
+                                mob_registry.needs_refresh = true;
+                                session.log_success(
+                                    format!("Registered {} in mobs.assets.ron", relative_str),
+                                    &time,
+                                );
+                            }
+                            Err(e) => {
+                                session.log_error(format!("Failed to register: {}", e), &time);
+                            }
+                        }
+                    } else {
+                        session.log_error("Could not calculate relative path".to_string(), &time);
+                    }
+                }
+            } else {
+                session.log_error("Could not determine mobs.assets.ron path".to_string(), &time);
+            }
+        }
     }
 
     // Bottom status bar / log panel
@@ -465,7 +520,13 @@ pub fn main_ui_system(
             .to_string();
 
         // Register sprite if needed
-        if !sprite_registry.is_registered(&asset_path) {
+        // When checking extended sprites, use the extended:// prefix for proper matching
+        let check_path = if is_extended {
+            format!("extended://{}", asset_path)
+        } else {
+            asset_path.clone()
+        };
+        if !sprite_registry.is_registered(&check_path) {
             if let Err(e) = append_sprite_to_assets_ron(&assets_ron, &asset_path, is_extended) {
                 session.log_error(format!("Failed to register sprite: {}", e), &time);
                 // Don't open dialog if registration failed
@@ -1324,7 +1385,14 @@ fn render_sprite_browser_dialog(
                                 format!("{}/{}", dialog.current_path.join("/"), entry.name)
                             };
 
-                            let label = if sprite_registry.is_registered(&asset_path) {
+                            // When browsing extended, check with extended:// prefix
+                            let check_path = if dialog.browsing_extended {
+                                format!("extended://{}", asset_path)
+                            } else {
+                                asset_path.clone()
+                            };
+
+                            let label = if sprite_registry.is_registered(&check_path) {
                                 format!("{} ✔", entry.name)
                             } else {
                                 entry.name.clone()
@@ -1351,8 +1419,16 @@ fn render_sprite_browser_dialog(
                     .unwrap_or_default();
 
                 // Build asset path to check registration
+                // When browsing extended, add extended:// prefix for proper matching
                 let asset_path = dialog.get_asset_path(selected, config);
-                let registration_info = asset_path
+                let check_path = asset_path.as_ref().map(|p| {
+                    if dialog.browsing_extended {
+                        format!("extended://{}", p)
+                    } else {
+                        p.clone()
+                    }
+                });
+                let registration_info = check_path
                     .as_ref()
                     .and_then(|p| sprite_registry.find_by_path(p));
 

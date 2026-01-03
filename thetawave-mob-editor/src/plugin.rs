@@ -17,10 +17,13 @@ use bevy_aseprite_ultra::AsepriteUltraPlugin;
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
 
 use crate::{
-    data::{EditorSession, RegisteredSprite, SpriteRegistry, SpriteSource},
+    data::{
+        EditorSession, MobAssetRegistry, MobAssetSource, RegisteredMobAsset,
+        RegisteredSprite, SpriteRegistry, SpriteSource,
+    },
     file::{
         DeleteDirectoryEvent, DeleteMobEvent, FileOperations, FileTreeState, LoadMobEvent,
-        NewMobEvent, ReloadMobEvent, SaveMobEvent, parse_assets_ron,
+        NewMobEvent, ReloadMobEvent, SaveMobEvent, parse_assets_ron, parse_mobs_assets_ron,
     },
     preview::{
         JointedMobCache, PreviewSettings, PreviewState, check_preview_update, draw_collider_gizmos,
@@ -85,6 +88,7 @@ impl Plugin for MobEditorPlugin {
             .init_resource::<NewFolderDialog>()
             .init_resource::<NewMobDialog>()
             .init_resource::<SpriteRegistry>()
+            .init_resource::<MobAssetRegistry>()
             .init_resource::<SpriteRegistrationDialog>()
             .init_resource::<SpriteSelectionDialog>()
             .init_resource::<DecorationSelectionDialog>()
@@ -113,6 +117,7 @@ impl Plugin for MobEditorPlugin {
                 setup_preview_camera,
                 initial_scan_system,
                 initial_sprite_scan,
+                initial_mob_asset_scan,
             ),
         );
 
@@ -158,6 +163,7 @@ impl Plugin for MobEditorPlugin {
                 handle_delete_directory,
                 check_file_refresh,
                 check_sprite_registry_refresh,
+                check_mob_asset_registry_refresh,
                 handle_window_close,
             ),
         );
@@ -201,6 +207,17 @@ impl EditorConfig {
     pub fn extended_assets_ron(&self) -> Option<PathBuf> {
         self.extended_assets_root()
             .map(|p| p.join("game.assets.ron"))
+    }
+
+    /// Get the base mobs.assets.ron path
+    pub fn base_mobs_assets_ron(&self) -> Option<PathBuf> {
+        self.base_assets_root().map(|p| p.join("mobs.assets.ron"))
+    }
+
+    /// Get the extended mobs.assets.ron path
+    pub fn extended_mobs_assets_ron(&self) -> Option<PathBuf> {
+        self.extended_assets_root()
+            .map(|p| p.join("mobs.assets.ron"))
     }
 
     /// Check if a path is within the extended assets directory.
@@ -621,6 +638,108 @@ fn check_sprite_registry_refresh(
 ) {
     if sprite_registry.needs_refresh {
         scan_sprite_registry(&mut sprite_registry, &config);
+    }
+}
+
+/// Initial scan of mob assets from mobs.assets.ron files
+fn initial_mob_asset_scan(mut mob_registry: ResMut<MobAssetRegistry>, config: Res<EditorConfig>) {
+    scan_mob_asset_registry(&mut mob_registry, &config);
+}
+
+/// Scan mobs.assets.ron files and populate the mob asset registry
+fn scan_mob_asset_registry(registry: &mut MobAssetRegistry, config: &EditorConfig) {
+    registry.entries.clear();
+    registry.parse_errors.clear();
+
+    let cwd = std::env::current_dir().unwrap_or_default();
+
+    // Scan base mobs.assets.ron
+    if let Some(base_mobs_ron) = config.base_mobs_assets_ron() {
+        let base_mobs_ron = cwd.join(&base_mobs_ron);
+        if base_mobs_ron.exists() {
+            match parse_mobs_assets_ron(&base_mobs_ron) {
+                Ok(parsed) => {
+                    for path in parsed.mobs {
+                        let display_name = extract_mob_display_name(&path);
+                        registry.entries.push(RegisteredMobAsset {
+                            asset_path: path,
+                            display_name,
+                            source: MobAssetSource::Base,
+                        });
+                    }
+                    // Base files shouldn't have patches, but handle them if present
+                    for path in parsed.patches {
+                        let display_name = extract_mob_display_name(&path);
+                        registry.entries.push(RegisteredMobAsset {
+                            asset_path: path,
+                            display_name,
+                            source: MobAssetSource::Base,
+                        });
+                    }
+                }
+                Err(e) => registry.parse_errors.push(e),
+            }
+        }
+    }
+
+    // Scan extended mobs.assets.ron
+    if let Some(extended_mobs_ron) = config.extended_mobs_assets_ron() {
+        let extended_mobs_ron = cwd.join(&extended_mobs_ron);
+        if extended_mobs_ron.exists() {
+            match parse_mobs_assets_ron(&extended_mobs_ron) {
+                Ok(parsed) => {
+                    for path in parsed.mobs {
+                        let display_name = extract_mob_display_name(&path);
+                        registry.entries.push(RegisteredMobAsset {
+                            asset_path: path,
+                            display_name,
+                            source: MobAssetSource::Extended,
+                        });
+                    }
+                    for path in parsed.patches {
+                        let display_name = extract_mob_display_name(&path);
+                        registry.entries.push(RegisteredMobAsset {
+                            asset_path: path,
+                            display_name,
+                            source: MobAssetSource::Extended,
+                        });
+                    }
+                }
+                Err(e) => registry.parse_errors.push(e),
+            }
+        }
+    }
+
+    // Sort by display name
+    registry
+        .entries
+        .sort_by(|a, b| a.display_name.cmp(&b.display_name));
+    registry.needs_refresh = false;
+
+    info!(
+        "Loaded {} mob assets ({} base, {} extended)",
+        registry.entries.len(),
+        registry.base_entries().count(),
+        registry.extended_entries().count()
+    );
+}
+
+/// Extract display name (file stem) from a mob path
+fn extract_mob_display_name(path: &str) -> String {
+    std::path::Path::new(path)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or(path)
+        .to_string()
+}
+
+/// Check if mob asset registry needs refresh
+fn check_mob_asset_registry_refresh(
+    mut mob_registry: ResMut<MobAssetRegistry>,
+    config: Res<EditorConfig>,
+) {
+    if mob_registry.needs_refresh {
+        scan_mob_asset_registry(&mut mob_registry, &config);
     }
 }
 

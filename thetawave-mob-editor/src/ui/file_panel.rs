@@ -9,8 +9,9 @@ use bevy::{ecs::message::MessageWriter, prelude::Resource};
 use bevy_egui::egui;
 
 use crate::{
-    data::{EditorSession, SpriteRegistry},
+    data::{EditorSession, MobAssetRegistry, SpriteRegistry},
     file::{DeleteDirectoryEvent, DeleteMobEvent, FileNode, FileTreeState, LoadMobEvent},
+    plugin::EditorConfig,
 };
 
 /// Maximum length for displayed filenames in the file tree
@@ -178,7 +179,9 @@ pub fn file_panel_ui(
     ui: &mut egui::Ui,
     file_tree: &mut FileTreeState,
     sprite_registry: &mut SpriteRegistry,
+    mob_registry: &mut MobAssetRegistry,
     session: &EditorSession,
+    config: &EditorConfig,
     load_events: &mut MessageWriter<LoadMobEvent>,
     delete_dialog: &mut DeleteDialogState,
     delete_dir_dialog: &mut DeleteDirectoryDialogState,
@@ -188,10 +191,11 @@ pub fn file_panel_ui(
 ) {
     ui.heading("Mob Files");
 
-    // Refresh button - refreshes both file tree and sprite registry
+    // Refresh button - refreshes file tree, sprite registry, and mob registry
     if ui.button("🔄 Refresh").clicked() {
         file_tree.needs_refresh = true;
         sprite_registry.needs_refresh = true;
+        mob_registry.needs_refresh = true;
     }
 
     ui.separator();
@@ -206,7 +210,9 @@ pub fn file_panel_ui(
                     ui,
                     &root,
                     file_tree,
+                    mob_registry,
                     session,
+                    config,
                     load_events,
                     delete_dialog,
                     delete_dir_dialog,
@@ -229,7 +235,9 @@ fn render_file_node(
     ui: &mut egui::Ui,
     node: &FileNode,
     file_tree: &mut FileTreeState,
+    mob_registry: &MobAssetRegistry,
     session: &EditorSession,
+    config: &EditorConfig,
     load_events: &mut MessageWriter<LoadMobEvent>,
     delete_dialog: &mut DeleteDialogState,
     delete_dir_dialog: &mut DeleteDirectoryDialogState,
@@ -253,7 +261,9 @@ fn render_file_node(
                         ui,
                         child,
                         file_tree,
+                        mob_registry,
                         session,
+                        config,
                         load_events,
                         delete_dialog,
                         delete_dir_dialog,
@@ -309,6 +319,9 @@ fn render_file_node(
             "📋" // .mobpatch
         };
 
+        // Check registration status
+        let is_registered = mob_registry.is_registered(&node.path, config);
+
         // Truncate long filenames, show full name on hover
         let display_name = truncate_filename(&node.name, MAX_FILENAME_DISPLAY_LEN);
         let label = format!("{} {}", icon, display_name);
@@ -321,7 +334,18 @@ fn render_file_node(
             }
         }
 
-        let response = ui.selectable_label(is_selected, text);
+        let response = ui.horizontal(|ui| {
+            let label_response = ui.selectable_label(is_selected, text);
+
+            // Registration indicator (small, after filename)
+            if is_registered {
+                ui.label(egui::RichText::new("✔").small().color(egui::Color32::from_rgb(100, 200, 100)));
+            } else {
+                ui.label(egui::RichText::new("⚠").small().color(egui::Color32::YELLOW));
+            }
+
+            label_response
+        }).inner;
 
         // Show full filename on hover if truncated
         if display_name != node.name {
