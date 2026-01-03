@@ -15,6 +15,9 @@ pub const PATCHED_COLOR: egui::Color32 = egui::Color32::from_rgb(100, 200, 255);
 /// Color for inherited values (from base mob) in patch files
 pub const INHERITED_COLOR: egui::Color32 = egui::Color32::from_rgb(140, 140, 140);
 
+/// Color for modified indicator (changed since last save)
+pub const MODIFIED_COLOR: egui::Color32 = egui::Color32::from_rgb(255, 200, 50);
+
 /// Minimum button size for icon buttons
 pub const ICON_BUTTON_MIN_SIZE: egui::Vec2 = egui::vec2(16.0, 16.0);
 
@@ -31,7 +34,27 @@ pub enum FieldResult<T> {
     Reset,
 }
 
+/// Render patch indicator (● for patched, ○ for inherited)
+///
+/// Only shows for patch files. Modified state is shown via label color instead.
+pub fn render_field_indicators(
+    ui: &mut egui::Ui,
+    is_patched: bool,
+    is_patch_file: bool,
+    _is_modified: bool, // Modified state shown via label_color instead
+) {
+    if is_patch_file {
+        if is_patched {
+            ui.label(egui::RichText::new("●").color(PATCHED_COLOR));
+        } else {
+            ui.label(egui::RichText::new("○").color(INHERITED_COLOR));
+        }
+    }
+}
+
 /// Render a patch indicator (● for patched, ○ for inherited)
+///
+/// Deprecated: Use render_field_indicators for new code
 pub fn render_patch_indicator(ui: &mut egui::Ui, is_patched: bool, show_indicator: bool) -> bool {
     if show_indicator {
         if is_patched {
@@ -48,7 +71,7 @@ pub fn render_reset_button(ui: &mut egui::Ui, is_patched: bool, is_patch_file: b
     if is_patch_file && is_patched {
         let response = ui.add(
             egui::Button::new(egui::RichText::new("×").color(egui::Color32::WHITE))
-                .fill(egui::Color32::from_rgb(120, 60, 60))
+                .fill(crate::ui::DELETE_BUTTON_COLOR)
                 .min_size(ICON_BUTTON_MIN_SIZE),
         );
         if response
@@ -61,29 +84,50 @@ pub fn render_reset_button(ui: &mut egui::Ui, is_patched: bool, is_patch_file: b
     false
 }
 
-/// Get label color based on patch state
+/// Get label color based on patch and modification state
 ///
-/// Returns dimmed color for inherited values in patch files
-pub fn label_color(ui: &egui::Ui, is_patch_file: bool, is_patched: bool) -> egui::Color32 {
-    if is_patch_file && !is_patched {
+/// - Yellow if modified since last save
+/// - Dimmed if inherited (not patched) in patch files
+/// - Normal otherwise
+pub fn label_color(
+    ui: &egui::Ui,
+    is_patch_file: bool,
+    is_patched: bool,
+    is_modified: bool,
+) -> egui::Color32 {
+    if is_modified {
+        MODIFIED_COLOR
+    } else if is_patch_file && !is_patched {
         INHERITED_COLOR
     } else {
         ui.style().visuals.text_color()
     }
 }
 
-/// Render a string field with patch awareness
+/// Get color for section or item headers based on modification state
+///
+/// Returns MODIFIED_COLOR (yellow) if modified, otherwise default text color
+pub fn header_color(ui: &egui::Ui, is_modified: bool) -> egui::Color32 {
+    if is_modified {
+        MODIFIED_COLOR
+    } else {
+        ui.style().visuals.text_color()
+    }
+}
+
+/// Render a string field with patch and modification awareness
 pub fn render_string_field(
     ui: &mut egui::Ui,
     label: &str,
     current_value: &str,
     is_patched: bool,
     is_patch_file: bool,
+    is_modified: bool,
 ) -> FieldResult<String> {
     let mut result = FieldResult::NoChange;
     ui.horizontal(|ui| {
-        render_patch_indicator(ui, is_patched, is_patch_file);
-        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched)));
+        render_field_indicators(ui, is_patched, is_patch_file, is_modified);
+        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched, is_modified)));
 
         let mut value = current_value.to_string();
         if ui.text_edit_singleline(&mut value).changed() {
@@ -97,18 +141,19 @@ pub fn render_string_field(
     result
 }
 
-/// Render a boolean field with patch awareness
+/// Render a boolean field with patch and modification awareness
 pub fn render_bool_field(
     ui: &mut egui::Ui,
     label: &str,
     current_value: bool,
     is_patched: bool,
     is_patch_file: bool,
+    is_modified: bool,
 ) -> FieldResult<bool> {
     let mut result = FieldResult::NoChange;
     ui.horizontal(|ui| {
-        render_patch_indicator(ui, is_patched, is_patch_file);
-        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched)));
+        render_field_indicators(ui, is_patched, is_patch_file, is_modified);
+        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched, is_modified)));
 
         let mut value = current_value;
         if ui.checkbox(&mut value, "").changed() {
@@ -122,7 +167,7 @@ pub fn render_bool_field(
     result
 }
 
-/// Render an integer field with patch awareness
+/// Render an integer field with patch and modification awareness
 pub fn render_int_field(
     ui: &mut egui::Ui,
     label: &str,
@@ -130,11 +175,12 @@ pub fn render_int_field(
     range: std::ops::RangeInclusive<i32>,
     is_patched: bool,
     is_patch_file: bool,
+    is_modified: bool,
 ) -> FieldResult<i32> {
     let mut result = FieldResult::NoChange;
     ui.horizontal(|ui| {
-        render_patch_indicator(ui, is_patched, is_patch_file);
-        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched)));
+        render_field_indicators(ui, is_patched, is_patch_file, is_modified);
+        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched, is_modified)));
 
         let mut value = current_value;
         if ui
@@ -151,7 +197,7 @@ pub fn render_int_field(
     result
 }
 
-/// Render a float field with patch awareness
+/// Render a float field with patch and modification awareness
 pub fn render_float_field(
     ui: &mut egui::Ui,
     label: &str,
@@ -160,11 +206,12 @@ pub fn render_float_field(
     speed: Option<f64>,
     is_patched: bool,
     is_patch_file: bool,
+    is_modified: bool,
 ) -> FieldResult<f32> {
     let mut result = FieldResult::NoChange;
     ui.horizontal(|ui| {
-        render_patch_indicator(ui, is_patched, is_patch_file);
-        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched)));
+        render_field_indicators(ui, is_patched, is_patch_file, is_modified);
+        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched, is_modified)));
 
         let mut value = current_value;
         let mut drag = egui::DragValue::new(&mut value).range(range);
@@ -182,7 +229,7 @@ pub fn render_float_field(
     result
 }
 
-/// Render a Vec2 field with patch awareness
+/// Render a Vec2 field with patch and modification awareness
 pub fn render_vec2_field(
     ui: &mut egui::Ui,
     label: &str,
@@ -192,12 +239,13 @@ pub fn render_vec2_field(
     speed: Option<f64>,
     is_patched: bool,
     is_patch_file: bool,
+    is_modified: bool,
 ) -> FieldResult<(f32, f32)> {
     let mut result = FieldResult::NoChange;
 
     ui.horizontal(|ui| {
-        render_patch_indicator(ui, is_patched, is_patch_file);
-        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched)));
+        render_field_indicators(ui, is_patched, is_patch_file, is_modified);
+        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched, is_modified)));
 
         if render_reset_button(ui, is_patched, is_patch_file) {
             result = FieldResult::Reset;

@@ -1,3 +1,10 @@
+//! Editor state management.
+//!
+//! Defines the state machines that control the editor's behavior:
+//! - [`EditorState`] - Main application states (Loading, Browsing, Editing)
+//! - [`EditingMode`] - Sub-states for different editing panels
+//! - [`DialogState`] - Modal dialog visibility states
+
 use bevy::prelude::States;
 
 /// Main application states for the mob editor

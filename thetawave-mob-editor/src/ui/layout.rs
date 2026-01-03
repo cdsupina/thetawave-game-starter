@@ -1,3 +1,8 @@
+//! Main UI layout and dialog rendering.
+//!
+//! Contains the main UI system that orchestrates all panels,
+//! status bar, and modal dialogs.
+
 use bevy::{
     ecs::{message::MessageWriter, system::SystemParam},
     log::warn,
@@ -8,8 +13,8 @@ use bevy_egui::{EguiContexts, egui};
 use crate::{
     data::{EditorSession, SpriteRegistry},
     file::{
-        DeleteMobEvent, FileTreeState, LoadMobEvent, NewMobEvent, ReloadMobEvent, SaveMobEvent,
-        append_sprite_to_assets_ron,
+        DeleteDirectoryEvent, DeleteMobEvent, FileTreeState, LoadMobEvent, NewMobEvent,
+        ReloadMobEvent, SaveMobEvent, append_sprite_to_assets_ron,
     },
     plugin::{
         DecorationSelectionDialog, EditorConfig, SpriteBrowserDialog, SpriteBrowserTarget,
@@ -29,6 +34,23 @@ const STARTUP_FRAMES_TO_SKIP: u8 = 2;
 /// Default width of the properties panel in pixels
 const PROPERTIES_PANEL_DEFAULT_WIDTH: f32 = 300.0;
 
+/// Convert a filename like "my_new_mob" to Title Case "My New Mob"
+fn filename_to_display_name(filename: &str) -> String {
+    filename
+        .split(|c| c == '_' || c == '-')
+        .map(|word| {
+            let mut chars = word.chars();
+            match chars.next() {
+                Some(first) => {
+                    first.to_uppercase().chain(chars).collect::<String>()
+                }
+                None => String::new(),
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 /// Minimum width of the properties panel in pixels
 const PROPERTIES_PANEL_MIN_WIDTH: f32 = 250.0;
 
@@ -39,9 +61,9 @@ const STATUS_LOG_EXPANDED_HEIGHT: f32 = 120.0;
 const STATUS_LOG_COLLAPSED_HEIGHT: f32 = 24.0;
 
 use super::{
-    DeleteDialogState, ErrorDialog, NewFolderDialog, NewMobDialog, UnsavedChangesDialog,
-    ValidationDialog, file_panel_ui, properties_panel_ui, render_delete_dialog,
-    update_decoration_sprite,
+    DeleteDialogState, DeleteDirectoryDialogState, NewFolderDialog, NewMobDialog,
+    UnsavedChangesDialog, file_panel_ui, properties_panel_ui, render_delete_dialog,
+    render_delete_directory_dialog, update_decoration_sprite,
 };
 
 /// Grouped message writers for the main UI system
@@ -52,6 +74,7 @@ pub struct UiMessageWriters<'w> {
     reload: MessageWriter<'w, ReloadMobEvent>,
     new: MessageWriter<'w, NewMobEvent>,
     delete: MessageWriter<'w, DeleteMobEvent>,
+    delete_dir: MessageWriter<'w, DeleteDirectoryEvent>,
     exit: MessageWriter<'w, bevy::app::AppExit>,
 }
 
@@ -59,9 +82,8 @@ pub struct UiMessageWriters<'w> {
 #[derive(SystemParam)]
 pub struct DialogResources<'w> {
     pub delete_dialog: ResMut<'w, DeleteDialogState>,
+    pub delete_dir_dialog: ResMut<'w, DeleteDirectoryDialogState>,
     pub unsaved_dialog: ResMut<'w, UnsavedChangesDialog>,
-    pub error_dialog: ResMut<'w, ErrorDialog>,
-    pub validation_dialog: ResMut<'w, ValidationDialog>,
     pub registration_dialog: ResMut<'w, SpriteRegistrationDialog>,
     pub selection_dialog: ResMut<'w, SpriteSelectionDialog>,
     pub decoration_selection_dialog: ResMut<'w, DecorationSelectionDialog>,
@@ -109,9 +131,11 @@ pub fn main_ui_system(
             file_panel_ui(
                 ui,
                 &mut file_tree,
+                &mut sprite_registry,
                 &session,
                 &mut events.load,
                 &mut dialogs.delete_dialog,
+                &mut dialogs.delete_dir_dialog,
                 &mut dialogs.unsaved_dialog,
                 &mut dialogs.new_folder_dialog,
                 &mut dialogs.new_mob_dialog,
@@ -164,31 +188,8 @@ pub fn main_ui_system(
         .exact_height(panel_height)
         .show(ctx, |ui| {
             ui.horizontal(|ui| {
-                // File path
-                if let Some(path) = &session.current_path {
-                    ui.label(format!("File: {}", path.display()));
-                } else {
-                    ui.label("No file loaded");
-                }
-
-                ui.separator();
-
-                // Modified indicator
-                if session.is_modified {
-                    ui.colored_label(egui::Color32::YELLOW, "Modified");
-                } else {
-                    ui.label("Saved");
-                }
-
-                // When collapsed, show last message
-                if !session.log.expanded
-                    && let Some(entry) = session.log.last()
-                {
-                    ui.separator();
-                    ui.colored_label(entry.level.color(), &entry.text);
-                }
-
-                // Right-aligned expand/collapse and clear buttons
+                // Right-aligned buttons FIRST (so they're always visible)
+                // Reserve space by adding them with right-to-left layout
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     // Clear button (only when there are entries)
                     if !session.log.is_empty() && ui.small_button("Clear").clicked() {
@@ -204,6 +205,44 @@ pub fn main_ui_system(
                     if ui.small_button(toggle_text).clicked() {
                         session.log.expanded = !session.log.expanded;
                     }
+
+                    ui.separator();
+
+                    // When collapsed, show last message (truncated if needed)
+                    if !session.log.expanded
+                        && let Some(entry) = session.log.last()
+                    {
+                        // Truncate long messages
+                        let text = if entry.text.len() > 60 {
+                            format!("{}...", &entry.text[..57])
+                        } else {
+                            entry.text.clone()
+                        };
+                        ui.colored_label(entry.level.color(), text);
+                        ui.separator();
+                    }
+
+                    // Modified indicator
+                    if session.is_modified {
+                        ui.colored_label(egui::Color32::YELLOW, "Modified");
+                    } else {
+                        ui.label("Saved");
+                    }
+
+                    ui.separator();
+
+                    // File path (truncated if needed)
+                    if let Some(path) = &session.current_path {
+                        let path_str = path.display().to_string();
+                        let display_path = if path_str.len() > 40 {
+                            format!("...{}", &path_str[path_str.len() - 37..])
+                        } else {
+                            path_str
+                        };
+                        ui.label(format!("File: {}", display_path));
+                    } else {
+                        ui.label("No file loaded");
+                    }
                 });
             });
 
@@ -212,6 +251,7 @@ pub fn main_ui_system(
                 ui.separator();
                 egui::ScrollArea::vertical()
                     .stick_to_bottom(true)
+                    .auto_shrink([false, false])
                     .show(ui, |ui| {
                         for entry in session.log.iter() {
                             ui.horizontal(|ui| {
@@ -330,8 +370,9 @@ pub fn main_ui_system(
             }
         });
 
-    // Render delete dialog window
+    // Render delete dialog windows
     render_delete_dialog(ctx, &mut dialogs.delete_dialog, &mut events.delete);
+    render_delete_directory_dialog(ctx, &mut dialogs.delete_dir_dialog, &mut events.delete_dir);
 
     // Render sprite registration dialog
     render_registration_dialog(
@@ -366,17 +407,11 @@ pub fn main_ui_system(
     render_unsaved_changes_dialog(
         ctx,
         &mut dialogs.unsaved_dialog,
-        &session,
+        &mut session,
         &mut events.save,
         &mut events.load,
         &mut events.exit,
     );
-
-    // Render error dialog
-    render_error_dialog(ctx, &mut dialogs.error_dialog);
-
-    // Render validation dialog
-    render_validation_dialog(ctx, &mut dialogs.validation_dialog);
 
     // Render new folder dialog
     render_new_folder_dialog(ctx, &mut dialogs.new_folder_dialog, &mut file_tree);
@@ -408,7 +443,15 @@ pub fn main_ui_system(
         };
 
         // Determine the mob path (with extended:// prefix if needed)
-        let mob_path = if is_extended && session.file_type == crate::data::FileType::MobPatch {
+        // Extended sprites need the prefix for both patches AND extended mobs
+        let is_extended_mob = session
+            .current_path
+            .as_ref()
+            .map(|p| config.is_extended_path(p))
+            .unwrap_or(false);
+        let needs_extended_prefix =
+            is_extended && (session.file_type == crate::data::FileType::MobPatch || is_extended_mob);
+        let mob_path = if needs_extended_prefix {
             format!("extended://{}", asset_path)
         } else {
             asset_path.clone()
@@ -450,53 +493,11 @@ pub fn main_ui_system(
     }
 }
 
-/// Render the validation errors dialog
-fn render_validation_dialog(ctx: &egui::Context, dialog: &mut ValidationDialog) {
-    if !dialog.is_open {
-        return;
-    }
-
-    egui::Window::new("Validation Errors")
-        .collapsible(false)
-        .resizable(true)
-        .default_width(400.0)
-        .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
-        .show(ctx, |ui| {
-            ui.label("The following issues were found:");
-            ui.add_space(8.0);
-
-            egui::ScrollArea::vertical()
-                .max_height(200.0)
-                .show(ui, |ui| {
-                    for error in &dialog.errors {
-                        ui.horizontal(|ui| {
-                            ui.colored_label(egui::Color32::RED, ">");
-                            ui.label(egui::RichText::new(&error.field_path).monospace().strong());
-                            ui.label(&error.message);
-                        });
-                    }
-                });
-
-            ui.add_space(12.0);
-            ui.label(
-                egui::RichText::new("Please fix these issues before saving.")
-                    .small()
-                    .color(egui::Color32::GRAY),
-            );
-
-            ui.add_space(8.0);
-            if ui.button("OK").clicked() {
-                dialog.is_open = false;
-                dialog.errors.clear();
-            }
-        });
-}
-
 /// Render the unsaved changes dialog
 fn render_unsaved_changes_dialog(
     ctx: &egui::Context,
     dialog: &mut UnsavedChangesDialog,
-    session: &EditorSession,
+    session: &mut EditorSession,
     save_events: &mut MessageWriter<SaveMobEvent>,
     load_events: &mut MessageWriter<LoadMobEvent>,
     exit_events: &mut MessageWriter<bevy::app::AppExit>,
@@ -508,6 +509,7 @@ fn render_unsaved_changes_dialog(
     }
 
     let mut action_to_take: Option<UnsavedAction> = None;
+    let mut save_then_exit = false;
     let mut close_dialog = false;
 
     // Determine dialog message based on action
@@ -544,8 +546,17 @@ fn render_unsaved_changes_dialog(
                 };
                 if ui.button(continue_text).clicked() {
                     // Save first, then perform action
-                    save_events.write(crate::file::SaveMobEvent { path: None });
-                    action_to_take = dialog.pending_action.clone();
+                    save_events.write(crate::file::SaveMobEvent {
+                        path: None,
+                        skip_registration_check: false,
+                    });
+                    if is_exit {
+                        // For exit: set flag so save handler will exit after save completes
+                        save_then_exit = true;
+                    } else {
+                        // For load: proceed with load after save
+                        action_to_take = dialog.pending_action.clone();
+                    }
                     close_dialog = true;
                 }
 
@@ -566,6 +577,11 @@ fn render_unsaved_changes_dialog(
             });
         });
 
+    // Set the pending exit flag if "Save & Exit" was clicked
+    if save_then_exit {
+        session.pending_exit_after_save = true;
+    }
+
     if let Some(action) = action_to_take {
         match action {
             UnsavedAction::LoadFile(path) => {
@@ -580,49 +596,6 @@ fn render_unsaved_changes_dialog(
     if close_dialog {
         dialog.close();
     }
-}
-
-/// Render the error dialog
-fn render_error_dialog(ctx: &egui::Context, dialog: &mut ErrorDialog) {
-    if !dialog.is_open {
-        return;
-    }
-
-    egui::Window::new(&dialog.title)
-        .collapsible(false)
-        .resizable(true)
-        .default_width(400.0)
-        .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
-        .show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.colored_label(egui::Color32::RED, "Error:");
-                ui.label(&dialog.message);
-            });
-
-            if let Some(details) = &dialog.details {
-                ui.add_space(8.0);
-                egui::CollapsingHeader::new("Details")
-                    .default_open(false)
-                    .show(ui, |ui| {
-                        egui::ScrollArea::vertical()
-                            .max_height(200.0)
-                            .show(ui, |ui| {
-                                ui.add(
-                                    egui::TextEdit::multiline(&mut details.as_str())
-                                        .font(egui::TextStyle::Monospace)
-                                        .desired_width(f32::INFINITY),
-                                );
-                            });
-                    });
-            }
-
-            ui.add_space(12.0);
-            ui.horizontal(|ui| {
-                if ui.button("OK").clicked() {
-                    dialog.close();
-                }
-            });
-        });
 }
 
 /// Render the new folder dialog
@@ -653,17 +626,28 @@ fn render_new_folder_dialog(
                 response.request_focus();
             });
 
-            ui.add_space(8.0);
+            ui.add_space(4.0);
+
+            // Check for invalid characters and show warning
+            let has_invalid_chars = dialog
+                .folder_name
+                .contains(['/', '\\', ':', '*', '?', '"', '<', '>', '|']);
+            if has_invalid_chars {
+                ui.label(
+                    egui::RichText::new("Invalid characters: / \\ : * ? \" < > |")
+                        .small()
+                        .color(egui::Color32::from_rgb(255, 180, 100)),
+                );
+            }
+
+            ui.add_space(4.0);
 
             ui.horizontal(|ui| {
                 if ui.button("Cancel").clicked() {
                     should_close = true;
                 }
 
-                let valid_name = !dialog.folder_name.trim().is_empty()
-                    && !dialog
-                        .folder_name
-                        .contains(['/', '\\', ':', '*', '?', '"', '<', '>', '|']);
+                let valid_name = !dialog.folder_name.trim().is_empty() && !has_invalid_chars;
 
                 if ui
                     .add_enabled(valid_name, egui::Button::new("Create"))
@@ -754,17 +738,28 @@ fn render_new_mob_text_dialog(
                 ui.label(".mob");
             });
 
-            ui.add_space(8.0);
+            ui.add_space(4.0);
+
+            // Check for invalid characters and show warning
+            let has_invalid_chars = dialog
+                .file_name
+                .contains(['/', '\\', ':', '*', '?', '"', '<', '>', '|', '.']);
+            if has_invalid_chars {
+                ui.label(
+                    egui::RichText::new("Invalid characters: / \\ : * ? \" < > | .")
+                        .small()
+                        .color(egui::Color32::from_rgb(255, 180, 100)),
+                );
+            }
+
+            ui.add_space(4.0);
 
             ui.horizontal(|ui| {
                 if ui.button("Cancel").clicked() {
                     *should_close = true;
                 }
 
-                let valid_name = !dialog.file_name.trim().is_empty()
-                    && !dialog
-                        .file_name
-                        .contains(['/', '\\', ':', '*', '?', '"', '<', '>', '|', '.']);
+                let valid_name = !dialog.file_name.trim().is_empty() && !has_invalid_chars;
 
                 if ui
                     .add_enabled(valid_name, egui::Button::new("Create"))
@@ -781,7 +776,7 @@ fn render_new_mob_text_dialog(
 
         new_events.write(NewMobEvent {
             path,
-            name: dialog.file_name.trim().to_string(),
+            name: filename_to_display_name(dialog.file_name.trim()),
             is_patch: false,
         });
 
@@ -883,12 +878,9 @@ fn render_new_patch_dialog(
             let _ = std::fs::create_dir_all(parent);
         }
 
-        // Extract the mob name from the ref (last component)
-        let name = mob_ref
-            .rsplit('/')
-            .next()
-            .unwrap_or(mob_ref)
-            .to_string();
+        // Extract the mob name from the ref (last component) and convert to Title Case
+        let base_name = mob_ref.rsplit('/').next().unwrap_or(mob_ref);
+        let name = filename_to_display_name(base_name);
 
         new_events.write(NewMobEvent {
             path: patch_path,
@@ -971,20 +963,24 @@ fn render_registration_dialog(
                     // Mark registry for refresh
                     sprite_registry.needs_refresh = true;
 
-                    // Proceed with save
-                    if let Some(path) = dialog.pending_save_path.take() {
-                        save_events.write(SaveMobEvent { path: Some(path) });
-                    }
+                    // Proceed with save (use pending path or current file)
+                    let path = dialog.pending_save_path.take();
+                    save_events.write(SaveMobEvent {
+                        path,
+                        skip_registration_check: true, // We just registered them
+                    });
 
                     dialog.show = false;
                     dialog.unregistered_sprites.clear();
                 }
 
                 if ui.button("Save Without Registering").clicked() {
-                    // Proceed with save anyway
-                    if let Some(path) = dialog.pending_save_path.take() {
-                        save_events.write(SaveMobEvent { path: Some(path) });
-                    }
+                    // Proceed with save anyway (use pending path or current file)
+                    let path = dialog.pending_save_path.take();
+                    save_events.write(SaveMobEvent {
+                        path,
+                        skip_registration_check: true,
+                    });
 
                     dialog.show = false;
                     dialog.unregistered_sprites.clear();
@@ -1040,14 +1036,7 @@ fn render_selection_dialog(
                             toml::Value::String(dialog.mob_path.clone()),
                         );
                         session.check_modified();
-
-                        // Also update merged preview for patches
-                        if let (Some(base), Some(patch)) = (&session.base_mob, &session.current_mob)
-                        {
-                            let mut merged = base.clone();
-                            crate::file::merge_toml_values(&mut merged, patch.clone());
-                            session.merged_for_preview = Some(merged);
-                        }
+                        session.update_merged_for_preview();
 
                         // Trigger preview rebuild
                         preview_state.needs_rebuild = true;
@@ -1077,6 +1066,14 @@ fn render_selection_dialog(
                     session
                         .log_success(format!("Sprite registered: {}", dialog.display_name), time);
 
+                    dialog.show = false;
+                    dialog.asset_path.clear();
+                    dialog.mob_path.clear();
+                    dialog.display_name.clear();
+                }
+
+                if ui.button("Cancel").clicked() {
+                    // Cancel - don't register or set sprite
                     dialog.show = false;
                     dialog.asset_path.clear();
                     dialog.mob_path.clear();
@@ -1184,16 +1181,8 @@ fn render_decoration_selection_dialog(
 
             ui.horizontal(|ui| {
                 if ui.button("Yes, use sprite").clicked() {
-                    // Set the sprite path in the decoration
+                    // Set the sprite path in the decoration (also updates merged preview)
                     update_decoration_sprite(session, dialog.decoration_index, &dialog.mob_path);
-                    session.check_modified();
-
-                    // Also update merged preview for patches
-                    if let (Some(base), Some(patch)) = (&session.base_mob, &session.current_mob) {
-                        let mut merged = base.clone();
-                        crate::file::merge_toml_values(&mut merged, patch.clone());
-                        session.merged_for_preview = Some(merged);
-                    }
 
                     // Trigger preview rebuild
                     preview_state.needs_rebuild = true;
@@ -1220,6 +1209,13 @@ fn render_decoration_selection_dialog(
                     dialog.mob_path.clear();
                     dialog.display_name.clear();
                 }
+
+                if ui.button("Cancel").clicked() {
+                    // Cancel - don't register or set sprite
+                    dialog.show = false;
+                    dialog.mob_path.clear();
+                    dialog.display_name.clear();
+                }
             });
         });
 }
@@ -1238,7 +1234,7 @@ fn render_sprite_browser_dialog(
 
     let mut result = None;
 
-    egui::Window::new("Register New Sprite")
+    egui::Window::new("Sprite Browser")
         .collapsible(false)
         .resizable(true)
         .default_width(500.0)
@@ -1347,23 +1343,52 @@ fn render_sprite_browser_dialog(
 
             ui.separator();
 
-            // Selected file info
-            if let Some(selected) = &dialog.selected {
+            // Selected file info and registration status
+            let selected_is_registered = if let Some(selected) = &dialog.selected {
                 let file_name = selected
                     .file_name()
                     .map(|n| n.to_string_lossy().to_string())
                     .unwrap_or_default();
+
+                // Build asset path to check registration
+                let asset_path = dialog.get_asset_path(selected, config);
+                let registration_info = asset_path
+                    .as_ref()
+                    .and_then(|p| sprite_registry.find_by_path(p));
+
                 ui.horizontal(|ui| {
                     ui.label("Selected:");
                     ui.label(egui::RichText::new(&file_name).monospace().strong());
                 });
+
+                // Show registration status
+                if let Some(sprite) = registration_info {
+                    let source_name = match sprite.source {
+                        crate::data::SpriteSource::Base => "base game.assets.ron",
+                        crate::data::SpriteSource::Extended => "extended game.assets.ron",
+                    };
+                    ui.label(
+                        egui::RichText::new(format!("✔ Already registered in {}", source_name))
+                            .small()
+                            .color(egui::Color32::GREEN),
+                    );
+                    true
+                } else {
+                    ui.label(
+                        egui::RichText::new("Will be registered on use")
+                            .small()
+                            .color(egui::Color32::GRAY),
+                    );
+                    false
+                }
             } else {
                 ui.label(
                     egui::RichText::new("Click a sprite file to select it")
                         .italics()
                         .color(egui::Color32::GRAY),
                 );
-            }
+                false
+            };
 
             ui.separator();
 
@@ -1374,8 +1399,13 @@ fn render_sprite_browser_dialog(
                 }
 
                 let can_select = dialog.selected.is_some();
+                let button_label = if selected_is_registered {
+                    "Use"
+                } else {
+                    "Register & Use"
+                };
                 if ui
-                    .add_enabled(can_select, egui::Button::new("Register & Use"))
+                    .add_enabled(can_select, egui::Button::new(button_label))
                     .clicked()
                     && let Some(selected_path) = &dialog.selected
                     && let Some(asset_path) = dialog.get_asset_path(selected_path, config)

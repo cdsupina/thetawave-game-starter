@@ -1,3 +1,8 @@
+//! Preview camera controls and settings.
+//!
+//! Handles camera zoom, pan, and reset for the preview panel,
+//! including mouse wheel zoom and right-click drag panning.
+
 use bevy::{
     camera::ScalingMode,
     ecs::message::MessageReader,

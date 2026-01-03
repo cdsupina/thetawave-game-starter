@@ -1,9 +1,14 @@
+//! File I/O operations for mob and patch files.
+//!
+//! Provides [`FileOperations`] for loading, saving, and managing `.mob` and
+//! `.mobpatch` files, including TOML parsing and patch merging.
+
 use std::{
     fs, io,
     path::{Path, PathBuf},
 };
 
-use bevy::log::{info, warn};
+use bevy::log::{debug, warn};
 use thiserror::Error;
 use toml::Value;
 
@@ -163,7 +168,7 @@ impl FileOperations {
                     // Merge patch into a copy of base
                     let mut merged = base.clone();
                     merge_toml_values(&mut merged, patch.clone());
-                    info!("Merged patch with base mob from: {:?}", base_path);
+                    debug!("Merged patch with base mob from: {:?}", base_path);
                     Ok((patch, Some(base), Some(merged), expected_path))
                 }
                 Err(e) => {
@@ -188,6 +193,8 @@ pub struct LoadMobEvent {
 #[derive(bevy::ecs::message::Message)]
 pub struct SaveMobEvent {
     pub path: Option<PathBuf>, // None = save to current path
+    /// Skip the unregistered sprite check (used after user confirms "Save Without Registering")
+    pub skip_registration_check: bool,
 }
 
 /// Message to request reloading the current mob from disk
@@ -205,6 +212,12 @@ pub struct NewMobEvent {
 /// Message to delete a mob file
 #[derive(bevy::ecs::message::Message)]
 pub struct DeleteMobEvent {
+    pub path: PathBuf,
+}
+
+/// Message to delete a directory (and all its contents)
+#[derive(bevy::ecs::message::Message)]
+pub struct DeleteDirectoryEvent {
     pub path: PathBuf,
 }
 
@@ -318,8 +331,9 @@ mod tests {
 
         let value = result.unwrap();
         assert_eq!(value.get("name").and_then(|v| v.as_str()), Some("New Mob"));
-        // Full mobs should have default sprite, health, colliders
-        assert!(value.get("sprite").is_some());
+        // Full mobs should have default health and colliders
+        // Sprites are optional - new mobs don't have one by default
+        assert!(value.get("sprite").is_none());
         assert!(value.get("health").is_some());
         assert!(value.get("colliders").is_some());
     }
@@ -386,9 +400,9 @@ mod tests {
         let result = FileOperations::load_patch_with_base(&patch_path);
         assert!(result.is_ok());
 
-        let (patch, base, merged) = result.unwrap();
+        let (patch, base, merged, _expected_path) = result.unwrap();
         assert_eq!(
-            patch.get("name").and_then(|v| v.as_str()),
+            patch.get("name").and_then(|v: &toml::Value| v.as_str()),
             Some("Patched Enemy")
         );
         assert!(base.is_none());

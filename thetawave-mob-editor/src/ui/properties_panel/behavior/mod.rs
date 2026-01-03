@@ -16,7 +16,7 @@ use thetawave_mobs::BehaviorNodeType;
 
 use crate::data::EditorSession;
 
-use super::fields::{INHERITED_COLOR, PATCHED_COLOR, render_patch_indicator};
+use super::fields::{INHERITED_COLOR, PATCHED_COLOR, header_color, render_patch_indicator};
 use navigation::get_children_count;
 use node_rendering::{
     format_node_header, render_action_node, render_control_node, render_if_then_node,
@@ -36,8 +36,11 @@ pub fn render_behavior_section(
     modified: &mut bool,
 ) {
     let is_patched = is_patch && patch_table.contains_key("behavior");
+    let section_modified = session.is_field_modified("behavior");
 
-    egui::CollapsingHeader::new("Behavior Tree")
+    let header_text =
+        egui::RichText::new("Behavior Tree").color(header_color(ui, section_modified));
+    egui::CollapsingHeader::new(header_text)
         .default_open(false)
         .show(ui, |ui| {
             ui.horizontal(|ui| {

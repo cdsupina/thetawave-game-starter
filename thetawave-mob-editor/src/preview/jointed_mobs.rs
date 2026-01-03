@@ -1,7 +1,12 @@
+//! Jointed mob resolution and caching.
+//!
+//! Recursively resolves jointed mob references and caches the results
+//! for preview rendering.
+
 use std::path::PathBuf;
 
 use bevy::{
-    log::{info, warn},
+    log::{debug, warn},
     prelude::{Res, ResMut, Resource, State, Vec2},
 };
 
@@ -32,6 +37,8 @@ pub struct ResolvedJointedMob {
     pub sprite_path: Option<String>,
     /// Cumulative offset from the main mob
     pub offset_pos: Vec2,
+    /// Rotation in degrees
+    pub offset_rot: f32,
     /// Z-level for rendering order
     pub z_level: f32,
     /// Nesting depth (0 = direct child of main mob)
@@ -127,6 +134,10 @@ fn resolve_jointed_mobs(
 
         let mob_ref = table.get("mob_ref").and_then(|v| v.as_str());
         let offset_pos = parse_vec2(table.get("offset_pos")).unwrap_or(Vec2::ZERO);
+        let offset_rot = table
+            .get("offset_rot")
+            .and_then(|v| v.as_float())
+            .unwrap_or(0.0) as f32;
 
         // Check for chain configuration
         if let Some(chain) = table.get("chain").and_then(|v| v.as_table()) {
@@ -157,6 +168,7 @@ fn resolve_jointed_mobs(
                     results.push(ResolvedJointedMob {
                         sprite_path: sprite,
                         offset_pos: parent_offset + chain_offset,
+                        offset_rot,
                         z_level,
                         depth,
                         decorations,
@@ -192,6 +204,7 @@ fn resolve_jointed_mobs(
                 results.push(ResolvedJointedMob {
                     sprite_path: sprite,
                     offset_pos: parent_offset + offset_pos,
+                    offset_rot,
                     z_level,
                     depth,
                     decorations,
@@ -251,7 +264,7 @@ pub fn rebuild_jointed_mob_cache(
         .max()
         .unwrap_or(0);
 
-    info!(
+    debug!(
         "Rebuilt jointed mob cache: {} resolved mobs, max depth {}",
         cache.resolved_mobs.len(),
         max_depth

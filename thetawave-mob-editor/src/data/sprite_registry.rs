@@ -1,3 +1,8 @@
+//! Sprite registry for tracking available sprites.
+//!
+//! The [`SpriteRegistry`] maintains a list of all registered sprites
+//! from both base and extended `game.assets.ron` files.
+
 use bevy::prelude::Resource;
 
 /// Source of a registered sprite

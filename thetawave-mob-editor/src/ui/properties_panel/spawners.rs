@@ -8,10 +8,11 @@ use thetawave_core::Faction;
 use thetawave_projectiles::ProjectileType;
 
 use crate::data::EditorSession;
+use crate::file::FileTreeState;
 
 use super::fields::{
-    FieldResult, INHERITED_COLOR, PATCHED_COLOR, render_float_field, render_patch_indicator,
-    render_reset_button, render_string_field, render_vec2_field,
+    FieldResult, INHERITED_COLOR, PATCHED_COLOR, header_color, render_float_field,
+    render_patch_indicator, render_reset_button, render_vec2_field,
 };
 
 /// Check if a specific spawner field is patched
@@ -126,8 +127,11 @@ pub fn render_projectile_spawners_section(
     modified: &mut bool,
 ) {
     let is_patched = is_patch && patch_table.contains_key("projectile_spawners");
+    let section_modified = session.is_field_modified("projectile_spawners");
 
-    egui::CollapsingHeader::new("Projectile Spawners")
+    let header_text = egui::RichText::new("Projectile Spawners")
+        .color(header_color(ui, section_modified));
+    egui::CollapsingHeader::new(header_text)
         .default_open(false)
         .show(ui, |ui| {
             ui.horizontal(|ui| {
@@ -161,8 +165,15 @@ pub fn render_projectile_spawners_section(
                     for key in keys {
                         if let Some(spawner) = spawners.get(&key).and_then(|v| v.as_table()) {
                             let spawner_key = key.clone();
+                            let spawner_modified = session.is_nested_key_modified(&[
+                                "projectile_spawners",
+                                "spawners",
+                                &key,
+                            ]);
 
-                            egui::CollapsingHeader::new(format!("Spawner: {}", key))
+                            let spawner_header = egui::RichText::new(format!("Spawner: {}", key))
+                                .color(header_color(ui, spawner_modified));
+                            egui::CollapsingHeader::new(spawner_header)
                                 .id_salt(format!("proj_spawner_{}", key))
                                 .default_open(false)
                                 .show(ui, |ui| {
@@ -225,7 +236,7 @@ fn render_projectile_spawner_fields(
             *rename_spawner = Some((spawner_key.to_string(), name));
         }
         if ui
-            .add(egui::Button::new("🗑").fill(egui::Color32::from_rgb(120, 60, 60)))
+            .add(egui::Button::new("🗑").fill(crate::ui::DELETE_BUTTON_COLOR))
             .on_hover_text("Delete spawner")
             .clicked()
         {
@@ -249,6 +260,7 @@ fn render_projectile_spawner_fields(
         Some(0.01),
         field_patched,
         is_patch,
+        false, // TODO: nested field modification tracking
     ) {
         FieldResult::Changed(new_val) => {
             set_spawner_field(
@@ -288,6 +300,7 @@ fn render_projectile_spawner_fields(
         None,
         field_patched,
         is_patch,
+        false, // TODO: nested field modification tracking
     ) {
         FieldResult::Changed((x, y)) => {
             let arr = toml::Value::Array(vec![
@@ -319,6 +332,7 @@ fn render_projectile_spawner_fields(
         None,
         field_patched,
         is_patch,
+        false, // TODO: nested field modification tracking
     ) {
         FieldResult::Changed(new_val) => {
             set_spawner_field(
@@ -442,10 +456,14 @@ pub fn render_mob_spawners_section(
     session: &mut EditorSession,
     is_patch: bool,
     modified: &mut bool,
+    file_tree: &FileTreeState,
 ) {
     let is_patched = is_patch && patch_table.contains_key("mob_spawners");
+    let section_modified = session.is_field_modified("mob_spawners");
 
-    egui::CollapsingHeader::new("Mob Spawners")
+    let header_text =
+        egui::RichText::new("Mob Spawners").color(header_color(ui, section_modified));
+    egui::CollapsingHeader::new(header_text)
         .default_open(false)
         .show(ui, |ui| {
             ui.horizontal(|ui| {
@@ -477,8 +495,12 @@ pub fn render_mob_spawners_section(
                     for key in keys {
                         if let Some(spawner) = spawners.get(&key).and_then(|v| v.as_table()) {
                             let spawner_key = key.clone();
+                            let spawner_modified =
+                                session.is_nested_key_modified(&["mob_spawners", "spawners", &key]);
 
-                            egui::CollapsingHeader::new(format!("Spawner: {}", key))
+                            let spawner_header = egui::RichText::new(format!("Spawner: {}", key))
+                                .color(header_color(ui, spawner_modified));
+                            egui::CollapsingHeader::new(spawner_header)
                                 .id_salt(format!("mob_spawner_{}", key))
                                 .default_open(false)
                                 .show(ui, |ui| {
@@ -492,6 +514,7 @@ pub fn render_mob_spawners_section(
                                         modified,
                                         &mut delete_spawner,
                                         &mut rename_spawner,
+                                        file_tree,
                                     );
                                 });
                         }
@@ -531,6 +554,7 @@ fn render_mob_spawner_fields(
     modified: &mut bool,
     delete_spawner: &mut Option<String>,
     rename_spawner: &mut Option<(String, String)>,
+    file_tree: &FileTreeState,
 ) {
     // Name editing and delete button
     ui.horizontal(|ui| {
@@ -541,7 +565,7 @@ fn render_mob_spawner_fields(
             *rename_spawner = Some((spawner_key.to_string(), name));
         }
         if ui
-            .add(egui::Button::new("🗑").fill(egui::Color32::from_rgb(120, 60, 60)))
+            .add(egui::Button::new("🗑").fill(crate::ui::DELETE_BUTTON_COLOR))
             .on_hover_text("Delete spawner")
             .clicked()
         {
@@ -564,6 +588,7 @@ fn render_mob_spawner_fields(
         Some(0.1),
         field_patched,
         is_patch,
+        false, // TODO: nested field modification tracking
     ) {
         FieldResult::Changed(new_val) => {
             set_spawner_field(
@@ -603,6 +628,7 @@ fn render_mob_spawner_fields(
         None,
         field_patched,
         is_patch,
+        false, // TODO: nested field modification tracking
     ) {
         FieldResult::Changed((x, y)) => {
             let arr = toml::Value::Array(vec![
@@ -634,6 +660,7 @@ fn render_mob_spawner_fields(
         None,
         field_patched,
         is_patch,
+        false, // TODO: nested field modification tracking
     ) {
         FieldResult::Changed(new_val) => {
             set_spawner_field(
@@ -652,49 +679,94 @@ fn render_mob_spawner_fields(
         FieldResult::NoChange => {}
     }
 
-    // Mob Ref
+    // Mob Ref (dropdown of available mobs with categories)
     let field_patched =
         is_spawner_field_patched(patch_table, "mob_spawners", spawner_key, "mob_ref");
     let mob_ref = spawner
         .get("mob_ref")
         .and_then(|v| v.as_str())
         .unwrap_or("");
-    match render_string_field(ui, "Mob Ref:", mob_ref, field_patched, is_patch) {
-        FieldResult::Changed(new_val) => {
+
+    ui.horizontal(|ui| {
+        render_patch_indicator(ui, field_patched, is_patch);
+        ui.label("Mob Ref:");
+
+        let (base_refs, extended_refs) = file_tree.get_categorized_mob_refs();
+        let mut selected = mob_ref.to_string();
+
+        egui::ComboBox::from_id_salt(format!("mob_spawner_ref_{}", spawner_key))
+            .selected_text(if selected.is_empty() {
+                "(none)"
+            } else {
+                &selected
+            })
+            .show_ui(ui, |ui| {
+                // None option
+                if ui.selectable_label(selected.is_empty(), "(none)").clicked() {
+                    selected.clear();
+                }
+                // Base mobs section
+                if !base_refs.is_empty() {
+                    ui.separator();
+                    ui.label(egui::RichText::new("Base Mobs").strong().small());
+                    for ref_name in &base_refs {
+                        if ui
+                            .selectable_label(selected == *ref_name, ref_name)
+                            .clicked()
+                        {
+                            selected = ref_name.clone();
+                        }
+                    }
+                }
+                // Extended mobs section
+                if !extended_refs.is_empty() {
+                    ui.separator();
+                    ui.label(egui::RichText::new("Extended Mobs").strong().small());
+                    for ref_name in &extended_refs {
+                        if ui
+                            .selectable_label(selected == *ref_name, ref_name)
+                            .clicked()
+                        {
+                            selected = ref_name.clone();
+                        }
+                    }
+                }
+            });
+
+        if selected != mob_ref {
             set_spawner_field(
                 session,
                 "mob_spawners",
                 spawner_key,
                 "mob_ref",
-                toml::Value::String(new_val),
+                toml::Value::String(selected),
             );
             *modified = true;
         }
-        FieldResult::Reset => {
+
+        if render_reset_button(ui, field_patched, is_patch) {
             remove_spawner_field(session, "mob_spawners", spawner_key, "mob_ref");
             *modified = true;
         }
-        FieldResult::NoChange => {}
-    }
+    });
 }
 
 /// Generate a unique spawner name
+/// Uses the prefix directly, or adds a number suffix if that name exists
 fn generate_unique_spawner_name(
     existing_spawners: Option<&toml::value::Table>,
     prefix: &str,
 ) -> String {
-    let directions = ["north", "south", "east", "west", "center"];
-    for dir in directions {
-        let name = format!("{}_{}", prefix, dir);
-        if existing_spawners
-            .map(|s| !s.contains_key(&name))
-            .unwrap_or(true)
-        {
-            return name;
-        }
+    // First try just the prefix
+    if existing_spawners
+        .map(|s| !s.contains_key(prefix))
+        .unwrap_or(true)
+    {
+        return prefix.to_string();
     }
-    // Fallback to numbered names
-    for i in 1..100 {
+
+    // Then try numbered names
+    for i in 2..100 {
         let name = format!("{}_{}", prefix, i);
         if existing_spawners
             .map(|s| !s.contains_key(&name))
@@ -714,7 +786,7 @@ fn add_new_projectile_spawner(session: &mut EditorSession, display_table: &toml:
         .and_then(|t| t.get("spawners"))
         .and_then(|v| v.as_table());
 
-    let name = generate_unique_spawner_name(existing, "spawner");
+    let name = generate_unique_spawner_name(existing, "projectile_spawner");
 
     // Create default spawner
     let mut spawner = toml::value::Table::new();
@@ -765,7 +837,7 @@ fn add_new_mob_spawner(session: &mut EditorSession, display_table: &toml::value:
         .and_then(|t| t.get("spawners"))
         .and_then(|v| v.as_table());
 
-    let name = generate_unique_spawner_name(existing, "mob");
+    let name = generate_unique_spawner_name(existing, "mob_spawner");
 
     // Create default mob spawner
     let mut spawner = toml::value::Table::new();

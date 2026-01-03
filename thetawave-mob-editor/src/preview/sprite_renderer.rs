@@ -1,10 +1,15 @@
+//! Mob sprite rendering for the preview panel.
+//!
+//! Handles loading and displaying mob sprites, decorations, and
+//! jointed mob previews in the central preview area.
+
 use std::path::PathBuf;
 
 use bevy::{
     asset::Handle,
-    log::{info, warn},
+    log::{debug, info, warn},
     prelude::{
-        AssetServer, Color, Commands, Component, Entity, Query, Res, ResMut, Resource, Sprite,
+        AssetServer, Color, Commands, Component, Entity, Quat, Query, Res, ResMut, Resource, Sprite,
         State, Transform, Vec2, With, default,
     },
 };
@@ -56,14 +61,21 @@ pub struct PreviewState {
 
 /// Check if the preview needs to be updated
 pub fn check_preview_update(
-    session: Res<EditorSession>,
+    mut session: ResMut<EditorSession>,
     mut preview_state: ResMut<PreviewState>,
     state: Res<State<EditorState>>,
 ) {
     // Only care about preview when editing
     if *state.get() != EditorState::Editing {
         preview_state.needs_rebuild = false;
+        session.preview_needs_rebuild = false;
         return;
+    }
+
+    // Check if session flagged a rebuild needed (from properties panel changes)
+    if session.preview_needs_rebuild {
+        preview_state.needs_rebuild = true;
+        session.preview_needs_rebuild = false;
     }
 
     // Check if we switched files
@@ -83,7 +95,7 @@ pub fn check_preview_update(
         let sprite_key = sprite_path.as_ref().map(|p| sprite_path_to_key(p));
 
         if sprite_key != preview_state.current_sprite_key {
-            info!(
+            debug!(
                 "Sprite changed: {:?} -> {:?}",
                 preview_state.current_sprite_key, sprite_key
             );
@@ -192,7 +204,7 @@ pub fn update_preview_mob(
         };
 
         if let Some(aseprite_handle) = load_result.handle {
-            info!("Loading sprite for mob preview: {}", path);
+            debug!("Loading sprite for mob preview: {}", path);
 
             // Spawn the main mob preview entity
             commands.spawn((
@@ -216,13 +228,13 @@ pub fn update_preview_mob(
             warn!("Could not find sprite: {}", path);
         }
     } else {
+        // No sprite field - this is valid, sprites are optional
         preview_state.sprite_info = SpriteLoadInfo {
             sprite_key: None,
             loaded_from: None,
             searched_paths: vec![],
-            error: Some("No 'sprite' field in mob data".to_string()),
+            error: None,
         };
-        warn!("No sprite field found for mob");
     }
 }
 
@@ -243,7 +255,8 @@ fn spawn_jointed_mob_previews(
 
         let load_result = try_load_sprite_from_path(sprite_path, asset_server, config);
         if let Some(aseprite_handle) = load_result.handle {
-            // Spawn the jointed mob sprite
+            // Spawn the jointed mob sprite with rotation
+            let rotation = Quat::from_rotation_z(resolved.offset_rot.to_radians());
             commands.spawn((
                 PreviewJointedMob,
                 AseAnimation {
@@ -259,7 +272,8 @@ fn spawn_jointed_mob_previews(
                     resolved.offset_pos.y,
                     // Layer behind main mob, with depth affecting z-order
                     resolved.z_level - 0.01 * resolved.depth as f32,
-                ),
+                )
+                .with_rotation(rotation),
             ));
 
             // Spawn decorations for this jointed mob (also dimmed)
@@ -347,7 +361,7 @@ pub fn try_load_sprite_from_path(
     for fs_path in &search_paths {
         if fs_path.exists() {
             let abs_path = fs_path.to_string_lossy().to_string();
-            info!("Found sprite at: {:?}, loading with absolute path", fs_path);
+            debug!("Found sprite at: {:?}", fs_path);
             return SpriteLoadResult {
                 handle: Some(asset_server.load(abs_path)),
                 loaded_from: Some(fs_path.clone()),
@@ -405,10 +419,7 @@ fn spawn_decorations(
         // Try to load the decoration sprite using the full path (supports extended:// prefix)
         let load_result = try_load_sprite_from_path(sprite_path, asset_server, config);
         if let Some(handle) = load_result.handle {
-            info!(
-                "Loading decoration sprite: {} at {:?}",
-                sprite_path, position
-            );
+            debug!("Loading decoration sprite: {} at {:?}", sprite_path, position);
             commands.spawn((
                 PreviewDecoration { index },
                 AseAnimation {

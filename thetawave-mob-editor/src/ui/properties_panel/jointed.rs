@@ -8,7 +8,7 @@ use bevy_egui::egui;
 use crate::data::EditorSession;
 use crate::file::FileTreeState;
 
-use super::fields::{INHERITED_COLOR, PATCHED_COLOR, render_patch_indicator};
+use super::fields::{INHERITED_COLOR, PATCHED_COLOR, header_color, render_patch_indicator};
 
 /// Render the jointed mobs section
 pub fn render_jointed_mobs_section(
@@ -21,24 +21,41 @@ pub fn render_jointed_mobs_section(
     file_tree: &FileTreeState,
 ) {
     let is_patched = is_patch && patch_table.contains_key("jointed_mobs");
+    let section_modified = session.is_field_modified("jointed_mobs");
 
-    egui::CollapsingHeader::new("Jointed Mobs")
+    let header_text =
+        egui::RichText::new("Jointed Mobs").color(header_color(ui, section_modified));
+    egui::CollapsingHeader::new(header_text)
         .default_open(false)
         .show(ui, |ui| {
             // Patch status indicator
             ui.horizontal(|ui| {
                 render_patch_indicator(ui, is_patched, is_patch);
                 if is_patch && !is_patched {
+                    let has_base_jointed = display_table.contains_key("jointed_mobs");
                     ui.label(
-                        egui::RichText::new("(inherited from base)")
-                            .small()
-                            .color(INHERITED_COLOR),
+                        egui::RichText::new(if has_base_jointed {
+                            "(inherited from base)"
+                        } else {
+                            "(no jointed mobs in base)"
+                        })
+                        .small()
+                        .color(INHERITED_COLOR),
                     );
-                    if ui.button("Override").clicked()
-                        && let Some(jointed_mobs) = display_table.get("jointed_mobs").cloned()
+                    let button_label = if has_base_jointed {
+                        "Override"
+                    } else {
+                        "Add Jointed Mobs"
+                    };
+                    if ui.button(button_label).clicked()
                         && let Some(mob) =
                             session.current_mob.as_mut().and_then(|v| v.as_table_mut())
                     {
+                        // Copy from base if it exists, otherwise create empty array
+                        let jointed_mobs = display_table
+                            .get("jointed_mobs")
+                            .cloned()
+                            .unwrap_or_else(|| toml::Value::Array(vec![]));
                         mob.insert("jointed_mobs".to_string(), jointed_mobs);
                         *modified = true;
                     }
@@ -80,14 +97,16 @@ pub fn render_jointed_mobs_section(
                         .and_then(|v| v.as_str())
                         .unwrap_or("unnamed");
                     let is_selected = session.selected_jointed_mob == Some(i);
+                    let item_modified = session.is_array_item_modified("jointed_mobs", i);
 
-                    // Highlight selected joint
+                    // Highlight selected and/or modified joint
                     let header_text = if is_selected {
                         egui::RichText::new(format!("Joint: {} *", key))
                             .strong()
                             .color(egui::Color32::YELLOW)
                     } else {
                         egui::RichText::new(format!("Joint: {}", key))
+                            .color(header_color(ui, item_modified))
                     };
 
                     egui::CollapsingHeader::new(header_text)
@@ -108,7 +127,7 @@ pub fn render_jointed_mobs_section(
                                     && ui
                                         .add(
                                             egui::Button::new("🗑")
-                                                .fill(egui::Color32::from_rgb(120, 60, 60)),
+                                                .fill(crate::ui::DELETE_BUTTON_COLOR),
                                         )
                                         .on_hover_text("Delete joint")
                                         .clicked()
@@ -181,9 +200,9 @@ fn render_jointed_mob_fields(
         }
     });
 
-    // Mob ref field (dropdown)
+    // Mob ref field (dropdown with categories)
     let mob_ref = table.get("mob_ref").and_then(|v| v.as_str()).unwrap_or("");
-    let mob_refs = file_tree.get_mob_refs();
+    let (base_refs, extended_refs) = file_tree.get_categorized_mob_refs();
     ui.horizontal(|ui| {
         ui.label("Mob Ref:");
         let mut selected = mob_ref.to_string();
@@ -194,12 +213,33 @@ fn render_jointed_mob_fields(
                 &selected
             })
             .show_ui(ui, |ui| {
-                for ref_name in &mob_refs {
-                    if ui
-                        .selectable_label(selected == *ref_name, ref_name)
-                        .clicked()
-                    {
-                        selected = ref_name.clone();
+                if ui.selectable_label(selected.is_empty(), "(none)").clicked() {
+                    selected.clear();
+                }
+                // Base mobs section
+                if !base_refs.is_empty() {
+                    ui.separator();
+                    ui.label(egui::RichText::new("Base Mobs").strong().small());
+                    for ref_name in &base_refs {
+                        if ui
+                            .selectable_label(selected == *ref_name, ref_name)
+                            .clicked()
+                        {
+                            selected = ref_name.clone();
+                        }
+                    }
+                }
+                // Extended mobs section
+                if !extended_refs.is_empty() {
+                    ui.separator();
+                    ui.label(egui::RichText::new("Extended Mobs").strong().small());
+                    for ref_name in &extended_refs {
+                        if ui
+                            .selectable_label(selected == *ref_name, ref_name)
+                            .clicked()
+                        {
+                            selected = ref_name.clone();
+                        }
                     }
                 }
             });
@@ -223,6 +263,23 @@ fn render_jointed_mob_fields(
             .changed();
         if x_changed || y_changed {
             set_jointed_mob_vec2(session, index, "offset_pos", x, y);
+            *modified = true;
+        }
+    });
+
+    // Offset rotation
+    let offset_rot = table
+        .get("offset_rot")
+        .and_then(|v| v.as_float())
+        .unwrap_or(0.0) as f32;
+    ui.horizontal(|ui| {
+        ui.label("Offset Rot:");
+        let mut rot = offset_rot;
+        if ui
+            .add(egui::DragValue::new(&mut rot).speed(1.0).suffix("°"))
+            .changed()
+        {
+            set_jointed_mob_field(session, index, "offset_rot", toml::Value::Float(rot as f64));
             *modified = true;
         }
     });
@@ -743,10 +800,7 @@ fn add_new_jointed_mob(session: &mut EditorSession) {
                 "key".to_string(),
                 toml::Value::String(format!("joint_{}", arr.len())),
             );
-            new_joint.insert(
-                "mob_ref".to_string(),
-                toml::Value::String("mobs/example.mob".to_string()),
-            );
+            new_joint.insert("mob_ref".to_string(), toml::Value::String(String::new()));
             new_joint.insert(
                 "offset_pos".to_string(),
                 toml::Value::Array(vec![toml::Value::Float(0.0), toml::Value::Float(-10.0)]),

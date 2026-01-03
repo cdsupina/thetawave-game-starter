@@ -1,3 +1,8 @@
+//! Preview panel rendering and camera controls.
+//!
+//! Handles the central preview panel where mobs are displayed with their
+//! sprites, colliders, spawners, and jointed mob connections.
+
 mod camera;
 mod collider_gizmos;
 mod joint_gizmos;

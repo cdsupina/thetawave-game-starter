@@ -1,11 +1,15 @@
+//! Collider visualization gizmos for the preview panel.
+//!
+//! Draws collider outlines, grid, and spawner direction indicators.
+
 use bevy::prelude::{Color, Gizmos, Res, State, Vec2};
 
 use crate::{data::EditorSession, preview::PreviewSettings, states::EditorState};
 
 /// Color for collider outlines
 const COLLIDER_COLOR: Color = Color::srgba(0.0, 1.0, 0.5, 0.8);
-/// Color for selected collider
-const SELECTED_COLLIDER_COLOR: Color = Color::srgba(1.0, 1.0, 0.0, 1.0);
+/// Color for selected collider (white for visibility)
+const SELECTED_COLLIDER_COLOR: Color = Color::srgba(1.0, 1.0, 1.0, 1.0);
 
 /// Draw collider gizmos for the current mob
 pub fn draw_collider_gizmos(

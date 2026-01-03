@@ -1,3 +1,8 @@
+//! Editor session state management.
+//!
+//! Contains [`EditorSession`] which tracks the current editing session,
+//! including the loaded mob data, modification state, and status log.
+
 use std::collections::VecDeque;
 use std::path::PathBuf;
 
@@ -103,130 +108,6 @@ impl StatusLog {
     }
 }
 
-/// A validation error for a specific field
-#[derive(Debug, Clone)]
-pub struct ValidationError {
-    pub field_path: String,
-    pub message: String,
-}
-
-/// Result of validation
-#[derive(Default)]
-pub struct ValidationResult {
-    pub errors: Vec<ValidationError>,
-}
-
-impl ValidationResult {
-    pub fn add_error(&mut self, field_path: impl Into<String>, message: impl Into<String>) {
-        self.errors.push(ValidationError {
-            field_path: field_path.into(),
-            message: message.into(),
-        });
-    }
-
-    pub fn has_errors(&self) -> bool {
-        !self.errors.is_empty()
-    }
-}
-
-/// Validate a mob value before saving
-pub fn validate_mob(mob: &toml::Value, is_patch: bool) -> ValidationResult {
-    let mut result = ValidationResult::default();
-
-    // Skip most validation for patches - they override only some fields
-    if is_patch {
-        return result;
-    }
-
-    let table = match mob.as_table() {
-        Some(t) => t,
-        None => {
-            result.add_error("root", "Mob must be a TOML table");
-            return result;
-        }
-    };
-
-    // Check sprite path (required for non-patches)
-    match table.get("sprite") {
-        Some(toml::Value::String(s)) if s.is_empty() => {
-            result.add_error("sprite", "Sprite path cannot be empty");
-        }
-        None => {
-            result.add_error("sprite", "Sprite path is required");
-        }
-        _ => {}
-    }
-
-    // Check health (must be positive if spawnable)
-    let is_spawnable = table
-        .get("spawnable")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
-
-    if is_spawnable {
-        match table.get("health") {
-            Some(toml::Value::Integer(h)) if *h <= 0 => {
-                result.add_error("health", "Health must be positive for spawnable mobs");
-            }
-            None => {
-                result.add_error("health", "Health is required for spawnable mobs");
-            }
-            _ => {}
-        }
-    }
-
-    // Check colliders (dimensions must be positive)
-    if let Some(colliders) = table.get("colliders").and_then(|v| v.as_array()) {
-        for (i, collider) in colliders.iter().enumerate() {
-            if let Some(table) = collider.as_table()
-                && let Some(shape) = table.get("shape").and_then(|v| v.as_table())
-            {
-                // Check Rectangle dimensions
-                if let Some(dims) = shape.get("Rectangle").and_then(|v| v.as_array()) {
-                    for (j, dim) in dims.iter().enumerate() {
-                        if let Some(v) = dim.as_float() {
-                            if v <= 0.0 {
-                                result.add_error(
-                                    format!("colliders[{}].shape.Rectangle[{}]", i, j),
-                                    "Collider dimension must be positive",
-                                );
-                            }
-                        } else if let Some(v) = dim.as_integer()
-                            && v <= 0
-                        {
-                            result.add_error(
-                                format!("colliders[{}].shape.Rectangle[{}]", i, j),
-                                "Collider dimension must be positive",
-                            );
-                        }
-                    }
-                }
-
-                // Check Ball radius
-                if let Some(radius) = shape.get("Ball") {
-                    if let Some(r) = radius.as_float() {
-                        if r <= 0.0 {
-                            result.add_error(
-                                format!("colliders[{}].shape.Ball", i),
-                                "Ball radius must be positive",
-                            );
-                        }
-                    } else if let Some(r) = radius.as_integer()
-                        && r <= 0
-                    {
-                        result.add_error(
-                            format!("colliders[{}].shape.Ball", i),
-                            "Ball radius must be positive",
-                        );
-                    }
-                }
-            }
-        }
-    }
-
-    result
-}
-
 /// Resource tracking the current editor session state
 #[derive(Resource)]
 pub struct EditorSession {
@@ -269,6 +150,14 @@ pub struct EditorSession {
 
     /// Status log for messages
     pub log: StatusLog,
+
+    /// Flag to signal that the preview needs to be rebuilt
+    /// Set by properties panel when preview-affecting fields change
+    pub preview_needs_rebuild: bool,
+
+    /// Flag to signal that the app should exit after the current save completes
+    /// Set by the unsaved changes dialog when "Save & Exit" is clicked
+    pub pending_exit_after_save: bool,
 }
 
 impl Default for EditorSession {
@@ -286,18 +175,178 @@ impl Default for EditorSession {
             selected_jointed_mob: None,
             selected_behavior_node: None,
             log: StatusLog::default(),
+            preview_needs_rebuild: false,
+            pending_exit_after_save: false,
         }
     }
 }
 
 impl EditorSession {
     /// Check if current_mob differs from original_mob and update is_modified
+    ///
+    /// Uses type-aware comparison to handle Integer/Float type differences
     pub fn check_modified(&mut self) {
         self.is_modified = match (&self.current_mob, &self.original_mob) {
-            (Some(current), Some(original)) => current != original,
+            (Some(current), Some(original)) => !Self::values_equal(current, original),
             (None, None) => false,
             _ => true,
         };
+    }
+
+    /// Check if a specific field has been modified since last save
+    ///
+    /// Compares the field value in current_mob vs original_mob
+    /// Uses type-aware comparison to handle Integer/Float type differences
+    pub fn is_field_modified(&self, field_name: &str) -> bool {
+        match (&self.current_mob, &self.original_mob) {
+            (Some(current), Some(original)) => {
+                let current_val = current.get(field_name);
+                let original_val = original.get(field_name);
+                match (current_val, original_val) {
+                    (Some(a), Some(b)) => !Self::values_equal(a, b),
+                    (None, None) => false,
+                    _ => true, // One exists, other doesn't
+                }
+            }
+            _ => false,
+        }
+    }
+
+    /// Compare two TOML values with type coercion for numbers
+    ///
+    /// This handles the case where a value might be stored as Integer in the
+    /// original file but set as Float by the editor (or vice versa).
+    pub fn values_equal(a: &toml::Value, b: &toml::Value) -> bool {
+        use toml::Value;
+        match (a, b) {
+            // Same types - compare directly
+            (Value::String(a), Value::String(b)) => a == b,
+            (Value::Boolean(a), Value::Boolean(b)) => a == b,
+            (Value::Datetime(a), Value::Datetime(b)) => a == b,
+
+            // Integer/Float coercion - compare as f64
+            (Value::Integer(a), Value::Integer(b)) => a == b,
+            (Value::Float(a), Value::Float(b)) => (a - b).abs() < f64::EPSILON,
+            (Value::Integer(a), Value::Float(b)) | (Value::Float(b), Value::Integer(a)) => {
+                (*a as f64 - b).abs() < f64::EPSILON
+            }
+
+            // Arrays - compare element by element
+            (Value::Array(a), Value::Array(b)) => {
+                a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| Self::values_equal(x, y))
+            }
+
+            // Tables - compare key by key
+            (Value::Table(a), Value::Table(b)) => {
+                a.len() == b.len()
+                    && a.keys().all(|k| {
+                        b.get(k)
+                            .map(|bv| Self::values_equal(a.get(k).unwrap(), bv))
+                            .unwrap_or(false)
+                    })
+            }
+
+            // Different types (and not Integer/Float pair) - not equal
+            _ => false,
+        }
+    }
+
+    /// Check if an array item is new or modified (for decorations, colliders, etc.)
+    ///
+    /// Returns true if:
+    /// - The item is new (index didn't exist in original)
+    /// - The item was modified (value differs from original)
+    pub fn is_array_item_modified(&self, field_name: &str, index: usize) -> bool {
+        match (&self.current_mob, &self.original_mob) {
+            (Some(current), Some(original)) => {
+                let current_arr = current.get(field_name).and_then(|v| v.as_array());
+                let original_arr = original.get(field_name).and_then(|v| v.as_array());
+
+                match (current_arr, original_arr) {
+                    (Some(curr), Some(orig)) => match (curr.get(index), orig.get(index)) {
+                        (Some(a), Some(b)) => !Self::values_equal(a, b),
+                        (None, None) => false,
+                        _ => true,
+                    },
+                    (Some(_), None) => true, // Entire array is new
+                    _ => false,
+                }
+            }
+            _ => false,
+        }
+    }
+
+    /// Check if a table entry is new or modified (for spawners with named keys)
+    ///
+    /// Returns true if:
+    /// - The key is new (didn't exist in original)
+    /// - The value at that key was modified
+    #[allow(dead_code)] // May be useful for future simple table comparisons
+    pub fn is_table_key_modified(&self, field_name: &str, key: &str) -> bool {
+        match (&self.current_mob, &self.original_mob) {
+            (Some(current), Some(original)) => {
+                let current_table = current.get(field_name).and_then(|v| v.as_table());
+                let original_table = original.get(field_name).and_then(|v| v.as_table());
+
+                match (current_table, original_table) {
+                    (Some(curr), Some(orig)) => match (curr.get(key), orig.get(key)) {
+                        (Some(a), Some(b)) => !Self::values_equal(a, b),
+                        (None, None) => false,
+                        _ => true,
+                    },
+                    (Some(_), None) => true, // Entire table is new
+                    _ => false,
+                }
+            }
+            _ => false,
+        }
+    }
+
+    /// Check if a nested table entry is new or modified
+    /// (for spawners.spawners.north, etc.)
+    ///
+    /// path example: ["projectile_spawners", "spawners", "north"]
+    pub fn is_nested_key_modified(&self, path: &[&str]) -> bool {
+        match (&self.current_mob, &self.original_mob) {
+            (Some(current), Some(original)) => {
+                let current_val = Self::get_nested_value(current, path);
+                let original_val = Self::get_nested_value(original, path);
+                match (current_val, original_val) {
+                    (Some(a), Some(b)) => !Self::values_equal(a, b),
+                    (None, None) => false,
+                    _ => true,
+                }
+            }
+            _ => false,
+        }
+    }
+
+    /// Helper to get a nested value by path
+    fn get_nested_value<'a>(value: &'a toml::Value, path: &[&str]) -> Option<&'a toml::Value> {
+        let mut current = value;
+        for key in path {
+            current = current.get(*key)?;
+        }
+        Some(current)
+    }
+
+    /// Update merged_for_preview after changes to current_mob (for patches)
+    ///
+    /// For .mobpatch files, this re-merges base_mob + current_mob so that
+    /// the preview reflects the latest changes. Should be called whenever
+    /// current_mob is modified for patch files.
+    ///
+    /// Also sets `preview_needs_rebuild` to signal the preview system.
+    pub fn update_merged_for_preview(&mut self) {
+        if self.file_type == FileType::MobPatch {
+            if let (Some(base), Some(patch)) = (&self.base_mob, &self.current_mob) {
+                let mut merged = base.clone();
+                crate::file::merge_toml_values(&mut merged, patch.clone());
+                self.merged_for_preview = Some(merged);
+            }
+        }
+        // Signal preview system to rebuild
+        self.preview_needs_rebuild = true;
     }
 
     /// Log a success message
@@ -338,14 +387,8 @@ impl EditorSession {
     pub fn new_mob(name: &str) -> toml::Value {
         let mut table = toml::value::Table::new();
         table.insert("name".to_string(), toml::Value::String(name.to_string()));
-        // Default sprite path - user should update this
-        table.insert(
-            "sprite".to_string(),
-            toml::Value::String(format!(
-                "media/aseprite/{}_mob.aseprite",
-                name.to_lowercase().replace(' ', "_")
-            )),
-        );
+        // No default sprite - user must register one explicitly
+        // This avoids creating references to non-existent files
         table.insert("spawnable".to_string(), toml::Value::Boolean(true));
         table.insert("health".to_string(), toml::Value::Integer(50));
 
@@ -400,254 +443,6 @@ mod tests {
             "#,
         )
         .unwrap()
-    }
-
-    #[test]
-    fn validate_mob_valid() {
-        let mob = valid_mob();
-        let result = validate_mob(&mob, false);
-        assert!(
-            !result.has_errors(),
-            "Valid mob should pass: {:?}",
-            result.errors
-        );
-    }
-
-    #[test]
-    fn validate_mob_missing_sprite() {
-        let mob = toml::from_str(
-            r#"
-            name = "No Sprite Mob"
-            spawnable = false
-            "#,
-        )
-        .unwrap();
-
-        let result = validate_mob(&mob, false);
-        assert!(result.has_errors());
-        assert!(result.errors.iter().any(|e| e.field_path == "sprite"));
-    }
-
-    #[test]
-    fn validate_mob_empty_sprite() {
-        let mob = toml::from_str(
-            r#"
-            name = "Empty Sprite Mob"
-            sprite = ""
-            spawnable = false
-            "#,
-        )
-        .unwrap();
-
-        let result = validate_mob(&mob, false);
-        assert!(result.has_errors());
-        assert!(
-            result
-                .errors
-                .iter()
-                .any(|e| e.field_path == "sprite" && e.message.contains("empty"))
-        );
-    }
-
-    #[test]
-    fn validate_mob_missing_health_spawnable() {
-        let mob = toml::from_str(
-            r#"
-            name = "No Health Mob"
-            sprite = "media/aseprite/test.aseprite"
-            spawnable = true
-            "#,
-        )
-        .unwrap();
-
-        let result = validate_mob(&mob, false);
-        assert!(result.has_errors());
-        assert!(
-            result
-                .errors
-                .iter()
-                .any(|e| e.field_path == "health" && e.message.contains("required"))
-        );
-    }
-
-    #[test]
-    fn validate_mob_negative_health() {
-        let mob = toml::from_str(
-            r#"
-            name = "Negative Health Mob"
-            sprite = "media/aseprite/test.aseprite"
-            spawnable = true
-            health = -10
-            "#,
-        )
-        .unwrap();
-
-        let result = validate_mob(&mob, false);
-        assert!(result.has_errors());
-        assert!(
-            result
-                .errors
-                .iter()
-                .any(|e| e.field_path == "health" && e.message.contains("positive"))
-        );
-    }
-
-    #[test]
-    fn validate_mob_zero_health() {
-        let mob = toml::from_str(
-            r#"
-            name = "Zero Health Mob"
-            sprite = "media/aseprite/test.aseprite"
-            spawnable = true
-            health = 0
-            "#,
-        )
-        .unwrap();
-
-        let result = validate_mob(&mob, false);
-        assert!(result.has_errors());
-        assert!(result.errors.iter().any(|e| e.field_path == "health"));
-    }
-
-    #[test]
-    fn validate_mob_invalid_rectangle_negative() {
-        let mob = toml::from_str(
-            r#"
-            name = "Bad Collider Mob"
-            sprite = "media/aseprite/test.aseprite"
-            spawnable = false
-
-            [[colliders]]
-            shape = { Rectangle = [-5.0, 10.0] }
-            position = [0.0, 0.0]
-            rotation = 0.0
-            "#,
-        )
-        .unwrap();
-
-        let result = validate_mob(&mob, false);
-        assert!(result.has_errors());
-        assert!(
-            result
-                .errors
-                .iter()
-                .any(|e| e.field_path.contains("Rectangle") && e.message.contains("positive"))
-        );
-    }
-
-    #[test]
-    fn validate_mob_invalid_ball_negative() {
-        let mob = toml::from_str(
-            r#"
-            name = "Bad Ball Mob"
-            sprite = "media/aseprite/test.aseprite"
-            spawnable = false
-
-            [[colliders]]
-            shape = { Ball = -5.0 }
-            position = [0.0, 0.0]
-            rotation = 0.0
-            "#,
-        )
-        .unwrap();
-
-        let result = validate_mob(&mob, false);
-        assert!(result.has_errors());
-        assert!(
-            result
-                .errors
-                .iter()
-                .any(|e| e.field_path.contains("Ball") && e.message.contains("positive"))
-        );
-    }
-
-    #[test]
-    fn validate_mob_patch_skips_validation() {
-        // Patches with missing required fields should still pass
-        let patch = toml::from_str(
-            r#"
-            name = "Patch Only"
-            health = 200
-            "#,
-        )
-        .unwrap();
-
-        let result = validate_mob(&patch, true);
-        assert!(!result.has_errors(), "Patches should skip validation");
-    }
-
-    #[test]
-    fn validate_mob_multiple_errors() {
-        let mob = toml::from_str(
-            r#"
-            name = "Multiple Errors"
-            spawnable = true
-
-            [[colliders]]
-            shape = { Rectangle = [-5.0, -10.0] }
-            position = [0.0, 0.0]
-            rotation = 0.0
-            "#,
-        )
-        .unwrap();
-
-        let result = validate_mob(&mob, false);
-        assert!(result.has_errors());
-        // Should have errors for: missing sprite, missing health, two negative dimensions
-        assert!(
-            result.errors.len() >= 3,
-            "Expected at least 3 errors, got {}",
-            result.errors.len()
-        );
-    }
-
-    #[test]
-    fn validate_mob_non_spawnable_no_health_ok() {
-        // Non-spawnable mobs don't require health
-        let mob = toml::from_str(
-            r#"
-            name = "Non-spawnable Mob"
-            sprite = "media/aseprite/test.aseprite"
-            spawnable = false
-
-            [[colliders]]
-            shape = { Rectangle = [10.0, 10.0] }
-            position = [0.0, 0.0]
-            rotation = 0.0
-            "#,
-        )
-        .unwrap();
-
-        let result = validate_mob(&mob, false);
-        assert!(
-            !result.has_errors(),
-            "Non-spawnable mob without health should be valid"
-        );
-    }
-
-    #[test]
-    fn validate_mob_mixed_colliders() {
-        let mob = toml::from_str(
-            r#"
-            name = "Mixed Colliders"
-            sprite = "media/aseprite/test.aseprite"
-            spawnable = false
-
-            [[colliders]]
-            shape = { Rectangle = [10.0, 10.0] }
-            position = [0.0, 0.0]
-            rotation = 0.0
-
-            [[colliders]]
-            shape = { Ball = 5.0 }
-            position = [5.0, 0.0]
-            rotation = 0.0
-            "#,
-        )
-        .unwrap();
-
-        let result = validate_mob(&mob, false);
-        assert!(!result.has_errors(), "Mixed valid colliders should pass");
     }
 
     // StatusLog tests
@@ -723,173 +518,69 @@ mod tests {
         let mob = EditorSession::new_mob("Test Enemy");
 
         assert_eq!(mob.get("name").and_then(|v| v.as_str()), Some("Test Enemy"));
-        assert!(mob.get("sprite").is_some());
+        // Sprite is optional - new mobs don't have one by default
+        assert!(mob.get("sprite").is_none());
         assert!(mob.get("health").is_some());
         assert!(mob.get("colliders").is_some());
         assert_eq!(mob.get("spawnable").and_then(|v| v.as_bool()), Some(true));
     }
 
-    // Additional edge case tests
+    // values_equal tests for type coercion
+    #[test]
+    fn values_equal_integer_vs_float() {
+        // Integer(50) should equal Float(50.0)
+        let int_val = toml::Value::Integer(50);
+        let float_val = toml::Value::Float(50.0);
+        assert!(EditorSession::values_equal(&int_val, &float_val));
+        assert!(EditorSession::values_equal(&float_val, &int_val));
+
+        // Different values should not be equal
+        let int_other = toml::Value::Integer(51);
+        assert!(!EditorSession::values_equal(&int_other, &float_val));
+    }
 
     #[test]
-    fn validate_mob_zero_dimensions() {
-        let mob = toml::from_str(
-            r#"
-            name = "Zero Dimensions"
-            sprite = "media/aseprite/test.aseprite"
-            spawnable = false
+    fn values_equal_arrays_with_type_coercion() {
+        // [50, 50] should equal [50.0, 50.0]
+        let int_arr = toml::Value::Array(vec![
+            toml::Value::Integer(50),
+            toml::Value::Integer(50),
+        ]);
+        let float_arr = toml::Value::Array(vec![
+            toml::Value::Float(50.0),
+            toml::Value::Float(50.0),
+        ]);
+        assert!(EditorSession::values_equal(&int_arr, &float_arr));
+    }
 
-            [[colliders]]
-            shape = { Rectangle = [0.0, 10.0] }
-            position = [0.0, 0.0]
-            rotation = 0.0
+    #[test]
+    fn check_modified_with_type_coercion() {
+        let mut session = EditorSession::default();
+
+        // Create original with Integer value
+        let original: toml::Value = toml::from_str(
+            r#"
+            name = "Test"
+            z_level = 0
             "#,
         )
         .unwrap();
 
-        let result = validate_mob(&mob, false);
-        assert!(result.has_errors());
-        assert!(
-            result
-                .errors
-                .iter()
-                .any(|e| e.field_path.contains("Rectangle"))
-        );
-    }
-
-    #[test]
-    fn validate_mob_integer_collider_dimensions() {
-        // Test that integer dimensions are handled correctly
-        let mob = toml::from_str(
+        // Create current with Float value (same numeric value)
+        let current: toml::Value = toml::from_str(
             r#"
-            name = "Integer Dimensions"
-            sprite = "media/aseprite/test.aseprite"
-            spawnable = false
-
-            [[colliders]]
-            shape = { Rectangle = [10, 15] }
-            position = [0.0, 0.0]
-            rotation = 0.0
+            name = "Test"
+            z_level = 0.0
             "#,
         )
         .unwrap();
 
-        let result = validate_mob(&mob, false);
-        assert!(
-            !result.has_errors(),
-            "Positive integer dimensions should be valid"
-        );
-    }
+        session.original_mob = Some(original);
+        session.current_mob = Some(current);
+        session.check_modified();
 
-    #[test]
-    fn validate_mob_negative_integer_collider() {
-        let mob = toml::from_str(
-            r#"
-            name = "Negative Integer"
-            sprite = "media/aseprite/test.aseprite"
-            spawnable = false
-
-            [[colliders]]
-            shape = { Rectangle = [-5, 10] }
-            position = [0.0, 0.0]
-            rotation = 0.0
-            "#,
-        )
-        .unwrap();
-
-        let result = validate_mob(&mob, false);
-        assert!(result.has_errors());
-    }
-
-    #[test]
-    fn validate_mob_ball_zero_radius() {
-        let mob = toml::from_str(
-            r#"
-            name = "Zero Ball"
-            sprite = "media/aseprite/test.aseprite"
-            spawnable = false
-
-            [[colliders]]
-            shape = { Ball = 0.0 }
-            position = [0.0, 0.0]
-            rotation = 0.0
-            "#,
-        )
-        .unwrap();
-
-        let result = validate_mob(&mob, false);
-        assert!(result.has_errors());
-        assert!(result.errors.iter().any(|e| e.field_path.contains("Ball")));
-    }
-
-    #[test]
-    fn validate_mob_integer_ball_radius() {
-        let mob = toml::from_str(
-            r#"
-            name = "Integer Ball"
-            sprite = "media/aseprite/test.aseprite"
-            spawnable = false
-
-            [[colliders]]
-            shape = { Ball = 5 }
-            position = [0.0, 0.0]
-            rotation = 0.0
-            "#,
-        )
-        .unwrap();
-
-        let result = validate_mob(&mob, false);
-        assert!(
-            !result.has_errors(),
-            "Positive integer ball radius should be valid"
-        );
-    }
-
-    #[test]
-    fn validate_mob_empty_colliders_array() {
-        let mob = toml::from_str(
-            r#"
-            name = "Empty Colliders"
-            sprite = "media/aseprite/test.aseprite"
-            spawnable = false
-            colliders = []
-            "#,
-        )
-        .unwrap();
-
-        let result = validate_mob(&mob, false);
-        // Empty colliders array is allowed - validation doesn't require colliders
-        assert!(!result.has_errors());
-    }
-
-    #[test]
-    fn validate_mob_no_colliders() {
-        let mob = toml::from_str(
-            r#"
-            name = "No Colliders"
-            sprite = "media/aseprite/test.aseprite"
-            spawnable = false
-            "#,
-        )
-        .unwrap();
-
-        let result = validate_mob(&mob, false);
-        assert!(
-            !result.has_errors(),
-            "Mobs without colliders should be valid"
-        );
-    }
-
-    #[test]
-    fn validation_result_add_multiple_errors() {
-        let mut result = ValidationResult::default();
-        assert!(!result.has_errors());
-
-        result.add_error("field1", "Error 1");
-        result.add_error("field2", "Error 2");
-        result.add_error("field3", "Error 3");
-
-        assert!(result.has_errors());
-        assert_eq!(result.errors.len(), 3);
+        // Should NOT be modified because 0 == 0.0
+        assert!(!session.is_modified);
+        assert!(!session.is_field_modified("z_level"));
     }
 }

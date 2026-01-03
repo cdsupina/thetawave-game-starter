@@ -5,11 +5,12 @@
 
 use bevy_egui::egui;
 
-use crate::data::{EditorSession, SpriteRegistry, SpriteSource};
+use crate::data::{EditorSession, SpriteRegistry};
 use crate::plugin::EditorConfig;
 
 use super::fields::{
-    INDENT_SPACING, INHERITED_COLOR, PATCHED_COLOR, render_patch_indicator, render_reset_button,
+    INDENT_SPACING, INHERITED_COLOR, PATCHED_COLOR, header_color, render_patch_indicator,
+    render_reset_button,
 };
 use super::update_decoration_sprite;
 
@@ -29,6 +30,7 @@ pub fn render_sprite_picker(
     let mut open_browser = false;
 
     let is_patched = is_patch && patch_table.contains_key("sprite");
+    let is_modified = session.is_field_modified("sprite");
     let current_sprite = display_table
         .get("sprite")
         .and_then(|v| v.as_str())
@@ -42,7 +44,10 @@ pub fn render_sprite_picker(
     ui.horizontal(|ui| {
         render_patch_indicator(ui, is_patched, is_patch);
 
-        let text_color = if is_patch && !is_patched {
+        // Use modification color (yellow) if modified, otherwise patch-aware color
+        let text_color = if is_modified {
+            super::fields::MODIFIED_COLOR
+        } else if is_patch && !is_patched {
             INHERITED_COLOR
         } else {
             ui.style().visuals.text_color()
@@ -105,19 +110,20 @@ pub fn render_sprite_picker(
                                 .small()
                                 .color(PATCHED_COLOR),
                         );
+                        // Extended sprites need extended:// prefix for patches AND extended mobs
+                        let needs_extended_prefix =
+                            is_patch || session.is_extended_mob(config);
                         for sprite in extended_sprites {
                             let is_selected = normalized_current == sprite.asset_path;
                             if ui
                                 .selectable_label(is_selected, &sprite.display_name)
                                 .clicked()
                             {
-                                // For patches, use extended:// prefix for extended sprites
-                                selected_path =
-                                    if is_patch && sprite.source == SpriteSource::Extended {
-                                        sprite.mobpatch_path()
-                                    } else {
-                                        sprite.mob_path()
-                                    };
+                                selected_path = if needs_extended_prefix {
+                                    sprite.mobpatch_path()
+                                } else {
+                                    sprite.mob_path()
+                                };
                             }
                         }
                     }
@@ -136,14 +142,17 @@ pub fn render_sprite_picker(
                 }
             });
 
-        // Apply change if different
+        // Apply change if different from current displayed value
         if selected_path != current_sprite
             && let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut())
         {
             if selected_path.is_empty() {
+                // User selected "(none)" - remove the field
                 mob.remove("sprite");
             } else {
-                mob.insert("sprite".to_string(), toml::Value::String(selected_path));
+                // Set the new sprite value
+                // The is_field_modified comparison will correctly detect if it equals original
+                mob.insert("sprite".to_string(), toml::Value::String(selected_path.clone()));
             }
             *modified = true;
         }
@@ -162,20 +171,14 @@ pub fn render_sprite_picker(
         ui.add_space(INDENT_SPACING);
 
         if ui
-            .small_button("➕ Register New Sprite...")
+            .small_button("Browse...")
             .on_hover_text(
-                "Find an aseprite file not yet in the sprite list and add it to game.assets.ron",
+                "Browse for an aseprite file and register it in game.assets.ron",
             )
             .clicked()
         {
             open_browser = true;
         }
-
-        ui.label(
-            egui::RichText::new("Add unregistered aseprite to game")
-                .small()
-                .color(egui::Color32::GRAY),
-        );
     });
 
     // Show warning if unregistered
@@ -208,26 +211,43 @@ pub fn render_decorations_section(
 ) -> Option<usize> {
     let mut open_decoration_browser: Option<usize> = None;
     let is_patched = is_patch && patch_table.contains_key("decorations");
+    let section_modified = session.is_field_modified("decorations");
     // Only allow editing if not a patch OR if decorations are in the patch
     let can_edit = !is_patch || is_patched;
 
-    egui::CollapsingHeader::new("Decorations")
+    let header_text =
+        egui::RichText::new("Decorations").color(header_color(ui, section_modified));
+    egui::CollapsingHeader::new(header_text)
         .default_open(false)
         .show(ui, |ui| {
             ui.horizontal(|ui| {
                 render_patch_indicator(ui, is_patched, is_patch);
                 if is_patch && !is_patched {
+                    let has_base_decorations = display_table.contains_key("decorations");
                     ui.label(
-                        egui::RichText::new("(inherited from base)")
-                            .small()
-                            .color(INHERITED_COLOR),
+                        egui::RichText::new(if has_base_decorations {
+                            "(inherited from base)"
+                        } else {
+                            "(no decorations in base)"
+                        })
+                        .small()
+                        .color(INHERITED_COLOR),
                     );
-                    // Add "Override" button to copy decorations to patch
-                    if ui.button("Override").clicked()
-                        && let Some(decorations) = display_table.get("decorations").cloned()
+                    // Add "Override"/"Add" button to create decorations in patch
+                    let button_label = if has_base_decorations {
+                        "Override"
+                    } else {
+                        "Add Decorations"
+                    };
+                    if ui.button(button_label).clicked()
                         && let Some(mob) =
                             session.current_mob.as_mut().and_then(|v| v.as_table_mut())
                     {
+                        // Copy from base if available, otherwise create empty array
+                        let decorations = display_table
+                            .get("decorations")
+                            .cloned()
+                            .unwrap_or_else(|| toml::Value::Array(vec![]));
                         mob.insert("decorations".to_string(), decorations);
                         *modified = true;
                     }
@@ -282,9 +302,14 @@ pub fn render_decorations_section(
                     (0.0, 0.0)
                 };
 
+                let item_modified = session.is_array_item_modified("decorations", i);
+
                 ui.group(|ui| {
                     ui.horizontal(|ui| {
-                        ui.label(format!("#{}", i + 1));
+                        ui.label(
+                            egui::RichText::new(format!("#{}", i + 1))
+                                .color(header_color(ui, item_modified)),
+                        );
                         if can_edit {
                             ui.with_layout(
                                 egui::Layout::right_to_left(egui::Align::Center),
@@ -452,18 +477,20 @@ fn render_decoration_sprite_picker(
                                     .small()
                                     .color(PATCHED_COLOR),
                             );
+                            // Extended sprites need extended:// prefix for patches AND extended mobs
+                            let needs_extended_prefix =
+                                is_patch || session.is_extended_mob(config);
                             for sprite in extended_sprites {
                                 let is_selected = normalized_current == sprite.asset_path;
                                 if ui
                                     .selectable_label(is_selected, &sprite.display_name)
                                     .clicked()
                                 {
-                                    selected_path =
-                                        if is_patch && sprite.source == SpriteSource::Extended {
-                                            sprite.mobpatch_path()
-                                        } else {
-                                            sprite.mob_path()
-                                        };
+                                    selected_path = if needs_extended_prefix {
+                                        sprite.mobpatch_path()
+                                    } else {
+                                        sprite.mob_path()
+                                    };
                                 }
                             }
                         }
@@ -490,10 +517,10 @@ fn render_decoration_sprite_picker(
                 *modified = true;
             }
 
-            // Register new sprite button
+            // Browse for sprite button
             if ui
-                .small_button("➕")
-                .on_hover_text("Register new sprite for this decoration")
+                .small_button("📁")
+                .on_hover_text("Browse for sprite")
                 .clicked()
             {
                 open_browser_for = Some(index);

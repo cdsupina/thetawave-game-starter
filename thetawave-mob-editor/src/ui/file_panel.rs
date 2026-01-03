@@ -1,12 +1,22 @@
+//! File browser panel UI.
+//!
+//! Renders the left panel with the file tree, context menus,
+//! and dialog states for file operations.
+
 use std::path::PathBuf;
 
 use bevy::{ecs::message::MessageWriter, prelude::Resource};
 use bevy_egui::egui;
 
 use crate::{
-    data::EditorSession,
-    file::{DeleteMobEvent, FileNode, FileTreeState, LoadMobEvent},
+    data::{EditorSession, SpriteRegistry},
+    file::{DeleteDirectoryEvent, DeleteMobEvent, FileNode, FileTreeState, LoadMobEvent},
 };
+
+/// Maximum length for displayed filenames in the file tree
+use super::truncate_filename;
+
+const MAX_FILENAME_DISPLAY_LEN: usize = 28;
 
 /// State for delete confirmation dialog
 #[derive(Resource, Default)]
@@ -25,6 +35,50 @@ impl DeleteDialogState {
 
     pub fn close(&mut self) {
         self.is_open = false;
+    }
+}
+
+/// State for delete directory confirmation dialog
+#[derive(Resource, Default)]
+pub struct DeleteDirectoryDialogState {
+    pub is_open: bool,
+    pub dir_path: PathBuf,
+    pub dir_name: String,
+    pub contained_files: Vec<String>,
+}
+
+impl DeleteDirectoryDialogState {
+    pub fn open(&mut self, path: PathBuf, name: String) {
+        self.is_open = true;
+        self.dir_path = path.clone();
+        self.dir_name = name;
+        // Collect all files in the directory
+        self.contained_files = Self::collect_files(&path);
+    }
+
+    fn collect_files(path: &PathBuf) -> Vec<String> {
+        let mut files = Vec::new();
+        if let Ok(entries) = std::fs::read_dir(path) {
+            for entry in entries.flatten() {
+                let entry_path = entry.path();
+                let name = entry.file_name().to_string_lossy().to_string();
+                if entry_path.is_dir() {
+                    // Recursively collect from subdirectories
+                    for sub_file in Self::collect_files(&entry_path) {
+                        files.push(format!("{}/{}", name, sub_file));
+                    }
+                } else {
+                    files.push(name);
+                }
+            }
+        }
+        files.sort();
+        files
+    }
+
+    pub fn close(&mut self) {
+        self.is_open = false;
+        self.contained_files.clear();
     }
 }
 
@@ -51,28 +105,6 @@ impl UnsavedChangesDialog {
     pub fn close(&mut self) {
         self.is_open = false;
         self.pending_action = None;
-    }
-}
-
-/// Dialog for displaying critical errors
-#[derive(Resource, Default)]
-pub struct ErrorDialog {
-    pub is_open: bool,
-    pub title: String,
-    pub message: String,
-    pub details: Option<String>,
-}
-
-/// Dialog for displaying validation errors
-#[derive(Resource, Default)]
-pub struct ValidationDialog {
-    pub is_open: bool,
-    pub errors: Vec<crate::data::ValidationError>,
-}
-
-impl ErrorDialog {
-    pub fn close(&mut self) {
-        self.is_open = false;
     }
 }
 
@@ -145,18 +177,21 @@ impl NewMobDialog {
 pub fn file_panel_ui(
     ui: &mut egui::Ui,
     file_tree: &mut FileTreeState,
+    sprite_registry: &mut SpriteRegistry,
     session: &EditorSession,
     load_events: &mut MessageWriter<LoadMobEvent>,
     delete_dialog: &mut DeleteDialogState,
+    delete_dir_dialog: &mut DeleteDirectoryDialogState,
     unsaved_dialog: &mut UnsavedChangesDialog,
     new_folder_dialog: &mut NewFolderDialog,
     new_mob_dialog: &mut NewMobDialog,
 ) {
     ui.heading("Mob Files");
 
-    // Refresh button
+    // Refresh button - refreshes both file tree and sprite registry
     if ui.button("🔄 Refresh").clicked() {
         file_tree.needs_refresh = true;
+        sprite_registry.needs_refresh = true;
     }
 
     ui.separator();
@@ -174,6 +209,7 @@ pub fn file_panel_ui(
                     session,
                     load_events,
                     delete_dialog,
+                    delete_dir_dialog,
                     unsaved_dialog,
                     new_folder_dialog,
                     new_mob_dialog,
@@ -196,6 +232,7 @@ fn render_file_node(
     session: &EditorSession,
     load_events: &mut MessageWriter<LoadMobEvent>,
     delete_dialog: &mut DeleteDialogState,
+    delete_dir_dialog: &mut DeleteDirectoryDialogState,
     unsaved_dialog: &mut UnsavedChangesDialog,
     new_folder_dialog: &mut NewFolderDialog,
     new_mob_dialog: &mut NewMobDialog,
@@ -206,7 +243,8 @@ fn render_file_node(
     if node.is_directory {
         // Directory node with collapse/expand
         let icon = if node.expanded { "📂" } else { "📁" };
-        let header = egui::CollapsingHeader::new(format!("{} {}", icon, node.name))
+        let display_name = truncate_filename(&node.name, MAX_FILENAME_DISPLAY_LEN);
+        let header = egui::CollapsingHeader::new(format!("{} {}", icon, display_name))
             .id_salt(&node.path)
             .default_open(node.expanded)
             .show(ui, |ui| {
@@ -218,6 +256,7 @@ fn render_file_node(
                         session,
                         load_events,
                         delete_dialog,
+                        delete_dir_dialog,
                         unsaved_dialog,
                         new_folder_dialog,
                         new_mob_dialog,
@@ -248,6 +287,19 @@ fn render_file_node(
                 new_folder_dialog.open(node.path.clone());
                 ui.close();
             }
+
+            // Only show delete for non-root directories (not "base" or "extended")
+            let is_root = node.name == "base" || node.name == "extended";
+            if !is_root {
+                ui.separator();
+                if ui
+                    .add(egui::Button::new("🗑 Delete...").fill(egui::Color32::from_rgb(80, 30, 30)))
+                    .clicked()
+                {
+                    delete_dir_dialog.open(node.path.clone(), node.name.clone());
+                    ui.close();
+                }
+            }
         });
     } else {
         // File node
@@ -257,8 +309,9 @@ fn render_file_node(
             "📋" // .mobpatch
         };
 
-        // Highlight currently edited file differently
-        let label = format!("{} {}", icon, node.name);
+        // Truncate long filenames, show full name on hover
+        let display_name = truncate_filename(&node.name, MAX_FILENAME_DISPLAY_LEN);
+        let label = format!("{} {}", icon, display_name);
         let mut text = egui::RichText::new(label);
 
         if is_current {
@@ -270,19 +323,28 @@ fn render_file_node(
 
         let response = ui.selectable_label(is_selected, text);
 
+        // Show full filename on hover if truncated
+        if display_name != node.name {
+            response.clone().on_hover_text(&node.name);
+        }
+
         if response.clicked() {
             file_tree.selected = Some(node.path.clone());
 
-            // Check if we're loading a different file with unsaved changes
-            let is_different_file = session.current_path.as_ref() != Some(&node.path);
-            if session.is_modified && is_different_file {
-                // Show unsaved changes dialog
-                unsaved_dialog.open(UnsavedAction::LoadFile(node.path.clone()));
-            } else {
-                load_events.write(LoadMobEvent {
-                    path: node.path.clone(),
-                });
+            // Check if we're clicking the same file that's already loaded
+            let is_same_file = session.current_path.as_ref() == Some(&node.path);
+            if !is_same_file {
+                // Check if we're loading a different file with unsaved changes
+                if session.is_modified {
+                    // Show unsaved changes dialog
+                    unsaved_dialog.open(UnsavedAction::LoadFile(node.path.clone()));
+                } else {
+                    load_events.write(LoadMobEvent {
+                        path: node.path.clone(),
+                    });
+                }
             }
+            // Skip loading if same file is already loaded
         }
 
         // Context menu for files
@@ -373,6 +435,82 @@ pub fn render_delete_dialog(
                 {
                     delete_events.write(DeleteMobEvent {
                         path: state.file_path.clone(),
+                    });
+                    state.close();
+                }
+            });
+        });
+}
+
+/// Render the delete directory confirmation dialog window
+pub fn render_delete_directory_dialog(
+    ctx: &egui::Context,
+    state: &mut DeleteDirectoryDialogState,
+    delete_events: &mut MessageWriter<DeleteDirectoryEvent>,
+) {
+    if !state.is_open {
+        return;
+    }
+
+    egui::Window::new("Confirm Delete Directory")
+        .collapsible(false)
+        .resizable(false)
+        .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+        .show(ctx, |ui| {
+            ui.label(format!(
+                "Are you sure you want to delete '{}'?",
+                state.dir_name
+            ));
+
+            if state.contained_files.is_empty() {
+                ui.label(
+                    egui::RichText::new("This directory is empty.")
+                        .small()
+                        .color(egui::Color32::GRAY),
+                );
+            } else {
+                ui.add_space(8.0);
+                ui.label(
+                    egui::RichText::new(format!(
+                        "The following {} file(s) will also be deleted:",
+                        state.contained_files.len()
+                    ))
+                    .color(egui::Color32::from_rgb(255, 180, 50)),
+                );
+
+                egui::ScrollArea::vertical()
+                    .max_height(150.0)
+                    .show(ui, |ui| {
+                        for file in &state.contained_files {
+                            ui.label(
+                                egui::RichText::new(format!("  • {}", file))
+                                    .small()
+                                    .color(egui::Color32::GRAY),
+                            );
+                        }
+                    });
+            }
+
+            ui.add_space(4.0);
+            ui.label(
+                egui::RichText::new("All contents will be moved to your system trash.")
+                    .small()
+                    .color(egui::Color32::GRAY),
+            );
+
+            ui.separator();
+
+            ui.horizontal(|ui| {
+                if ui.button("Cancel").clicked() {
+                    state.close();
+                }
+
+                if ui
+                    .add(egui::Button::new("Delete All").fill(egui::Color32::from_rgb(150, 50, 50)))
+                    .clicked()
+                {
+                    delete_events.write(DeleteDirectoryEvent {
+                        path: state.dir_path.clone(),
                     });
                     state.close();
                 }

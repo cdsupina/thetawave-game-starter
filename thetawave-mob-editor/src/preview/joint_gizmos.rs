@@ -1,3 +1,7 @@
+//! Joint visualization gizmos for jointed mob connections.
+//!
+//! Draws joint anchors, connections, angle limits, and chain indicators.
+
 use bevy::prelude::{Alpha, Color, Gizmos, Res, State, Vec2};
 
 use crate::{data::EditorSession, preview::PreviewSettings, states::EditorState};

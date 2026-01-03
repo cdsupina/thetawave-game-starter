@@ -7,7 +7,7 @@ use bevy_egui::egui;
 
 use crate::data::EditorSession;
 
-use super::fields::{INHERITED_COLOR, PATCHED_COLOR, render_patch_indicator};
+use super::fields::{INHERITED_COLOR, PATCHED_COLOR, header_color, render_patch_indicator};
 
 /// Render the colliders section of the properties panel
 ///
@@ -31,8 +31,10 @@ pub fn render_colliders_section(
 ) {
     // Check if this patch file has its own colliders (not inherited from base)
     let is_patched = is_patch && patch_table.contains_key("colliders");
+    let section_modified = session.is_field_modified("colliders");
 
-    egui::CollapsingHeader::new("Colliders")
+    let header_text = egui::RichText::new("Colliders").color(header_color(ui, section_modified));
+    egui::CollapsingHeader::new(header_text)
         .default_open(false)
         .show(ui, |ui| {
             // =================================================================
@@ -96,24 +98,45 @@ pub fn render_colliders_section(
                 // Render each collider as a collapsible sub-section
                 // =============================================================
                 for (i, collider) in colliders.iter().enumerate() {
-                    egui::CollapsingHeader::new(format!("Collider {}", i + 1))
+                    let is_selected = session.selected_collider == Some(i);
+                    let item_modified = session.is_array_item_modified("colliders", i);
+
+                    // Highlight selected and/or modified collider
+                    let header_text = if is_selected {
+                        egui::RichText::new(format!("Collider {} *", i + 1))
+                            .strong()
+                            .color(egui::Color32::WHITE)
+                    } else {
+                        egui::RichText::new(format!("Collider {}", i + 1))
+                            .color(header_color(ui, item_modified))
+                    };
+
+                    egui::CollapsingHeader::new(header_text)
                         .id_salt(format!("collider_{}", i))
                         .default_open(false)
                         .show(ui, |ui| {
-                            // Delete button (only shown when editing is allowed)
-                            if can_edit {
-                                ui.horizontal(|ui| {
-                                    if ui
+                            // Select and Delete buttons
+                            ui.horizontal(|ui| {
+                                if ui
+                                    .button(if is_selected { "Deselect" } else { "Select" })
+                                    .clicked()
+                                {
+                                    session.selected_collider =
+                                        if is_selected { None } else { Some(i) };
+                                }
+
+                                if can_edit
+                                    && ui
                                         .add(
-                                            egui::Button::new("🗑 Delete")
-                                                .fill(egui::Color32::from_rgb(120, 60, 60)),
+                                            egui::Button::new("🗑")
+                                                .fill(crate::ui::DELETE_BUTTON_COLOR),
                                         )
+                                        .on_hover_text("Delete collider")
                                         .clicked()
-                                    {
-                                        delete_index = Some(i);
-                                    }
-                                });
-                            }
+                                {
+                                    delete_index = Some(i);
+                                }
+                            });
 
                             if let Some(table) = collider.as_table() {
                                 // Shape editing - supports Circle and Rectangle
@@ -264,6 +287,14 @@ pub fn render_colliders_section(
                 // =============================================================
                 if let Some(idx) = delete_index {
                     delete_collider(session, idx);
+                    // Clear or adjust selection after deletion
+                    if session.selected_collider == Some(idx) {
+                        session.selected_collider = None;
+                    } else if let Some(selected) = session.selected_collider
+                        && selected > idx
+                    {
+                        session.selected_collider = Some(selected - 1);
+                    }
                     *modified = true;
                 }
             }

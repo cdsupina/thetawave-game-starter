@@ -51,6 +51,8 @@ fn main() {
                         resizable: true,
                         ..default()
                     }),
+                    // Don't close automatically - let our handler show unsaved changes dialog
+                    close_when_requested: false,
                     ..default()
                 })
                 .set(ImagePlugin::default_nearest())

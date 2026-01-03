@@ -20,6 +20,11 @@ pub mod spawners;
 use bevy::ecs::message::MessageWriter;
 use bevy_egui::egui;
 
+use super::truncate_filename;
+
+/// Maximum length for displayed filenames in the properties panel header
+const MAX_FILENAME_DISPLAY_LEN: usize = 24;
+
 use crate::data::{EditorSession, FileType, SpriteRegistry};
 use crate::file::{FileTreeState, ReloadMobEvent, SaveMobEvent};
 use crate::plugin::EditorConfig;
@@ -81,12 +86,12 @@ pub fn properties_panel_ui(
         .auto_shrink([false; 2])
         .show(ui, |ui| {
             // General Properties
-            render_general_properties(ui, &display_table, &patch_table, session, is_patch);
+            render_general_properties(ui, &display_table, &patch_table, session, is_patch, &mut modified);
 
             ui.separator();
 
             // Combat Properties
-            render_combat_properties(ui, &display_table, &patch_table, session, is_patch);
+            render_combat_properties(ui, &display_table, &patch_table, session, is_patch, &mut modified);
 
             ui.separator();
 
@@ -154,6 +159,7 @@ pub fn properties_panel_ui(
                 session,
                 is_patch,
                 &mut modified,
+                file_tree,
             );
 
             ui.separator();
@@ -185,6 +191,8 @@ pub fn properties_panel_ui(
     // Mark session modified if any section made changes
     if modified {
         session.check_modified();
+        // Update merged preview data for patches so preview reflects changes
+        session.update_merged_for_preview();
     }
 
     result
@@ -230,7 +238,10 @@ fn render_action_buttons(
             .add_enabled(save_enabled, egui::Button::new("💾 Save"))
             .clicked()
         {
-            save_events.write(SaveMobEvent { path: None });
+            save_events.write(SaveMobEvent {
+                path: None,
+                skip_registration_check: false,
+            });
         }
 
         let reload_enabled = session.current_path.is_some();
@@ -251,12 +262,21 @@ fn render_file_info(ui: &mut egui::Ui, session: &EditorSession) {
             .and_then(|n| n.to_str())
             .unwrap_or("Unknown");
 
+        // Truncate long filenames
+        let display_name = truncate_filename(filename, MAX_FILENAME_DISPLAY_LEN);
+
         ui.horizontal(|ui| {
-            ui.label(
-                egui::RichText::new(filename)
+            let label_response = ui.label(
+                egui::RichText::new(&display_name)
                     .heading()
                     .color(egui::Color32::WHITE),
             );
+
+            // Show full filename on hover if truncated
+            if display_name != filename {
+                label_response.on_hover_text(filename);
+            }
+
             if session.is_modified {
                 ui.label(egui::RichText::new("*").color(egui::Color32::YELLOW));
             }
@@ -299,58 +319,77 @@ fn render_general_properties(
     patch_table: &toml::value::Table,
     session: &mut EditorSession,
     is_patch: bool,
+    modified: &mut bool,
 ) {
-    egui::CollapsingHeader::new("General")
+    // Check if any General field is modified
+    let section_modified = session.is_field_modified("name")
+        || session.is_field_modified("spawnable")
+        || session.is_field_modified("z_level");
+
+    let header_text =
+        egui::RichText::new("General").color(fields::header_color(ui, section_modified));
+    egui::CollapsingHeader::new(header_text)
         .default_open(true)
         .show(ui, |ui| {
             // Name
             let name_patched = is_patch && patch_table.contains_key("name");
+            let name_modified = session.is_field_modified("name");
             let name = display_table
                 .get("name")
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            match fields::render_string_field(ui, "Name:", name, name_patched, is_patch) {
+            match fields::render_string_field(ui, "Name:", name, name_patched, is_patch, name_modified) {
                 FieldResult::Changed(new_val) => {
                     set_field(session, "name", toml::Value::String(new_val));
-                    session.check_modified();
+                    *modified = true;
                 }
                 FieldResult::Reset => {
                     remove_field(session, "name");
-                    session.check_modified();
+                    *modified = true;
                 }
                 FieldResult::NoChange => {}
             }
 
-            // Spawnable
+            // Spawnable (default: true)
+            const SPAWNABLE_DEFAULT: bool = true;
             let spawnable_patched = is_patch && patch_table.contains_key("spawnable");
+            let spawnable_modified = session.is_field_modified("spawnable");
             let spawnable = display_table
                 .get("spawnable")
                 .and_then(|v| v.as_bool())
-                .unwrap_or(true);
+                .unwrap_or(SPAWNABLE_DEFAULT);
             match fields::render_bool_field(
                 ui,
                 "Spawnable:",
                 spawnable,
                 spawnable_patched,
                 is_patch,
+                spawnable_modified,
             ) {
                 FieldResult::Changed(new_val) => {
-                    set_field(session, "spawnable", toml::Value::Boolean(new_val));
-                    session.check_modified();
+                    set_field_with_default(
+                        session,
+                        "spawnable",
+                        toml::Value::Boolean(new_val),
+                        toml::Value::Boolean(SPAWNABLE_DEFAULT),
+                    );
+                    *modified = true;
                 }
                 FieldResult::Reset => {
                     remove_field(session, "spawnable");
-                    session.check_modified();
+                    *modified = true;
                 }
                 FieldResult::NoChange => {}
             }
 
-            // Z-Level
+            // Z-Level (default: 0.0)
+            const Z_LEVEL_DEFAULT: f64 = 0.0;
             let z_patched = is_patch && patch_table.contains_key("z_level");
+            let z_modified = session.is_field_modified("z_level");
             let z_level = display_table
                 .get("z_level")
                 .and_then(|v| v.as_float())
-                .unwrap_or(0.0) as f32;
+                .unwrap_or(Z_LEVEL_DEFAULT) as f32;
             match fields::render_float_field(
                 ui,
                 "Z-Level:",
@@ -359,14 +398,20 @@ fn render_general_properties(
                 Some(0.1),
                 z_patched,
                 is_patch,
+                z_modified,
             ) {
                 FieldResult::Changed(new_val) => {
-                    set_field(session, "z_level", toml::Value::Float(new_val as f64));
-                    session.check_modified();
+                    set_field_with_default(
+                        session,
+                        "z_level",
+                        toml::Value::Float(new_val as f64),
+                        toml::Value::Float(Z_LEVEL_DEFAULT),
+                    );
+                    *modified = true;
                 }
                 FieldResult::Reset => {
                     remove_field(session, "z_level");
-                    session.check_modified();
+                    *modified = true;
                 }
                 FieldResult::NoChange => {}
             }
@@ -380,16 +425,28 @@ fn render_combat_properties(
     patch_table: &toml::value::Table,
     session: &mut EditorSession,
     is_patch: bool,
+    modified: &mut bool,
 ) {
-    egui::CollapsingHeader::new("Combat")
+    // Check if any Combat field is modified
+    let section_modified = session.is_field_modified("health")
+        || session.is_field_modified("collision_damage")
+        || session.is_field_modified("max_linear_speed")
+        || session.is_field_modified("linear_acceleration")
+        || session.is_field_modified("projectile_speed");
+
+    let header_text =
+        egui::RichText::new("Combat").color(fields::header_color(ui, section_modified));
+    egui::CollapsingHeader::new(header_text)
         .default_open(true)
         .show(ui, |ui| {
-            // Health
+            // Health (default: 100)
+            const HEALTH_DEFAULT: i64 = 100;
             let health_patched = is_patch && patch_table.contains_key("health");
+            let health_modified = session.is_field_modified("health");
             let health = display_table
                 .get("health")
                 .and_then(|v| v.as_integer())
-                .unwrap_or(100) as i32;
+                .unwrap_or(HEALTH_DEFAULT) as i32;
             match fields::render_int_field(
                 ui,
                 "Health:",
@@ -397,24 +454,32 @@ fn render_combat_properties(
                 1..=10000,
                 health_patched,
                 is_patch,
+                health_modified,
             ) {
                 FieldResult::Changed(new_val) => {
-                    set_field(session, "health", toml::Value::Integer(new_val as i64));
-                    session.check_modified();
+                    set_field_with_default(
+                        session,
+                        "health",
+                        toml::Value::Integer(new_val as i64),
+                        toml::Value::Integer(HEALTH_DEFAULT),
+                    );
+                    *modified = true;
                 }
                 FieldResult::Reset => {
                     remove_field(session, "health");
-                    session.check_modified();
+                    *modified = true;
                 }
                 FieldResult::NoChange => {}
             }
 
-            // Collision Damage
+            // Collision Damage (default: 0)
+            const DAMAGE_DEFAULT: i64 = 0;
             let damage_patched = is_patch && patch_table.contains_key("collision_damage");
+            let damage_modified = session.is_field_modified("collision_damage");
             let damage = display_table
                 .get("collision_damage")
                 .and_then(|v| v.as_integer())
-                .unwrap_or(0) as i32;
+                .unwrap_or(DAMAGE_DEFAULT) as i32;
             match fields::render_int_field(
                 ui,
                 "Collision Damage:",
@@ -422,26 +487,30 @@ fn render_combat_properties(
                 0..=1000,
                 damage_patched,
                 is_patch,
+                damage_modified,
             ) {
                 FieldResult::Changed(new_val) => {
-                    set_field(
+                    set_field_with_default(
                         session,
                         "collision_damage",
                         toml::Value::Integer(new_val as i64),
+                        toml::Value::Integer(DAMAGE_DEFAULT),
                     );
-                    session.check_modified();
+                    *modified = true;
                 }
                 FieldResult::Reset => {
                     remove_field(session, "collision_damage");
-                    session.check_modified();
+                    *modified = true;
                 }
                 FieldResult::NoChange => {}
             }
 
-            // Max Linear Speed
+            // Max Linear Speed (default: [50.0, 50.0])
+            const SPEED_DEFAULT: (f32, f32) = (50.0, 50.0);
             let speed_patched = is_patch && patch_table.contains_key("max_linear_speed");
+            let speed_modified = session.is_field_modified("max_linear_speed");
             let (speed_x, speed_y) =
-                fields::get_vec2_value(display_table, "max_linear_speed", 50.0, 50.0);
+                fields::get_vec2_value(display_table, "max_linear_speed", SPEED_DEFAULT.0, SPEED_DEFAULT.1);
             match fields::render_vec2_field(
                 ui,
                 "Max Speed:",
@@ -451,22 +520,25 @@ fn render_combat_properties(
                 Some(1.0),
                 speed_patched,
                 is_patch,
+                speed_modified,
             ) {
                 FieldResult::Changed((x, y)) => {
-                    set_vec2_field(session, "max_linear_speed", x, y);
-                    session.check_modified();
+                    set_vec2_field_with_default(session, "max_linear_speed", x, y, SPEED_DEFAULT.0, SPEED_DEFAULT.1);
+                    *modified = true;
                 }
                 FieldResult::Reset => {
                     remove_field(session, "max_linear_speed");
-                    session.check_modified();
+                    *modified = true;
                 }
                 FieldResult::NoChange => {}
             }
 
-            // Linear Acceleration
+            // Linear Acceleration (default: [100.0, 100.0])
+            const ACCEL_DEFAULT: (f32, f32) = (100.0, 100.0);
             let accel_patched = is_patch && patch_table.contains_key("linear_acceleration");
+            let accel_modified = session.is_field_modified("linear_acceleration");
             let (accel_x, accel_y) =
-                fields::get_vec2_value(display_table, "linear_acceleration", 100.0, 100.0);
+                fields::get_vec2_value(display_table, "linear_acceleration", ACCEL_DEFAULT.0, ACCEL_DEFAULT.1);
             match fields::render_vec2_field(
                 ui,
                 "Acceleration:",
@@ -476,24 +548,27 @@ fn render_combat_properties(
                 Some(1.0),
                 accel_patched,
                 is_patch,
+                accel_modified,
             ) {
                 FieldResult::Changed((x, y)) => {
-                    set_vec2_field(session, "linear_acceleration", x, y);
-                    session.check_modified();
+                    set_vec2_field_with_default(session, "linear_acceleration", x, y, ACCEL_DEFAULT.0, ACCEL_DEFAULT.1);
+                    *modified = true;
                 }
                 FieldResult::Reset => {
                     remove_field(session, "linear_acceleration");
-                    session.check_modified();
+                    *modified = true;
                 }
                 FieldResult::NoChange => {}
             }
 
-            // Projectile Speed
+            // Projectile Speed (default: 150.0)
+            const PROJ_SPEED_DEFAULT: f64 = 150.0;
             let proj_speed_patched = is_patch && patch_table.contains_key("projectile_speed");
+            let proj_speed_modified = session.is_field_modified("projectile_speed");
             let proj_speed = display_table
                 .get("projectile_speed")
                 .and_then(|v| v.as_float())
-                .unwrap_or(150.0) as f32;
+                .unwrap_or(PROJ_SPEED_DEFAULT) as f32;
             match fields::render_float_field(
                 ui,
                 "Projectile Speed:",
@@ -502,18 +577,20 @@ fn render_combat_properties(
                 Some(1.0),
                 proj_speed_patched,
                 is_patch,
+                proj_speed_modified,
             ) {
                 FieldResult::Changed(new_val) => {
-                    set_field(
+                    set_field_with_default(
                         session,
                         "projectile_speed",
                         toml::Value::Float(new_val as f64),
+                        toml::Value::Float(PROJ_SPEED_DEFAULT),
                     );
-                    session.check_modified();
+                    *modified = true;
                 }
                 FieldResult::Reset => {
                     remove_field(session, "projectile_speed");
-                    session.check_modified();
+                    *modified = true;
                 }
                 FieldResult::NoChange => {}
             }
@@ -524,7 +601,42 @@ fn render_combat_properties(
 // Helper functions for field manipulation
 // =============================================================================
 
-/// Set a field on the current mob
+/// Set a field on the current mob with smart modification tracking.
+///
+/// - If original had this field: always set the value (so comparison works correctly)
+/// - If original didn't have this field and new value equals default: remove from current
+///   (user reverted to default, so don't add the field)
+/// - If original didn't have this field and new value differs from default: add the field
+fn set_field_with_default(
+    session: &mut EditorSession,
+    key: &str,
+    value: toml::Value,
+    default: toml::Value,
+) {
+    let original_has_field = session
+        .original_mob
+        .as_ref()
+        .and_then(|m| m.get(key))
+        .is_some();
+
+    if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
+        if original_has_field {
+            // Original had this field - always set the new value
+            mob.insert(key.to_string(), value);
+        } else {
+            // Original didn't have this field
+            if EditorSession::values_equal(&value, &default) {
+                // Setting to default value - don't add field (remove if exists)
+                mob.remove(key);
+            } else {
+                // Setting to non-default value - add the field
+                mob.insert(key.to_string(), value);
+            }
+        }
+    }
+}
+
+/// Simple set_field for fields that always exist (no default handling needed)
 fn set_field(session: &mut EditorSession, key: &str, value: toml::Value) {
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
         mob.insert(key.to_string(), value);
@@ -538,10 +650,44 @@ fn remove_field(session: &mut EditorSession, key: &str) {
     }
 }
 
-/// Set a Vec2 field on the current mob
-fn set_vec2_field(session: &mut EditorSession, key: &str, x: f32, y: f32) {
+/// Set a Vec2 field on the current mob with smart modification tracking.
+fn set_vec2_field_with_default(
+    session: &mut EditorSession,
+    key: &str,
+    x: f32,
+    y: f32,
+    default_x: f32,
+    default_y: f32,
+) {
+    let new_value = toml::Value::Array(vec![
+        toml::Value::Float(x as f64),
+        toml::Value::Float(y as f64),
+    ]);
+    let default_value = toml::Value::Array(vec![
+        toml::Value::Float(default_x as f64),
+        toml::Value::Float(default_y as f64),
+    ]);
+
+    let original_has_field = session
+        .original_mob
+        .as_ref()
+        .and_then(|m| m.get(key))
+        .is_some();
+
     if let Some(mob) = session.current_mob.as_mut().and_then(|v| v.as_table_mut()) {
-        fields::set_vec2_value(mob, key, x, y);
+        if original_has_field {
+            // Original had this field - always set the new value
+            fields::set_vec2_value(mob, key, x, y);
+        } else {
+            // Original didn't have this field
+            if EditorSession::values_equal(&new_value, &default_value) {
+                // Setting to default value - don't add field
+                mob.remove(key);
+            } else {
+                // Setting to non-default value - add the field
+                fields::set_vec2_value(mob, key, x, y);
+            }
+        }
     }
 }
 
@@ -557,4 +703,5 @@ pub fn update_decoration_sprite(session: &mut EditorSession, index: usize, sprit
         decoration[0] = toml::Value::String(sprite_path.to_string());
     }
     session.check_modified();
+    session.update_merged_for_preview();
 }

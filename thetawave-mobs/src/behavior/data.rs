@@ -49,53 +49,53 @@ impl MobBehaviorCategory {
 #[serde(tag = "action", deny_unknown_fields)]
 pub enum MobBehaviorType {
     // Movement behaviors
-    #[strum(props(category = "Movement"))]
+    #[strum_discriminants(strum(props(category = "Movement")))]
     MoveDown,
-    #[strum(props(category = "Movement"))]
+    #[strum_discriminants(strum(props(category = "Movement")))]
     #[allow(dead_code)] // Available for future use in behavior trees
     MoveUp,
-    #[strum(props(category = "Movement"))]
+    #[strum_discriminants(strum(props(category = "Movement")))]
     MoveLeft,
-    #[strum(props(category = "Movement"))]
+    #[strum_discriminants(strum(props(category = "Movement")))]
     MoveRight,
-    #[strum(props(category = "Movement"))]
+    #[strum_discriminants(strum(props(category = "Movement")))]
     BrakeHorizontal,
-    #[strum(props(category = "Movement"))]
+    #[strum_discriminants(strum(props(category = "Movement")))]
     BrakeAngular,
-    #[strum(props(category = "Movement"))]
+    #[strum_discriminants(strum(props(category = "Movement")))]
     MoveTo { x: f32, y: f32 },
-    #[strum(props(category = "Movement"))]
+    #[strum_discriminants(strum(props(category = "Movement")))]
     MoveForward,
 
     // Targeting behaviors
-    #[strum(props(category = "Targeting"))]
+    #[strum_discriminants(strum(props(category = "Targeting")))]
     FindPlayerTarget,
-    #[strum(props(category = "Targeting"))]
+    #[strum_discriminants(strum(props(category = "Targeting")))]
     MoveToTarget,
-    #[strum(props(category = "Targeting"))]
+    #[strum_discriminants(strum(props(category = "Targeting")))]
     RotateToTarget,
-    #[strum(props(category = "Targeting"))]
+    #[strum_discriminants(strum(props(category = "Targeting")))]
     LoseTarget,
 
     // Spawning behaviors
-    #[strum(props(category = "Spawning"))]
+    #[strum_discriminants(strum(props(category = "Spawning")))]
     SpawnMob { keys: Option<Vec<String>> },
-    #[strum(props(category = "Spawning"))]
+    #[strum_discriminants(strum(props(category = "Spawning")))]
     SpawnProjectile { keys: Option<Vec<String>> },
 
     // Timing behaviors
-    #[strum(props(category = "Timing"))]
+    #[strum_discriminants(strum(props(category = "Timing")))]
     DoForTime { seconds: f32 },
 
     // Communication behaviors
-    #[strum(props(category = "Communication"))]
+    #[strum_discriminants(strum(props(category = "Communication")))]
     TransmitMobBehavior {
         mob_type: String,
         behaviors: Vec<MobBehaviorType>,
     },
 
     // Joint behaviors
-    #[strum(props(category = "Joints"))]
+    #[strum_discriminants(strum(props(category = "Joints")))]
     #[allow(dead_code)]
     RotateJointsClockwise { keys: Vec<String> },
 }

@@ -1,3 +1,8 @@
+//! Main editor plugin and configuration.
+//!
+//! Contains [`MobEditorPlugin`] which sets up all editor systems, and
+//! [`EditorConfig`] which holds path configuration for base and extended assets.
+
 use std::path::PathBuf;
 
 use bevy::{
@@ -14,8 +19,8 @@ use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
 use crate::{
     data::{EditorSession, RegisteredSprite, SpriteRegistry, SpriteSource},
     file::{
-        DeleteMobEvent, FileOperations, FileTreeState, LoadMobEvent, NewMobEvent, ReloadMobEvent,
-        SaveMobEvent, parse_assets_ron,
+        DeleteDirectoryEvent, DeleteMobEvent, FileOperations, FileTreeState, LoadMobEvent,
+        NewMobEvent, ReloadMobEvent, SaveMobEvent, parse_assets_ron,
     },
     preview::{
         JointedMobCache, PreviewSettings, PreviewState, check_preview_update, draw_collider_gizmos,
@@ -25,8 +30,8 @@ use crate::{
     },
     states::{DialogState, EditingMode, EditorState},
     ui::{
-        DeleteDialogState, ErrorDialog, NewFolderDialog, NewMobDialog, UnsavedChangesDialog,
-        ValidationDialog, main_ui_system,
+        DeleteDialogState, DeleteDirectoryDialogState, NewFolderDialog, NewMobDialog,
+        UnsavedChangesDialog, main_ui_system,
     },
 };
 
@@ -75,9 +80,8 @@ impl Plugin for MobEditorPlugin {
             .init_resource::<PreviewSettings>()
             .init_resource::<PreviewState>()
             .init_resource::<DeleteDialogState>()
+            .init_resource::<DeleteDirectoryDialogState>()
             .init_resource::<UnsavedChangesDialog>()
-            .init_resource::<ErrorDialog>()
-            .init_resource::<ValidationDialog>()
             .init_resource::<NewFolderDialog>()
             .init_resource::<NewMobDialog>()
             .init_resource::<SpriteRegistry>()
@@ -99,7 +103,8 @@ impl Plugin for MobEditorPlugin {
             .add_message::<SaveMobEvent>()
             .add_message::<ReloadMobEvent>()
             .add_message::<NewMobEvent>()
-            .add_message::<DeleteMobEvent>();
+            .add_message::<DeleteMobEvent>()
+            .add_message::<DeleteDirectoryEvent>();
 
         // Startup systems
         app.add_systems(
@@ -150,6 +155,7 @@ impl Plugin for MobEditorPlugin {
                 handle_reload_mob,
                 handle_new_mob,
                 handle_delete_mob,
+                handle_delete_directory,
                 check_file_refresh,
                 check_sprite_registry_refresh,
                 handle_window_close,
@@ -237,13 +243,36 @@ impl EditorConfig {
         None
     }
 
-    /// Resolve a mob_ref path (e.g., "mobs/enemy.mob") to a filesystem path
+    /// Resolve a mob_ref path to a filesystem path
+    /// Handles both formats:
+    /// - Full path: "mobs/ferritharax_parts/left_shoulder.mob"
+    /// - Short path: "ferritharax_parts/left_shoulder" (from dropdown)
     pub fn resolve_mob_ref(&self, mob_ref: &str) -> Option<PathBuf> {
         let cwd = std::env::current_dir().ok()?;
 
+        // Determine if this is a short or full path
+        let needs_prefix = !mob_ref.starts_with("mobs/");
+        let needs_extension = !mob_ref.ends_with(".mob");
+
+        // Build the normalized path
+        let normalized = if needs_prefix || needs_extension {
+            let with_prefix = if needs_prefix {
+                format!("mobs/{}", mob_ref)
+            } else {
+                mob_ref.to_string()
+            };
+            if needs_extension {
+                format!("{}.mob", with_prefix)
+            } else {
+                with_prefix
+            }
+        } else {
+            mob_ref.to_string()
+        };
+
         // Try base assets first
         if let Some(base_root) = self.base_assets_root() {
-            let base_path = cwd.join(&base_root).join(mob_ref);
+            let base_path = cwd.join(&base_root).join(&normalized);
             if base_path.exists() {
                 return Some(base_path);
             }
@@ -251,7 +280,7 @@ impl EditorConfig {
 
         // Try extended assets
         if let Some(extended_root) = self.extended_assets_root() {
-            let extended_path = cwd.join(&extended_root).join(mob_ref);
+            let extended_path = cwd.join(&extended_root).join(&normalized);
             if extended_path.exists() {
                 return Some(extended_path);
             }
@@ -630,6 +659,9 @@ fn handle_load_mob(
                 session.is_modified = false;
                 session.selected_collider = None;
                 session.selected_behavior_node = None;
+                session.selected_jointed_mob = None;
+                // Trigger preview rebuild (important for reload case where path is unchanged)
+                session.preview_needs_rebuild = true;
 
                 let status = if is_patch && session.merged_for_preview.is_some() {
                     format!("Loaded patch (merged with base): {}", event.path.display())
@@ -655,11 +687,9 @@ fn handle_save_mob(
     mut session: ResMut<EditorSession>,
     sprite_registry: Res<SpriteRegistry>,
     mut registration_dialog: ResMut<SpriteRegistrationDialog>,
-    mut validation_dialog: ResMut<ValidationDialog>,
+    mut exit_writer: MessageWriter<bevy::app::AppExit>,
     time: Res<Time>,
 ) {
-    use crate::data::validate_mob;
-
     for event in events.read() {
         // Clone the path to avoid borrow checker issues
         let path = event.path.clone().or_else(|| session.current_path.clone());
@@ -674,20 +704,8 @@ fn handle_save_mob(
             continue;
         };
 
-        // Run validation (skip if validation dialog is already open)
-        if !validation_dialog.is_open {
-            let is_patch = session.file_type == crate::data::FileType::MobPatch;
-            let validation_result = validate_mob(&mob, is_patch);
-            if validation_result.has_errors() {
-                validation_dialog.is_open = true;
-                validation_dialog.errors = validation_result.errors;
-                session.log_warning("Validation errors found - please review", &time);
-                continue;
-            }
-        }
-
-        // Check for unregistered sprites (only if dialog isn't already showing)
-        if !registration_dialog.show {
+        // Check for unregistered sprites (unless user already confirmed to skip)
+        if !event.skip_registration_check && !registration_dialog.show {
             let unregistered = find_unregistered_sprites(&mob, &sprite_registry);
             if !unregistered.is_empty() {
                 // Show dialog instead of saving
@@ -707,9 +725,17 @@ fn handle_save_mob(
                     session.current_path = event.path.clone();
                 }
                 session.log_success(format!("Saved: {}", path.display()), &time);
+
+                // Check if we should exit after this save completes
+                if session.pending_exit_after_save {
+                    session.pending_exit_after_save = false;
+                    exit_writer.write(bevy::app::AppExit::Success);
+                }
             }
             Err(e) => {
                 session.log_error(format!("Error saving: {}", e), &time);
+                // Clear pending exit on error - user needs to address the issue
+                session.pending_exit_after_save = false;
             }
         }
     }
@@ -837,6 +863,41 @@ fn handle_delete_mob(
     }
 }
 
+/// Handle deleting a directory (and all its contents)
+fn handle_delete_directory(
+    mut events: MessageReader<DeleteDirectoryEvent>,
+    mut session: ResMut<EditorSession>,
+    mut file_tree: ResMut<FileTreeState>,
+    mut next_state: ResMut<NextState<EditorState>>,
+    time: Res<Time>,
+) {
+    for event in events.read() {
+        // Use trash crate to delete the directory recursively
+        match trash::delete(&event.path) {
+            Ok(()) => {
+                // If the current file was inside this directory, clear session
+                if let Some(current_path) = &session.current_path {
+                    if current_path.starts_with(&event.path) {
+                        session.current_mob = None;
+                        session.current_path = None;
+                        session.is_modified = false;
+                        next_state.set(EditorState::Browsing);
+                    }
+                }
+
+                file_tree.needs_refresh = true;
+                session.log_success(
+                    format!("Deleted directory: {}", event.path.display()),
+                    &time,
+                );
+            }
+            Err(e) => {
+                session.log_error(format!("Error deleting directory: {}", e), &time);
+            }
+        }
+    }
+}
+
 /// Handle keyboard shortcuts
 fn handle_keyboard_shortcuts(
     keys: Res<ButtonInput<KeyCode>>,
@@ -850,7 +911,10 @@ fn handle_keyboard_shortcuts(
         // Ctrl+S - Save
         if keys.just_pressed(KeyCode::KeyS) && session.current_path.is_some() && session.is_modified
         {
-            save_events.write(SaveMobEvent { path: None });
+            save_events.write(SaveMobEvent {
+                path: None,
+                skip_registration_check: false,
+            });
         }
 
         // Ctrl+R - Reload
