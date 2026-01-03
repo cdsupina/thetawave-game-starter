@@ -2,6 +2,9 @@
 //!
 //! Handles camera zoom, pan, and reset for the preview panel,
 //! including mouse wheel zoom and right-click drag panning.
+//!
+//! Scroll events are ignored when the pointer is over UI scroll areas
+//! (panels, dialogs) or when popups (dropdowns, combo boxes) are open.
 
 use bevy::{
     camera::ScalingMode,
@@ -31,6 +34,9 @@ pub struct PreviewSettings {
     target_zoom: f32,
     /// Target pan offset (for smooth panning)
     target_pan: Vec2,
+    /// Set by UI each frame when pointer is over a scrollable area (panels, dialogs).
+    /// Used to prevent scroll wheel from affecting zoom when scrolling in UI.
+    pub pointer_over_ui_scroll_area: bool,
 }
 
 impl Default for PreviewSettings {
@@ -44,6 +50,7 @@ impl Default for PreviewSettings {
             show_joint_gizmos: true,  // Show anchor points when enabled
             target_zoom: 3.0,
             target_pan: Vec2::ZERO,
+            pointer_over_ui_scroll_area: false,
         }
     }
 }
@@ -127,16 +134,16 @@ pub fn handle_camera_input(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut contexts: EguiContexts,
 ) {
-    // Check if egui has any popup open (like dropdown menus)
-    let egui_wants_scroll = contexts
+    // Check if egui has any popup open (dropdown menus, combo boxes, etc.)
+    let popup_open = contexts
         .ctx_mut()
-        .map(|ctx| {
-            // Check if any popup is open (dropdowns, menus, etc.)
-            bevy_egui::egui::Popup::is_any_open(ctx)
-        })
+        .map(|ctx| bevy_egui::egui::Popup::is_any_open(ctx))
         .unwrap_or(false);
 
-    if !egui_wants_scroll {
+    // Only process scroll/pan if:
+    // - Pointer is not over a UI scroll area (panels, dialogs)
+    // - No popup is open (dropdowns, combo boxes)
+    if !settings.pointer_over_ui_scroll_area && !popup_open {
         // Zoom with scroll wheel
         for event in scroll_events.read() {
             let zoom_delta = event.y * 0.1;

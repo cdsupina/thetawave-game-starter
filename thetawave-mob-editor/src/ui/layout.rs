@@ -123,8 +123,11 @@ pub fn main_ui_system(
         return;
     };
 
+    // Reset scroll area tracking each frame (prevents zoom when scrolling in UI panels)
+    preview_settings.pointer_over_ui_scroll_area = false;
+
     // Left panel - File browser
-    egui::SidePanel::left("file_panel")
+    let file_panel_response = egui::SidePanel::left("file_panel")
         .default_width(250.0)
         .min_width(200.0)
         .resizable(true)
@@ -144,11 +147,14 @@ pub fn main_ui_system(
                 &mut dialogs.new_mob_dialog,
             );
         });
+    if file_panel_response.response.contains_pointer() {
+        preview_settings.pointer_over_ui_scroll_area = true;
+    }
 
     // Right panel - Properties (only when editing)
     let mut panel_result = super::PropertiesPanelResult::default();
     if *state.get() == EditorState::Editing {
-        egui::SidePanel::right("properties_panel")
+        let props_panel_response = egui::SidePanel::right("properties_panel")
             .default_width(PROPERTIES_PANEL_DEFAULT_WIDTH)
             .min_width(PROPERTIES_PANEL_MIN_WIDTH)
             .resizable(true)
@@ -164,6 +170,9 @@ pub fn main_ui_system(
                     &mut events.reload,
                 );
             });
+        if props_panel_response.response.contains_pointer() {
+            preview_settings.pointer_over_ui_scroll_area = true;
+        }
     }
 
     // Open sprite browser for main sprite
@@ -239,7 +248,7 @@ pub fn main_ui_system(
     } else {
         STATUS_LOG_COLLAPSED_HEIGHT
     };
-    egui::TopBottomPanel::bottom("status_bar")
+    let status_bar_response = egui::TopBottomPanel::bottom("status_bar")
         .exact_height(panel_height)
         .show(ctx, |ui| {
             ui.horizontal(|ui| {
@@ -330,6 +339,10 @@ pub fn main_ui_system(
                     });
             }
         });
+    // Only block scroll for status bar when log is expanded (has scrollable content)
+    if session.log.expanded && status_bar_response.response.contains_pointer() {
+        preview_settings.pointer_over_ui_scroll_area = true;
+    }
 
     // Central panel - Preview area (transparent to show 2D camera view)
     egui::CentralPanel::default()
@@ -551,6 +564,11 @@ pub fn main_ui_system(
                 dialogs.decoration_selection_dialog.display_name = display_name;
             }
         }
+    }
+
+    // Block scroll when sprite browser (with scroll area) is open and pointer is over it
+    if dialogs.sprite_browser.is_open && ctx.is_pointer_over_area() {
+        preview_settings.pointer_over_ui_scroll_area = true;
     }
 }
 
