@@ -54,9 +54,23 @@ pub struct SpriteRegistry {
 
 impl SpriteRegistry {
     /// Find a sprite by its asset path (with or without extended:// prefix)
+    ///
+    /// When the path has an `extended://` prefix, only extended sprites are matched.
+    /// When the path has no prefix, only base sprites are matched.
+    /// This ensures that base and extended sprites with the same relative path
+    /// are treated as distinct entries.
     pub fn find_by_path(&self, path: &str) -> Option<&RegisteredSprite> {
-        let normalized = path.strip_prefix("extended://").unwrap_or(path);
-        self.sprites.iter().find(|s| s.asset_path == normalized)
+        if let Some(normalized) = path.strip_prefix("extended://") {
+            // Path has extended:// prefix - only match extended sprites
+            self.sprites
+                .iter()
+                .find(|s| s.asset_path == normalized && s.source == SpriteSource::Extended)
+        } else {
+            // No prefix - only match base sprites
+            self.sprites
+                .iter()
+                .find(|s| s.asset_path == path && s.source == SpriteSource::Base)
+        }
     }
 
     /// Check if a sprite path is registered

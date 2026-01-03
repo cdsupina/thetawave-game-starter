@@ -82,6 +82,8 @@ pub fn render_sprite_picker(
                 ui.separator();
 
                 // Base sprites section
+                // Only selected if current sprite has NO extended:// prefix
+                let current_is_extended = current_sprite.starts_with("extended://");
                 let base_sprites: Vec<_> = sprite_registry.base_sprites().collect();
                 if !base_sprites.is_empty() {
                     ui.label(
@@ -90,7 +92,8 @@ pub fn render_sprite_picker(
                             .color(egui::Color32::GRAY),
                     );
                     for sprite in base_sprites {
-                        let is_selected = normalized_current == sprite.asset_path;
+                        let is_selected =
+                            !current_is_extended && normalized_current == sprite.asset_path;
                         if ui
                             .selectable_label(is_selected, &sprite.display_name)
                             .clicked()
@@ -114,7 +117,9 @@ pub fn render_sprite_picker(
                         let needs_extended_prefix =
                             is_patch || session.is_extended_mob(config);
                         for sprite in extended_sprites {
-                            let is_selected = normalized_current == sprite.asset_path;
+                            // Only selected if current sprite HAS extended:// prefix
+                            let is_selected =
+                                current_is_extended && normalized_current == sprite.asset_path;
                             if ui
                                 .selectable_label(is_selected, &sprite.display_name)
                                 .clicked()
@@ -449,6 +454,8 @@ fn render_decoration_sprite_picker(
                     ui.separator();
 
                     // Base sprites section
+                    // Only selected if current sprite has NO extended:// prefix
+                    let current_is_extended = current_sprite.starts_with("extended://");
                     let base_sprites: Vec<_> = sprite_registry.base_sprites().collect();
                     if !base_sprites.is_empty() {
                         ui.label(
@@ -457,7 +464,8 @@ fn render_decoration_sprite_picker(
                                 .color(egui::Color32::GRAY),
                         );
                         for sprite in base_sprites {
-                            let is_selected = normalized_current == sprite.asset_path;
+                            let is_selected =
+                                !current_is_extended && normalized_current == sprite.asset_path;
                             if ui
                                 .selectable_label(is_selected, &sprite.display_name)
                                 .clicked()
@@ -481,7 +489,9 @@ fn render_decoration_sprite_picker(
                             let needs_extended_prefix =
                                 is_patch || session.is_extended_mob(config);
                             for sprite in extended_sprites {
-                                let is_selected = normalized_current == sprite.asset_path;
+                                // Only selected if current sprite HAS extended:// prefix
+                                let is_selected =
+                                    current_is_extended && normalized_current == sprite.asset_path;
                                 if ui
                                     .selectable_label(is_selected, &sprite.display_name)
                                     .clicked()
