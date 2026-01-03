@@ -574,7 +574,15 @@ fn scan_sprite_registry(registry: &mut SpriteRegistry, config: &EditorConfig) {
     registry.sprites.clear();
     registry.parse_errors.clear();
 
-    let cwd = std::env::current_dir().unwrap_or_default();
+    let cwd = match std::env::current_dir() {
+        Ok(dir) => dir,
+        Err(e) => {
+            registry
+                .parse_errors
+                .push(format!("Failed to get working directory: {}", e));
+            return;
+        }
+    };
 
     // Scan base assets
     if let Some(base_assets_ron) = config.base_assets_ron() {
@@ -670,7 +678,15 @@ fn scan_mob_asset_registry(registry: &mut MobAssetRegistry, config: &EditorConfi
     registry.entries.clear();
     registry.parse_errors.clear();
 
-    let cwd = std::env::current_dir().unwrap_or_default();
+    let cwd = match std::env::current_dir() {
+        Ok(dir) => dir,
+        Err(e) => {
+            registry
+                .parse_errors
+                .push(format!("Failed to get working directory: {}", e));
+            return;
+        }
+    };
 
     // Scan base mobs.assets.ron
     if let Some(base_mobs_ron) = config.base_mobs_assets_ron() {

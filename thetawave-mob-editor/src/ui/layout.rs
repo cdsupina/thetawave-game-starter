@@ -251,7 +251,13 @@ pub fn main_ui_system(
             .unwrap_or(&sprite_path);
 
         // Get the appropriate assets.ron path
-        let cwd = std::env::current_dir().unwrap_or_default();
+        let cwd = match std::env::current_dir() {
+            Ok(dir) => dir,
+            Err(e) => {
+                session.log_error(format!("Failed to get working directory: {}", e), &time);
+                continue;
+            }
+        };
         let assets_ron = if is_extended {
             config.extended_assets_ron().map(|p| cwd.join(p))
         } else {
@@ -539,7 +545,13 @@ pub fn main_ui_system(
 
     // Handle sprite browser selection result
     if let Some((asset_path, is_extended)) = browser_result {
-        let cwd = std::env::current_dir().unwrap_or_default();
+        let cwd = match std::env::current_dir() {
+            Ok(dir) => dir,
+            Err(e) => {
+                session.log_error(format!("Failed to get working directory: {}", e), &time);
+                return;
+            }
+        };
         let assets_ron = if is_extended {
             config.extended_assets_ron().map(|p| cwd.join(p))
         } else {
@@ -1064,7 +1076,17 @@ fn render_registration_dialog(
             ui.horizontal(|ui| {
                 if ui.button("Register & Save").clicked() {
                     // Register sprites to appropriate .assets.ron file
-                    let cwd = std::env::current_dir().unwrap_or_default();
+                    let cwd = match std::env::current_dir() {
+                        Ok(dir) => dir,
+                        Err(e) => {
+                            session.log_error(
+                                format!("Failed to get working directory: {}", e),
+                                time,
+                            );
+                            dialog.show = false;
+                            return;
+                        }
+                    };
 
                     for sprite in &dialog.unregistered_sprites {
                         let is_extended = sprite.starts_with("extended://");

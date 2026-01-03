@@ -8,7 +8,7 @@ use thetawave_mob_editor::MobEditorPlugin;
 
 /// Find the assets directory by searching up from the current working directory
 fn find_assets_path() -> String {
-    let cwd = std::env::current_dir().unwrap_or_default();
+    let cwd = std::env::current_dir().expect("Failed to get current working directory");
 
     // Try current directory first
     let assets_in_cwd = cwd.join("assets");
@@ -68,9 +68,10 @@ fn main() {
                 //
                 // 2. Security mitigations in place:
                 //    - Only used in editor binary (not game binary)
-                //    - File browser only shows .mob/.mobpatch files
-                //    - Path validation rejects traversal characters (/, \, ..)
-                //    - No arbitrary path input - all paths derived from scanned directories
+                //    - File browser restricted to .mob/.mobpatch files only
+                //    - Directory scanning limited to depth 10 to prevent infinite loops
+                //    - Hidden files (starting with .) automatically filtered
+                //    - Paths derived from filesystem scanning, not user text input
                 //
                 // 3. Risk assessment:
                 //    - Low risk: Editor is a development tool, not end-user facing
