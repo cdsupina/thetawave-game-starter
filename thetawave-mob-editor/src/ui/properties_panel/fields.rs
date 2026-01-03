@@ -54,7 +54,8 @@ pub fn render_field_indicators(
 
 /// Render a patch indicator (● for patched, ○ for inherited)
 ///
-/// Deprecated: Use render_field_indicators for new code
+/// This function is used in section headers where modification state is shown
+/// separately via header_color. For individual fields, prefer render_field_indicators.
 pub fn render_patch_indicator(ui: &mut egui::Ui, is_patched: bool, show_indicator: bool) -> bool {
     if show_indicator {
         if is_patched {

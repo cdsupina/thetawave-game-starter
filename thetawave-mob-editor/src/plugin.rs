@@ -451,14 +451,33 @@ impl SpriteBrowserDialog {
             full_path = full_path.join(component);
         }
 
-        let Ok(entries) = std::fs::read_dir(&full_path) else {
-            return;
+        let entries = match std::fs::read_dir(&full_path) {
+            Ok(e) => e,
+            Err(e) => {
+                bevy::log::warn!(
+                    "Sprite browser: failed to read directory {:?}: {}",
+                    full_path,
+                    e
+                );
+                return;
+            }
         };
 
         let mut dirs = Vec::new();
         let mut files = Vec::new();
 
-        for entry in entries.flatten() {
+        for entry_result in entries {
+            let entry = match entry_result {
+                Ok(e) => e,
+                Err(e) => {
+                    bevy::log::debug!(
+                        "Sprite browser: skipping inaccessible entry in {:?}: {}",
+                        full_path,
+                        e
+                    );
+                    continue;
+                }
+            };
             let entry_path = entry.path();
             let name = entry.file_name().to_string_lossy().to_string();
 

@@ -740,10 +740,12 @@ fn render_new_folder_dialog(
     if should_create && !dialog.folder_name.trim().is_empty() {
         let new_path = dialog.parent_path.join(dialog.folder_name.trim());
         if let Err(e) = std::fs::create_dir_all(&new_path) {
-            eprintln!("Failed to create folder: {}", e);
-        } else {
-            file_tree.needs_refresh = true;
+            // Log error - will be visible in console/logs rather than silently hidden
+            bevy::log::error!("Failed to create folder {:?}: {}", new_path, e);
+            // Don't close dialog on error - user can see the path and try again
+            return;
         }
+        file_tree.needs_refresh = true;
         dialog.close();
     } else if should_close {
         dialog.close();
@@ -954,7 +956,14 @@ fn render_new_patch_dialog(
 
         // Create parent directories if needed
         if let Some(parent) = patch_path.parent() {
-            let _ = std::fs::create_dir_all(parent);
+            if let Err(e) = std::fs::create_dir_all(parent) {
+                bevy::log::error!(
+                    "Failed to create parent directory for patch {:?}: {}",
+                    patch_path,
+                    e
+                );
+                return;
+            }
         }
 
         // Extract the mob name from the ref (last component) and convert to Title Case

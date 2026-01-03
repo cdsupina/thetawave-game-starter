@@ -71,7 +71,11 @@ impl FileOperations {
         // Write atomically using temp file
         let temp_path = path.with_extension("tmp");
         fs::write(&temp_path, &content)?;
-        fs::rename(&temp_path, path)?;
+        if let Err(e) = fs::rename(&temp_path, path) {
+            // Attempt to clean up temp file on rename failure
+            let _ = fs::remove_file(&temp_path);
+            return Err(FileError::Io(e));
+        }
 
         Ok(())
     }
@@ -120,9 +124,10 @@ impl FileOperations {
     pub fn expected_base_path(patch_path: &Path) -> Option<String> {
         let path_str = patch_path.to_string_lossy();
 
-        // Extract the relative path after "mobs/"
-        let mobs_idx = path_str.find("mobs/")?;
-        let relative = &path_str[mobs_idx + 5..]; // Skip "mobs/", e.g., "xhitara/spitter.mobpatch"
+        // Find "mobs/" and get everything after it using split, which is UTF-8 safe
+        let relative = path_str
+            .split("mobs/")
+            .nth(1)?; // Get the part after "mobs/"
 
         // Convert to .mob extension
         let base_relative = relative.strip_suffix(".mobpatch")?.to_string() + ".mob";

@@ -152,45 +152,33 @@ fn resolve_jointed_mobs(
                 let chain_offset = offset_pos + pos_offset * i as f32;
 
                 // Load the referenced mob
-                if let Some(ref_path) = mob_ref.and_then(|r| resolve_mob_ref(r, config))
-                    && let Ok(ref_mob) = FileOperations::load_file(&ref_path)
-                {
-                    let sprite = ref_mob
-                        .get("sprite")
-                        .and_then(|v: &toml::Value| v.as_str())
-                        .map(String::from);
-                    let z_level = ref_mob
-                        .get("z_level")
-                        .and_then(|v: &toml::Value| v.as_float())
-                        .unwrap_or(0.0) as f32;
-                    let decorations = extract_decorations(&ref_mob);
+                let Some(mob_ref_str) = mob_ref else {
+                    warn!(
+                        "Jointed mob chain entry at depth {} has no mob_ref",
+                        depth
+                    );
+                    continue;
+                };
 
-                    results.push(ResolvedJointedMob {
-                        sprite_path: sprite,
-                        offset_pos: parent_offset + chain_offset,
-                        offset_rot,
-                        z_level,
-                        depth,
-                        decorations,
-                    });
+                let Some(ref_path) = resolve_mob_ref(mob_ref_str, config) else {
+                    warn!(
+                        "Could not resolve mob_ref '{}' - check if file exists and path is correct",
+                        mob_ref_str
+                    );
+                    continue;
+                };
 
-                    // Recursively resolve this segment's jointed mobs (only for last segment)
-                    if i == length - 1 {
-                        resolve_jointed_mobs(
-                            &ref_mob,
-                            parent_offset + chain_offset,
-                            depth + 1,
-                            results,
-                            config,
+                let ref_mob = match FileOperations::load_file(&ref_path) {
+                    Ok(m) => m,
+                    Err(e) => {
+                        warn!(
+                            "Failed to load referenced mob '{}' at {:?}: {}",
+                            mob_ref_str, ref_path, e
                         );
+                        continue;
                     }
-                }
-            }
-        } else {
-            // Non-chain jointed mob
-            if let Some(ref_path) = mob_ref.and_then(|r| resolve_mob_ref(r, config))
-                && let Ok(ref_mob) = FileOperations::load_file(&ref_path)
-            {
+                };
+
                 let sprite = ref_mob
                     .get("sprite")
                     .and_then(|v: &toml::Value| v.as_str())
@@ -203,22 +191,80 @@ fn resolve_jointed_mobs(
 
                 results.push(ResolvedJointedMob {
                     sprite_path: sprite,
-                    offset_pos: parent_offset + offset_pos,
+                    offset_pos: parent_offset + chain_offset,
                     offset_rot,
                     z_level,
                     depth,
                     decorations,
                 });
 
-                // Recursively resolve nested jointed mobs
-                resolve_jointed_mobs(
-                    &ref_mob,
-                    parent_offset + offset_pos,
-                    depth + 1,
-                    results,
-                    config,
-                );
+                // Recursively resolve this segment's jointed mobs (only for last segment)
+                if i == length - 1 {
+                    resolve_jointed_mobs(
+                        &ref_mob,
+                        parent_offset + chain_offset,
+                        depth + 1,
+                        results,
+                        config,
+                    );
+                }
             }
+        } else {
+            // Non-chain jointed mob
+            let Some(mob_ref_str) = mob_ref else {
+                warn!(
+                    "Jointed mob entry at depth {} has no mob_ref",
+                    depth
+                );
+                continue;
+            };
+
+            let Some(ref_path) = resolve_mob_ref(mob_ref_str, config) else {
+                warn!(
+                    "Could not resolve mob_ref '{}' - check if file exists and path is correct",
+                    mob_ref_str
+                );
+                continue;
+            };
+
+            let ref_mob = match FileOperations::load_file(&ref_path) {
+                Ok(m) => m,
+                Err(e) => {
+                    warn!(
+                        "Failed to load referenced mob '{}' at {:?}: {}",
+                        mob_ref_str, ref_path, e
+                    );
+                    continue;
+                }
+            };
+
+            let sprite = ref_mob
+                .get("sprite")
+                .and_then(|v: &toml::Value| v.as_str())
+                .map(String::from);
+            let z_level = ref_mob
+                .get("z_level")
+                .and_then(|v: &toml::Value| v.as_float())
+                .unwrap_or(0.0) as f32;
+            let decorations = extract_decorations(&ref_mob);
+
+            results.push(ResolvedJointedMob {
+                sprite_path: sprite,
+                offset_pos: parent_offset + offset_pos,
+                offset_rot,
+                z_level,
+                depth,
+                decorations,
+            });
+
+            // Recursively resolve nested jointed mobs
+            resolve_jointed_mobs(
+                &ref_mob,
+                parent_offset + offset_pos,
+                depth + 1,
+                results,
+                config,
+            );
         }
     }
 }

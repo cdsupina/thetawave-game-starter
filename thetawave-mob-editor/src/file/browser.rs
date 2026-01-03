@@ -97,15 +97,46 @@ impl FileTreeState {
         self.needs_refresh = false;
     }
 
+    /// Maximum recursion depth for directory scanning to prevent infinite loops
+    const MAX_SCAN_DEPTH: usize = 10;
+
     fn scan_directory(node: &mut FileNode, path: &PathBuf) {
-        let Ok(entries) = std::fs::read_dir(path) else {
+        Self::scan_directory_with_depth(node, path, 0);
+    }
+
+    fn scan_directory_with_depth(node: &mut FileNode, path: &PathBuf, depth: usize) {
+        if depth >= Self::MAX_SCAN_DEPTH {
+            bevy::log::warn!(
+                "Max directory scan depth {} reached at {:?}, stopping recursion",
+                Self::MAX_SCAN_DEPTH,
+                path
+            );
             return;
+        }
+
+        let entries = match std::fs::read_dir(path) {
+            Ok(e) => e,
+            Err(e) => {
+                bevy::log::warn!(
+                    "Failed to read directory {:?}: {}. Contents will not be shown.",
+                    path,
+                    e
+                );
+                return;
+            }
         };
 
         let mut dirs = Vec::new();
         let mut files = Vec::new();
 
-        for entry in entries.flatten() {
+        for entry_result in entries {
+            let entry = match entry_result {
+                Ok(e) => e,
+                Err(e) => {
+                    bevy::log::debug!("Skipping inaccessible entry in {:?}: {}", path, e);
+                    continue;
+                }
+            };
             let entry_path = entry.path();
             let name = entry.file_name().to_string_lossy().to_string();
 
@@ -116,7 +147,7 @@ impl FileTreeState {
 
             if entry_path.is_dir() {
                 let mut dir_node = FileNode::new_directory(name, entry_path.clone());
-                Self::scan_directory(&mut dir_node, &entry_path);
+                Self::scan_directory_with_depth(&mut dir_node, &entry_path, depth + 1);
                 dirs.push(dir_node);
             } else if let Some(ext) = entry_path.extension() {
                 let ext_str = ext.to_string_lossy();
