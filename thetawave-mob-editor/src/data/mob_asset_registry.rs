@@ -7,16 +7,8 @@ use std::path::Path;
 
 use bevy::prelude::Resource;
 
+use super::AssetSource;
 use crate::plugin::EditorConfig;
-
-/// Source of a registered mob asset
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum MobAssetSource {
-    /// From config.base_assets_root()/mobs.assets.ron
-    Base,
-    /// From config.extended_assets_root()/mobs.assets.ron
-    Extended,
-}
 
 /// A registered mob asset entry
 #[derive(Debug, Clone)]
@@ -27,7 +19,7 @@ pub struct RegisteredMobAsset {
     /// Display name for UI (file stem, e.g., "grunt")
     pub display_name: String,
     /// Whether this is from base or extended assets
-    pub source: MobAssetSource,
+    pub source: AssetSource,
 }
 
 /// Resource containing all registered mob assets from mobs.assets.ron files
@@ -63,8 +55,8 @@ impl MobAssetRegistry {
         // Find matching entry
         self.entries.iter().find(|entry| {
             let source_matches = match (is_extended, entry.source) {
-                (true, MobAssetSource::Extended) => true,
-                (false, MobAssetSource::Base) => true,
+                (true, AssetSource::Extended) => true,
+                (false, AssetSource::Base) => true,
                 _ => false,
             };
 
@@ -95,13 +87,13 @@ impl MobAssetRegistry {
     pub fn base_entries(&self) -> impl Iterator<Item = &RegisteredMobAsset> {
         self.entries
             .iter()
-            .filter(|e| e.source == MobAssetSource::Base)
+            .filter(|e| e.source == AssetSource::Base)
     }
 
     /// Get all extended entries
     pub fn extended_entries(&self) -> impl Iterator<Item = &RegisteredMobAsset> {
         self.entries
             .iter()
-            .filter(|e| e.source == MobAssetSource::Extended)
+            .filter(|e| e.source == AssetSource::Extended)
     }
 }

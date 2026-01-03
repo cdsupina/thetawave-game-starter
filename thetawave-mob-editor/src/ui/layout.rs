@@ -11,7 +11,7 @@ use bevy::{
 use bevy_egui::{EguiContexts, egui};
 
 use crate::{
-    data::{EditorSession, MobAssetRegistry, SpriteRegistry},
+    data::{AssetSource, EditorSession, MobAssetRegistry, SpriteRegistry},
     file::{
         DeleteDirectoryEvent, DeleteMobEvent, FileTreeState, LoadMobEvent, NewMobEvent,
         ReloadMobEvent, SaveMobEvent, append_sprite_to_assets_ron,
@@ -1458,8 +1458,8 @@ fn render_sprite_browser_dialog(
                 // Show registration status
                 if let Some(sprite) = registration_info {
                     let source_name = match sprite.source {
-                        crate::data::SpriteSource::Base => "base game.assets.ron",
-                        crate::data::SpriteSource::Extended => "extended game.assets.ron",
+                        AssetSource::Base => "base game.assets.ron",
+                        AssetSource::Extended => "extended game.assets.ron",
                     };
                     ui.label(
                         egui::RichText::new(format!("✔ Already registered in {}", source_name))

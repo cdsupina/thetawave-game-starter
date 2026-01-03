@@ -5,14 +5,7 @@
 
 use bevy::prelude::Resource;
 
-/// Source of a registered sprite
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SpriteSource {
-    /// From assets/game.assets.ron
-    Base,
-    /// From thetawave-test-game/assets/game.assets.ron
-    Extended,
-}
+use super::AssetSource;
 
 /// A registered sprite entry
 #[derive(Debug, Clone)]
@@ -22,7 +15,7 @@ pub struct RegisteredSprite {
     /// Display name for UI (file stem, e.g., "xhitara_grunt_mob")
     pub display_name: String,
     /// Whether this is from base or extended assets
-    pub source: SpriteSource,
+    pub source: AssetSource,
 }
 
 impl RegisteredSprite {
@@ -35,8 +28,8 @@ impl RegisteredSprite {
     /// Extended sprites get the extended:// prefix
     pub fn mobpatch_path(&self) -> String {
         match self.source {
-            SpriteSource::Extended => format!("extended://{}", self.asset_path),
-            SpriteSource::Base => self.asset_path.clone(),
+            AssetSource::Extended => format!("extended://{}", self.asset_path),
+            AssetSource::Base => self.asset_path.clone(),
         }
     }
 }
@@ -64,12 +57,12 @@ impl SpriteRegistry {
             // Path has extended:// prefix - only match extended sprites
             self.sprites
                 .iter()
-                .find(|s| s.asset_path == normalized && s.source == SpriteSource::Extended)
+                .find(|s| s.asset_path == normalized && s.source == AssetSource::Extended)
         } else {
             // No prefix - only match base sprites
             self.sprites
                 .iter()
-                .find(|s| s.asset_path == path && s.source == SpriteSource::Base)
+                .find(|s| s.asset_path == path && s.source == AssetSource::Base)
         }
     }
 
@@ -96,13 +89,13 @@ impl SpriteRegistry {
     pub fn base_sprites(&self) -> impl Iterator<Item = &RegisteredSprite> {
         self.sprites
             .iter()
-            .filter(|s| s.source == SpriteSource::Base)
+            .filter(|s| s.source == AssetSource::Base)
     }
 
     /// Get all extended sprites
     pub fn extended_sprites(&self) -> impl Iterator<Item = &RegisteredSprite> {
         self.sprites
             .iter()
-            .filter(|s| s.source == SpriteSource::Extended)
+            .filter(|s| s.source == AssetSource::Extended)
     }
 }

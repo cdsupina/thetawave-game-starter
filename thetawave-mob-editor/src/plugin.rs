@@ -18,8 +18,8 @@ use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
 
 use crate::{
     data::{
-        EditorSession, MobAssetRegistry, MobAssetSource, RegisteredMobAsset,
-        RegisteredSprite, SpriteRegistry, SpriteSource,
+        AssetSource, EditorSession, MobAssetRegistry, RegisteredMobAsset, RegisteredSprite,
+        SpriteRegistry,
     },
     file::{
         DeleteDirectoryEvent, DeleteMobEvent, FileOperations, FileTreeState, LoadMobEvent,
@@ -568,7 +568,7 @@ fn scan_sprite_registry(registry: &mut SpriteRegistry, config: &EditorConfig) {
                         registry.sprites.push(RegisteredSprite {
                             asset_path: path,
                             display_name,
-                            source: SpriteSource::Base,
+                            source: AssetSource::Base,
                         });
                     }
                 }
@@ -588,7 +588,7 @@ fn scan_sprite_registry(registry: &mut SpriteRegistry, config: &EditorConfig) {
                         registry.sprites.push(RegisteredSprite {
                             asset_path: path,
                             display_name,
-                            source: SpriteSource::Extended,
+                            source: AssetSource::Extended,
                         });
                     }
                 }
@@ -664,7 +664,7 @@ fn scan_mob_asset_registry(registry: &mut MobAssetRegistry, config: &EditorConfi
                         registry.entries.push(RegisteredMobAsset {
                             asset_path: path,
                             display_name,
-                            source: MobAssetSource::Base,
+                            source: AssetSource::Base,
                         });
                     }
                     // Base files shouldn't have patches, but handle them if present
@@ -673,7 +673,7 @@ fn scan_mob_asset_registry(registry: &mut MobAssetRegistry, config: &EditorConfi
                         registry.entries.push(RegisteredMobAsset {
                             asset_path: path,
                             display_name,
-                            source: MobAssetSource::Base,
+                            source: AssetSource::Base,
                         });
                     }
                 }
@@ -693,7 +693,7 @@ fn scan_mob_asset_registry(registry: &mut MobAssetRegistry, config: &EditorConfi
                         registry.entries.push(RegisteredMobAsset {
                             asset_path: path,
                             display_name,
-                            source: MobAssetSource::Extended,
+                            source: AssetSource::Extended,
                         });
                     }
                     for path in parsed.patches {
@@ -701,7 +701,7 @@ fn scan_mob_asset_registry(registry: &mut MobAssetRegistry, config: &EditorConfi
                         registry.entries.push(RegisteredMobAsset {
                             asset_path: path,
                             display_name,
-                            source: MobAssetSource::Extended,
+                            source: AssetSource::Extended,
                         });
                     }
                 }
