@@ -14,9 +14,17 @@ use super::fields::{
 };
 use super::update_decoration_sprite;
 
+/// Result from rendering a sprite picker
+pub struct SpritePickerResult {
+    /// Whether the sprite browser should be opened
+    pub open_browser: bool,
+    /// Sprite path that should be registered (if user clicked Register)
+    pub register_sprite: Option<String>,
+}
+
 /// Render a sprite picker dropdown
 ///
-/// Returns true if the sprite browser should be opened
+/// Returns a result indicating if the browser should open or a sprite should be registered
 pub fn render_sprite_picker(
     ui: &mut egui::Ui,
     display_table: &toml::value::Table,
@@ -26,8 +34,11 @@ pub fn render_sprite_picker(
     is_patch: bool,
     modified: &mut bool,
     config: &EditorConfig,
-) -> bool {
-    let mut open_browser = false;
+) -> SpritePickerResult {
+    let mut result = SpritePickerResult {
+        open_browser: false,
+        register_sprite: None,
+    };
 
     let is_patched = is_patch && patch_table.contains_key("sprite");
     let is_modified = session.is_field_modified("sprite");
@@ -171,7 +182,7 @@ pub fn render_sprite_picker(
         }
     });
 
-    // Browse & Register button row
+    // Browse button row
     ui.horizontal(|ui| {
         ui.add_space(INDENT_SPACING);
 
@@ -182,11 +193,11 @@ pub fn render_sprite_picker(
             )
             .clicked()
         {
-            open_browser = true;
+            result.open_browser = true;
         }
     });
 
-    // Show warning if unregistered
+    // Show warning and register button if unregistered
     if !sprite_registry.is_registered(current_sprite) && !current_sprite.is_empty() {
         ui.horizontal(|ui| {
             ui.add_space(INDENT_SPACING);
@@ -195,15 +206,30 @@ pub fn render_sprite_picker(
                     .small()
                     .color(egui::Color32::YELLOW),
             );
+            if ui
+                .small_button("Register")
+                .on_hover_text("Register this sprite in game.assets.ron")
+                .clicked()
+            {
+                result.register_sprite = Some(current_sprite.to_string());
+            }
         });
     }
 
-    open_browser
+    result
+}
+
+/// Result from rendering the decorations section
+pub struct DecorationsSectionResult {
+    /// If Some, the decoration index that needs a sprite browser
+    pub open_browser_for: Option<usize>,
+    /// Sprites that should be registered
+    pub register_sprites: Vec<String>,
 }
 
 /// Render the decorations section with sprite pickers
 ///
-/// Returns Some(decoration_index) if the sprite browser should be opened for a decoration
+/// Returns result containing which decoration needs browser and any sprites to register
 pub fn render_decorations_section(
     ui: &mut egui::Ui,
     display_table: &toml::value::Table,
@@ -213,8 +239,11 @@ pub fn render_decorations_section(
     is_patch: bool,
     modified: &mut bool,
     config: &EditorConfig,
-) -> Option<usize> {
-    let mut open_decoration_browser: Option<usize> = None;
+) -> DecorationsSectionResult {
+    let mut result = DecorationsSectionResult {
+        open_browser_for: None,
+        register_sprites: Vec::new(),
+    };
     let is_patched = is_patch && patch_table.contains_key("decorations");
     let section_modified = session.is_field_modified("decorations");
     // Only allow editing if not a patch OR if decorations are in the patch
@@ -332,7 +361,7 @@ pub fn render_decorations_section(
                     });
 
                     // Sprite picker for this decoration
-                    let open_browser_for = render_decoration_sprite_picker(
+                    let picker_result = render_decoration_sprite_picker(
                         ui,
                         i,
                         sprite_path,
@@ -343,8 +372,11 @@ pub fn render_decorations_section(
                         modified,
                         config,
                     );
-                    if let Some(idx) = open_browser_for {
-                        open_decoration_browser = Some(idx);
+                    if let Some(idx) = picker_result.open_browser_for {
+                        result.open_browser_for = Some(idx);
+                    }
+                    if let Some(sprite) = picker_result.register_sprite {
+                        result.register_sprites.push(sprite);
                     }
 
                     // Position editors
@@ -399,12 +431,20 @@ pub fn render_decorations_section(
             }
         });
 
-    open_decoration_browser
+    result
+}
+
+/// Result from rendering a decoration sprite picker
+struct DecorationSpritePickerResult {
+    /// If Some, the decoration index that needs a sprite browser
+    open_browser_for: Option<usize>,
+    /// Sprite path that should be registered (if user clicked Register)
+    register_sprite: Option<String>,
 }
 
 /// Render sprite picker for a decoration
 ///
-/// Returns Some(decoration_index) if the sprite browser should be opened
+/// Returns result indicating if browser should open or sprite should be registered
 fn render_decoration_sprite_picker(
     ui: &mut egui::Ui,
     index: usize,
@@ -415,8 +455,11 @@ fn render_decoration_sprite_picker(
     can_edit: bool,
     modified: &mut bool,
     config: &EditorConfig,
-) -> Option<usize> {
-    let mut open_browser_for: Option<usize> = None;
+) -> DecorationSpritePickerResult {
+    let mut result = DecorationSpritePickerResult {
+        open_browser_for: None,
+        register_sprite: None,
+    };
 
     // Normalize for comparison (strip extended:// prefix)
     let normalized_current = current_sprite
@@ -533,14 +576,25 @@ fn render_decoration_sprite_picker(
                 .on_hover_text("Browse for sprite")
                 .clicked()
             {
-                open_browser_for = Some(index);
+                result.open_browser_for = Some(index);
+            }
+
+            // Register button for unregistered sprites
+            if !is_registered && !current_sprite.is_empty() {
+                if ui
+                    .small_button("📋")
+                    .on_hover_text("Register this sprite")
+                    .clicked()
+                {
+                    result.register_sprite = Some(current_sprite.to_string());
+                }
             }
         } else {
             ui.label(&display_text);
         }
     });
 
-    open_browser_for
+    result
 }
 
 // =============================================================================

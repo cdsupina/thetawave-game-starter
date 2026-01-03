@@ -40,6 +40,8 @@ pub struct PropertiesPanelResult {
     pub open_decoration_browser: Option<usize>,
     /// Whether mob registration was triggered
     pub register_mob: bool,
+    /// Sprites that need to be registered (paths as they appear in the mob file)
+    pub register_sprites: Vec<String>,
 }
 
 /// Render the complete properties panel
@@ -101,7 +103,7 @@ pub fn properties_panel_ui(
             ui.separator();
 
             // Sprite picker
-            if decorations::render_sprite_picker(
+            let sprite_result = decorations::render_sprite_picker(
                 ui,
                 &display_table,
                 &patch_table,
@@ -110,14 +112,18 @@ pub fn properties_panel_ui(
                 is_patch,
                 &mut modified,
                 config,
-            ) {
+            );
+            if sprite_result.open_browser {
                 result.open_sprite_browser = true;
+            }
+            if let Some(sprite) = sprite_result.register_sprite {
+                result.register_sprites.push(sprite);
             }
 
             ui.separator();
 
             // Decorations
-            if let Some(idx) = decorations::render_decorations_section(
+            let decorations_result = decorations::render_decorations_section(
                 ui,
                 &display_table,
                 &patch_table,
@@ -126,9 +132,11 @@ pub fn properties_panel_ui(
                 is_patch,
                 &mut modified,
                 config,
-            ) {
+            );
+            if let Some(idx) = decorations_result.open_browser_for {
                 result.open_decoration_browser = Some(idx);
             }
+            result.register_sprites.extend(decorations_result.register_sprites);
 
             ui.separator();
 

@@ -242,6 +242,46 @@ pub fn main_ui_system(
         }
     }
 
+    // Handle sprite registration from properties panel
+    for sprite_path in panel_result.register_sprites {
+        // Determine if this is an extended sprite and extract asset path
+        let is_extended = sprite_path.starts_with("extended://");
+        let asset_path = sprite_path
+            .strip_prefix("extended://")
+            .unwrap_or(&sprite_path);
+
+        // Get the appropriate assets.ron path
+        let cwd = std::env::current_dir().unwrap_or_default();
+        let assets_ron = if is_extended {
+            config.extended_assets_ron().map(|p| cwd.join(p))
+        } else {
+            config.base_assets_ron().map(|p| cwd.join(p))
+        };
+
+        if let Some(assets_ron) = assets_ron {
+            match append_sprite_to_assets_ron(&assets_ron, asset_path, is_extended) {
+                Ok(()) => {
+                    sprite_registry.needs_refresh = true;
+                    session.log_success(
+                        format!("Registered sprite: {}", asset_path),
+                        &time,
+                    );
+                }
+                Err(e) => {
+                    session.log_error(format!("Failed to register sprite: {}", e), &time);
+                }
+            }
+        } else {
+            session.log_error(
+                format!(
+                    "Could not determine assets.ron path for {}",
+                    if is_extended { "extended" } else { "base" }
+                ),
+                &time,
+            );
+        }
+    }
+
     // Bottom status bar / log panel
     let panel_height = if session.log.expanded {
         STATUS_LOG_EXPANDED_HEIGHT
