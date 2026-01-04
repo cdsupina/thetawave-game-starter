@@ -276,32 +276,6 @@ impl EditorSession {
         }
     }
 
-    /// Check if a table entry is new or modified (for spawners with named keys)
-    ///
-    /// Returns true if:
-    /// - The key is new (didn't exist in original)
-    /// - The value at that key was modified
-    #[allow(dead_code)] // May be useful for future simple table comparisons
-    pub fn is_table_key_modified(&self, field_name: &str, key: &str) -> bool {
-        match (&self.current_mob, &self.original_mob) {
-            (Some(current), Some(original)) => {
-                let current_table = current.get(field_name).and_then(|v| v.as_table());
-                let original_table = original.get(field_name).and_then(|v| v.as_table());
-
-                match (current_table, original_table) {
-                    (Some(curr), Some(orig)) => match (curr.get(key), orig.get(key)) {
-                        (Some(a), Some(b)) => !Self::values_equal(a, b),
-                        (None, None) => false,
-                        _ => true,
-                    },
-                    (Some(_), None) => true, // Entire table is new
-                    _ => false,
-                }
-            }
-            _ => false,
-        }
-    }
-
     /// Check if a nested table entry is new or modified
     /// (for spawners.spawners.north, etc.)
     ///
