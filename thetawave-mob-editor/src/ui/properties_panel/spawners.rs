@@ -129,8 +129,8 @@ pub fn render_projectile_spawners_section(
     let is_patched = is_patch && patch_table.contains_key("projectile_spawners");
     let section_modified = session.is_field_modified("projectile_spawners");
 
-    let header_text = egui::RichText::new("Projectile Spawners")
-        .color(header_color(ui, section_modified));
+    let header_text =
+        egui::RichText::new("Projectile Spawners").color(header_color(ui, section_modified));
     egui::CollapsingHeader::new(header_text)
         .default_open(false)
         .show(ui, |ui| {
@@ -461,8 +461,7 @@ pub fn render_mob_spawners_section(
     let is_patched = is_patch && patch_table.contains_key("mob_spawners");
     let section_modified = session.is_field_modified("mob_spawners");
 
-    let header_text =
-        egui::RichText::new("Mob Spawners").color(header_color(ui, section_modified));
+    let header_text = egui::RichText::new("Mob Spawners").color(header_color(ui, section_modified));
     egui::CollapsingHeader::new(header_text)
         .default_open(false)
         .show(ui, |ui| {

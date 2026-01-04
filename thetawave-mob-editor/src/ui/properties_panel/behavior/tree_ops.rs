@@ -149,9 +149,12 @@ pub fn change_behavior_node_type(
         && let Some(table) = node.as_table_mut()
     {
         let old_type_str = table.get("type").and_then(|v| v.as_str()).unwrap_or("");
-        let old_type: Option<BehaviorNodeType> = old_type_str.parse().map_err(|e| {
-            bevy::log::debug!("Unknown behavior node type '{}': {}", old_type_str, e);
-        }).ok();
+        let old_type: Option<BehaviorNodeType> = old_type_str
+            .parse()
+            .map_err(|e| {
+                bevy::log::debug!("Unknown behavior node type '{}': {}", old_type_str, e);
+            })
+            .ok();
 
         // Only proceed if type is actually changing
         if old_type == Some(new_type) {

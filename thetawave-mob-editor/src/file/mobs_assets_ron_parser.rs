@@ -56,8 +56,8 @@ pub fn parse_mobs_assets_ron(path: &PathBuf) -> Result<ParsedMobsAssets, String>
     #[derive(Clone, Copy, PartialEq)]
     enum Section {
         None,
-        Mobs,         // "mobs" or "extended_mobs"
-        MobPatches,   // "extended_mob_patches"
+        Mobs,       // "mobs" or "extended_mobs"
+        MobPatches, // "extended_mob_patches"
     }
 
     let mut current_section = Section::None;
@@ -102,21 +102,20 @@ pub fn parse_mobs_assets_ron(path: &PathBuf) -> Result<ParsedMobsAssets, String>
             }
 
             // Extract quoted strings ending in .mob or .mobpatch
-            if in_paths_array {
-                if let Some(path_str) = extract_quoted_path(trimmed) {
-                    if path_str.ends_with(".mob") || path_str.ends_with(".mobpatch") {
-                        // Strip extended:// prefix if present
-                        let clean_path = path_str
-                            .strip_prefix("extended://")
-                            .unwrap_or(&path_str)
-                            .to_string();
+            if in_paths_array
+                && let Some(path_str) = extract_quoted_path(trimmed)
+                && (path_str.ends_with(".mob") || path_str.ends_with(".mobpatch"))
+            {
+                // Strip extended:// prefix if present
+                let clean_path = path_str
+                    .strip_prefix("extended://")
+                    .unwrap_or(&path_str)
+                    .to_string();
 
-                        match current_section {
-                            Section::Mobs => result.mobs.push(clean_path),
-                            Section::MobPatches => result.patches.push(clean_path),
-                            Section::None => {}
-                        }
-                    }
+                match current_section {
+                    Section::Mobs => result.mobs.push(clean_path),
+                    Section::MobPatches => result.patches.push(clean_path),
+                    Section::None => {}
                 }
             }
 

@@ -9,8 +9,8 @@ use bevy::{
     asset::Handle,
     log::{debug, info, warn},
     prelude::{
-        AssetServer, Color, Commands, Component, Entity, Quat, Query, Res, ResMut, Resource, Sprite,
-        State, Transform, Vec2, With, default,
+        AssetServer, Color, Commands, Component, Entity, Quat, Query, Res, ResMut, Resource,
+        Sprite, State, Transform, Vec2, With, default,
     },
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
@@ -419,7 +419,10 @@ fn spawn_decorations(
         // Try to load the decoration sprite using the full path (supports extended:// prefix)
         let load_result = try_load_sprite_from_path(sprite_path, asset_server, config);
         if let Some(handle) = load_result.handle {
-            debug!("Loading decoration sprite: {} at {:?}", sprite_path, position);
+            debug!(
+                "Loading decoration sprite: {} at {:?}",
+                sprite_path, position
+            );
             commands.spawn((
                 PreviewDecoration { index },
                 AseAnimation {

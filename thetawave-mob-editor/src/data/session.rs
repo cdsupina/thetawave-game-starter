@@ -233,7 +233,10 @@ impl EditorSession {
 
             // Arrays - compare element by element
             (Value::Array(a), Value::Array(b)) => {
-                a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| Self::values_equal(x, y))
+                a.len() == b.len()
+                    && a.iter()
+                        .zip(b.iter())
+                        .all(|(x, y)| Self::values_equal(x, y))
             }
 
             // Tables - compare key by key
@@ -312,12 +315,12 @@ impl EditorSession {
     ///
     /// Also sets `preview_needs_rebuild` to signal the preview system.
     pub fn update_merged_for_preview(&mut self) {
-        if self.file_type == FileType::MobPatch {
-            if let (Some(base), Some(patch)) = (&self.base_mob, &self.current_mob) {
-                let mut merged = base.clone();
-                crate::file::merge_toml_values(&mut merged, patch.clone());
-                self.merged_for_preview = Some(merged);
-            }
+        if self.file_type == FileType::MobPatch
+            && let (Some(base), Some(patch)) = (&self.base_mob, &self.current_mob)
+        {
+            let mut merged = base.clone();
+            crate::file::merge_toml_values(&mut merged, patch.clone());
+            self.merged_for_preview = Some(merged);
         }
         // Signal preview system to rebuild
         self.preview_needs_rebuild = true;
@@ -518,14 +521,9 @@ mod tests {
     #[test]
     fn values_equal_arrays_with_type_coercion() {
         // [50, 50] should equal [50.0, 50.0]
-        let int_arr = toml::Value::Array(vec![
-            toml::Value::Integer(50),
-            toml::Value::Integer(50),
-        ]);
-        let float_arr = toml::Value::Array(vec![
-            toml::Value::Float(50.0),
-            toml::Value::Float(50.0),
-        ]);
+        let int_arr = toml::Value::Array(vec![toml::Value::Integer(50), toml::Value::Integer(50)]);
+        let float_arr =
+            toml::Value::Array(vec![toml::Value::Float(50.0), toml::Value::Float(50.0)]);
         assert!(EditorSession::values_equal(&int_arr, &float_arr));
     }
 

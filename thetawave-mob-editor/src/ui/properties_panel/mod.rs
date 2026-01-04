@@ -93,12 +93,26 @@ pub fn properties_panel_ui(
         .auto_shrink([false; 2])
         .show(ui, |ui| {
             // General Properties
-            render_general_properties(ui, &display_table, &patch_table, session, is_patch, &mut modified);
+            render_general_properties(
+                ui,
+                &display_table,
+                &patch_table,
+                session,
+                is_patch,
+                &mut modified,
+            );
 
             ui.separator();
 
             // Combat Properties
-            render_combat_properties(ui, &display_table, &patch_table, session, is_patch, &mut modified);
+            render_combat_properties(
+                ui,
+                &display_table,
+                &patch_table,
+                session,
+                is_patch,
+                &mut modified,
+            );
 
             ui.separator();
 
@@ -136,7 +150,9 @@ pub fn properties_panel_ui(
             if let Some(idx) = decorations_result.open_browser_for {
                 result.open_decoration_browser = Some(idx);
             }
-            result.register_sprites.extend(decorations_result.register_sprites);
+            result
+                .register_sprites
+                .extend(decorations_result.register_sprites);
 
             ui.separator();
 
@@ -383,7 +399,14 @@ fn render_general_properties(
                 .get("name")
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            match fields::render_string_field(ui, "Name:", name, name_patched, is_patch, name_modified) {
+            match fields::render_string_field(
+                ui,
+                "Name:",
+                name,
+                name_patched,
+                is_patch,
+                name_modified,
+            ) {
                 FieldResult::Changed(new_val) => {
                     set_field(session, "name", toml::Value::String(new_val));
                     *modified = true;
@@ -554,8 +577,12 @@ fn render_combat_properties(
             const SPEED_DEFAULT: (f32, f32) = (50.0, 50.0);
             let speed_patched = is_patch && patch_table.contains_key("max_linear_speed");
             let speed_modified = session.is_field_modified("max_linear_speed");
-            let (speed_x, speed_y) =
-                fields::get_vec2_value(display_table, "max_linear_speed", SPEED_DEFAULT.0, SPEED_DEFAULT.1);
+            let (speed_x, speed_y) = fields::get_vec2_value(
+                display_table,
+                "max_linear_speed",
+                SPEED_DEFAULT.0,
+                SPEED_DEFAULT.1,
+            );
             match fields::render_vec2_field(
                 ui,
                 "Max Speed:",
@@ -568,7 +595,14 @@ fn render_combat_properties(
                 speed_modified,
             ) {
                 FieldResult::Changed((x, y)) => {
-                    set_vec2_field_with_default(session, "max_linear_speed", x, y, SPEED_DEFAULT.0, SPEED_DEFAULT.1);
+                    set_vec2_field_with_default(
+                        session,
+                        "max_linear_speed",
+                        x,
+                        y,
+                        SPEED_DEFAULT.0,
+                        SPEED_DEFAULT.1,
+                    );
                     *modified = true;
                 }
                 FieldResult::Reset => {
@@ -582,8 +616,12 @@ fn render_combat_properties(
             const ACCEL_DEFAULT: (f32, f32) = (100.0, 100.0);
             let accel_patched = is_patch && patch_table.contains_key("linear_acceleration");
             let accel_modified = session.is_field_modified("linear_acceleration");
-            let (accel_x, accel_y) =
-                fields::get_vec2_value(display_table, "linear_acceleration", ACCEL_DEFAULT.0, ACCEL_DEFAULT.1);
+            let (accel_x, accel_y) = fields::get_vec2_value(
+                display_table,
+                "linear_acceleration",
+                ACCEL_DEFAULT.0,
+                ACCEL_DEFAULT.1,
+            );
             match fields::render_vec2_field(
                 ui,
                 "Acceleration:",
@@ -596,7 +634,14 @@ fn render_combat_properties(
                 accel_modified,
             ) {
                 FieldResult::Changed((x, y)) => {
-                    set_vec2_field_with_default(session, "linear_acceleration", x, y, ACCEL_DEFAULT.0, ACCEL_DEFAULT.1);
+                    set_vec2_field_with_default(
+                        session,
+                        "linear_acceleration",
+                        x,
+                        y,
+                        ACCEL_DEFAULT.0,
+                        ACCEL_DEFAULT.1,
+                    );
                     *modified = true;
                 }
                 FieldResult::Reset => {

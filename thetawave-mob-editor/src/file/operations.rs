@@ -125,9 +125,7 @@ impl FileOperations {
         let path_str = patch_path.to_string_lossy();
 
         // Find "mobs/" and get everything after it using split, which is UTF-8 safe
-        let relative = path_str
-            .split("mobs/")
-            .nth(1)?; // Get the part after "mobs/"
+        let relative = path_str.split("mobs/").nth(1)?; // Get the part after "mobs/"
 
         // Convert to .mob extension
         let base_relative = relative.strip_suffix(".mobpatch")?.to_string() + ".mob";
@@ -163,8 +161,16 @@ impl FileOperations {
     /// The base_load_warning is set when a base mob file exists but couldn't be loaded
     pub fn load_patch_with_base(
         patch_path: &Path,
-    ) -> Result<(Value, Option<Value>, Option<Value>, Option<String>, Option<String>), FileError>
-    {
+    ) -> Result<
+        (
+            Value,
+            Option<Value>,
+            Option<Value>,
+            Option<String>,
+            Option<String>,
+        ),
+        FileError,
+    > {
         let patch = Self::load_file(patch_path)?;
         let expected_path = Self::expected_base_path(patch_path);
 

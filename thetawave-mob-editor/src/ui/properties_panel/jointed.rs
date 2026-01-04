@@ -23,8 +23,7 @@ pub fn render_jointed_mobs_section(
     let is_patched = is_patch && patch_table.contains_key("jointed_mobs");
     let section_modified = session.is_field_modified("jointed_mobs");
 
-    let header_text =
-        egui::RichText::new("Jointed Mobs").color(header_color(ui, section_modified));
+    let header_text = egui::RichText::new("Jointed Mobs").color(header_color(ui, section_modified));
     egui::CollapsingHeader::new(header_text)
         .default_open(false)
         .show(ui, |ui| {

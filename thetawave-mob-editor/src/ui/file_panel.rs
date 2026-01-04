@@ -342,18 +342,28 @@ fn render_file_node(
             }
         }
 
-        let response = ui.horizontal(|ui| {
-            let label_response = ui.selectable_label(is_selected, text);
+        let response = ui
+            .horizontal(|ui| {
+                let label_response = ui.selectable_label(is_selected, text);
 
-            // Registration indicator (small, after filename)
-            if is_registered {
-                ui.label(egui::RichText::new("✔").small().color(egui::Color32::from_rgb(100, 200, 100)));
-            } else {
-                ui.label(egui::RichText::new("⚠").small().color(egui::Color32::YELLOW));
-            }
+                // Registration indicator (small, after filename)
+                if is_registered {
+                    ui.label(
+                        egui::RichText::new("✔")
+                            .small()
+                            .color(egui::Color32::from_rgb(100, 200, 100)),
+                    );
+                } else {
+                    ui.label(
+                        egui::RichText::new("⚠")
+                            .small()
+                            .color(egui::Color32::YELLOW),
+                    );
+                }
 
-            label_response
-        }).inner;
+                label_response
+            })
+            .inner;
 
         // Show full filename on hover if truncated
         if display_name != node.name {

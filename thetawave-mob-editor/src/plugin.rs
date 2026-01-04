@@ -966,14 +966,14 @@ fn handle_new_mob(
                 // For patches, look up the base mob
                 if event.is_patch {
                     session.expected_base_path = FileOperations::expected_base_path(&event.path);
-                    if let Some(base_path) = FileOperations::find_base_mob(&event.path) {
-                        if let Ok(base) = FileOperations::load_file(&base_path) {
-                            // Merge patch with base for preview
-                            let mut merged = base.clone();
-                            thetawave_core::merge_toml_values(&mut merged, value);
-                            session.base_mob = Some(base);
-                            session.merged_for_preview = Some(merged);
-                        }
+                    if let Some(base_path) = FileOperations::find_base_mob(&event.path)
+                        && let Ok(base) = FileOperations::load_file(&base_path)
+                    {
+                        // Merge patch with base for preview
+                        let mut merged = base.clone();
+                        thetawave_core::merge_toml_values(&mut merged, value);
+                        session.base_mob = Some(base);
+                        session.merged_for_preview = Some(merged);
                     }
                 } else {
                     session.base_mob = None;
@@ -1035,13 +1035,13 @@ fn handle_delete_directory(
         match trash::delete(&event.path) {
             Ok(()) => {
                 // If the current file was inside this directory, clear session
-                if let Some(current_path) = &session.current_path {
-                    if current_path.starts_with(&event.path) {
-                        session.current_mob = None;
-                        session.current_path = None;
-                        session.is_modified = false;
-                        next_state.set(EditorState::Browsing);
-                    }
+                if let Some(current_path) = &session.current_path
+                    && current_path.starts_with(&event.path)
+                {
+                    session.current_mob = None;
+                    session.current_path = None;
+                    session.is_modified = false;
+                    next_state.set(EditorState::Browsing);
                 }
 
                 file_tree.needs_refresh = true;

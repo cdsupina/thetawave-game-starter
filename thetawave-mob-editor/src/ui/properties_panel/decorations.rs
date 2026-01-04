@@ -125,8 +125,7 @@ pub fn render_sprite_picker(
                                 .color(PATCHED_COLOR),
                         );
                         // Extended sprites need extended:// prefix for patches AND extended mobs
-                        let needs_extended_prefix =
-                            is_patch || session.is_extended_mob(config);
+                        let needs_extended_prefix = is_patch || session.is_extended_mob(config);
                         for sprite in extended_sprites {
                             // Only selected if current sprite HAS extended:// prefix
                             let is_selected =
@@ -168,7 +167,10 @@ pub fn render_sprite_picker(
             } else {
                 // Set the new sprite value
                 // The is_field_modified comparison will correctly detect if it equals original
-                mob.insert("sprite".to_string(), toml::Value::String(selected_path.clone()));
+                mob.insert(
+                    "sprite".to_string(),
+                    toml::Value::String(selected_path.clone()),
+                );
             }
             *modified = true;
         }
@@ -188,9 +190,7 @@ pub fn render_sprite_picker(
 
         if ui
             .small_button("Browse...")
-            .on_hover_text(
-                "Browse for an aseprite file and register it in game.assets.ron",
-            )
+            .on_hover_text("Browse for an aseprite file and register it in game.assets.ron")
             .clicked()
         {
             result.open_browser = true;
@@ -249,8 +249,7 @@ pub fn render_decorations_section(
     // Only allow editing if not a patch OR if decorations are in the patch
     let can_edit = !is_patch || is_patched;
 
-    let header_text =
-        egui::RichText::new("Decorations").color(header_color(ui, section_modified));
+    let header_text = egui::RichText::new("Decorations").color(header_color(ui, section_modified));
     egui::CollapsingHeader::new(header_text)
         .default_open(false)
         .show(ui, |ui| {
@@ -529,8 +528,7 @@ fn render_decoration_sprite_picker(
                                     .color(PATCHED_COLOR),
                             );
                             // Extended sprites need extended:// prefix for patches AND extended mobs
-                            let needs_extended_prefix =
-                                is_patch || session.is_extended_mob(config);
+                            let needs_extended_prefix = is_patch || session.is_extended_mob(config);
                             for sprite in extended_sprites {
                                 // Only selected if current sprite HAS extended:// prefix
                                 let is_selected =
@@ -580,14 +578,14 @@ fn render_decoration_sprite_picker(
             }
 
             // Register button for unregistered sprites
-            if !is_registered && !current_sprite.is_empty() {
-                if ui
+            if !is_registered
+                && !current_sprite.is_empty()
+                && ui
                     .small_button("📋")
                     .on_hover_text("Register this sprite")
                     .clicked()
-                {
-                    result.register_sprite = Some(current_sprite.to_string());
-                }
+            {
+                result.register_sprite = Some(current_sprite.to_string());
             }
         } else {
             ui.label(&display_text);

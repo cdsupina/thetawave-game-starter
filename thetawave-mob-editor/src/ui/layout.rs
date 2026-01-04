@@ -37,13 +37,11 @@ const PROPERTIES_PANEL_DEFAULT_WIDTH: f32 = 300.0;
 /// Convert a filename like "my_new_mob" to Title Case "My New Mob"
 fn filename_to_display_name(filename: &str) -> String {
     filename
-        .split(|c| c == '_' || c == '-')
+        .split(['_', '-'])
         .map(|word| {
             let mut chars = word.chars();
             match chars.next() {
-                Some(first) => {
-                    first.to_uppercase().chain(chars).collect::<String>()
-                }
+                Some(first) => first.to_uppercase().chain(chars).collect::<String>(),
                 None => String::new(),
             }
         })
@@ -192,53 +190,56 @@ pub fn main_ui_system(
     }
 
     // Handle mob registration
-    if panel_result.register_mob {
-        if let Some(path) = &session.current_path {
-            let is_extended = config.is_extended_path(path);
-            let is_patch = path.extension().is_some_and(|e| e == "mobpatch");
+    if panel_result.register_mob
+        && let Some(path) = &session.current_path
+    {
+        let is_extended = config.is_extended_path(path);
+        let is_patch = path.extension().is_some_and(|e| e == "mobpatch");
 
-            // Get the mobs.assets.ron path
-            let mobs_assets_path = if is_extended {
-                config.extended_mobs_assets_ron()
+        // Get the mobs.assets.ron path
+        let mobs_assets_path = if is_extended {
+            config.extended_mobs_assets_ron()
+        } else {
+            config.base_mobs_assets_ron()
+        };
+
+        if let Some(mobs_assets_path) = mobs_assets_path {
+            // Calculate relative path for the assets.ron file
+            let assets_root = if is_extended {
+                config.extended_assets_root()
             } else {
-                config.base_mobs_assets_ron()
+                config.base_assets_root()
             };
 
-            if let Some(mobs_assets_path) = mobs_assets_path {
-                // Calculate relative path for the assets.ron file
-                let assets_root = if is_extended {
-                    config.extended_assets_root()
-                } else {
-                    config.base_assets_root()
-                };
-
-                if let Some(assets_root) = assets_root {
-                    if let Ok(relative) = path.strip_prefix(&assets_root) {
-                        let relative_str = relative.to_string_lossy().to_string();
-                        match crate::file::append_to_mobs_assets_ron(
-                            &mobs_assets_path,
-                            &relative_str,
-                            is_patch,
-                            is_extended,
-                        ) {
-                            Ok(()) => {
-                                mob_registry.needs_refresh = true;
-                                session.log_success(
-                                    format!("Registered {} in mobs.assets.ron", relative_str),
-                                    &time,
-                                );
-                            }
-                            Err(e) => {
-                                session.log_error(format!("Failed to register: {}", e), &time);
-                            }
+            if let Some(assets_root) = assets_root {
+                if let Ok(relative) = path.strip_prefix(&assets_root) {
+                    let relative_str = relative.to_string_lossy().to_string();
+                    match crate::file::append_to_mobs_assets_ron(
+                        &mobs_assets_path,
+                        &relative_str,
+                        is_patch,
+                        is_extended,
+                    ) {
+                        Ok(()) => {
+                            mob_registry.needs_refresh = true;
+                            session.log_success(
+                                format!("Registered {} in mobs.assets.ron", relative_str),
+                                &time,
+                            );
                         }
-                    } else {
-                        session.log_error("Could not calculate relative path".to_string(), &time);
+                        Err(e) => {
+                            session.log_error(format!("Failed to register: {}", e), &time);
+                        }
                     }
+                } else {
+                    session.log_error("Could not calculate relative path".to_string(), &time);
                 }
-            } else {
-                session.log_error("Could not determine mobs.assets.ron path".to_string(), &time);
             }
+        } else {
+            session.log_error(
+                "Could not determine mobs.assets.ron path".to_string(),
+                &time,
+            );
         }
     }
 
@@ -268,10 +269,7 @@ pub fn main_ui_system(
             match append_sprite_to_assets_ron(&assets_ron, asset_path, is_extended) {
                 Ok(()) => {
                     sprite_registry.needs_refresh = true;
-                    session.log_success(
-                        format!("Registered sprite: {}", asset_path),
-                        &time,
-                    );
+                    session.log_success(format!("Registered sprite: {}", asset_path), &time);
                 }
                 Err(e) => {
                     session.log_error(format!("Failed to register sprite: {}", e), &time);
@@ -569,8 +567,8 @@ pub fn main_ui_system(
             .as_ref()
             .map(|p| config.is_extended_path(p))
             .unwrap_or(false);
-        let needs_extended_prefix =
-            is_extended && (session.file_type == crate::data::FileType::MobPatch || is_extended_mob);
+        let needs_extended_prefix = is_extended
+            && (session.file_type == crate::data::FileType::MobPatch || is_extended_mob);
         let mob_path = if needs_extended_prefix {
             format!("extended://{}", asset_path)
         } else {
@@ -952,8 +950,7 @@ fn render_new_patch_dialog(
             // Dropdown for selecting base mob
             let selected_display = dialog
                 .selected_mob_ref
-                .as_ref()
-                .map(|s| s.as_str())
+                .as_deref()
                 .unwrap_or("(select a mob)");
 
             egui::ComboBox::from_label("")
@@ -1025,17 +1022,17 @@ fn render_new_patch_dialog(
         let patch_path = extended_dir.join(format!("{}.mobpatch", mob_ref));
 
         // Create parent directories if needed
-        if let Some(parent) = patch_path.parent() {
-            if let Err(e) = std::fs::create_dir_all(parent) {
-                dialog.error_message = Some(format!("Failed to create directory: {}", e));
-                bevy::log::error!(
-                    "Failed to create parent directory for patch {:?}: {}",
-                    patch_path,
-                    e
-                );
-                *should_create = false;
-                return;
-            }
+        if let Some(parent) = patch_path.parent()
+            && let Err(e) = std::fs::create_dir_all(parent)
+        {
+            dialog.error_message = Some(format!("Failed to create directory: {}", e));
+            bevy::log::error!(
+                "Failed to create parent directory for patch {:?}: {}",
+                patch_path,
+                e
+            );
+            *should_create = false;
+            return;
         }
 
         // Extract the mob name from the ref (last component) and convert to Title Case
@@ -1099,10 +1096,8 @@ fn render_registration_dialog(
                     let cwd = match std::env::current_dir() {
                         Ok(dir) => dir,
                         Err(e) => {
-                            session.log_error(
-                                format!("Failed to get working directory: {}", e),
-                                time,
-                            );
+                            session
+                                .log_error(format!("Failed to get working directory: {}", e), time);
                             dialog.show = false;
                             return;
                         }

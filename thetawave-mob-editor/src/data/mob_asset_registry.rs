@@ -45,7 +45,11 @@ impl MobAssetRegistry {
     /// Get registration info for a file path
     ///
     /// Returns the registration entry if the file is registered, None otherwise.
-    pub fn get_registration(&self, path: &Path, config: &EditorConfig) -> Option<&RegisteredMobAsset> {
+    pub fn get_registration(
+        &self,
+        path: &Path,
+        config: &EditorConfig,
+    ) -> Option<&RegisteredMobAsset> {
         // Determine if this is an extended path
         let is_extended = config.is_extended_path(path);
 
@@ -54,11 +58,10 @@ impl MobAssetRegistry {
 
         // Find matching entry
         self.entries.iter().find(|entry| {
-            let source_matches = match (is_extended, entry.source) {
-                (true, AssetSource::Extended) => true,
-                (false, AssetSource::Base) => true,
-                _ => false,
-            };
+            let source_matches = matches!(
+                (is_extended, entry.source),
+                (true, AssetSource::Extended) | (false, AssetSource::Base)
+            );
 
             source_matches && entry.asset_path == relative_path
         })

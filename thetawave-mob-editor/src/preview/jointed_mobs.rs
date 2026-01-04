@@ -153,10 +153,7 @@ fn resolve_jointed_mobs(
 
                 // Load the referenced mob
                 let Some(mob_ref_str) = mob_ref else {
-                    warn!(
-                        "Jointed mob chain entry at depth {} has no mob_ref",
-                        depth
-                    );
+                    warn!("Jointed mob chain entry at depth {} has no mob_ref", depth);
                     continue;
                 };
 
@@ -212,10 +209,7 @@ fn resolve_jointed_mobs(
         } else {
             // Non-chain jointed mob
             let Some(mob_ref_str) = mob_ref else {
-                warn!(
-                    "Jointed mob entry at depth {} has no mob_ref",
-                    depth
-                );
+                warn!("Jointed mob entry at depth {} has no mob_ref", depth);
                 continue;
             };
 

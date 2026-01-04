@@ -128,7 +128,12 @@ pub fn render_string_field(
     let mut result = FieldResult::NoChange;
     ui.horizontal(|ui| {
         render_field_indicators(ui, is_patched, is_patch_file, is_modified);
-        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched, is_modified)));
+        ui.label(egui::RichText::new(label).color(label_color(
+            ui,
+            is_patch_file,
+            is_patched,
+            is_modified,
+        )));
 
         let mut value = current_value.to_string();
         if ui.text_edit_singleline(&mut value).changed() {
@@ -154,7 +159,12 @@ pub fn render_bool_field(
     let mut result = FieldResult::NoChange;
     ui.horizontal(|ui| {
         render_field_indicators(ui, is_patched, is_patch_file, is_modified);
-        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched, is_modified)));
+        ui.label(egui::RichText::new(label).color(label_color(
+            ui,
+            is_patch_file,
+            is_patched,
+            is_modified,
+        )));
 
         let mut value = current_value;
         if ui.checkbox(&mut value, "").changed() {
@@ -181,7 +191,12 @@ pub fn render_int_field(
     let mut result = FieldResult::NoChange;
     ui.horizontal(|ui| {
         render_field_indicators(ui, is_patched, is_patch_file, is_modified);
-        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched, is_modified)));
+        ui.label(egui::RichText::new(label).color(label_color(
+            ui,
+            is_patch_file,
+            is_patched,
+            is_modified,
+        )));
 
         let mut value = current_value;
         if ui
@@ -212,7 +227,12 @@ pub fn render_float_field(
     let mut result = FieldResult::NoChange;
     ui.horizontal(|ui| {
         render_field_indicators(ui, is_patched, is_patch_file, is_modified);
-        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched, is_modified)));
+        ui.label(egui::RichText::new(label).color(label_color(
+            ui,
+            is_patch_file,
+            is_patched,
+            is_modified,
+        )));
 
         let mut value = current_value;
         let mut drag = egui::DragValue::new(&mut value).range(range);
@@ -246,7 +266,12 @@ pub fn render_vec2_field(
 
     ui.horizontal(|ui| {
         render_field_indicators(ui, is_patched, is_patch_file, is_modified);
-        ui.label(egui::RichText::new(label).color(label_color(ui, is_patch_file, is_patched, is_modified)));
+        ui.label(egui::RichText::new(label).color(label_color(
+            ui,
+            is_patch_file,
+            is_patched,
+            is_modified,
+        )));
 
         if render_reset_button(ui, is_patched, is_patch_file) {
             result = FieldResult::Reset;
