@@ -2,6 +2,7 @@
 # Moves toward player with tentacles attached.
 
 name = "Xhitara Cyclusk"
+sprite = "media/aseprite/xhitara_cyclusk_mob.aseprite"
 
 linear_acceleration = [0.2, 0.2]
 max_linear_speed = [20.0, 20.0]

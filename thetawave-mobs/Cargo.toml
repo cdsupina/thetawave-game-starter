@@ -19,6 +19,8 @@ bevy = { workspace = true, features = [
 bevy_aseprite_ultra.workspace = true
 avian2d.workspace = true
 serde.workspace = true
+strum.workspace = true
+strum_macros.workspace = true
 rand.workspace = true
 bevy_behave.workspace = true
 bevy_asset_loader.workspace = true

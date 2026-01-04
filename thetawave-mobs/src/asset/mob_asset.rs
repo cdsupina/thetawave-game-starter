@@ -1,7 +1,7 @@
 //! MobAsset type definition for .mob files.
 
 use bevy::math::Vec2;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use thetawave_physics::{ThetawaveCollider, ThetawavePhysicsLayer};
 
 use crate::{
@@ -124,9 +124,11 @@ pub struct MobAsset {
     pub projectile_range_seconds: f32,
 
     // === Visual ===
-    /// Override sprite key (defaults to mob file stem if not specified)
+    /// Sprite file path relative to assets directory.
+    /// Example: "media/aseprite/xhitara_grunt_mob.aseprite"
+    /// Defaults to empty string for new mobs - must be set before spawning in game.
     #[serde(default)]
-    pub sprite_key: Option<String>,
+    pub sprite: String,
 
     /// Decorative sprites attached to this mob
     #[serde(default)]
@@ -157,7 +159,7 @@ pub struct MobAsset {
 }
 
 /// Reference to a jointed mob using a file path instead of a string key.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct JointedMobRef {
     /// Identifier key for this joint (used by behaviors)
@@ -193,7 +195,7 @@ pub struct JointedMobRef {
 }
 
 /// Describes angle limits for a revolute joint.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct JointAngleLimit {
     /// Minimum angle (degrees)
@@ -205,7 +207,7 @@ pub struct JointAngleLimit {
 }
 
 /// Configuration for creating a chain of jointed mobs.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct MobChain {
     /// Number of links in the chain
@@ -220,7 +222,7 @@ pub struct MobChain {
 }
 
 /// Settings for random chain length termination.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RandomMobChain {
     /// Minimum guaranteed chain length

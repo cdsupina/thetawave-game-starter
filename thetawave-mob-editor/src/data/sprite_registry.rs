@@ -1,0 +1,101 @@
+//! Sprite registry for tracking available sprites.
+//!
+//! The [`SpriteRegistry`] maintains a list of all registered sprites
+//! from both base and extended `game.assets.ron` files.
+
+use bevy::prelude::Resource;
+
+use super::AssetSource;
+
+/// A registered sprite entry
+#[derive(Debug, Clone)]
+pub struct RegisteredSprite {
+    /// The path as stored in .mob files (e.g., "media/aseprite/xhitara_grunt_mob.aseprite")
+    pub asset_path: String,
+    /// Display name for UI (file stem, e.g., "xhitara_grunt_mob")
+    pub display_name: String,
+    /// Whether this is from base or extended assets
+    pub source: AssetSource,
+}
+
+impl RegisteredSprite {
+    /// Get the path to use when saving to a .mob file
+    pub fn mob_path(&self) -> String {
+        self.asset_path.clone()
+    }
+
+    /// Get the path to use when saving to a .mobpatch file
+    /// Extended sprites get the extended:// prefix
+    pub fn mobpatch_path(&self) -> String {
+        match self.source {
+            AssetSource::Extended => format!("extended://{}", self.asset_path),
+            AssetSource::Base => self.asset_path.clone(),
+        }
+    }
+}
+
+/// Resource containing all registered sprites from .assets.ron files
+#[derive(Resource, Default)]
+pub struct SpriteRegistry {
+    /// All registered sprites
+    pub sprites: Vec<RegisteredSprite>,
+    /// Whether the registry needs to be rescanned
+    pub needs_refresh: bool,
+    /// Parse errors encountered during scanning
+    pub parse_errors: Vec<String>,
+}
+
+impl SpriteRegistry {
+    /// Find a sprite by its asset path (with or without extended:// prefix)
+    ///
+    /// When the path has an `extended://` prefix, only extended sprites are matched.
+    /// When the path has no prefix, only base sprites are matched.
+    /// This ensures that base and extended sprites with the same relative path
+    /// are treated as distinct entries.
+    pub fn find_by_path(&self, path: &str) -> Option<&RegisteredSprite> {
+        if let Some(normalized) = path.strip_prefix("extended://") {
+            // Path has extended:// prefix - only match extended sprites
+            self.sprites
+                .iter()
+                .find(|s| s.asset_path == normalized && s.source == AssetSource::Extended)
+        } else {
+            // No prefix - only match base sprites
+            self.sprites
+                .iter()
+                .find(|s| s.asset_path == path && s.source == AssetSource::Base)
+        }
+    }
+
+    /// Check if a sprite path is registered
+    pub fn is_registered(&self, path: &str) -> bool {
+        self.find_by_path(path).is_some()
+    }
+
+    /// Get display name for a path, or the path itself if not found
+    pub fn display_name_for(&self, path: &str) -> String {
+        self.find_by_path(path)
+            .map(|s| s.display_name.clone())
+            .unwrap_or_else(|| {
+                // Extract file stem as fallback display name
+                std::path::Path::new(path)
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or(path)
+                    .to_string()
+            })
+    }
+
+    /// Get all base sprites
+    pub fn base_sprites(&self) -> impl Iterator<Item = &RegisteredSprite> {
+        self.sprites
+            .iter()
+            .filter(|s| s.source == AssetSource::Base)
+    }
+
+    /// Get all extended sprites
+    pub fn extended_sprites(&self) -> impl Iterator<Item = &RegisteredSprite> {
+        self.sprites
+            .iter()
+            .filter(|s| s.source == AssetSource::Extended)
+    }
+}

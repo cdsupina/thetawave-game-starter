@@ -2,8 +2,8 @@
 # Left arm component of the Ferritharax boss.
 
 name = "Ferritharax Left Arm"
+sprite = "media/aseprite/ferritharax_left_arm_mob.aseprite"
 spawnable = false
-sprite_key = "ferritharax_left_arm_mob"
 
 rotation_locked = false
 

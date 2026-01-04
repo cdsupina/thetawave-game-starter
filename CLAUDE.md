@@ -11,6 +11,9 @@ cargo run --bin thetawave-test-game
 # Development with extended data files (must run from thetawave-test-game directory)
 cd thetawave-test-game && cargo run
 
+# Mob Editor (visual editor for .mob files)
+cargo run --bin mob-editor
+
 # Check compilation
 cargo check
 
@@ -27,7 +30,7 @@ cd thetawave-test-game && trunk build   # Production build to dist/
 
 ## Architecture Overview
 
-This is a Bevy 0.17 game engine project organized as a Cargo workspace with 12 crates. The main plugin (`ThetawaveStarterPlugin` in `thetawave-starter`) orchestrates all subsystems.
+This is a Bevy 0.17 game engine project organized as a Cargo workspace with 13 crates. The main plugin (`ThetawaveStarterPlugin` in `thetawave-starter`) orchestrates all subsystems.
 
 ### Crate Responsibilities
 
@@ -44,6 +47,7 @@ This is a Bevy 0.17 game engine project organized as a Cargo workspace with 12 c
 | `thetawave-backgrounds` | Background and planet rendering using Bevy 3D |
 | `thetawave-camera` | 2D/3D camera zoom via events |
 | `thetawave-debug` | World inspector via `bevy-inspector-egui`, auto-generated spawn menu (feature-gated) |
+| `thetawave-mob-editor` | Visual editor for `.mob` files with live preview, sprite browser, asset registration |
 | `thetawave-test-game` | Example game binary |
 
 ### Key Patterns

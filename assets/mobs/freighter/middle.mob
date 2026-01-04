@@ -2,6 +2,7 @@
 # Middle cargo component of a Freighter.
 
 name = "Freighter Middle"
+sprite = "media/aseprite/freighter_middle_mob.aseprite"
 spawnable = false
 
 rotation_locked = false

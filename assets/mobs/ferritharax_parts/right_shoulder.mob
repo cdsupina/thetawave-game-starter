@@ -2,8 +2,8 @@
 # Right shoulder component of the Ferritharax boss.
 
 name = "Ferritharax Right Shoulder"
+sprite = "media/aseprite/ferritharax_right_shoulder_mob.aseprite"
 spawnable = false
-sprite_key = "ferritharax_right_shoulder_mob"
 
 rotation_locked = false
 

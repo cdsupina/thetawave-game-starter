@@ -1,9 +1,36 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use strum_macros::{AsRefStr, EnumIter, EnumString};
 
 use super::data::MobBehaviorType;
 
+/// Simple enum representing behavior node types for UI purposes.
+/// This mirrors the variants of `BehaviorNodeData` without the associated data.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter, AsRefStr, EnumString)]
+pub enum BehaviorNodeType {
+    Forever,
+    Sequence,
+    Fallback,
+    While,
+    IfThen,
+    Wait,
+    Action,
+    Trigger,
+}
+
+impl BehaviorNodeType {
+    /// Check if this is a control node (has children array).
+    pub fn is_control_node(&self) -> bool {
+        matches!(self, Self::Forever | Self::Sequence | Self::Fallback)
+    }
+
+    /// Check if this is a leaf node (no children).
+    pub fn is_leaf_node(&self) -> bool {
+        matches!(self, Self::Wait | Self::Action | Self::Trigger)
+    }
+}
+
 /// Represents a node in the behavior tree that can be deserialized from TOML
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type", deny_unknown_fields)]
 pub enum BehaviorNodeData {
     /// Control Flow Nodes

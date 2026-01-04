@@ -2,7 +2,7 @@
 # Main component of the Ferritharax boss. Vulnerable in head/eye. Uses arms to protect itself.
 
 name = "Ferritharax"
-sprite_key = "ferritharax_head_mob"
+sprite = "media/aseprite/ferritharax_head_mob.aseprite"
 
 linear_acceleration = [0.3, 0.3]
 max_linear_speed = [20.0, 20.0]

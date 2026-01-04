@@ -5,7 +5,8 @@ A complete starter template for creating Thetawave-style space shooter games usi
 ## Key Features
 - **Complete Game Systems**: Character selection, physics, persistence, audio, particle effects
 - **Extended Assets**: Override and extend game data (characters, mobs, projectiles) via TOML and `.mob` files
-- **Modular Architecture**: 12 specialized crates for clean separation of concerns
+- **Modular Architecture**: 13 specialized crates for clean separation of concerns
+- **Visual Mob Editor**: Standalone editor for creating and editing `.mob` files with live preview
 - **Cross-Platform**: Supports desktop and WASM (WebGPU) deployment
 - **Developer Friendly**: Debug menu with auto-generated spawn lists, world inspector, behavior tree visualization
 
@@ -65,6 +66,22 @@ trunk build
 # Deploy dist/ contents to web server for production
 ```
 
+## Mob Editor
+
+A visual editor for creating and editing `.mob` and `.mobpatch` files:
+
+```bash
+# Run from workspace root
+cargo run --bin mob-editor
+```
+
+Features:
+- **File Browser**: Navigate base and extended mob directories
+- **Live Preview**: See mob sprites, colliders, and decorations in real-time
+- **Sprite Browser**: Browse and select sprites from registered assets
+- **Asset Registration**: Register new mobs/sprites to their respective `.assets.ron` files
+- **Patch Creation**: Create `.mobpatch` files that override specific fields of base mobs
+
 ## Extended Assets System
 
 ### Media Assets
@@ -100,7 +117,7 @@ Customize player characters in `thetawave-test-game/assets/data/character_attrib
 
 ## Project Architecture
 
-The workspace contains 12 specialized crates:
+The workspace contains 13 specialized crates:
 
 | Crate | Purpose |
 |-------|---------|
@@ -115,6 +132,7 @@ The workspace contains 12 specialized crates:
 | `thetawave-backgrounds` | Background and planet rendering |
 | `thetawave-camera` | 2D/3D camera zoom via events |
 | `thetawave-debug` | World inspector via `bevy-inspector-egui` (feature-gated) |
+| `thetawave-mob-editor` | Visual editor for `.mob` files with live preview and sprite browser |
 | `thetawave-test-game` | Example game binary |
 
 The following dependency graph shows the modular architecture and relationships between crates:

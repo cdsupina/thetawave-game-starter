@@ -13,11 +13,10 @@ Cargo.lock
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
 
-# Ignore test game assets except .example templates
+# Ignore test game assets
 # Media files (images, audio, models) are not open licensed
 thetawave-test-game/assets/media/
-# Actual config files are user-specific, only .example templates are tracked
-thetawave-test-game/assets/*.assets.ron
+# Data files contain user-specific customizations
 thetawave-test-game/assets/data/*.toml
 thetawave-test-game/assets/mobs/**/*.mob
 thetawave-test-game/assets/mobs/**/*.mobpatch

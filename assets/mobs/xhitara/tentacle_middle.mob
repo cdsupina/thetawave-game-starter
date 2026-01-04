@@ -2,6 +2,7 @@
 # Middle segment of a tentacle chain.
 
 name = "Xhitara Tentacle Middle"
+sprite = "media/aseprite/xhitara_tentacle_middle_mob.aseprite"
 spawnable = false
 
 rotation_locked = false

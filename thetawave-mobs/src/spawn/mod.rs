@@ -37,21 +37,32 @@ use crate::{
 };
 
 /// Bundle containing all the core physics and gameplay components for a mob entity.
+/// Note: Collider is added separately to support mobs with no colliders.
 #[derive(Bundle)]
 struct MobComponentBundle {
     name: Name,
     restitution: Restitution,
     friction: Friction,
-    collision_layers: CollisionLayers,
-    collider: Collider,
     locked_axes: LockedAxes,
-    collider_density: ColliderDensity,
     mob_attributes: MobAttributesComponent,
     health: HealthComponent,
 }
 
-impl From<&MobAsset> for MobComponentBundle {
-    fn from(mob: &MobAsset) -> Self {
+/// Bundle for collider-related components (only added when mob has colliders)
+#[derive(Bundle)]
+struct MobColliderBundle {
+    collision_layers: CollisionLayers,
+    collider: Collider,
+    collider_density: ColliderDensity,
+}
+
+impl MobColliderBundle {
+    /// Create collider bundle from mob asset, returns None if mob has no colliders
+    fn from_mob(mob: &MobAsset) -> Option<Self> {
+        if mob.colliders.is_empty() {
+            return None;
+        }
+
         // Calculate collision layers
         let mut membership: u32 = 0;
         for layer in &mob.collision_layer_membership {
@@ -76,6 +87,16 @@ impl From<&MobAsset> for MobComponentBundle {
                 .collect(),
         );
 
+        Some(MobColliderBundle {
+            collision_layers: CollisionLayers::new(membership, filter),
+            collider,
+            collider_density: ColliderDensity(mob.collider_density),
+        })
+    }
+}
+
+impl From<&MobAsset> for MobComponentBundle {
+    fn from(mob: &MobAsset) -> Self {
         // Determine locked axes
         let locked_axes = if mob.rotation_locked {
             LockedAxes::ROTATION_LOCKED
@@ -87,10 +108,7 @@ impl From<&MobAsset> for MobComponentBundle {
             name: Name::new(mob.name.clone()),
             restitution: Restitution::new(mob.restitution),
             friction: Friction::new(mob.friction),
-            collision_layers: CollisionLayers::new(membership, filter),
-            collider,
             locked_axes,
-            collider_density: ColliderDensity(mob.collider_density),
             mob_attributes: MobAttributesComponent {
                 linear_acceleration: mob.linear_acceleration,
                 linear_deceleration: mob.linear_deceleration,
@@ -108,13 +126,31 @@ impl From<&MobAsset> for MobComponentBundle {
     }
 }
 
-/// Get the Aseprite handle from a decoration name string using asset resolver
-fn get_mob_decoration_sprite(
-    decoration_name: &str,
+/// Strip the extended:// prefix from a path if present
+fn strip_extended_prefix(path: &str) -> &str {
+    path.strip_prefix("extended://").unwrap_or(path)
+}
+
+/// Extract asset key from sprite path.
+/// "media/aseprite/xhitara_grunt_mob.aseprite" → "xhitara_grunt_mob"
+/// "extended://media/aseprite/foo.aseprite" → "foo"
+fn sprite_path_to_key(path: &str) -> &str {
+    let path = strip_extended_prefix(path);
+    std::path::Path::new(path)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or(path)
+}
+
+/// Get the Aseprite handle from a sprite path using asset resolver.
+/// Supports extended:// prefix to hint at extended asset location.
+fn get_sprite_from_path(
+    sprite_path: &str,
     extended_assets: &ExtendedGameAssets,
     game_assets: &GameAssets,
 ) -> Result<Handle<Aseprite>, AssetError> {
-    AssetResolver::get_game_sprite(decoration_name, extended_assets, game_assets)
+    let key = sprite_path_to_key(sprite_path);
+    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
 }
 
 fn get_particle_effect_str(projectile_type: &ProjectileType) -> &str {
@@ -225,17 +261,8 @@ fn spawn_mob(
             normalized_ref
         )))?;
 
-    // Get the sprite key: either the specified sprite_key or derive from normalized mob_ref
-    // Derive: "xhitara/launcher" -> "xhitara_launcher_mob"
-    let derived_sprite_key;
-    let sprite_key = if let Some(key) = &mob.sprite_key {
-        key.as_str()
-    } else {
-        // Normalize the mob_ref and convert to sprite format
-        // "xhitara/launcher" -> "xhitara_launcher_mob"
-        derived_sprite_key = format!("{}_mob", normalized_ref.replace('/', "_"));
-        &derived_sprite_key
-    };
+    // Load sprite using the path from the mob asset
+    let sprite_handle = get_sprite_from_path(&mob.sprite, extended_assets, game_assets)?;
 
     // Spawn the main anchor entity with all core components
     let mut entity_commands = cmds.spawn((
@@ -243,7 +270,7 @@ fn spawn_mob(
         MobMarker::new(normalized_ref),
         AseAnimation {
             animation: Animation::tag("idle"),
-            aseprite: AssetResolver::get_game_sprite(sprite_key, extended_assets, game_assets)?,
+            aseprite: sprite_handle,
         },
         Sprite::default(),
         Cleanup::<AppState> {
@@ -253,6 +280,11 @@ fn spawn_mob(
         Transform::from_xyz(position.x, position.y, mob.z_level)
             .with_rotation(Quat::from_rotation_z(rotation.to_radians())),
     ));
+
+    // Add collider bundle only if mob has colliders
+    if let Some(collider_bundle) = MobColliderBundle::from_mob(mob) {
+        entity_commands.insert(collider_bundle);
+    }
 
     if let Some(mob_spawners) = &mob.mob_spawners {
         entity_commands.insert(mob_spawners.clone());
@@ -265,13 +297,13 @@ fn spawn_mob(
     let anchor_id = entity_commands
         .with_children(|parent| {
             // Spawn visual decorations as child entities
-            for (decoration_sprite_stem, pos) in &mob.decorations {
+            for (decoration_sprite_path, pos) in &mob.decorations {
                 parent.spawn((
                     Transform::from_xyz(pos.x, pos.y, 0.0),
                     AseAnimation {
                         animation: Animation::tag("idle"),
-                        aseprite: match get_mob_decoration_sprite(
-                            decoration_sprite_stem,
+                        aseprite: match get_sprite_from_path(
+                            decoration_sprite_path,
                             extended_assets,
                             game_assets,
                         ) {
@@ -289,7 +321,7 @@ fn spawn_mob(
                         },
                     },
                     Sprite::default(),
-                    Name::new(decoration_sprite_stem.clone()),
+                    Name::new(sprite_path_to_key(decoration_sprite_path).to_string()),
                 ));
             }
 

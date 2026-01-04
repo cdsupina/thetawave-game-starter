@@ -2,9 +2,9 @@
 # Start of a short tentacle chain.
 
 name = "Xhitara Tentacle Short"
+sprite = "media/aseprite/xhitara_tentacle_start_mob.aseprite"
 spawnable = false
 
-sprite_key = "xhitara_tentacle_start_mob"
 rotation_locked = false
 restitution = 0.0
 friction = 1.0

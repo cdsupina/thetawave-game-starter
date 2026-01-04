@@ -2,6 +2,7 @@
 # Moves down and shoots projectiles in a ring around it. Can be spun around when hit.
 
 name = "Xhitara Gyro"
+sprite = "media/aseprite/xhitara_gyro_mob.aseprite"
 
 rotation_locked = false
 

@@ -6,18 +6,32 @@ use bevy::{
     reflect::Reflect,
     time::{Timer, TimerMode},
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use strum_macros::{AsRefStr, EnumIter, EnumString};
 use thetawave_core::Faction;
 use thetawave_physics::ThetawaveCollider;
 
-#[derive(Component, Debug, Deserialize, Eq, PartialEq, Hash, Reflect, Clone)]
+#[derive(
+    Component,
+    Debug,
+    Serialize,
+    Deserialize,
+    Eq,
+    PartialEq,
+    Hash,
+    Reflect,
+    Clone,
+    EnumIter,
+    AsRefStr,
+    EnumString,
+)]
 pub enum ProjectileType {
     Bullet,
     Blast,
 }
 
 /// Defines how multiple projectiles are spread when fired
-#[derive(Debug, Deserialize, Clone, Reflect)]
+#[derive(Debug, Serialize, Deserialize, Clone, Reflect)]
 #[serde(deny_unknown_fields)]
 pub enum ProjectileSpread {
     /// Projectiles are evenly distributed in an arc pattern
@@ -193,5 +207,35 @@ impl<'de> Deserialize<'de> for ProjectileSpawner {
             count: helper.count,
             projectile_spread: helper.projectile_spread,
         })
+    }
+}
+
+impl Serialize for ProjectileSpawner {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+
+        let mut state = serializer.serialize_struct("ProjectileSpawner", 11)?;
+        state.serialize_field("timer", &self.timer.duration().as_secs_f32())?;
+        state.serialize_field("position", &self.position)?;
+        state.serialize_field("rotation", &self.rotation)?;
+        state.serialize_field("projectile_type", &self.projectile_type)?;
+        state.serialize_field("faction", &self.faction)?;
+        state.serialize_field("speed_multiplier", &self.speed_multiplier)?;
+        state.serialize_field("damage_multiplier", &self.damage_multiplier)?;
+        state.serialize_field("range_seconds_multiplier", &self.range_seconds_multiplier)?;
+        state.serialize_field(
+            "pre_spawn_animation_start_time",
+            &self.pre_spawn_animation_start_time,
+        )?;
+        state.serialize_field(
+            "pre_spawn_animation_end_time",
+            &self.pre_spawn_animation_end_time,
+        )?;
+        state.serialize_field("count", &self.count)?;
+        state.serialize_field("projectile_spread", &self.projectile_spread)?;
+        state.end()
     }
 }

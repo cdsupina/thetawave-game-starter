@@ -1,5 +1,6 @@
 use bevy::{color::Color, ecs::component::Component, ecs::resource::Resource, reflect::Reflect};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use strum_macros::{AsRefStr, EnumIter};
 
 // Faction color constants
 pub const ALLY_BASE_COLOR: Color = Color::srgba(3.0, 3.0, 0.0, 1.0); // Yellow with bloom
@@ -18,7 +19,7 @@ pub fn with_bloom(color: Color, bloom: f32) -> Color {
 }
 
 /// Used for designating factions for projectiles
-#[derive(Debug, Clone, Reflect, Deserialize, Component)]
+#[derive(Debug, Clone, Reflect, Serialize, Deserialize, Component, EnumIter, AsRefStr)]
 pub enum Faction {
     Ally,
     Enemy,

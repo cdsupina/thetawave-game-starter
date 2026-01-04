@@ -2,6 +2,7 @@
 # Searches for player targets, then pursues them. Explodes on impact.
 
 name = "Xhitara Missile"
+sprite = "media/aseprite/xhitara_missile_mob.aseprite"
 
 rotation_locked = false
 max_linear_speed = [100.0, 100.0]
@@ -15,7 +16,7 @@ colliders = [
 ]
 
 decorations = [
-    ["xhitara_missile_thrusters", [0.0, 10.5]],
+    ["media/aseprite/xhitara_missile_thrusters.aseprite", [0.0, 10.5]],
 ]
 
 [behavior]

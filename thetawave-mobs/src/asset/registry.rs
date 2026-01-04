@@ -443,12 +443,14 @@ mod tests {
         // Minimal valid mob definition
         let toml_str = r#"
             name = "Test Mob"
+            sprite = "media/aseprite/test_mob.aseprite"
         "#;
 
         let value: toml::Value = toml::from_str(toml_str).unwrap();
         let mob: MobAsset = value.try_into().expect("Should deserialize minimal mob");
 
         assert_eq!(mob.name, "Test Mob");
+        assert_eq!(mob.sprite, "media/aseprite/test_mob.aseprite");
         assert!(mob.spawnable); // default
         assert_eq!(mob.health, 50); // default
     }
@@ -457,6 +459,7 @@ mod tests {
     fn test_mob_asset_deserialization_with_colliders() {
         let toml_str = r#"
             name = "Collider Mob"
+            sprite = "media/aseprite/collider_mob.aseprite"
             health = 100
             colliders = [
                 { shape = { Rectangle = [12.0, 15.0] }, position = [0.0, 0.0], rotation = 0.0 }
@@ -477,6 +480,7 @@ mod tests {
     fn test_mob_asset_deserialization_with_behavior() {
         let toml_str = r#"
             name = "Behaving Mob"
+            sprite = "media/aseprite/behaving_mob.aseprite"
 
             [behavior]
             type = "Forever"
@@ -499,6 +503,7 @@ mod tests {
     fn test_mob_asset_deserialization_with_jointed_mobs() {
         let toml_str = r#"
             name = "Parent Mob"
+            sprite = "media/aseprite/parent_mob.aseprite"
 
             [[jointed_mobs]]
             key = "left_arm"
@@ -522,6 +527,7 @@ mod tests {
     fn test_mob_asset_deserialization_rejects_unknown_fields() {
         let toml_str = r#"
             name = "Test Mob"
+            sprite = "media/aseprite/test_mob.aseprite"
             unknown_field = "should fail"
         "#;
 
@@ -535,6 +541,7 @@ mod tests {
     fn test_toml_merge_basic_fields() {
         let base_toml = r#"
             name = "Base Mob"
+            sprite = "media/aseprite/base_mob.aseprite"
             health = 100
             projectile_speed = 50.0
         "#;
@@ -560,6 +567,7 @@ mod tests {
     fn test_toml_merge_nested_tables() {
         let base_toml = r#"
             name = "Base Mob"
+            sprite = "media/aseprite/base_mob.aseprite"
 
             [projectile_spawners]
             [projectile_spawners.spawners.north]
@@ -606,7 +614,10 @@ mod tests {
         let mut raw_values = HashMap::new();
 
         // Valid mob
-        let valid_toml = r#"name = "Valid Mob""#;
+        let valid_toml = r#"
+            name = "Valid Mob"
+            sprite = "media/aseprite/valid_mob.aseprite"
+        "#;
         raw_values.insert("valid/mob".to_string(), toml::from_str(valid_toml).unwrap());
 
         // Invalid mob (unknown field)
@@ -620,7 +631,10 @@ mod tests {
         );
 
         // Another valid mob
-        let valid_toml2 = r#"name = "Another Valid Mob""#;
+        let valid_toml2 = r#"
+            name = "Another Valid Mob"
+            sprite = "media/aseprite/another_valid_mob.aseprite"
+        "#;
         raw_values.insert(
             "another/valid".to_string(),
             toml::from_str(valid_toml2).unwrap(),
