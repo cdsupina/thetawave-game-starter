@@ -16,7 +16,7 @@ use bevy::{
 };
 use rand::{Rng, rngs::ThreadRng};
 use std::ops::RangeInclusive;
-use thetawave_assets::{AssetResolver, BackgroundAssets, ExtendedBackgroundAssets, ModBackgroundAssets};
+use thetawave_assets::{AssetResolver, MergedBackgroundAssets};
 use thetawave_core::{AppState, Cleanup};
 
 // Background properties
@@ -54,15 +54,13 @@ const STAR_POINT_LIGHT_RANGE: f32 = 100.0; // Maximum distance of star light eff
 /// a random planet, and star clusters
 pub(super) fn spawn_bg_system(
     mut cmds: Commands,
-    mod_bg_assets: Res<ModBackgroundAssets>,
-    extended_bg_assets: Res<ExtendedBackgroundAssets>,
-    bg_assets: Res<BackgroundAssets>,
+    bg_assets: Res<MergedBackgroundAssets>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) -> Result {
     // Create a semi-transparent material with a random space background texture
     // that will serve as the backdrop
-    let background_texture = AssetResolver::get_random_space_bg(&mod_bg_assets, &extended_bg_assets, &bg_assets)?;
+    let background_texture = AssetResolver::get_random_space_bg(&bg_assets)?;
 
     let material_handle = materials.add(StandardMaterial {
         base_color_texture: Some(background_texture),
@@ -103,7 +101,7 @@ pub(super) fn spawn_bg_system(
     };
 
     // Spawn a random planet model with rotation behavior
-    let planet_scene = AssetResolver::get_random_planet(&mod_bg_assets, &extended_bg_assets, &bg_assets)?;
+    let planet_scene = AssetResolver::get_random_planet(&bg_assets)?;
 
     cmds.spawn((
         SceneRoot(planet_scene),

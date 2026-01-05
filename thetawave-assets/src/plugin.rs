@@ -28,7 +28,8 @@ use super::{
     data::{BackgroundAssets, GameAssets, MusicAssets, UiAssets},
     systems::{
         get_loading_progress_system, log_game_assets_system, log_main_menu_assets_system,
-        setup_particle_materials_system, unload_game_assets_system,
+        merge_game_assets_system, merge_main_menu_assets_system, setup_particle_materials_system,
+        unload_game_assets_system, unload_merged_game_assets_system,
     },
 };
 
@@ -103,8 +104,18 @@ impl Plugin for ThetawaveAssetsPlugin {
             OnEnter(AppState::GameLoading),
             setup_particle_materials_system,
         )
-        .add_systems(OnEnter(AppState::MainMenu), log_main_menu_assets_system)
-        .add_systems(OnEnter(AppState::Game), log_game_assets_system)
-        .add_systems(OnExit(AppState::Game), unload_game_assets_system);
+        // Merge assets after loading completes (before logging)
+        .add_systems(
+            OnEnter(AppState::MainMenu),
+            (merge_main_menu_assets_system, log_main_menu_assets_system).chain(),
+        )
+        .add_systems(
+            OnEnter(AppState::Game),
+            (merge_game_assets_system, log_game_assets_system).chain(),
+        )
+        .add_systems(
+            OnExit(AppState::Game),
+            (unload_game_assets_system, unload_merged_game_assets_system),
+        );
     }
 }

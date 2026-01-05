@@ -16,7 +16,7 @@ use bevy::{
     transform::components::Transform,
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
-use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ModGameAssets};
+use thetawave_assets::{AssetError, AssetResolver, MergedGameAssets};
 use thetawave_core::{AppState, Cleanup};
 use thetawave_core::{CollisionDamage, Faction};
 use thetawave_particles::SpawnProjectileTrailEffectEvent;
@@ -53,16 +53,14 @@ fn get_projectile_collision_filter(faction: &Faction) -> u32 {
 /// Get the Aseprite handle from a given ProjectileType using asset resolver
 fn get_projectile_sprite(
     projectile_type: &ProjectileType,
-    mod_assets: &ModGameAssets,
-    extended_assets: &ExtendedGameAssets,
-    game_assets: &GameAssets,
+    assets: &MergedGameAssets,
 ) -> Result<Handle<Aseprite>, AssetError> {
     let key = match projectile_type {
         ProjectileType::Bullet => "bullet_projectile",
         ProjectileType::Blast => "blast_projectile",
     };
 
-    AssetResolver::get_game_sprite(key, mod_assets, extended_assets, game_assets)
+    AssetResolver::get_game_sprite(key, assets)
 }
 
 /// Calculate spread velocities based on the spread pattern
@@ -162,9 +160,7 @@ fn calculate_spread_velocities(
 
 pub(crate) fn spawn_projectile_system(
     mut cmds: Commands,
-    game_assets: Res<GameAssets>,
-    extended_assets: Res<ExtendedGameAssets>,
-    mod_assets: Res<ModGameAssets>,
+    game_assets: Res<MergedGameAssets>,
     mut spawn_projectile_event_reader: MessageReader<SpawnProjectileEvent>,
     attributes_res: Res<ProjectileAttributesResource>,
     mut projectile_trail_effect_event_writer: MessageWriter<SpawnProjectileTrailEffectEvent>,
@@ -182,8 +178,6 @@ pub(crate) fn spawn_projectile_system(
             event.damage,
             event.range_seconds,
             &game_assets,
-            &extended_assets,
-            &mod_assets,
             &attributes_res,
             &mut projectile_trail_effect_event_writer,
         )?;
@@ -203,9 +197,7 @@ fn spawn_projectile(
     velocity: Vec2,
     damage: u32,
     range_seconds: f32,
-    game_assets: &GameAssets,
-    extended_assets: &ExtendedGameAssets,
-    mod_assets: &ModGameAssets,
+    game_assets: &MergedGameAssets,
     attributes_res: &ProjectileAttributesResource,
     projectile_trail_effect_event_writer: &mut MessageWriter<SpawnProjectileTrailEffectEvent>,
 ) -> Result<Vec<Entity>, BevyError> {
@@ -240,7 +232,7 @@ fn spawn_projectile(
             Collider::from(projectile_attributes),
             AseAnimation {
                 animation: Animation::tag("idle"),
-                aseprite: get_projectile_sprite(projectile_type, mod_assets, extended_assets, game_assets)?,
+                aseprite: get_projectile_sprite(projectile_type, game_assets)?,
             },
             RigidBody::Dynamic,
             collision_layers,
