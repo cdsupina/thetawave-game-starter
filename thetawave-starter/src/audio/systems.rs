@@ -4,7 +4,8 @@ use bevy_kira_audio::{AudioChannel, AudioControl, AudioTween, prelude::Decibels}
 use bevy_persistent::Persistent;
 use std::time::Duration;
 use thetawave_assets::{
-    AssetResolver, ExtendedMusicAssets, ExtendedUiAssets, MusicAssets, UiAssets,
+    AssetResolver, ExtendedMusicAssets, ExtendedUiAssets, ModMusicAssets, ModUiAssets, MusicAssets,
+    UiAssets,
 };
 use thetawave_core::AppState;
 
@@ -30,6 +31,7 @@ fn amplitude_to_decibels(amplitude: f64) -> Decibels {
 pub(super) fn start_music_system(
     app_audio_assets: Res<MusicAssets>,
     extended_music_assets: Res<ExtendedMusicAssets>,
+    mod_music_assets: Res<ModMusicAssets>,
     mut music_trans_events: MessageWriter<MusicTransitionEvent>,
     mut state_trans_events: MessageReader<StateTransitionEvent<AppState>>,
 ) -> bevy::ecs::error::Result {
@@ -40,6 +42,7 @@ pub(super) fn start_music_system(
                     music_trans_events.write(MusicTransitionEvent {
                         music: AssetResolver::get_music(
                             "main_menu_theme",
+                            &mod_music_assets,
                             &extended_music_assets,
                             &app_audio_assets,
                         )?,
@@ -49,6 +52,7 @@ pub(super) fn start_music_system(
                     music_trans_events.write(MusicTransitionEvent {
                         music: AssetResolver::get_music(
                             "game_theme",
+                            &mod_music_assets,
                             &extended_music_assets,
                             &app_audio_assets,
                         )?,
@@ -63,6 +67,7 @@ pub(super) fn start_music_system(
 
 /// System for playing audio effects, listens for AudioEffectEvents
 pub(super) fn play_effect_system(
+    mod_ui_assets: Res<ModUiAssets>,
     extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
     mut effect_events: MessageReader<AudioEffectEvent>,
@@ -79,6 +84,7 @@ pub(super) fn play_effect_system(
                 AudioEffectEvent::MenuButtonSelected => {
                     ui_audio_channel
                         .play(AssetResolver::get_random_button_press_effect(
+                            &mod_ui_assets,
                             &extended_ui_assets,
                             &ui_assets,
                         )?)
@@ -87,6 +93,7 @@ pub(super) fn play_effect_system(
                 AudioEffectEvent::MenuButtonReleased => {
                     ui_audio_channel
                         .play(AssetResolver::get_random_button_release_effect(
+                            &mod_ui_assets,
                             &extended_ui_assets,
                             &ui_assets,
                         )?)
@@ -95,6 +102,7 @@ pub(super) fn play_effect_system(
                 AudioEffectEvent::MenuButtonConfirm => {
                     ui_audio_channel
                         .play(AssetResolver::get_random_button_confirm_effect(
+                            &mod_ui_assets,
                             &extended_ui_assets,
                             &ui_assets,
                         )?)

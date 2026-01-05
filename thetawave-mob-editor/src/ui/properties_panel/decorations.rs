@@ -47,9 +47,9 @@ pub fn render_sprite_picker(
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
-    // Normalize for comparison (strip extended:// prefix)
+    // Normalize for comparison (strip game:// prefix)
     let normalized_current = current_sprite
-        .strip_prefix("extended://")
+        .strip_prefix("game://")
         .unwrap_or(current_sprite);
 
     ui.horizontal(|ui| {
@@ -93,8 +93,8 @@ pub fn render_sprite_picker(
                 ui.separator();
 
                 // Base sprites section
-                // Only selected if current sprite has NO extended:// prefix
-                let current_is_extended = current_sprite.starts_with("extended://");
+                // Only selected if current sprite has NO game:// prefix
+                let current_is_extended = current_sprite.starts_with("game://");
                 let base_sprites: Vec<_> = sprite_registry.base_sprites().collect();
                 if !base_sprites.is_empty() {
                     ui.label(
@@ -124,10 +124,10 @@ pub fn render_sprite_picker(
                                 .small()
                                 .color(PATCHED_COLOR),
                         );
-                        // Extended sprites need extended:// prefix for patches AND extended mobs
+                        // Extended sprites need game:// prefix for patches AND extended mobs
                         let needs_extended_prefix = is_patch || session.is_extended_mob(config);
                         for sprite in extended_sprites {
-                            // Only selected if current sprite HAS extended:// prefix
+                            // Only selected if current sprite HAS game:// prefix
                             let is_selected =
                                 current_is_extended && normalized_current == sprite.asset_path;
                             if ui
@@ -460,9 +460,9 @@ fn render_decoration_sprite_picker(
         register_sprite: None,
     };
 
-    // Normalize for comparison (strip extended:// prefix)
+    // Normalize for comparison (strip game:// prefix)
     let normalized_current = current_sprite
-        .strip_prefix("extended://")
+        .strip_prefix("game://")
         .unwrap_or(current_sprite);
 
     ui.horizontal(|ui| {
@@ -496,8 +496,8 @@ fn render_decoration_sprite_picker(
                     ui.separator();
 
                     // Base sprites section
-                    // Only selected if current sprite has NO extended:// prefix
-                    let current_is_extended = current_sprite.starts_with("extended://");
+                    // Only selected if current sprite has NO game:// prefix
+                    let current_is_extended = current_sprite.starts_with("game://");
                     let base_sprites: Vec<_> = sprite_registry.base_sprites().collect();
                     if !base_sprites.is_empty() {
                         ui.label(
@@ -527,10 +527,10 @@ fn render_decoration_sprite_picker(
                                     .small()
                                     .color(PATCHED_COLOR),
                             );
-                            // Extended sprites need extended:// prefix for patches AND extended mobs
+                            // Extended sprites need game:// prefix for patches AND extended mobs
                             let needs_extended_prefix = is_patch || session.is_extended_mob(config);
                             for sprite in extended_sprites {
-                                // Only selected if current sprite HAS extended:// prefix
+                                // Only selected if current sprite HAS game:// prefix
                                 let is_selected =
                                     current_is_extended && normalized_current == sprite.asset_path;
                                 if ui

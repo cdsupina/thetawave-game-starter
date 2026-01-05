@@ -51,7 +51,9 @@ strum.workspace = true
 winit.workspace = true
 image.workspace = true
 itertools.workspace = true
-bevy_embedded_assets.workspace = true
+include_dir.workspace = true
+futures-io.workspace = true
+futures-lite.workspace = true
 
 bevy_asset_loader = { workspace = true }
 

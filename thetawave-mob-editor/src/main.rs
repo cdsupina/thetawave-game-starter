@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use bevy::{
     asset::{AssetPlugin, UnapprovedPathMode},
     prelude::*,
@@ -7,14 +9,14 @@ use bevy::{
 use thetawave_mob_editor::MobEditorPlugin;
 
 /// Find the assets directory by searching up from the current working directory
-fn find_assets_path() -> String {
+fn find_assets_path() -> PathBuf {
     let cwd = std::env::current_dir().expect("Failed to get current working directory");
 
     // Try current directory first
     let assets_in_cwd = cwd.join("assets");
     if assets_in_cwd.join("media/aseprite").exists() {
         println!("Found assets at: {:?}", assets_in_cwd);
-        return assets_in_cwd.to_string_lossy().to_string();
+        return assets_in_cwd;
     }
 
     // Try parent directories
@@ -25,20 +27,44 @@ fn find_assets_path() -> String {
             let assets_path = check_dir.join("assets");
             if assets_path.join("media/aseprite").exists() {
                 println!("Found assets at: {:?}", assets_path);
-                return assets_path.to_string_lossy().to_string();
+                return assets_path;
             }
         }
     }
 
     // Fallback - just use "assets" and hope for the best
     println!("Warning: Could not find assets directory, using 'assets'");
-    "assets".to_string()
+    PathBuf::from("assets")
+}
+
+/// Find or create the mods directory relative to the assets directory
+fn find_mods_path(assets_path: &PathBuf) -> PathBuf {
+    // Mods directory is a sibling of assets (e.g., assets/../mods)
+    let mods_path = assets_path
+        .parent()
+        .map(|p| p.join("mods"))
+        .unwrap_or_else(|| PathBuf::from("mods"));
+
+    // Create mods/mobs directory if it doesn't exist
+    let mods_mobs_path = mods_path.join("mobs");
+    if !mods_mobs_path.exists() {
+        if let Err(e) = std::fs::create_dir_all(&mods_mobs_path) {
+            println!("Warning: Could not create mods directory: {}", e);
+        } else {
+            println!("Created mods directory at: {:?}", mods_mobs_path);
+        }
+    } else {
+        println!("Found mods at: {:?}", mods_mobs_path);
+    }
+
+    mods_mobs_path
 }
 
 fn main() {
     // Determine the correct assets path before building the app
     let assets_path = find_assets_path();
-    println!("Using assets path: {}", assets_path);
+    let mods_path = find_mods_path(&assets_path);
+    println!("Using assets path: {:?}", assets_path);
 
     App::new()
         .add_plugins(
@@ -63,7 +89,8 @@ fn main() {
                 //
                 // 1. Editor loads assets from multiple directory trees:
                 //    - Base assets: assets/mobs/
-                //    - Extended assets: thetawave-test-game/assets/mobs/
+                //    - Game assets: thetawave-test-game/assets/mobs/
+                //    - Mods assets: mods/mobs/
                 //    - Sprite files: media/aseprite/
                 //
                 // 2. Security mitigations in place:
@@ -78,11 +105,16 @@ fn main() {
                 //    - Asset loading restricted to discovered directory trees
                 //    - No network or remote path support
                 .set(AssetPlugin {
-                    file_path: assets_path,
+                    file_path: assets_path.to_string_lossy().to_string(),
                     unapproved_path_mode: UnapprovedPathMode::Allow,
                     ..default()
                 }),
         )
-        .add_plugins(MobEditorPlugin::default())
+        .add_plugins(MobEditorPlugin {
+            base_assets_dir: PathBuf::from("assets/mobs"),
+            game_assets_dir: Some(PathBuf::from("thetawave-test-game/assets/mobs")),
+            mods_assets_dir: Some(mods_path),
+            show_base_mobs: true,
+        })
         .run();
 }

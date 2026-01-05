@@ -20,7 +20,7 @@ use bevy::{
 };
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation, Aseprite};
 use bevy_behave::prelude::BehaveTree;
-use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets};
+use thetawave_assets::{AssetError, AssetResolver, ExtendedGameAssets, GameAssets, ModGameAssets};
 #[cfg(feature = "debug")]
 use thetawave_core::LoggingSettings;
 use thetawave_core::{AppState, Cleanup, HealthComponent};
@@ -126,14 +126,14 @@ impl From<&MobAsset> for MobComponentBundle {
     }
 }
 
-/// Strip the extended:// prefix from a path if present
+/// Strip the game:// prefix from a path if present
 fn strip_extended_prefix(path: &str) -> &str {
-    path.strip_prefix("extended://").unwrap_or(path)
+    path.strip_prefix("game://").unwrap_or(path)
 }
 
 /// Extract asset key from sprite path.
 /// "media/aseprite/xhitara_grunt_mob.aseprite" → "xhitara_grunt_mob"
-/// "extended://media/aseprite/foo.aseprite" → "foo"
+/// "game://media/aseprite/foo.aseprite" → "foo"
 fn sprite_path_to_key(path: &str) -> &str {
     let path = strip_extended_prefix(path);
     std::path::Path::new(path)
@@ -143,14 +143,15 @@ fn sprite_path_to_key(path: &str) -> &str {
 }
 
 /// Get the Aseprite handle from a sprite path using asset resolver.
-/// Supports extended:// prefix to hint at extended asset location.
+/// Supports game:// prefix to hint at extended asset location.
 fn get_sprite_from_path(
     sprite_path: &str,
+    mod_assets: &ModGameAssets,
     extended_assets: &ExtendedGameAssets,
     game_assets: &GameAssets,
 ) -> Result<Handle<Aseprite>, AssetError> {
     let key = sprite_path_to_key(sprite_path);
-    AssetResolver::get_game_sprite(key, extended_assets, game_assets)
+    AssetResolver::get_game_sprite(key, mod_assets, extended_assets, game_assets)
 }
 
 fn get_particle_effect_str(projectile_type: &ProjectileType) -> &str {
@@ -206,6 +207,7 @@ pub(super) fn spawn_mob_system(
     mut cmds: Commands,
     game_assets: Res<GameAssets>,
     extended_assets: Res<ExtendedGameAssets>,
+    mod_assets: Res<ModGameAssets>,
     mob_debug_settings: Res<MobDebugSettings>,
     #[cfg(feature = "debug")] logging_settings: Res<LoggingSettings>,
     mut spawn_mob_event_reader: MessageReader<SpawnMobEvent>,
@@ -227,6 +229,7 @@ pub(super) fn spawn_mob_system(
             &mob_registry,
             &game_assets,
             &extended_assets,
+            &mod_assets,
             suppress_jointed_mobs,
             transmitter_entity,
             &mut spawner_effect_event_writer,
@@ -246,6 +249,7 @@ fn spawn_mob(
     mob_registry: &MobRegistry,
     game_assets: &GameAssets,
     extended_assets: &ExtendedGameAssets,
+    mod_assets: &ModGameAssets,
     suppress_jointed_mobs: bool,
     transmitter_entity: Option<Entity>, // entity that can transmit behaviors to the mob
     spawner_effect_event_writer: &mut MessageWriter<SpawnSpawnerEffectEvent>,
@@ -262,7 +266,7 @@ fn spawn_mob(
         )))?;
 
     // Load sprite using the path from the mob asset
-    let sprite_handle = get_sprite_from_path(&mob.sprite, extended_assets, game_assets)?;
+    let sprite_handle = get_sprite_from_path(&mob.sprite, mod_assets, extended_assets, game_assets)?;
 
     // Spawn the main anchor entity with all core components
     let mut entity_commands = cmds.spawn((
@@ -304,6 +308,7 @@ fn spawn_mob(
                         animation: Animation::tag("idle"),
                         aseprite: match get_sprite_from_path(
                             decoration_sprite_path,
+                            mod_assets,
                             extended_assets,
                             game_assets,
                         ) {
@@ -377,6 +382,7 @@ fn spawn_mob(
                     mob_registry,
                     game_assets,
                     extended_assets,
+                    mod_assets,
                     chain_index < actual_length - 1, // Suppress jointed mobs except on the last chain link
                     new_transmitter_entity,
                     spawner_effect_event_writer,
@@ -416,6 +422,7 @@ fn spawn_mob(
                 mob_registry,
                 game_assets,
                 extended_assets,
+                mod_assets,
                 false,
                 new_transmitter_entity,
                 spawner_effect_event_writer,

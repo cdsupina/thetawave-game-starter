@@ -13,7 +13,10 @@ use bevy_behave::{Behave, prelude::Tree};
 use serde::{Deserialize, Serialize};
 use thetawave_core::merge_toml_values;
 
-use super::{ExtendedMobPatches, ExtendedMobs, MobAsset, MobAssets, MobPatch, RawMob};
+use super::{
+    ExtendedMobPatches, ExtendedMobs, MobAsset, MobAssets, MobPatch, ModMobPatches, ModMobs,
+    RawMob,
+};
 use crate::behavior::build_behavior_tree;
 
 /// A strongly-typed reference to a mob definition.
@@ -116,37 +119,37 @@ pub struct MobRegistry {
 impl MobRegistry {
     /// Build the registry from loaded RawMob assets and MobPatches.
     ///
-    /// Processing order:
+    /// Processing order (3-tier: base → game → mods):
     /// 1. Collect raw TOML values from base mobs
-    /// 2. Add extended mobs (new complete mobs)
-    /// 3. Merge patches into base/extended values (if patches exist)
-    /// 4. Deserialize merged values to MobAsset
-    /// 5. Build behavior trees for all mobs
+    /// 2. Add game mobs (can add new or override base)
+    /// 3. Add mod mobs (can add new or override base/game)
+    /// 4. Merge game patches into values
+    /// 5. Merge mod patches into values (can override game patches)
+    /// 6. Deserialize merged values to MobAsset
+    /// 7. Build behavior trees for all mobs
     pub fn build(
         base_assets: &MobAssets,
-        extended_mobs: &ExtendedMobs,
-        extended_patches: &ExtendedMobPatches,
+        game_mobs: &ExtendedMobs,
+        mod_mobs: &ModMobs,
+        game_patches: &ExtendedMobPatches,
+        mod_patches: &ModMobPatches,
         raw_mob_assets: &Assets<RawMob>,
         patch_assets: &Assets<MobPatch>,
     ) -> Self {
         info!(
-            "Building MobRegistry: {} base handles, extended_mobs is {}, extended_patches is {}",
+            "Building MobRegistry: {} base, game_mobs={}, mod_mobs={}, game_patches={}, mod_patches={}",
             base_assets.mobs.len(),
-            if extended_mobs.mobs.is_some() {
-                "Some"
-            } else {
-                "None"
-            },
-            if extended_patches.patches.is_some() {
-                "Some"
-            } else {
-                "None"
-            }
+            if game_mobs.mobs.is_some() { "Some" } else { "None" },
+            if mod_mobs.mobs.is_some() { "Some" } else { "None" },
+            if game_patches.patches.is_some() { "Some" } else { "None" },
+            if mod_patches.patches.is_some() { "Some" } else { "None" }
         );
 
         let mut raw_values = Self::collect_base_mobs(base_assets, raw_mob_assets);
-        Self::add_extended_mobs(&mut raw_values, extended_mobs, raw_mob_assets);
-        Self::apply_patches(&mut raw_values, extended_patches, patch_assets);
+        Self::add_game_mobs(&mut raw_values, game_mobs, raw_mob_assets);
+        Self::add_mod_mobs(&mut raw_values, mod_mobs, raw_mob_assets);
+        Self::apply_game_patches(&mut raw_values, game_patches, patch_assets);
+        Self::apply_mod_patches(&mut raw_values, mod_patches, patch_assets);
         let mobs = Self::deserialize_all(raw_values);
         let behaviors = Self::build_all_behaviors(&mobs);
 
@@ -178,77 +181,151 @@ impl MobRegistry {
         raw_values
     }
 
-    /// Add extended mobs (complete new mobs) to the raw values map.
-    fn add_extended_mobs(
+    /// Add game mobs (complete new mobs) to the raw values map.
+    fn add_game_mobs(
         raw_values: &mut HashMap<String, toml::Value>,
-        extended_mobs: &ExtendedMobs,
+        game_mobs: &ExtendedMobs,
         raw_mob_assets: &Assets<RawMob>,
     ) {
-        let Some(extended) = &extended_mobs.mobs else {
-            info!("No extended mobs to process");
+        let Some(mobs) = &game_mobs.mobs else {
+            info!("No game mobs to process");
             return;
         };
 
-        info!("Processing {} extended mobs", extended.len());
+        info!("Processing {} game mobs", mobs.len());
 
-        for (_stem, handle) in extended {
+        for (_stem, handle) in mobs {
             let Some(key) = get_normalized_key(handle) else {
-                warn!("Extended mob handle has no path");
+                warn!("Game mob handle has no path");
                 continue;
             };
 
             if let Some(raw_mob) = raw_mob_assets.get(handle) {
                 if raw_values.contains_key(&key) {
-                    info!("Extended mob '{}' overrides base mob", key);
+                    info!("Game mob '{}' overrides base mob", key);
                 } else {
-                    debug!("Adding extended mob: {}", key);
+                    debug!("Adding game mob: {}", key);
                 }
                 raw_values.insert(key, raw_mob.value.clone());
             } else {
-                warn!("Could not get extended mob asset for: {}", key);
+                warn!("Could not get game mob asset for: {}", key);
             }
         }
     }
 
-    /// Apply patches to base/extended mob values.
-    fn apply_patches(
+    /// Add mod mobs (complete new mobs) to the raw values map.
+    fn add_mod_mobs(
         raw_values: &mut HashMap<String, toml::Value>,
-        extended_patches: &ExtendedMobPatches,
-        patch_assets: &Assets<MobPatch>,
+        mod_mobs: &ModMobs,
+        raw_mob_assets: &Assets<RawMob>,
     ) {
-        let Some(patches) = &extended_patches.patches else {
-            info!("No extended mob patches to process");
+        let Some(mobs) = &mod_mobs.mobs else {
+            info!("No mod mobs to process");
             return;
         };
 
-        info!("Processing {} extended mob patches", patches.len());
+        info!("Processing {} mod mobs", mobs.len());
+
+        for (_stem, handle) in mobs {
+            let Some(key) = get_normalized_key(handle) else {
+                warn!("Mod mob handle has no path");
+                continue;
+            };
+
+            if let Some(raw_mob) = raw_mob_assets.get(handle) {
+                if raw_values.contains_key(&key) {
+                    info!("Mod mob '{}' overrides base/game mob", key);
+                } else {
+                    debug!("Adding mod mob: {}", key);
+                }
+                raw_values.insert(key, raw_mob.value.clone());
+            } else {
+                warn!("Could not get mod mob asset for: {}", key);
+            }
+        }
+    }
+
+    /// Apply game patches to base/game mob values.
+    fn apply_game_patches(
+        raw_values: &mut HashMap<String, toml::Value>,
+        game_patches: &ExtendedMobPatches,
+        patch_assets: &Assets<MobPatch>,
+    ) {
+        let Some(patches) = &game_patches.patches else {
+            info!("No game mob patches to process");
+            return;
+        };
+
+        info!("Processing {} game mob patches", patches.len());
         let mut merged_count = 0;
 
         for (_stem, handle) in patches {
             let Some(key) = get_normalized_key(handle) else {
-                warn!("Patch handle has no path");
+                warn!("Game patch handle has no path");
                 continue;
             };
 
             let Some(patch) = patch_assets.get(handle) else {
-                warn!("Could not get patch asset for: {}", key);
+                warn!("Could not get game patch asset for: {}", key);
                 continue;
             };
 
             if let Some(base_value) = raw_values.get_mut(&key) {
-                info!("Merging patch '{}' into base mob", key);
+                info!("Merging game patch '{}' into mob", key);
                 merge_toml_values(base_value, patch.value.clone());
                 merged_count += 1;
             } else {
                 warn!(
-                    "No base mob found for patch '{}', skipping (use .mob for new mobs)",
+                    "No mob found for game patch '{}', skipping (use .mob for new mobs)",
                     key
                 );
             }
         }
 
         if merged_count > 0 {
-            info!("Merged {} patches into base mobs", merged_count);
+            info!("Merged {} game patches into mobs", merged_count);
+        }
+    }
+
+    /// Apply mod patches to base/game/mod mob values.
+    fn apply_mod_patches(
+        raw_values: &mut HashMap<String, toml::Value>,
+        mod_patches: &ModMobPatches,
+        patch_assets: &Assets<MobPatch>,
+    ) {
+        let Some(patches) = &mod_patches.patches else {
+            info!("No mod mob patches to process");
+            return;
+        };
+
+        info!("Processing {} mod mob patches", patches.len());
+        let mut merged_count = 0;
+
+        for (_stem, handle) in patches {
+            let Some(key) = get_normalized_key(handle) else {
+                warn!("Mod patch handle has no path");
+                continue;
+            };
+
+            let Some(patch) = patch_assets.get(handle) else {
+                warn!("Could not get mod patch asset for: {}", key);
+                continue;
+            };
+
+            if let Some(base_value) = raw_values.get_mut(&key) {
+                info!("Merging mod patch '{}' into mob", key);
+                merge_toml_values(base_value, patch.value.clone());
+                merged_count += 1;
+            } else {
+                warn!(
+                    "No mob found for mod patch '{}', skipping (use .mob for new mobs)",
+                    key
+                );
+            }
+        }
+
+        if merged_count > 0 {
+            info!("Merged {} mod patches into mobs", merged_count);
         }
     }
 

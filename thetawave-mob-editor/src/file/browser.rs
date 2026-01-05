@@ -43,7 +43,7 @@ impl FileNode {
 /// Resource storing the file tree state
 #[derive(Resource, Default)]
 pub struct FileTreeState {
-    /// Root nodes of the file tree (base and extended directories)
+    /// Root nodes of the file tree (base, game, and mods directories)
     pub roots: Vec<FileNode>,
 
     /// Currently selected file path
@@ -54,16 +54,17 @@ pub struct FileTreeState {
 }
 
 impl FileTreeState {
-    /// Scan the mobs directories and build the file tree
+    /// Scan the mobs directories and build the file tree (3-tier: base → game → mods)
     pub fn scan_directories(
         &mut self,
         base_dir: &PathBuf,
-        extended_dir: Option<&PathBuf>,
+        game_dir: Option<&PathBuf>,
+        mods_dir: Option<&PathBuf>,
         show_base_mobs: bool,
     ) {
         self.roots.clear();
 
-        // Scan base assets directory (only if show_base_mobs is true)
+        // Tier 1: Scan base assets directory (only if show_base_mobs is true)
         if show_base_mobs && base_dir.exists() {
             let mut base_root = FileNode::new_directory("base".to_string(), base_dir.clone());
             base_root.expanded = true;
@@ -73,24 +74,45 @@ impl FileTreeState {
             }
         }
 
-        // Scan extended assets directory (create if needed, always show so users can create mobs)
-        if let Some(ext_dir) = extended_dir {
+        // Tier 2: Scan game assets directory (create if needed, always show so users can create mobs)
+        if let Some(game_d) = game_dir {
             // Create the directory if it doesn't exist
-            if !ext_dir.exists()
-                && let Err(e) = std::fs::create_dir_all(ext_dir)
+            if !game_d.exists()
+                && let Err(e) = std::fs::create_dir_all(game_d)
             {
                 bevy::log::warn!(
-                    "Failed to create extended assets directory {:?}: {}",
-                    ext_dir,
+                    "Failed to create game assets directory {:?}: {}",
+                    game_d,
                     e
                 );
             }
 
-            if ext_dir.exists() {
-                let mut ext_root = FileNode::new_directory("extended".to_string(), ext_dir.clone());
-                ext_root.expanded = true;
-                Self::scan_directory(&mut ext_root, ext_dir);
-                self.roots.push(ext_root);
+            if game_d.exists() {
+                let mut game_root = FileNode::new_directory("game".to_string(), game_d.clone());
+                game_root.expanded = true;
+                Self::scan_directory(&mut game_root, game_d);
+                self.roots.push(game_root);
+            }
+        }
+
+        // Tier 3: Scan mods assets directory (create if needed)
+        if let Some(mods_d) = mods_dir {
+            // Create the directory if it doesn't exist
+            if !mods_d.exists()
+                && let Err(e) = std::fs::create_dir_all(mods_d)
+            {
+                bevy::log::warn!(
+                    "Failed to create mods assets directory {:?}: {}",
+                    mods_d,
+                    e
+                );
+            }
+
+            if mods_d.exists() {
+                let mut mods_root = FileNode::new_directory("mods".to_string(), mods_d.clone());
+                mods_root.expanded = true;
+                Self::scan_directory(&mut mods_root, mods_d);
+                self.roots.push(mods_root);
             }
         }
 
@@ -183,25 +205,30 @@ impl FileTreeState {
         }
     }
 
-    /// Get categorized mob refs - returns (base_refs, extended_refs)
-    /// where each ref does NOT include the "base/" or "extended/" prefix
-    pub fn get_categorized_mob_refs(&self) -> (Vec<String>, Vec<String>) {
+    /// Get categorized mob refs - returns (base_refs, game_refs, mods_refs)
+    /// where each ref does NOT include the "base/", "game/", or "mods/" prefix
+    pub fn get_categorized_mob_refs(&self) -> (Vec<String>, Vec<String>, Vec<String>) {
         let mut base_refs = Vec::new();
-        let mut extended_refs = Vec::new();
+        let mut game_refs = Vec::new();
+        let mut mods_refs = Vec::new();
 
         for root in &self.roots {
             if root.name == "base" {
                 for child in &root.children {
                     Self::collect_mob_refs_no_root(child, "", &mut base_refs);
                 }
-            } else if root.name == "extended" {
+            } else if root.name == "game" {
                 for child in &root.children {
-                    Self::collect_mob_refs_no_root(child, "", &mut extended_refs);
+                    Self::collect_mob_refs_no_root(child, "", &mut game_refs);
+                }
+            } else if root.name == "mods" {
+                for child in &root.children {
+                    Self::collect_mob_refs_no_root(child, "", &mut mods_refs);
                 }
             }
         }
 
-        (base_refs, extended_refs)
+        (base_refs, game_refs, mods_refs)
     }
 
     /// Get mob refs from only the "base" root (mobs that can be patched)
@@ -240,13 +267,13 @@ impl FileTreeState {
         }
     }
 
-    /// Get existing patch refs from "extended" root
-    /// Returns refs without the "extended/" prefix (e.g., "xhitara/spitter")
+    /// Get existing patch refs from "game" and "mods" roots
+    /// Returns refs without the "game/" or "mods/" prefix (e.g., "xhitara/spitter")
     pub fn get_existing_patch_refs(&self) -> HashSet<String> {
         let mut refs = HashSet::new();
         for root in &self.roots {
-            if root.name == "extended" {
-                // Collect from children of "extended" root, skipping the root name
+            if root.name == "game" || root.name == "mods" {
+                // Collect from children of game/mods roots, skipping the root name
                 for child in &root.children {
                     Self::collect_patch_refs_no_root(child, "", &mut refs);
                 }

@@ -161,6 +161,52 @@ pub struct ExtendedBackgroundAssets {
 }
 
 // ============================================================================
+// Mod Assets (Tier 3 - User/Modder assets from mods:// source)
+// ============================================================================
+
+/// Mod game assets loaded from mods:// source
+#[derive(Resource, Default, Clone, AssetCollection)]
+pub struct ModGameAssets {
+    #[asset(key = "mod_game_sprites", collection(typed, mapped), optional)]
+    pub sprites: Option<HashMap<AssetFileStem, Handle<Aseprite>>>,
+    #[asset(key = "mod_game_particle_effects", collection(typed, mapped), optional)]
+    pub particle_effects: Option<HashMap<AssetFileStem, Handle<Particle2dEffect>>>,
+}
+
+/// Mod music assets
+#[derive(Resource, Default, AssetCollection)]
+pub struct ModMusicAssets {
+    #[asset(key = "mod_music", collection(typed, mapped), optional)]
+    pub music: Option<HashMap<AssetFileStem, Handle<AudioSource>>>,
+}
+
+/// Mod UI assets
+#[derive(Resource, Default, AssetCollection)]
+pub struct ModUiAssets {
+    #[asset(key = "mod_ui_sprites", collection(typed, mapped), optional)]
+    pub sprites: Option<HashMap<AssetFileStem, Handle<Aseprite>>>,
+    #[asset(key = "mod_ui_images", collection(typed, mapped), optional)]
+    pub images: Option<HashMap<AssetFileStem, Handle<Image>>>,
+    #[asset(key = "mod_ui_fonts", collection(typed, mapped), optional)]
+    pub fonts: Option<HashMap<AssetFileStem, Handle<Font>>>,
+    #[asset(key = "mod_ui_button_select_audio", collection(typed), optional)]
+    pub menu_button_select_effects: Option<Vec<Handle<AudioSource>>>,
+    #[asset(key = "mod_ui_button_release_audio", collection(typed), optional)]
+    pub menu_button_release_effects: Option<Vec<Handle<AudioSource>>>,
+    #[asset(key = "mod_ui_button_confirm_audio", collection(typed), optional)]
+    pub menu_button_confirm_effects: Option<Vec<Handle<AudioSource>>>,
+}
+
+/// Mod background assets
+#[derive(Resource, Default, AssetCollection)]
+pub struct ModBackgroundAssets {
+    #[asset(key = "mod_space_backgrounds", collection(typed), optional)]
+    pub space_backgrounds: Option<Vec<Handle<Image>>>,
+    #[asset(key = "mod_planets", collection(typed), optional)]
+    pub planets: Option<Vec<Handle<Scene>>>,
+}
+
+// ============================================================================
 // Loading Progress Event
 // ============================================================================
 
@@ -172,98 +218,133 @@ pub struct LoadingProgressEvent(pub f32);
 // Asset Resolver
 // ============================================================================
 
-/// Utility for resolving assets with Extended*Assets priority and base assets fallback
+/// Utility for resolving assets with 3-tier priority: Mods -> Game -> Base
 ///
 /// Note: With `collection(typed, mapped)`, assets are keyed by their file stem.
 /// For example, "media/aseprite/bullet_projectile.aseprite" gets key "bullet_projectile".
 pub struct AssetResolver;
 
 impl AssetResolver {
-    /// Get an Aseprite handle by key, checking ExtendedGameAssets first, then GameAssets
+    /// Get an Aseprite handle by key, checking Mods first, then Game, then Base
     pub fn get_game_sprite(
         key: &str,
-        extended_assets: &ExtendedGameAssets,
-        assets: &GameAssets,
+        mod_assets: &ModGameAssets,
+        game_assets: &ExtendedGameAssets,
+        base_assets: &GameAssets,
     ) -> Result<Handle<Aseprite>, AssetError> {
-        extended_assets
+        mod_assets
             .sprites
             .as_ref()
             .and_then(|sprites| sprites.get(key))
-            .or_else(|| assets.sprites.get(key))
+            .or_else(|| {
+                game_assets
+                    .sprites
+                    .as_ref()
+                    .and_then(|sprites| sprites.get(key))
+            })
+            .or_else(|| base_assets.sprites.get(key))
             .cloned()
             .ok_or_else(|| AssetError::NotFound(key.to_string()))
     }
 
-    /// Get a Particle2DEffect handle by key, checking ExtendedGameAssets first, then GameAssets
+    /// Get a Particle2DEffect handle by key, checking Mods first, then Game, then Base
     pub fn get_game_particle_effect(
         key: &str,
-        extended_assets: &ExtendedGameAssets,
-        assets: &GameAssets,
+        mod_assets: &ModGameAssets,
+        game_assets: &ExtendedGameAssets,
+        base_assets: &GameAssets,
     ) -> Result<Handle<Particle2dEffect>, AssetError> {
-        extended_assets
+        mod_assets
             .particle_effects
             .as_ref()
             .and_then(|effects| effects.get(key))
-            .or_else(|| assets.particle_effects.get(key))
+            .or_else(|| {
+                game_assets
+                    .particle_effects
+                    .as_ref()
+                    .and_then(|effects| effects.get(key))
+            })
+            .or_else(|| base_assets.particle_effects.get(key))
             .cloned()
             .ok_or_else(|| AssetError::NotFound(key.to_string()))
     }
 
     pub fn get_ui_image(
         key: &str,
-        extended_assets: &ExtendedUiAssets,
-        assets: &UiAssets,
+        mod_assets: &ModUiAssets,
+        game_assets: &ExtendedUiAssets,
+        base_assets: &UiAssets,
     ) -> Result<Handle<Image>, AssetError> {
-        extended_assets
+        mod_assets
             .images
             .as_ref()
             .and_then(|images| images.get(key))
-            .or_else(|| assets.images.get(key))
+            .or_else(|| game_assets.images.as_ref().and_then(|images| images.get(key)))
+            .or_else(|| base_assets.images.get(key))
             .cloned()
             .ok_or_else(|| AssetError::NotFound(key.to_string()))
     }
 
     pub fn get_ui_sprite(
         key: &str,
-        extended_assets: &ExtendedUiAssets,
-        assets: &UiAssets,
+        mod_assets: &ModUiAssets,
+        game_assets: &ExtendedUiAssets,
+        base_assets: &UiAssets,
     ) -> Result<Handle<Aseprite>, AssetError> {
-        extended_assets
+        mod_assets
             .sprites
             .as_ref()
             .and_then(|sprites| sprites.get(key))
-            .or_else(|| assets.sprites.get(key))
+            .or_else(|| {
+                game_assets
+                    .sprites
+                    .as_ref()
+                    .and_then(|sprites| sprites.get(key))
+            })
+            .or_else(|| base_assets.sprites.get(key))
             .cloned()
             .ok_or_else(|| AssetError::NotFound(key.to_string()))
     }
 
     pub fn get_ui_font(
         key: &str,
-        extended_assets: &ExtendedUiAssets,
-        assets: &UiAssets,
+        mod_assets: &ModUiAssets,
+        game_assets: &ExtendedUiAssets,
+        base_assets: &UiAssets,
     ) -> Result<Handle<Font>, AssetError> {
-        extended_assets
+        mod_assets
             .fonts
             .as_ref()
             .and_then(|fonts| fonts.get(key))
-            .or_else(|| assets.fonts.get(key))
+            .or_else(|| game_assets.fonts.as_ref().and_then(|fonts| fonts.get(key)))
+            .or_else(|| base_assets.fonts.get(key))
             .cloned()
             .ok_or_else(|| AssetError::NotFound(key.to_string()))
     }
 
     pub fn get_random_button_press_effect(
-        extended_assets: &ExtendedUiAssets,
-        assets: &UiAssets,
+        mod_assets: &ModUiAssets,
+        game_assets: &ExtendedUiAssets,
+        base_assets: &UiAssets,
     ) -> Result<Handle<AudioSource>, AssetError> {
-        if let Some(effects) = &extended_assets.menu_button_select_effects
+        // Check mods first
+        if let Some(effects) = &mod_assets.menu_button_select_effects
             && !effects.is_empty()
         {
             let idx = rand::rng().random_range(0..effects.len());
             return Ok(effects[idx].clone());
         }
-        if !assets.menu_button_select_effects.is_empty() {
-            let idx = rand::rng().random_range(0..assets.menu_button_select_effects.len());
-            Ok(assets.menu_button_select_effects[idx].clone())
+        // Then game assets
+        if let Some(effects) = &game_assets.menu_button_select_effects
+            && !effects.is_empty()
+        {
+            let idx = rand::rng().random_range(0..effects.len());
+            return Ok(effects[idx].clone());
+        }
+        // Finally base assets
+        if !base_assets.menu_button_select_effects.is_empty() {
+            let idx = rand::rng().random_range(0..base_assets.menu_button_select_effects.len());
+            Ok(base_assets.menu_button_select_effects[idx].clone())
         } else {
             Err(AssetError::EmptyCollections(
                 "button press effects".to_string(),
@@ -272,18 +353,28 @@ impl AssetResolver {
     }
 
     pub fn get_random_button_release_effect(
-        extended_assets: &ExtendedUiAssets,
-        assets: &UiAssets,
+        mod_assets: &ModUiAssets,
+        game_assets: &ExtendedUiAssets,
+        base_assets: &UiAssets,
     ) -> Result<Handle<AudioSource>, AssetError> {
-        if let Some(effects) = &extended_assets.menu_button_release_effects
+        // Check mods first
+        if let Some(effects) = &mod_assets.menu_button_release_effects
             && !effects.is_empty()
         {
             let idx = rand::rng().random_range(0..effects.len());
             return Ok(effects[idx].clone());
         }
-        if !assets.menu_button_release_effects.is_empty() {
-            let idx = rand::rng().random_range(0..assets.menu_button_release_effects.len());
-            Ok(assets.menu_button_release_effects[idx].clone())
+        // Then game assets
+        if let Some(effects) = &game_assets.menu_button_release_effects
+            && !effects.is_empty()
+        {
+            let idx = rand::rng().random_range(0..effects.len());
+            return Ok(effects[idx].clone());
+        }
+        // Finally base assets
+        if !base_assets.menu_button_release_effects.is_empty() {
+            let idx = rand::rng().random_range(0..base_assets.menu_button_release_effects.len());
+            Ok(base_assets.menu_button_release_effects[idx].clone())
         } else {
             Err(AssetError::EmptyCollections(
                 "button release effects".to_string(),
@@ -292,18 +383,28 @@ impl AssetResolver {
     }
 
     pub fn get_random_button_confirm_effect(
-        extended_assets: &ExtendedUiAssets,
-        assets: &UiAssets,
+        mod_assets: &ModUiAssets,
+        game_assets: &ExtendedUiAssets,
+        base_assets: &UiAssets,
     ) -> Result<Handle<AudioSource>, AssetError> {
-        if let Some(effects) = &extended_assets.menu_button_confirm_effects
+        // Check mods first
+        if let Some(effects) = &mod_assets.menu_button_confirm_effects
             && !effects.is_empty()
         {
             let idx = rand::rng().random_range(0..effects.len());
             return Ok(effects[idx].clone());
         }
-        if !assets.menu_button_confirm_effects.is_empty() {
-            let idx = rand::rng().random_range(0..assets.menu_button_confirm_effects.len());
-            Ok(assets.menu_button_confirm_effects[idx].clone())
+        // Then game assets
+        if let Some(effects) = &game_assets.menu_button_confirm_effects
+            && !effects.is_empty()
+        {
+            let idx = rand::rng().random_range(0..effects.len());
+            return Ok(effects[idx].clone());
+        }
+        // Finally base assets
+        if !base_assets.menu_button_confirm_effects.is_empty() {
+            let idx = rand::rng().random_range(0..base_assets.menu_button_confirm_effects.len());
+            Ok(base_assets.menu_button_confirm_effects[idx].clone())
         } else {
             Err(AssetError::EmptyCollections(
                 "button confirm effects".to_string(),
@@ -312,13 +413,17 @@ impl AssetResolver {
     }
 
     pub fn get_random_space_bg(
-        extended_assets: &ExtendedBackgroundAssets,
-        assets: &BackgroundAssets,
+        mod_assets: &ModBackgroundAssets,
+        game_assets: &ExtendedBackgroundAssets,
+        base_assets: &BackgroundAssets,
     ) -> Result<Handle<Image>, AssetError> {
         let mut all_backgrounds = Vec::new();
-        all_backgrounds.extend(assets.space_backgrounds.iter().cloned());
-        if let Some(extended_backgrounds) = &extended_assets.space_backgrounds {
-            all_backgrounds.extend(extended_backgrounds.iter().cloned());
+        all_backgrounds.extend(base_assets.space_backgrounds.iter().cloned());
+        if let Some(game_backgrounds) = &game_assets.space_backgrounds {
+            all_backgrounds.extend(game_backgrounds.iter().cloned());
+        }
+        if let Some(mod_backgrounds) = &mod_assets.space_backgrounds {
+            all_backgrounds.extend(mod_backgrounds.iter().cloned());
         }
         if all_backgrounds.is_empty() {
             return Err(AssetError::EmptyCollections(
@@ -330,13 +435,17 @@ impl AssetResolver {
     }
 
     pub fn get_random_planet(
-        extended_assets: &ExtendedBackgroundAssets,
-        assets: &BackgroundAssets,
+        mod_assets: &ModBackgroundAssets,
+        game_assets: &ExtendedBackgroundAssets,
+        base_assets: &BackgroundAssets,
     ) -> Result<Handle<Scene>, AssetError> {
         let mut all_planets = Vec::new();
-        all_planets.extend(assets.planets.iter().cloned());
-        if let Some(extended_planets) = &extended_assets.planets {
-            all_planets.extend(extended_planets.iter().cloned());
+        all_planets.extend(base_assets.planets.iter().cloned());
+        if let Some(game_planets) = &game_assets.planets {
+            all_planets.extend(game_planets.iter().cloned());
+        }
+        if let Some(mod_planets) = &mod_assets.planets {
+            all_planets.extend(mod_planets.iter().cloned());
         }
         if all_planets.is_empty() {
             return Err(AssetError::EmptyCollections("planets".to_string()));
@@ -347,14 +456,16 @@ impl AssetResolver {
 
     pub fn get_music(
         key: &str,
-        extended_assets: &ExtendedMusicAssets,
-        assets: &MusicAssets,
+        mod_assets: &ModMusicAssets,
+        game_assets: &ExtendedMusicAssets,
+        base_assets: &MusicAssets,
     ) -> Result<Handle<AudioSource>, AssetError> {
-        extended_assets
+        mod_assets
             .music
             .as_ref()
             .and_then(|music| music.get(key))
-            .or_else(|| assets.music.get(key))
+            .or_else(|| game_assets.music.as_ref().and_then(|music| music.get(key)))
+            .or_else(|| base_assets.music.get(key))
             .cloned()
             .ok_or_else(|| AssetError::NotFound(key.to_string()))
     }

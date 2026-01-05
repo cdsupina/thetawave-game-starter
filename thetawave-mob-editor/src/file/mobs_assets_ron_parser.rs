@@ -17,7 +17,7 @@ pub struct ParsedMobsAssets {
 
 /// Parse mob and patch paths from a mobs.assets.ron file
 ///
-/// Returns paths without the extended:// prefix (normalized).
+/// Returns paths without the game:// prefix (normalized).
 ///
 /// # Format
 ///
@@ -37,12 +37,12 @@ pub struct ParsedMobsAssets {
 /// ({
 ///     "extended_mobs": Files(
 ///         paths: [
-///             "extended://mobs/custom/enemy.mob",
+///             "game://mobs/custom/enemy.mob",
 ///         ]
 ///     ),
 ///     "extended_mob_patches": Files(
 ///         paths: [
-///             "extended://mobs/xhitara/grunt.mobpatch",
+///             "game://mobs/xhitara/grunt.mobpatch",
 ///         ]
 ///     ),
 /// })
@@ -106,9 +106,9 @@ pub fn parse_mobs_assets_ron(path: &PathBuf) -> Result<ParsedMobsAssets, String>
                 && let Some(path_str) = extract_quoted_path(trimmed)
                 && (path_str.ends_with(".mob") || path_str.ends_with(".mobpatch"))
             {
-                // Strip extended:// prefix if present
+                // Strip game:// prefix if present
                 let clean_path = path_str
-                    .strip_prefix("extended://")
+                    .strip_prefix("game://")
                     .unwrap_or(&path_str)
                     .to_string();
 
@@ -161,7 +161,7 @@ fn create_extended_mobs_assets_ron_template() -> String {
 
 /// Append a mob or patch path to a mobs.assets.ron file
 ///
-/// For extended files, the path will be prefixed with "extended://".
+/// For extended files, the path will be prefixed with "game://".
 /// For base files, only mobs can be added (not patches).
 ///
 /// Creates the file with a template if it doesn't exist (extended only).
@@ -232,7 +232,7 @@ pub fn append_to_mobs_assets_ron(
     if let Some(idx) = insert_index {
         // Format the new line with proper indentation
         let new_line = if is_extended {
-            format!("            \"extended://{}\",", mob_path)
+            format!("            \"game://{}\",", mob_path)
         } else {
             format!("            \"{}\",", mob_path)
         };
@@ -262,8 +262,8 @@ mod tests {
             Some("mobs/xhitara/grunt.mob".to_string())
         );
         assert_eq!(
-            extract_quoted_path(r#"            "extended://mobs/custom/enemy.mob","#),
-            Some("extended://mobs/custom/enemy.mob".to_string())
+            extract_quoted_path(r#"            "game://mobs/custom/enemy.mob","#),
+            Some("game://mobs/custom/enemy.mob".to_string())
         );
         assert_eq!(extract_quoted_path("no quotes here"), None);
     }
@@ -299,12 +299,12 @@ mod tests {
         let content = r#"({
     "extended_mobs": Files(
         paths: [
-            "extended://mobs/custom/enemy.mob",
+            "game://mobs/custom/enemy.mob",
         ]
     ),
     "extended_mob_patches": Files(
         paths: [
-            "extended://mobs/xhitara/grunt.mobpatch",
+            "game://mobs/xhitara/grunt.mobpatch",
         ]
     ),
 })"#;
@@ -317,9 +317,9 @@ mod tests {
         let result = parse_mobs_assets_ron(&temp_file).unwrap();
 
         assert_eq!(result.mobs.len(), 1);
-        assert_eq!(result.mobs[0], "mobs/custom/enemy.mob"); // extended:// stripped
+        assert_eq!(result.mobs[0], "mobs/custom/enemy.mob"); // game:// stripped
         assert_eq!(result.patches.len(), 1);
-        assert_eq!(result.patches[0], "mobs/xhitara/grunt.mobpatch"); // extended:// stripped
+        assert_eq!(result.patches[0], "mobs/xhitara/grunt.mobpatch"); // game:// stripped
 
         fs::remove_file(&temp_file).ok();
     }

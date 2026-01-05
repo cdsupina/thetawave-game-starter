@@ -690,7 +690,7 @@ fn render_mob_spawner_fields(
         render_patch_indicator(ui, field_patched, is_patch);
         ui.label("Mob Ref:");
 
-        let (base_refs, extended_refs) = file_tree.get_categorized_mob_refs();
+        let (base_refs, game_refs, mods_refs) = file_tree.get_categorized_mob_refs();
         let mut selected = mob_ref.to_string();
 
         egui::ComboBox::from_id_salt(format!("mob_spawner_ref_{}", spawner_key))
@@ -717,11 +717,24 @@ fn render_mob_spawner_fields(
                         }
                     }
                 }
-                // Extended mobs section
-                if !extended_refs.is_empty() {
+                // Game mobs section
+                if !game_refs.is_empty() {
                     ui.separator();
-                    ui.label(egui::RichText::new("Extended Mobs").strong().small());
-                    for ref_name in &extended_refs {
+                    ui.label(egui::RichText::new("Game Mobs").strong().small());
+                    for ref_name in &game_refs {
+                        if ui
+                            .selectable_label(selected == *ref_name, ref_name)
+                            .clicked()
+                        {
+                            selected = ref_name.clone();
+                        }
+                    }
+                }
+                // Mods mobs section
+                if !mods_refs.is_empty() {
+                    ui.separator();
+                    ui.label(egui::RichText::new("Mods Mobs").strong().small());
+                    for ref_name in &mods_refs {
                         if ui
                             .selectable_label(selected == *ref_name, ref_name)
                             .clicked()

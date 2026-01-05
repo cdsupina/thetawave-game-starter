@@ -1,7 +1,7 @@
 //! Registry for tracking registered mob assets.
 //!
 //! The [`MobAssetRegistry`] maintains a list of all registered mobs and patches
-//! from both base and extended `mobs.assets.ron` files.
+//! from base, game, and mods `mobs.assets.ron` files.
 
 use std::path::Path;
 
@@ -14,11 +14,11 @@ use crate::plugin::EditorConfig;
 #[derive(Debug, Clone)]
 pub struct RegisteredMobAsset {
     /// The path as stored in .assets.ron files (e.g., "mobs/xhitara/grunt.mob")
-    /// For extended assets, this is without the "extended://" prefix
+    /// For game/mods assets, this is without the prefix
     pub asset_path: String,
     /// Display name for UI (file stem, e.g., "grunt")
     pub display_name: String,
-    /// Whether this is from base or extended assets
+    /// Whether this is from base, game, or mods assets
     pub source: AssetSource,
 }
 
@@ -45,26 +45,34 @@ impl MobAssetRegistry {
     /// Get registration info for a file path
     ///
     /// Returns the registration entry if the file is registered, None otherwise.
+    ///
+    /// Priority order for path classification (first match wins):
+    /// 1. Mods paths (mods_assets_dir)
+    /// 2. Game paths (game_assets_dir)
+    /// 3. Base paths (default)
+    ///
+    /// This ensures mod overrides are correctly identified when paths could match multiple sources.
     pub fn get_registration(
         &self,
         path: &Path,
         config: &EditorConfig,
     ) -> Option<&RegisteredMobAsset> {
-        // Determine if this is an extended path
-        let is_extended = config.is_extended_path(path);
+        // Determine the source type
+        let source = if config.is_mods_path(path) {
+            AssetSource::Mods
+        } else if config.is_game_path(path) {
+            AssetSource::Game
+        } else {
+            AssetSource::Base
+        };
 
-        // Calculate the relative path
-        let relative_path = self.calculate_relative_path(path, config, is_extended)?;
+        // Calculate the relative path based on source
+        let relative_path = self.calculate_relative_path(path, config, source)?;
 
         // Find matching entry
-        self.entries.iter().find(|entry| {
-            let source_matches = matches!(
-                (is_extended, entry.source),
-                (true, AssetSource::Extended) | (false, AssetSource::Base)
-            );
-
-            source_matches && entry.asset_path == relative_path
-        })
+        self.entries
+            .iter()
+            .find(|entry| entry.source == source && entry.asset_path == relative_path)
     }
 
     /// Calculate the relative path for a mob file as it would appear in mobs.assets.ron
@@ -72,12 +80,12 @@ impl MobAssetRegistry {
         &self,
         path: &Path,
         config: &EditorConfig,
-        is_extended: bool,
+        source: AssetSource,
     ) -> Option<String> {
-        let assets_root = if is_extended {
-            config.extended_assets_root()?
-        } else {
-            config.base_assets_root()?
+        let assets_root = match source {
+            AssetSource::Mods => config.mods_assets_root()?,
+            AssetSource::Game => config.game_assets_root()?,
+            AssetSource::Base => config.base_assets_root()?,
         };
 
         // Strip the assets root to get the relative path
@@ -93,10 +101,17 @@ impl MobAssetRegistry {
             .filter(|e| e.source == AssetSource::Base)
     }
 
-    /// Get all extended entries
-    pub fn extended_entries(&self) -> impl Iterator<Item = &RegisteredMobAsset> {
+    /// Get all game entries
+    pub fn game_entries(&self) -> impl Iterator<Item = &RegisteredMobAsset> {
         self.entries
             .iter()
-            .filter(|e| e.source == AssetSource::Extended)
+            .filter(|e| e.source == AssetSource::Game)
+    }
+
+    /// Get all mods entries
+    pub fn mods_entries(&self) -> impl Iterator<Item = &RegisteredMobAsset> {
+        self.entries
+            .iter()
+            .filter(|e| e.source == AssetSource::Mods)
     }
 }

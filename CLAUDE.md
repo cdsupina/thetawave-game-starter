@@ -54,7 +54,10 @@ This is a Bevy 0.17 game engine project organized as a Cargo workspace with 13 c
 
 **Event-Driven Communication**: Plugins communicate via Bevy messages (e.g., `SpawnMobEvent`, `SpawnProjectileEvent`, `PlayerDeathEvent`, `MobDeathEvent`, `SpawnerParticleEffectSpawnedEvent`). Register with `app.add_message::<T>()`.
 
-**Dual Asset System**: Base assets are embedded in the binary via `bevy_embedded_assets`. Extended assets load from `assets/` directory at runtime using the `"extended://"` asset source, allowing customization without recompilation.
+**3-Tier Asset System**:
+- **Tier 1 (Base)**: Embedded in library at compile time via `include_dir`
+- **Tier 2 (Game)**: Developer assets from `assets/` directory using `"game://"` source
+- **Tier 3 (Mods)**: User/modder assets from `mods/` directory (relative to executable) using `"mods://"` source
 
 **State Hierarchy**:
 - `AppState`: MainMenuLoading → MainMenu → GameLoading → Game
@@ -179,6 +182,36 @@ Extended data merges with base via `load_with_extended()` from `thetawave-core`.
 | bevy_kira_audio | 0.24.0 | Audio system |
 | bevy-inspector-egui | 0.35.0 | Debug world inspector |
 | toml | 0.9.8 | TOML parsing for data files |
+
+## Mods Directory Structure
+
+Mods are loaded from the `mods/` directory next to the game executable. The directory and default `.assets.ron` files are auto-created on first run.
+
+### Directory Layout
+```
+mods/
+├── ui.assets.ron          # UI sprites, fonts, audio
+├── music.assets.ron       # Music tracks
+├── background.assets.ron  # Space backgrounds, planets
+├── game.assets.ron        # Game sprites, particle effects
+├── mobs.assets.ron        # Mob definitions and patches
+└── mobs/                  # .mob and .mobpatch files
+    └── my_custom_mob.mob
+```
+
+### Asset Priority
+Mods override game assets, which override base assets:
+- `mods://` > `game://` > base (embedded)
+
+### Adding Mod Content
+1. Place `.mob` files in `mods/mobs/`
+2. Register them in `mods/mobs.assets.ron`:
+```ron
+({
+    "mod_mobs": Files(paths: ["mobs/my_custom_mob.mob"]),
+    "mod_mob_patches": Files(paths: []),
+})
+```
 
 ## Rendering Notes
 

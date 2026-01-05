@@ -5,7 +5,7 @@
     "extended_game_sprites": Files(
         paths: [
             // Add extended sprite paths here, e.g.:
-            // "extended://media/aseprite/custom_mob.aseprite",
+            // "game://media/aseprite/custom_mob.aseprite",
         ]
     ),
     // Extended particle effects - these take precedence over base effects
@@ -13,7 +13,7 @@
     "extended_game_particle_effects": Files(
         paths: [
             // Add extended particle effect paths here, e.g.:
-            // "extended://media/particles/custom_explosion.ron",
+            // "game://media/particles/custom_explosion.ron",
         ]
     ),
 })

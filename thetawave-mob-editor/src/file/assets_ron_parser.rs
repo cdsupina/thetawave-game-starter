@@ -7,7 +7,7 @@ use std::fs;
 use std::path::PathBuf;
 
 /// Parse sprite paths from a .assets.ron file
-/// Returns paths without the extended:// prefix (normalized)
+/// Returns paths without the game:// prefix (normalized)
 pub fn parse_assets_ron(path: &PathBuf) -> Result<Vec<String>, String> {
     let content = fs::read_to_string(path)
         .map_err(|e| format!("Failed to read {}: {}", path.display(), e))?;
@@ -53,8 +53,8 @@ pub fn parse_assets_ron(path: &PathBuf) -> Result<Vec<String>, String> {
                 && let Some(path_str) = extract_quoted_path(trimmed)
                 && (path_str.ends_with(".aseprite") || path_str.ends_with(".ase"))
             {
-                // Strip extended:// prefix if present to normalize
-                let clean_path = path_str.strip_prefix("extended://").unwrap_or(&path_str);
+                // Strip game:// prefix if present to normalize
+                let clean_path = path_str.strip_prefix("game://").unwrap_or(&path_str);
                 sprites.push(clean_path.to_string());
             }
 
@@ -163,7 +163,7 @@ pub fn append_sprite_to_assets_ron(
     if let Some(idx) = insert_index {
         // Format the new line with proper indentation
         let new_line = if is_extended {
-            format!("            \"extended://{}\",", sprite_path)
+            format!("            \"game://{}\",", sprite_path)
         } else {
             format!("            \"{}\",", sprite_path)
         };
@@ -193,8 +193,8 @@ mod tests {
             Some("media/aseprite/foo.aseprite".to_string())
         );
         assert_eq!(
-            extract_quoted_path(r#"            "extended://media/aseprite/bar.aseprite","#),
-            Some("extended://media/aseprite/bar.aseprite".to_string())
+            extract_quoted_path(r#"            "game://media/aseprite/bar.aseprite","#),
+            Some("game://media/aseprite/bar.aseprite".to_string())
         );
         assert_eq!(extract_quoted_path("no quotes here"), None);
     }

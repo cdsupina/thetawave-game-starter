@@ -22,7 +22,7 @@ use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use bevy_persistent::Persistent;
 use leafwing_input_manager::prelude::{ActionState, InputMap};
-use thetawave_assets::{AssetResolver, ExtendedUiAssets};
+use thetawave_assets::{AssetResolver, ExtendedUiAssets, ModUiAssets};
 use thetawave_core::AppState;
 use thetawave_player::{
     CharacterCarouselAction, CharactersResource, ChosenCharacterData, ChosenCharactersResource,
@@ -32,6 +32,7 @@ use thetawave_player::{
 /// Spawn ui for character selection
 pub(in crate::ui) fn spawn_character_selection_system(
     mut cmds: Commands,
+    mod_ui_assets: Res<ModUiAssets>,
     extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
 ) {
@@ -69,6 +70,7 @@ pub(in crate::ui) fn spawn_character_selection_system(
                     .with_children(|parent| {
                         // Player 1 character selection
                         parent.spawn_character_selection(
+                            &mod_ui_assets,
                             &extended_ui_assets,
                             &ui_assets,
                             PlayerNum::One,
@@ -76,6 +78,7 @@ pub(in crate::ui) fn spawn_character_selection_system(
 
                         // Player 2 character selection
                         parent.spawn_character_selection(
+                            &mod_ui_assets,
                             &extended_ui_assets,
                             &ui_assets,
                             PlayerNum::Two,
@@ -92,6 +95,7 @@ pub(in crate::ui) fn spawn_character_selection_system(
                     .with_children(|parent| {
                         // Player 3 character selection
                         parent.spawn_character_selection(
+                            &mod_ui_assets,
                             &extended_ui_assets,
                             &ui_assets,
                             PlayerNum::Three,
@@ -99,6 +103,7 @@ pub(in crate::ui) fn spawn_character_selection_system(
 
                         // Player 4 character selection
                         parent.spawn_character_selection(
+                            &mod_ui_assets,
                             &extended_ui_assets,
                             &ui_assets,
                             PlayerNum::Four,
@@ -119,6 +124,7 @@ pub(in crate::ui) fn spawn_character_selection_system(
             })
             .with_children(|parent| {
                 parent.spawn_menu_button(
+                    &mod_ui_assets,
                     &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterAppState(AppState::GameLoading),
@@ -128,6 +134,7 @@ pub(in crate::ui) fn spawn_character_selection_system(
                 );
 
                 parent.spawn_menu_button(
+                    &mod_ui_assets,
                     &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterMainMenuState(MainMenuState::Title),
@@ -202,6 +209,7 @@ pub(in crate::ui) fn cycle_player_one_carousel_system(
 pub(in crate::ui) fn update_carousel_ui_system(
     carousel_q: Query<(&Children, &CharacterCarousel), Changed<CharacterCarousel>>,
     mut carousel_slot_q: Query<(&VisibleCarouselSlot, &mut ImageNode)>,
+    mod_ui_assets: Res<ModUiAssets>,
     extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
 ) -> bevy::ecs::error::Result {
@@ -219,6 +227,7 @@ pub(in crate::ui) fn update_carousel_ui_system(
                 if let Some(character_type) = maybe_character_type {
                     image_node.image = AssetResolver::get_ui_image(
                         character_type,
+                        &mod_ui_assets,
                         &extended_ui_assets,
                         &ui_assets,
                     )?;
@@ -252,6 +261,7 @@ pub(in crate::ui) fn spawn_carousel_system(
     mut player_join_events: MessageReader<PlayerJoinEvent>,
     character_selector_q: Query<(Entity, &PlayerNum), With<CharacterSelector>>,
     mut cmds: Commands,
+    mod_ui_assets: Res<ModUiAssets>,
     extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
     options_res: Res<Persistent<OptionsRes>>,
@@ -266,13 +276,14 @@ pub(in crate::ui) fn spawn_carousel_system(
 
                 // Pre-resolve assets - will panic on failure
                 let arrow_sprite =
-                    AssetResolver::get_ui_sprite("arrow_button", &extended_ui_assets, &ui_assets)
+                    AssetResolver::get_ui_sprite("arrow_button", &mod_ui_assets, &extended_ui_assets, &ui_assets)
                         .expect("Failed to load arrow_button sprite");
 
                 // Pre-resolve character images - will panic on failure
                 let left_image = carousel.get_left_character().map(|left_character_type| {
                     AssetResolver::get_ui_image(
                         left_character_type,
+                        &mod_ui_assets,
                         &extended_ui_assets,
                         &ui_assets,
                     )
@@ -283,6 +294,7 @@ pub(in crate::ui) fn spawn_carousel_system(
                     .map(|active_character_type| {
                         AssetResolver::get_ui_image(
                             active_character_type,
+                            &mod_ui_assets,
                             &extended_ui_assets,
                             &ui_assets,
                         )
@@ -291,6 +303,7 @@ pub(in crate::ui) fn spawn_carousel_system(
                 let right_image = carousel.get_right_character().map(|right_character_type| {
                     AssetResolver::get_ui_image(
                         right_character_type,
+                        &mod_ui_assets,
                         &extended_ui_assets,
                         &ui_assets,
                     )
@@ -421,6 +434,7 @@ pub(in crate::ui) fn spawn_carousel_system(
 pub(in crate::ui) fn spawn_ready_button_system(
     mut player_join_events: MessageReader<PlayerJoinEvent>,
     button_q: Query<(&ButtonAction, Entity, &ChildOf)>,
+    mod_ui_assets: Res<ModUiAssets>,
     extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
     mut cmds: Commands,
@@ -437,6 +451,7 @@ pub(in crate::ui) fn spawn_ready_button_system(
 
                 menu_button_cmds.with_children(|parent| {
                     let mut entity_cmds = parent.spawn_menu_button(
+                        &mod_ui_assets,
                         &extended_ui_assets,
                         &ui_assets,
                         ButtonAction::Ready(player_num.clone()),
@@ -571,6 +586,7 @@ pub(in crate::ui) fn enable_join_button_system(
 pub(in crate::ui) fn spawn_join_prompt_system(
     mut player_join_events: MessageReader<PlayerJoinEvent>,
     character_selector_q: Query<(Entity, &PlayerNum), With<CharacterSelector>>,
+    mod_ui_assets: Res<ModUiAssets>,
     extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
     mut cmds: Commands,
@@ -580,7 +596,7 @@ pub(in crate::ui) fn spawn_join_prompt_system(
             for (entity, player_num) in character_selector_q.iter() {
                 if next_player_num == *player_num {
                     cmds.entity(entity).with_children(|parent| {
-                        parent.spawn_join_prompt(&extended_ui_assets, &ui_assets);
+                        parent.spawn_join_prompt(&mod_ui_assets, &extended_ui_assets, &ui_assets);
                     });
                 }
             }

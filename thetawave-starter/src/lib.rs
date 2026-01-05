@@ -24,7 +24,7 @@ use bevy::asset::{AssetApp, io::AssetSource, io::wasm::HttpWasmAssetReader};
 
 use bevy_aseprite_ultra::AsepriteUltraPlugin;
 
-use bevy_embedded_assets::{EmbeddedAssetPlugin, PluginMode};
+mod embedded_reader;
 
 use bevy_platform::collections::{HashMap, HashSet};
 #[cfg(feature = "debug")]
@@ -50,22 +50,43 @@ pub struct ThetawaveStarterPlugin {
 
 impl Plugin for ThetawaveStarterPlugin {
     fn build(&self, app: &mut bevy::app::App) {
+        // Tier 2: Game assets (developer's assets folder, relative to Cargo.toml)
         #[cfg(not(target_arch = "wasm32"))]
         app.register_asset_source(
-            "extended",
+            "game",
             AssetSource::build().with_reader(|| Box::new(FileAssetReader::new("assets"))),
         );
 
         #[cfg(target_arch = "wasm32")]
         app.register_asset_source(
-            "extended",
+            "game",
             AssetSource::build().with_reader(|| Box::new(HttpWasmAssetReader::new("assets"))),
         );
 
+        // Tier 3: Mod assets (relative to executable, never embedded)
+        // Only register if directory setup succeeds
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(mods_path) = setup_mods_directory() {
+            app.register_asset_source(
+                "mods",
+                AssetSource::build()
+                    .with_reader(move || Box::new(FileAssetReader::new(mods_path.clone()))),
+            );
+        }
+
+        #[cfg(target_arch = "wasm32")]
+        app.register_asset_source(
+            "mods",
+            AssetSource::build().with_reader(|| Box::new(HttpWasmAssetReader::new("mods"))),
+        );
+
+        // Register embedded base assets as the default source (before DefaultPlugins)
+        app.register_asset_source(
+            bevy::asset::io::AssetSourceId::Default,
+            embedded_reader::embedded_asset_source(),
+        );
+
         app.add_plugins((
-            EmbeddedAssetPlugin {
-                mode: PluginMode::ReplaceDefault, //embeds assets into binary
-            },
             DefaultPlugins
                 .set(AssetPlugin {
                     meta_check: AssetMetaCheck::Never,
@@ -125,4 +146,82 @@ impl Plugin for ThetawaveStarterPlugin {
             app.add_plugins(window::ThetawaveWindowPlugin);
         }
     }
+}
+
+/// Set up the mods directory and create default asset files if needed.
+///
+/// Returns the mods path if setup succeeds, None if it fails.
+/// This ensures the mods:// asset source is only registered when usable.
+///
+/// Note: This runs on every startup, but the exists() checks make the overhead
+/// negligible (~1 syscall per file when files already exist).
+#[cfg(not(target_arch = "wasm32"))]
+fn setup_mods_directory() -> Option<std::path::PathBuf> {
+    use std::fs;
+
+    let mods_path = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|p| p.join("mods")))?;
+
+    // Create the mods directory if it doesn't exist
+    if !mods_path.exists() {
+        if let Err(e) = fs::create_dir_all(&mods_path) {
+            bevy::log::warn!("Failed to create mods directory: {}", e);
+            return None;
+        }
+    }
+
+    // Default content for each .assets.ron file
+    let asset_files = [
+        (
+            "ui.assets.ron",
+            r#"({
+    "mod_ui_sprites": Files(paths: []),
+    "mod_ui_images": Files(paths: []),
+    "mod_ui_fonts": Files(paths: []),
+    "mod_ui_button_select_audio": Files(paths: []),
+    "mod_ui_button_release_audio": Files(paths: []),
+    "mod_ui_button_confirm_audio": Files(paths: []),
+})"#,
+        ),
+        (
+            "music.assets.ron",
+            r#"({
+    "mod_music": Files(paths: []),
+})"#,
+        ),
+        (
+            "background.assets.ron",
+            r#"({
+    "mod_space_backgrounds": Files(paths: []),
+    "mod_planets": Files(paths: []),
+})"#,
+        ),
+        (
+            "game.assets.ron",
+            r#"({
+    "mod_game_sprites": Files(paths: []),
+    "mod_game_particle_effects": Files(paths: []),
+})"#,
+        ),
+        (
+            "mobs.assets.ron",
+            r#"({
+    "mod_mobs": Files(paths: []),
+    "mod_mob_patches": Files(paths: []),
+})"#,
+        ),
+    ];
+
+    for (filename, content) in asset_files {
+        let file_path = mods_path.join(filename);
+        if !file_path.exists() {
+            if let Err(e) = fs::write(&file_path, content) {
+                bevy::log::warn!("Failed to create {}: {}", filename, e);
+                // Continue anyway - partial setup is better than none
+            }
+        }
+    }
+
+    Some(mods_path)
 }

@@ -42,10 +42,12 @@ use crate::{
 pub struct MobEditorPlugin {
     /// Base assets directory (where the main game's mobs are)
     pub base_assets_dir: PathBuf,
-    /// Extended assets directory (for game-specific overrides)
-    pub extended_assets_dir: Option<PathBuf>,
+    /// Game assets directory (for game-specific overrides)
+    pub game_assets_dir: Option<PathBuf>,
+    /// Mods assets directory (for user/modder mobs)
+    pub mods_assets_dir: Option<PathBuf>,
     /// Whether to show base mobs in the file tree.
-    /// When false, only extended mobs are shown and users can only create patches.
+    /// When false, only game/mods mobs are shown and users can only create patches.
     /// Set to false when using the editor as a library in an external game.
     pub show_base_mobs: bool,
 }
@@ -54,7 +56,8 @@ impl Default for MobEditorPlugin {
     fn default() -> Self {
         Self {
             base_assets_dir: PathBuf::from("assets/mobs"),
-            extended_assets_dir: Some(PathBuf::from("thetawave-test-game/assets/mobs")),
+            game_assets_dir: Some(PathBuf::from("thetawave-test-game/assets/mobs")),
+            mods_assets_dir: None, // Mods dir is relative to executable, so not useful in editor context
             show_base_mobs: true,
         }
     }
@@ -98,7 +101,8 @@ impl Plugin for MobEditorPlugin {
         // Store config
         app.insert_resource(EditorConfig {
             base_assets_dir: self.base_assets_dir.clone(),
-            extended_assets_dir: self.extended_assets_dir.clone(),
+            game_assets_dir: self.game_assets_dir.clone(),
+            mods_assets_dir: self.mods_assets_dir.clone(),
             show_base_mobs: self.show_base_mobs,
         });
 
@@ -175,10 +179,12 @@ impl Plugin for MobEditorPlugin {
 pub struct EditorConfig {
     /// Base mobs directory (e.g., "assets/mobs")
     pub base_assets_dir: PathBuf,
-    /// Extended mobs directory (e.g., "my-game/assets/mobs")
-    pub extended_assets_dir: Option<PathBuf>,
+    /// Game mobs directory (e.g., "my-game/assets/mobs")
+    pub game_assets_dir: Option<PathBuf>,
+    /// Mods mobs directory (e.g., "mods/mobs")
+    pub mods_assets_dir: Option<PathBuf>,
     /// Whether to show base mobs in the file tree.
-    /// When false, only extended mobs are shown and users can only create patches.
+    /// When false, only game/mods mobs are shown and users can only create patches.
     pub show_base_mobs: bool,
 }
 
@@ -189,10 +195,18 @@ impl EditorConfig {
         self.base_assets_dir.parent().map(|p| p.to_path_buf())
     }
 
-    /// Get the extended assets root directory (parent of mobs dir)
+    /// Get the game assets root directory (parent of mobs dir)
     /// e.g., "my-game/assets/mobs" -> "my-game/assets"
-    pub fn extended_assets_root(&self) -> Option<PathBuf> {
-        self.extended_assets_dir
+    pub fn game_assets_root(&self) -> Option<PathBuf> {
+        self.game_assets_dir
+            .as_ref()
+            .and_then(|p| p.parent())
+            .map(|p| p.to_path_buf())
+    }
+
+    /// Get the mods assets root directory (parent of mobs dir)
+    pub fn mods_assets_root(&self) -> Option<PathBuf> {
+        self.mods_assets_dir
             .as_ref()
             .and_then(|p| p.parent())
             .map(|p| p.to_path_buf())
@@ -203,10 +217,14 @@ impl EditorConfig {
         self.base_assets_root().map(|p| p.join("game.assets.ron"))
     }
 
-    /// Get the extended game.assets.ron path
-    pub fn extended_assets_ron(&self) -> Option<PathBuf> {
-        self.extended_assets_root()
-            .map(|p| p.join("game.assets.ron"))
+    /// Get the game game.assets.ron path
+    pub fn game_assets_ron(&self) -> Option<PathBuf> {
+        self.game_assets_root().map(|p| p.join("game.assets.ron"))
+    }
+
+    /// Get the mods game.assets.ron path
+    pub fn mods_assets_ron(&self) -> Option<PathBuf> {
+        self.mods_assets_root().map(|p| p.join("game.assets.ron"))
     }
 
     /// Get the base mobs.assets.ron path
@@ -214,38 +232,64 @@ impl EditorConfig {
         self.base_assets_root().map(|p| p.join("mobs.assets.ron"))
     }
 
-    /// Get the extended mobs.assets.ron path
-    pub fn extended_mobs_assets_ron(&self) -> Option<PathBuf> {
-        self.extended_assets_root()
-            .map(|p| p.join("mobs.assets.ron"))
+    /// Get the game mobs.assets.ron path
+    pub fn game_mobs_assets_ron(&self) -> Option<PathBuf> {
+        self.game_assets_root().map(|p| p.join("mobs.assets.ron"))
     }
 
-    /// Check if a path is within the extended assets directory.
+    /// Get the mods mobs.assets.ron path
+    pub fn mods_mobs_assets_ron(&self) -> Option<PathBuf> {
+        self.mods_assets_root().map(|p| p.join("mobs.assets.ron"))
+    }
+
+    /// Check if a path is within the game assets directory.
     ///
     /// Uses `Path::starts_with` for correct path prefix checking,
     /// avoiding false positives that could occur with string contains.
-    pub fn is_extended_path(&self, path: &std::path::Path) -> bool {
-        if let Some(extended) = &self.extended_assets_dir {
-            // Use Path::starts_with for proper path prefix checking
-            // This handles path normalization correctly
-            path.starts_with(extended)
+    pub fn is_game_path(&self, path: &std::path::Path) -> bool {
+        if let Some(game) = &self.game_assets_dir {
+            path.starts_with(game)
         } else {
             false
         }
     }
 
-    /// Resolve a sprite path to a filesystem path, checking extended first then base
+    /// Check if a path is within the mods assets directory.
+    pub fn is_mods_path(&self, path: &std::path::Path) -> bool {
+        if let Some(mods) = &self.mods_assets_dir {
+            path.starts_with(mods)
+        } else {
+            false
+        }
+    }
+
+    /// Check if a path is within either game or mods directory (not base).
+    /// Legacy alias for is_game_path - kept for backwards compatibility.
+    pub fn is_extended_path(&self, path: &std::path::Path) -> bool {
+        self.is_game_path(path) || self.is_mods_path(path)
+    }
+
+    /// Resolve a sprite path to a filesystem path, checking mods → game → base
     pub fn resolve_sprite_path(&self, relative_path: &str) -> Option<PathBuf> {
         let relative_path = relative_path
-            .strip_prefix("extended://")
+            .strip_prefix("game://")
+            .or_else(|| relative_path.strip_prefix("mods://"))
             .unwrap_or(relative_path);
         let cwd = std::env::current_dir().ok()?;
 
-        // Try extended first if available
-        if let Some(extended_root) = self.extended_assets_root() {
-            let extended_path = cwd.join(&extended_root).join(relative_path);
-            if extended_path.exists() {
-                return Some(extended_path);
+        // Try mods first if available
+        if let Some(mods_root) = self.mods_assets_root() {
+            let mods_path = cwd.join(&mods_root).join(relative_path);
+            if mods_path.exists() {
+                return Some(mods_path);
+            }
+        }
+
+        // Try game next
+        if let Some(game_root) = self.game_assets_root() {
+            let game_path = cwd.join(&game_root).join(relative_path);
+            if game_path.exists() {
+                return Some(game_path);
             }
         }
 
@@ -264,6 +308,7 @@ impl EditorConfig {
     /// Handles both formats:
     /// - Full path: "mobs/ferritharax_parts/left_shoulder.mob"
     /// - Short path: "ferritharax_parts/left_shoulder" (from dropdown)
+    /// Checks: base → game → mods (base first because it's the canonical source)
     pub fn resolve_mob_ref(&self, mob_ref: &str) -> Option<PathBuf> {
         let cwd = std::env::current_dir().ok()?;
 
@@ -287,7 +332,7 @@ impl EditorConfig {
             mob_ref.to_string()
         };
 
-        // Try base assets first
+        // Try base assets first (canonical source for base mobs)
         if let Some(base_root) = self.base_assets_root() {
             let base_path = cwd.join(&base_root).join(&normalized);
             if base_path.exists() {
@@ -295,11 +340,19 @@ impl EditorConfig {
             }
         }
 
-        // Try extended assets
-        if let Some(extended_root) = self.extended_assets_root() {
-            let extended_path = cwd.join(&extended_root).join(&normalized);
-            if extended_path.exists() {
-                return Some(extended_path);
+        // Try game assets
+        if let Some(game_root) = self.game_assets_root() {
+            let game_path = cwd.join(&game_root).join(&normalized);
+            if game_path.exists() {
+                return Some(game_path);
+            }
+        }
+
+        // Try mods assets
+        if let Some(mods_root) = self.mods_assets_root() {
+            let mods_path = cwd.join(&mods_root).join(&normalized);
+            if mods_path.exists() {
+                return Some(mods_path);
             }
         }
 
@@ -422,17 +475,13 @@ impl SpriteBrowserDialog {
     /// Note: config stores mobs directories (assets/mobs), but we need the parent assets directory
     fn get_assets_dir(&self, config: &EditorConfig) -> Option<PathBuf> {
         if self.browsing_extended {
-            // extended_assets_dir is like "thetawave-test-game/assets/mobs"
+            // game_assets_dir is like "thetawave-test-game/assets/mobs"
             // We need "thetawave-test-game/assets"
-            config
-                .extended_assets_dir
-                .as_ref()
-                .and_then(|p| p.parent())
-                .map(|p| p.to_path_buf())
+            config.game_assets_root()
         } else {
             // base_assets_dir is like "assets/mobs"
             // We need "assets"
-            config.base_assets_dir.parent().map(|p| p.to_path_buf())
+            config.base_assets_root()
         }
     }
 
@@ -558,7 +607,8 @@ fn initial_scan_system(
 ) {
     file_tree.scan_directories(
         &config.base_assets_dir,
-        config.extended_assets_dir.as_ref(),
+        config.game_assets_dir.as_ref(),
+        config.mods_assets_dir.as_ref(),
         config.show_base_mobs,
     );
     next_state.set(EditorState::Browsing);
@@ -569,7 +619,7 @@ fn initial_sprite_scan(mut sprite_registry: ResMut<SpriteRegistry>, config: Res<
     scan_sprite_registry(&mut sprite_registry, &config);
 }
 
-/// Scan .assets.ron files and populate the sprite registry
+/// Scan .assets.ron files and populate the sprite registry (3-tier: base, game, mods)
 fn scan_sprite_registry(registry: &mut SpriteRegistry, config: &EditorConfig) {
     registry.sprites.clear();
     registry.parse_errors.clear();
@@ -584,7 +634,7 @@ fn scan_sprite_registry(registry: &mut SpriteRegistry, config: &EditorConfig) {
         }
     };
 
-    // Scan base assets
+    // Tier 1: Scan base assets
     if let Some(base_assets_ron) = config.base_assets_ron() {
         let base_assets_ron = cwd.join(&base_assets_ron);
         if base_assets_ron.exists() {
@@ -604,18 +654,38 @@ fn scan_sprite_registry(registry: &mut SpriteRegistry, config: &EditorConfig) {
         }
     }
 
-    // Scan extended assets
-    if let Some(extended_assets_ron) = config.extended_assets_ron() {
-        let extended_assets_ron = cwd.join(&extended_assets_ron);
-        if extended_assets_ron.exists() {
-            match parse_assets_ron(&extended_assets_ron) {
+    // Tier 2: Scan game assets
+    if let Some(game_assets_ron) = config.game_assets_ron() {
+        let game_assets_ron = cwd.join(&game_assets_ron);
+        if game_assets_ron.exists() {
+            match parse_assets_ron(&game_assets_ron) {
                 Ok(paths) => {
                     for path in paths {
                         let display_name = extract_sprite_display_name(&path);
                         registry.sprites.push(RegisteredSprite {
                             asset_path: path,
                             display_name,
-                            source: AssetSource::Extended,
+                            source: AssetSource::Game,
+                        });
+                    }
+                }
+                Err(e) => registry.parse_errors.push(e),
+            }
+        }
+    }
+
+    // Tier 3: Scan mods assets
+    if let Some(mods_assets_ron) = config.mods_assets_ron() {
+        let mods_assets_ron = cwd.join(&mods_assets_ron);
+        if mods_assets_ron.exists() {
+            match parse_assets_ron(&mods_assets_ron) {
+                Ok(paths) => {
+                    for path in paths {
+                        let display_name = extract_sprite_display_name(&path);
+                        registry.sprites.push(RegisteredSprite {
+                            asset_path: path,
+                            display_name,
+                            source: AssetSource::Mods,
                         });
                     }
                 }
@@ -631,10 +701,11 @@ fn scan_sprite_registry(registry: &mut SpriteRegistry, config: &EditorConfig) {
     registry.needs_refresh = false;
 
     info!(
-        "Loaded {} sprites ({} base, {} extended)",
+        "Loaded {} sprites ({} base, {} game, {} mods)",
         registry.sprites.len(),
         registry.base_sprites().count(),
-        registry.extended_sprites().count()
+        registry.game_sprites().count(),
+        registry.mods_sprites().count()
     );
 }
 
@@ -652,7 +723,8 @@ fn check_file_refresh(mut file_tree: ResMut<FileTreeState>, config: Res<EditorCo
     if file_tree.needs_refresh {
         file_tree.scan_directories(
             &config.base_assets_dir,
-            config.extended_assets_dir.as_ref(),
+            config.game_assets_dir.as_ref(),
+            config.mods_assets_dir.as_ref(),
             config.show_base_mobs,
         );
     }
@@ -673,7 +745,7 @@ fn initial_mob_asset_scan(mut mob_registry: ResMut<MobAssetRegistry>, config: Re
     scan_mob_asset_registry(&mut mob_registry, &config);
 }
 
-/// Scan mobs.assets.ron files and populate the mob asset registry
+/// Scan mobs.assets.ron files and populate the mob asset registry (3-tier: base, game, mods)
 fn scan_mob_asset_registry(registry: &mut MobAssetRegistry, config: &EditorConfig) {
     registry.entries.clear();
     registry.parse_errors.clear();
@@ -688,7 +760,7 @@ fn scan_mob_asset_registry(registry: &mut MobAssetRegistry, config: &EditorConfi
         }
     };
 
-    // Scan base mobs.assets.ron
+    // Tier 1: Scan base mobs.assets.ron
     if let Some(base_mobs_ron) = config.base_mobs_assets_ron() {
         let base_mobs_ron = cwd.join(&base_mobs_ron);
         if base_mobs_ron.exists() {
@@ -717,18 +789,18 @@ fn scan_mob_asset_registry(registry: &mut MobAssetRegistry, config: &EditorConfi
         }
     }
 
-    // Scan extended mobs.assets.ron
-    if let Some(extended_mobs_ron) = config.extended_mobs_assets_ron() {
-        let extended_mobs_ron = cwd.join(&extended_mobs_ron);
-        if extended_mobs_ron.exists() {
-            match parse_mobs_assets_ron(&extended_mobs_ron) {
+    // Tier 2: Scan game mobs.assets.ron
+    if let Some(game_mobs_ron) = config.game_mobs_assets_ron() {
+        let game_mobs_ron = cwd.join(&game_mobs_ron);
+        if game_mobs_ron.exists() {
+            match parse_mobs_assets_ron(&game_mobs_ron) {
                 Ok(parsed) => {
                     for path in parsed.mobs {
                         let display_name = extract_mob_display_name(&path);
                         registry.entries.push(RegisteredMobAsset {
                             asset_path: path,
                             display_name,
-                            source: AssetSource::Extended,
+                            source: AssetSource::Game,
                         });
                     }
                     for path in parsed.patches {
@@ -736,7 +808,35 @@ fn scan_mob_asset_registry(registry: &mut MobAssetRegistry, config: &EditorConfi
                         registry.entries.push(RegisteredMobAsset {
                             asset_path: path,
                             display_name,
-                            source: AssetSource::Extended,
+                            source: AssetSource::Game,
+                        });
+                    }
+                }
+                Err(e) => registry.parse_errors.push(e),
+            }
+        }
+    }
+
+    // Tier 3: Scan mods mobs.assets.ron
+    if let Some(mods_mobs_ron) = config.mods_mobs_assets_ron() {
+        let mods_mobs_ron = cwd.join(&mods_mobs_ron);
+        if mods_mobs_ron.exists() {
+            match parse_mobs_assets_ron(&mods_mobs_ron) {
+                Ok(parsed) => {
+                    for path in parsed.mobs {
+                        let display_name = extract_mob_display_name(&path);
+                        registry.entries.push(RegisteredMobAsset {
+                            asset_path: path,
+                            display_name,
+                            source: AssetSource::Mods,
+                        });
+                    }
+                    for path in parsed.patches {
+                        let display_name = extract_mob_display_name(&path);
+                        registry.entries.push(RegisteredMobAsset {
+                            asset_path: path,
+                            display_name,
+                            source: AssetSource::Mods,
                         });
                     }
                 }
@@ -752,10 +852,11 @@ fn scan_mob_asset_registry(registry: &mut MobAssetRegistry, config: &EditorConfi
     registry.needs_refresh = false;
 
     info!(
-        "Loaded {} mob assets ({} base, {} extended)",
+        "Loaded {} mob assets ({} base, {} game, {} mods)",
         registry.entries.len(),
         registry.base_entries().count(),
-        registry.extended_entries().count()
+        registry.game_entries().count(),
+        registry.mods_entries().count()
     );
 }
 

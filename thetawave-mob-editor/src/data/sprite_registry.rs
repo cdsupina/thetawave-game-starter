@@ -1,7 +1,7 @@
 //! Sprite registry for tracking available sprites.
 //!
 //! The [`SpriteRegistry`] maintains a list of all registered sprites
-//! from both base and extended `game.assets.ron` files.
+//! from base, game, and mods `game.assets.ron` files.
 
 use bevy::prelude::Resource;
 
@@ -14,7 +14,7 @@ pub struct RegisteredSprite {
     pub asset_path: String,
     /// Display name for UI (file stem, e.g., "xhitara_grunt_mob")
     pub display_name: String,
-    /// Whether this is from base or extended assets
+    /// Whether this is from base, game, or mods assets
     pub source: AssetSource,
 }
 
@@ -25,10 +25,11 @@ impl RegisteredSprite {
     }
 
     /// Get the path to use when saving to a .mobpatch file
-    /// Extended sprites get the extended:// prefix
+    /// Game sprites get the game:// prefix, mods sprites get mods:// prefix
     pub fn mobpatch_path(&self) -> String {
         match self.source {
-            AssetSource::Extended => format!("extended://{}", self.asset_path),
+            AssetSource::Game => format!("game://{}", self.asset_path),
+            AssetSource::Mods => format!("mods://{}", self.asset_path),
             AssetSource::Base => self.asset_path.clone(),
         }
     }
@@ -46,18 +47,24 @@ pub struct SpriteRegistry {
 }
 
 impl SpriteRegistry {
-    /// Find a sprite by its asset path (with or without extended:// prefix)
+    /// Find a sprite by its asset path (with or without game:// or mods:// prefix)
     ///
-    /// When the path has an `extended://` prefix, only extended sprites are matched.
+    /// When the path has a `game://` prefix, only game sprites are matched.
+    /// When the path has a `mods://` prefix, only mods sprites are matched.
     /// When the path has no prefix, only base sprites are matched.
-    /// This ensures that base and extended sprites with the same relative path
+    /// This ensures that base, game, and mods sprites with the same relative path
     /// are treated as distinct entries.
     pub fn find_by_path(&self, path: &str) -> Option<&RegisteredSprite> {
-        if let Some(normalized) = path.strip_prefix("extended://") {
-            // Path has extended:// prefix - only match extended sprites
+        if let Some(normalized) = path.strip_prefix("game://") {
+            // Path has game:// prefix - only match game sprites
             self.sprites
                 .iter()
-                .find(|s| s.asset_path == normalized && s.source == AssetSource::Extended)
+                .find(|s| s.asset_path == normalized && s.source == AssetSource::Game)
+        } else if let Some(normalized) = path.strip_prefix("mods://") {
+            // Path has mods:// prefix - only match mods sprites
+            self.sprites
+                .iter()
+                .find(|s| s.asset_path == normalized && s.source == AssetSource::Mods)
         } else {
             // No prefix - only match base sprites
             self.sprites
@@ -92,10 +99,22 @@ impl SpriteRegistry {
             .filter(|s| s.source == AssetSource::Base)
     }
 
-    /// Get all extended sprites
-    pub fn extended_sprites(&self) -> impl Iterator<Item = &RegisteredSprite> {
+    /// Get all game sprites
+    pub fn game_sprites(&self) -> impl Iterator<Item = &RegisteredSprite> {
         self.sprites
             .iter()
-            .filter(|s| s.source == AssetSource::Extended)
+            .filter(|s| s.source == AssetSource::Game)
+    }
+
+    /// Get all mods sprites
+    pub fn mods_sprites(&self) -> impl Iterator<Item = &RegisteredSprite> {
+        self.sprites
+            .iter()
+            .filter(|s| s.source == AssetSource::Mods)
+    }
+
+    /// Get all extended sprites (game + mods, for backwards compatibility)
+    pub fn extended_sprites(&self) -> impl Iterator<Item = &RegisteredSprite> {
+        self.sprites.iter().filter(|s| s.source.is_extended())
     }
 }

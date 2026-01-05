@@ -9,7 +9,7 @@ use bevy::{
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use bevy_persistent::Persistent;
 use leafwing_input_manager::prelude::InputMap;
-use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets};
+use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets, ModGameAssets};
 use thetawave_core::{AppState, Cleanup};
 use thetawave_core::{HealthComponent, PlayerTag};
 use thetawave_physics::ThetawavePhysicsLayer;
@@ -22,6 +22,7 @@ pub(super) fn spawn_players_system(
     mut cmds: Commands,
     game_assets: Res<GameAssets>,
     extended_assets: Res<ExtendedGameAssets>,
+    mod_assets: Res<ModGameAssets>,
     options_res: Res<Persistent<OptionsRes>>,
     characters_res: Res<CharactersResource>,
     chosen_characters_res: Res<ChosenCharactersResource>,
@@ -39,6 +40,7 @@ pub(super) fn spawn_players_system(
                     animation: Animation::tag("idle"),
                     aseprite: AssetResolver::get_game_sprite(
                         &chosen_character_data.character,
+                        &mod_assets,
                         &extended_assets,
                         &game_assets,
                     )?,

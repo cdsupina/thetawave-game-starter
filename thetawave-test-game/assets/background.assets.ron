@@ -4,14 +4,14 @@
     "extended_space_backgrounds": Files(
         paths: [
             // Add extended background paths here, e.g.:
-            // "extended://media/images/backgrounds/custom_background.png",
+            // "game://media/images/backgrounds/custom_background.png",
         ]
     ),
     // Extended planets - these are added to the planet pool
     "extended_planets": Files(
         paths: [
             // Add extended planet paths here, e.g.:
-            // "extended://media/models/planets/Custom_Planet.glb#Scene0",
+            // "game://media/models/planets/Custom_Planet.glb#Scene0",
         ]
     ),
 })

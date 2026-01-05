@@ -12,7 +12,8 @@ use std::fmt;
 // Re-export asset types
 pub use data::{
     AssetResolver, BackgroundAssets, ExtendedBackgroundAssets, ExtendedGameAssets,
-    ExtendedMusicAssets, ExtendedUiAssets, GameAssets, MusicAssets, ParticleMaterials, UiAssets,
+    ExtendedMusicAssets, ExtendedUiAssets, GameAssets, ModBackgroundAssets, ModGameAssets,
+    ModMusicAssets, ModUiAssets, MusicAssets, ParticleMaterials, UiAssets,
 };
 
 pub use bevy_asset_loader::mapped::AssetFileStem;

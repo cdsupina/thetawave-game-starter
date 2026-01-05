@@ -3,9 +3,18 @@
 //! This module provides the infrastructure for loading `.mob` files as Bevy assets
 //! and building the runtime [`MobRegistry`] that resolves mob references.
 //!
+//! # 3-Tier Asset System
+//!
+//! Mob assets support a 3-tier priority system:
+//! - **Tier 1 (Base)**: Embedded library assets from `mobs.assets.ron`
+//! - **Tier 2 (Game)**: Developer assets from `game://mobs.assets.ron`
+//! - **Tier 3 (Mods)**: User/modder assets from `mods://mobs.assets.ron`
+//!
+//! Higher tiers override lower tiers (mods > game > base).
+//!
 //! # Asset Loading Pipeline
 //!
-//! The mob asset system uses a 5-step pipeline to load and process mob definitions:
+//! The mob asset system uses a 7-step pipeline to load and process mob definitions:
 //!
 //! ```text
 //! ┌─────────────────────────────────────────────────────────────────────────┐
@@ -19,29 +28,44 @@
 //!   Base .mob files are loaded from embedded assets and stored as raw
 //!   TOML values in RawMob assets, keyed by file stem (e.g., "xhitara/grunt").
 //!
-//! Step 2: Load Extended Mobs (AppState::GameLoading)
-//! ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//!   extended://mobs.assets.ron → MobAssetLoader → RawMob
+//! Step 2: Load Game Mobs (AppState::GameLoading)
+//! ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//!   game://mobs.assets.ron → MobAssetLoader → RawMob
 //!
-//!   Extended .mob files are loaded from the filesystem via the "extended://"
+//!   Game .mob files are loaded from the filesystem via the "game://"
 //!   asset source. These can add new mobs or completely override base mobs.
 //!
-//! Step 3: Load Mob Patches (AppState::GameLoading)
+//! Step 3: Load Mod Mobs (AppState::GameLoading)
+//! ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//!   mods://mobs.assets.ron → MobAssetLoader → RawMob
+//!
+//!   Mod .mob files are loaded from the mods directory. These can add
+//!   new mobs or override base/game mobs.
+//!
+//! Step 4: Load Game Patches (AppState::GameLoading)
+//! ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//!   game://mobs.assets.ron → MobPatchLoader → MobPatch
+//!
+//!   Game .mobpatch files are partial TOML overrides that will be
+//!   merged into base mobs at field level.
+//!
+//! Step 5: Load Mod Patches (AppState::GameLoading)
 //! ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//!   extended://mobs.assets.ron → MobPatchLoader → MobPatch
+//!   mods://mobs.assets.ron → MobPatchLoader → MobPatch
 //!
-//!   Extended .mobpatch files are partial TOML overrides that will be
-//!   merged into base/extended mobs at field level.
+//!   Mod .mobpatch files override game patches and can patch any mob.
 //!
-//! Step 4: Build MobRegistry (OnEnter(AppState::Game))
+//! Step 6: Build MobRegistry (OnEnter(AppState::Game))
 //! ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //!   a) Collect raw TOML values from base mobs
-//!   b) Add/override with extended complete mobs
-//!   c) Merge .mobpatch files into values (field-level override)
-//!   d) Deserialize merged values to MobAsset structs
-//!   e) Pre-build behavior trees for each mob
+//!   b) Add/override with game complete mobs
+//!   c) Add/override with mod complete mobs
+//!   d) Merge game .mobpatch files into values
+//!   e) Merge mod .mobpatch files into values (override game patches)
+//!   f) Deserialize merged values to MobAsset structs
+//!   g) Pre-build behavior trees for each mob
 //!
-//! Step 5: Runtime Access (AppState::Game)
+//! Step 7: Runtime Access (AppState::Game)
 //! ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //!   MobRegistry::get_mob("xhitara/grunt") → &MobAsset
 //!   MobRegistry::get_behavior("xhitara/grunt") → &Tree<Behave>
@@ -143,5 +167,31 @@ pub struct ExtendedMobPatches {
     /// Extended mob patches, keyed by file stem
     /// e.g., "xhitara/spitter" from "mobs/xhitara/spitter.mobpatch"
     #[asset(key = "extended_mob_patches", collection(typed, mapped), optional)]
+    pub patches: Option<HashMap<AssetFileStem, Handle<MobPatch>>>,
+}
+
+// ============================================================================
+// Mod Mobs (Tier 3 - User/Modder mob definitions)
+// ============================================================================
+
+/// Mod mobs loaded from mods:// source (optional).
+///
+/// These are complete mob definitions that add new mobs or override base/game mobs.
+/// Use .mob extension for these files.
+#[derive(Resource, Default, AssetCollection)]
+pub struct ModMobs {
+    /// Mod mobs, keyed by file stem
+    #[asset(key = "mod_mobs", collection(typed, mapped), optional)]
+    pub mobs: Option<HashMap<AssetFileStem, Handle<RawMob>>>,
+}
+
+/// Mod mob patches loaded from mods:// source (optional).
+///
+/// These are partial TOML overrides that get merged with base/game/mod mobs.
+/// Use .mobpatch extension for these files.
+#[derive(Resource, Default, AssetCollection)]
+pub struct ModMobPatches {
+    /// Mod mob patches, keyed by file stem
+    #[asset(key = "mod_mob_patches", collection(typed, mapped), optional)]
     pub patches: Option<HashMap<AssetFileStem, Handle<MobPatch>>>,
 }

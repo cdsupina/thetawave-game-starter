@@ -19,7 +19,8 @@ use iyes_progress::ProgressPlugin;
 use thetawave_core::AppState;
 
 use crate::{
-    ExtendedBackgroundAssets, ExtendedMusicAssets,
+    ExtendedBackgroundAssets, ExtendedMusicAssets, ModBackgroundAssets, ModGameAssets,
+    ModMusicAssets, ModUiAssets,
     data::{ExtendedGameAssets, ExtendedUiAssets, LoadingProgressEvent},
 };
 
@@ -54,33 +55,45 @@ impl Plugin for ThetawaveAssetsPlugin {
                 .after(LoadingStateSet(AppState::GameLoading)),
         );
 
-        // Configure main menu loading state
+        // Configure main menu loading state (3-tier: base -> game -> mods)
         let main_menu_loading = LoadingState::new(AppState::MainMenuLoading)
+            // Tier 1: Base assets (embedded in library)
             .with_dynamic_assets_file::<StandardDynamicAssetCollection>("ui.assets.ron")
             .load_collection::<UiAssets>()
-            .with_dynamic_assets_file::<StandardDynamicAssetCollection>("extended://ui.assets.ron")
-            .load_collection::<ExtendedUiAssets>()
             .with_dynamic_assets_file::<StandardDynamicAssetCollection>("music.assets.ron")
             .load_collection::<MusicAssets>()
-            .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
-                "extended://music.assets.ron",
-            )
-            .load_collection::<ExtendedMusicAssets>()
             .with_dynamic_assets_file::<StandardDynamicAssetCollection>("background.assets.ron")
             .load_collection::<BackgroundAssets>()
+            // Tier 2: Game assets (developer's assets folder)
+            .with_dynamic_assets_file::<StandardDynamicAssetCollection>("game://ui.assets.ron")
+            .load_collection::<ExtendedUiAssets>()
+            .with_dynamic_assets_file::<StandardDynamicAssetCollection>("game://music.assets.ron")
+            .load_collection::<ExtendedMusicAssets>()
             .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
-                "extended://background.assets.ron",
+                "game://background.assets.ron",
             )
-            .load_collection::<ExtendedBackgroundAssets>();
+            .load_collection::<ExtendedBackgroundAssets>()
+            // Tier 3: Mod assets (user/modder assets relative to executable)
+            .with_dynamic_assets_file::<StandardDynamicAssetCollection>("mods://ui.assets.ron")
+            .load_collection::<ModUiAssets>()
+            .with_dynamic_assets_file::<StandardDynamicAssetCollection>("mods://music.assets.ron")
+            .load_collection::<ModMusicAssets>()
+            .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
+                "mods://background.assets.ron",
+            )
+            .load_collection::<ModBackgroundAssets>();
 
-        // Configure game loading state
+        // Configure game loading state (3-tier: base -> game -> mods)
         let game_loading = LoadingState::new(AppState::GameLoading)
+            // Tier 1: Base assets
             .with_dynamic_assets_file::<StandardDynamicAssetCollection>("game.assets.ron")
             .load_collection::<GameAssets>()
-            .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
-                "extended://game.assets.ron",
-            )
-            .load_collection::<ExtendedGameAssets>();
+            // Tier 2: Game assets
+            .with_dynamic_assets_file::<StandardDynamicAssetCollection>("game://game.assets.ron")
+            .load_collection::<ExtendedGameAssets>()
+            // Tier 3: Mod assets
+            .with_dynamic_assets_file::<StandardDynamicAssetCollection>("mods://game.assets.ron")
+            .load_collection::<ModGameAssets>();
 
         // ProgressPlugin handles state transitions
         app.add_loading_state(main_menu_loading)

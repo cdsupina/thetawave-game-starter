@@ -8,23 +8,24 @@ use bevy::{
 };
 use bevy_alt_ui_navigation_lite::prelude::{Focusable, NavMessage};
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
-use thetawave_assets::{AssetResolver, ExtendedUiAssets};
+use thetawave_assets::{AssetResolver, ExtendedUiAssets, ModUiAssets};
 
 /// Spawn ui for title menu
 pub(in crate::ui) fn spawn_title_menu_system(
     mut cmds: Commands,
+    mod_ui_assets: Res<ModUiAssets>,
     extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
 ) {
     // Pre-resolve assets - will panic on failure
     let thetawave_logo_sprite =
-        AssetResolver::get_ui_sprite("thetawave_logo", &extended_ui_assets, &ui_assets)
+        AssetResolver::get_ui_sprite("thetawave_logo", &mod_ui_assets, &extended_ui_assets, &ui_assets)
             .expect("Failed to load thetawave_logo sprite");
     let bluesky_logo_sprite =
-        AssetResolver::get_ui_sprite("bluesky_logo", &extended_ui_assets, &ui_assets)
+        AssetResolver::get_ui_sprite("bluesky_logo", &mod_ui_assets, &extended_ui_assets, &ui_assets)
             .expect("Failed to load bluesky_logo sprite");
     let github_logo_sprite =
-        AssetResolver::get_ui_sprite("github_logo", &extended_ui_assets, &ui_assets)
+        AssetResolver::get_ui_sprite("github_logo", &mod_ui_assets, &extended_ui_assets, &ui_assets)
             .expect("Failed to load github_logo sprite");
 
     cmds.spawn((
@@ -80,6 +81,7 @@ pub(in crate::ui) fn spawn_title_menu_system(
             .with_children(|parent| {
                 // Play Button
                 parent.spawn_menu_button(
+                    &mod_ui_assets,
                     &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterMainMenuState(MainMenuState::CharacterSelection),
@@ -89,6 +91,7 @@ pub(in crate::ui) fn spawn_title_menu_system(
                 );
                 // Options Button
                 parent.spawn_menu_button(
+                    &mod_ui_assets,
                     &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterMainMenuState(MainMenuState::Options),
@@ -98,6 +101,7 @@ pub(in crate::ui) fn spawn_title_menu_system(
                 );
                 // Exit Button
                 parent.spawn_menu_button(
+                    &mod_ui_assets,
                     &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::Exit,

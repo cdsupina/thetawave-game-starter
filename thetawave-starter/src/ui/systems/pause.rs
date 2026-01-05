@@ -7,11 +7,12 @@ use bevy::{
     ui::{AlignItems, BackgroundColor, Display, FlexDirection, JustifyContent, Node, UiRect, Val},
     utils::default,
 };
-use thetawave_assets::ExtendedUiAssets;
+use thetawave_assets::{ExtendedUiAssets, ModUiAssets};
 
 /// Spawns the pause menu ui
 pub(in crate::ui) fn spawn_pause_menu_system(
     mut cmds: Commands,
+    mod_ui_assets: Res<ModUiAssets>,
     extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
 ) {
@@ -38,6 +39,7 @@ pub(in crate::ui) fn spawn_pause_menu_system(
     ))
     .with_children(|parent| {
         parent.spawn_menu_button(
+            &mod_ui_assets,
             &extended_ui_assets,
             &ui_assets,
             ButtonAction::EnterGameState(GameState::Playing),
@@ -47,6 +49,7 @@ pub(in crate::ui) fn spawn_pause_menu_system(
         );
 
         parent.spawn_menu_button(
+            &mod_ui_assets,
             &extended_ui_assets,
             &ui_assets,
             ButtonAction::EnterPauseMenuState(PauseMenuState::Options),
@@ -56,6 +59,7 @@ pub(in crate::ui) fn spawn_pause_menu_system(
         );
 
         parent.spawn_menu_button(
+            &mod_ui_assets,
             &extended_ui_assets,
             &ui_assets,
             ButtonAction::EnterAppState(AppState::MainMenuLoading),
@@ -69,6 +73,7 @@ pub(in crate::ui) fn spawn_pause_menu_system(
 /// Spawns ui for options pause menu
 pub(in crate::ui) fn spawn_pause_options_system(
     mut cmds: Commands,
+    mod_ui_assets: Res<ModUiAssets>,
     extended_ui_assets: Res<ExtendedUiAssets>,
     ui_assets: Res<UiAssets>,
 ) {
@@ -106,6 +111,7 @@ pub(in crate::ui) fn spawn_pause_options_system(
             })
             .with_children(|parent| {
                 parent.spawn_menu_button(
+                    &mod_ui_assets,
                     &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::ApplyOptions,
@@ -115,6 +121,7 @@ pub(in crate::ui) fn spawn_pause_options_system(
                 );
 
                 parent.spawn_menu_button(
+                    &mod_ui_assets,
                     &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterPauseMenuState(PauseMenuState::Main),
