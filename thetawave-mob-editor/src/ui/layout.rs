@@ -198,7 +198,7 @@ pub fn main_ui_system(
 
         // Get the mobs.assets.ron path
         let mobs_assets_path = if is_extended {
-            config.extended_mobs_assets_ron()
+            config.game_mobs_assets_ron()
         } else {
             config.base_mobs_assets_ron()
         };
@@ -206,7 +206,7 @@ pub fn main_ui_system(
         if let Some(mobs_assets_path) = mobs_assets_path {
             // Calculate relative path for the assets.ron file
             let assets_root = if is_extended {
-                config.extended_assets_root()
+                config.game_assets_root()
             } else {
                 config.base_assets_root()
             };
@@ -246,9 +246,9 @@ pub fn main_ui_system(
     // Handle sprite registration from properties panel
     for sprite_path in panel_result.register_sprites {
         // Determine if this is an extended sprite and extract asset path
-        let is_extended = sprite_path.starts_with("extended://");
+        let is_extended = sprite_path.starts_with("game://");
         let asset_path = sprite_path
-            .strip_prefix("extended://")
+            .strip_prefix("game://")
             .unwrap_or(&sprite_path);
 
         // Get the appropriate assets.ron path
@@ -260,7 +260,7 @@ pub fn main_ui_system(
             }
         };
         let assets_ron = if is_extended {
-            config.extended_assets_ron().map(|p| cwd.join(p))
+            config.game_assets_ron().map(|p| cwd.join(p))
         } else {
             config.base_assets_ron().map(|p| cwd.join(p))
         };
@@ -551,7 +551,7 @@ pub fn main_ui_system(
             }
         };
         let assets_ron = if is_extended {
-            config.extended_assets_ron().map(|p| cwd.join(p))
+            config.game_assets_ron().map(|p| cwd.join(p))
         } else {
             config.base_assets_ron().map(|p| cwd.join(p))
         };
@@ -560,7 +560,7 @@ pub fn main_ui_system(
             return;
         };
 
-        // Determine the mob path (with extended:// prefix if needed)
+        // Determine the mob path (with game:// prefix if needed)
         // Extended sprites need the prefix for both patches AND extended mobs
         let is_extended_mob = session
             .current_path
@@ -570,7 +570,7 @@ pub fn main_ui_system(
         let needs_extended_prefix = is_extended
             && (session.file_type == crate::data::FileType::MobPatch || is_extended_mob);
         let mob_path = if needs_extended_prefix {
-            format!("extended://{}", asset_path)
+            format!("game://{}", asset_path)
         } else {
             asset_path.clone()
         };
@@ -583,9 +583,9 @@ pub fn main_ui_system(
             .to_string();
 
         // Register sprite if needed
-        // When checking extended sprites, use the extended:// prefix for proper matching
+        // When checking extended sprites, use the game:// prefix for proper matching
         let check_path = if is_extended {
-            format!("extended://{}", asset_path)
+            format!("game://{}", asset_path)
         } else {
             asset_path.clone()
         };
@@ -1016,10 +1016,10 @@ fn render_new_patch_dialog(
 
     if *should_create
         && let Some(mob_ref) = &dialog.selected_mob_ref
-        && let Some(extended_dir) = &config.extended_assets_dir
+        && let Some(game_dir) = &config.game_assets_dir
     {
-        // Construct path: extended_dir/mob_ref.mobpatch
-        let patch_path = extended_dir.join(format!("{}.mobpatch", mob_ref));
+        // Construct path: game_dir/mob_ref.mobpatch
+        let patch_path = game_dir.join(format!("{}.mobpatch", mob_ref));
 
         // Create parent directories if needed
         if let Some(parent) = patch_path.parent()
@@ -1104,11 +1104,11 @@ fn render_registration_dialog(
                     };
 
                     for sprite in &dialog.unregistered_sprites {
-                        let is_extended = sprite.starts_with("extended://");
-                        let clean_path = sprite.strip_prefix("extended://").unwrap_or(sprite);
+                        let is_extended = sprite.starts_with("game://");
+                        let clean_path = sprite.strip_prefix("game://").unwrap_or(sprite);
 
                         let assets_ron = if is_extended {
-                            config.extended_assets_ron().map(|p| cwd.join(p))
+                            config.game_assets_ron().map(|p| cwd.join(p))
                         } else {
                             config.base_assets_ron().map(|p| cwd.join(p))
                         };
@@ -1422,9 +1422,9 @@ fn render_sprite_browser_dialog(
                 }
 
                 if dialog.allow_extended
-                    && config.extended_assets_dir.is_some()
+                    && config.game_assets_dir.is_some()
                     && ui
-                        .selectable_label(dialog.browsing_extended, "📂 Extended Assets")
+                        .selectable_label(dialog.browsing_extended, "📂 Game Assets")
                         .clicked()
                 {
                     dialog.switch_assets_source(true, config);
@@ -1436,7 +1436,7 @@ fn render_sprite_browser_dialog(
             // Breadcrumb navigation
             ui.horizontal(|ui| {
                 let source_name = if dialog.browsing_extended {
-                    "extended"
+                    "game"
                 } else {
                     "base"
                 };
@@ -1489,9 +1489,9 @@ fn render_sprite_browser_dialog(
                                 format!("{}/{}", dialog.current_path.join("/"), entry.name)
                             };
 
-                            // When browsing extended, check with extended:// prefix
+                            // When browsing extended, check with game:// prefix
                             let check_path = if dialog.browsing_extended {
-                                format!("extended://{}", asset_path)
+                                format!("game://{}", asset_path)
                             } else {
                                 asset_path.clone()
                             };
@@ -1523,11 +1523,11 @@ fn render_sprite_browser_dialog(
                     .unwrap_or_default();
 
                 // Build asset path to check registration
-                // When browsing extended, add extended:// prefix for proper matching
+                // When browsing extended, add game:// prefix for proper matching
                 let asset_path = dialog.get_asset_path(selected, config);
                 let check_path = asset_path.as_ref().map(|p| {
                     if dialog.browsing_extended {
-                        format!("extended://{}", p)
+                        format!("game://{}", p)
                     } else {
                         p.clone()
                     }
@@ -1545,7 +1545,8 @@ fn render_sprite_browser_dialog(
                 if let Some(sprite) = registration_info {
                     let source_name = match sprite.source {
                         AssetSource::Base => "base game.assets.ron",
-                        AssetSource::Extended => "extended game.assets.ron",
+                        AssetSource::Game => "game game.assets.ron",
+                        AssetSource::Mods => "mods game.assets.ron",
                     };
                     ui.label(
                         egui::RichText::new(format!("✔ Already registered in {}", source_name))

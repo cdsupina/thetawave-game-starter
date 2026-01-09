@@ -26,7 +26,7 @@ use bevy_egui::{
 use bevy_persistent::Persistent;
 use itertools::{EitherOrBoth, Itertools};
 use strum::IntoEnumIterator;
-use thetawave_assets::{ExtendedUiAssets, UiAssets};
+use thetawave_assets::MergedUiAssets;
 use thetawave_core::{Cleanup, MainMenuState};
 use thetawave_player::{DummyGamepad, InputType, PlayerAbility, PlayerAction};
 
@@ -35,8 +35,7 @@ const LABEL_TEXT_SIZE: f32 = 12.0;
 /// Spawns options menu ui for the main menu
 pub(in crate::ui) fn spawn_input_rebinding_menu_system(
     mut cmds: Commands,
-    extended_ui_assets: Res<ExtendedUiAssets>,
-    ui_assets: Res<UiAssets>,
+    ui_assets: Res<MergedUiAssets>,
 ) {
     cmds.spawn((
         Cleanup::<MainMenuState> {
@@ -66,7 +65,6 @@ pub(in crate::ui) fn spawn_input_rebinding_menu_system(
             })
             .with_children(|parent| {
                 parent.spawn_menu_button(
-                    &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::ApplyOptions,
                     300.0,
@@ -74,7 +72,6 @@ pub(in crate::ui) fn spawn_input_rebinding_menu_system(
                     false,
                 );
                 parent.spawn_menu_button(
-                    &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterMainMenuState(MainMenuState::Title),
                     300.0,

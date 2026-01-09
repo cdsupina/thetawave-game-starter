@@ -6,7 +6,7 @@ use crate::{
     audio::AudioEffectEvent,
     options::{ApplyOptionsEvent, OptionsRes},
 };
-use thetawave_assets::{LoadingProgressEvent, UiAssets};
+use thetawave_assets::LoadingProgressEvent;
 use thetawave_core::{AppState, Cleanup, GameState, MainMenuState, PauseMenuState};
 use thetawave_player::{ChosenCharactersResource, InputType, PlayerJoinEvent, PlayerNum};
 

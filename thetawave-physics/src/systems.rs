@@ -22,6 +22,10 @@ pub(super) fn pause_physics_system(
     for event in game_state_trans.read() {
         if let Some(entered_state) = event.entered {
             match entered_state {
+                GameState::Initializing => {
+                    // Keep physics paused during initialization
+                    physics_time.pause();
+                }
                 GameState::Playing => {
                     physics_time.unpause();
                 }

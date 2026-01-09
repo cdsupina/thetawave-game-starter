@@ -16,7 +16,7 @@ use bevy_enoki::{
     EmissionShape, NoAutoAabb, Particle2dEffect, ParticleEffectHandle, ParticleSpawner,
     prelude::{ColorParticle2dMaterial, OneShot, ParticleSpawnerState},
 };
-use thetawave_assets::{AssetResolver, ExtendedGameAssets, GameAssets, ParticleMaterials};
+use thetawave_assets::{AssetResolver, MergedGameAssets, ParticleMaterials};
 #[cfg(feature = "debug")]
 use thetawave_core::LoggingSettings;
 use thetawave_core::{AppState, Cleanup};
@@ -80,15 +80,14 @@ pub fn spawn_blood_effect(
     color: &Color,
     position: Vec2,
     direction: Vec2,
-    extended_assets: &ExtendedGameAssets,
-    assets: &GameAssets,
+    assets: &MergedGameAssets,
     materials: &ParticleMaterials,
     particle_effects: &mut Assets<Particle2dEffect>,
     color_materials: &mut Assets<ColorParticle2dMaterial>,
     #[cfg(feature = "debug")] logging_settings: &LoggingSettings,
 ) -> Result<Entity, BevyError> {
     // Get the base blood effect handle and modify it for direction
-    let base_handle = AssetResolver::get_game_particle_effect("blood", extended_assets, assets)?;
+    let base_handle = AssetResolver::get_game_particle_effect("blood", assets)?;
     let particle_effect_handle = if let Some(base_effect) = particle_effects.get(&base_handle) {
         let mut modified_effect = base_effect.clone();
 
@@ -147,8 +146,7 @@ pub fn spawn_projectile_trail(
     parent_entity: Entity,
     color: &Color,
     scale: f32,
-    extended_assets: &ExtendedGameAssets,
-    assets: &GameAssets,
+    assets: &MergedGameAssets,
     materials: &ParticleMaterials,
     particle_effects: &mut Assets<Particle2dEffect>,
     color_materials: &mut Assets<ColorParticle2dMaterial>,
@@ -157,7 +155,7 @@ pub fn spawn_projectile_trail(
     // Get the projectile trail effect handle and apply scaling
     let particle_effect_handle = {
         let base_handle =
-            AssetResolver::get_game_particle_effect("projectile_trail", extended_assets, assets)?;
+            AssetResolver::get_game_particle_effect("projectile_trail", assets)?;
         if let Some(base_effect) = particle_effects.get(&base_handle) {
             let mut modified_effect = base_effect.clone();
 
@@ -227,8 +225,7 @@ pub fn spawn_explosion(
     color: &Color,
     position: Vec2,
     scale: f32,
-    extended_assets: &ExtendedGameAssets,
-    assets: &GameAssets,
+    assets: &MergedGameAssets,
     materials: &ParticleMaterials,
     particle_effects: &mut Assets<Particle2dEffect>,
     color_materials: &mut Assets<ColorParticle2dMaterial>,
@@ -236,7 +233,7 @@ pub fn spawn_explosion(
     // Get the explosion effect handle and apply scaling
     let particle_effect_handle = {
         let base_handle =
-            AssetResolver::get_game_particle_effect("explosion", extended_assets, assets)?;
+            AssetResolver::get_game_particle_effect("explosion", assets)?;
         if let Some(base_effect) = particle_effects.get(&base_handle) {
             let mut modified_effect = base_effect.clone();
 
@@ -281,8 +278,7 @@ pub fn spawn_projectile_despawn_effect(
     color: &Color,
     position: Vec2,
     scale: f32,
-    extended_assets: &ExtendedGameAssets,
-    assets: &GameAssets,
+    assets: &MergedGameAssets,
     materials: &ParticleMaterials,
     particle_effects: &mut Assets<Particle2dEffect>,
     color_materials: &mut Assets<ColorParticle2dMaterial>,
@@ -290,7 +286,7 @@ pub fn spawn_projectile_despawn_effect(
     // Get the despawn effect handle and apply scaling
     let particle_effect_handle = {
         let base_handle =
-            AssetResolver::get_game_particle_effect(effect_type, extended_assets, assets)?;
+            AssetResolver::get_game_particle_effect(effect_type, assets)?;
         if let Some(base_effect) = particle_effects.get(&base_handle) {
             let mut modified_effect = base_effect.clone();
 
@@ -335,8 +331,7 @@ pub fn spawn_projectile_hit_effect(
     color: &Color,
     position: Vec2,
     scale: f32,
-    extended_assets: &ExtendedGameAssets,
-    assets: &GameAssets,
+    assets: &MergedGameAssets,
     materials: &ParticleMaterials,
     particle_effects: &mut Assets<Particle2dEffect>,
     color_materials: &mut Assets<ColorParticle2dMaterial>,
@@ -344,7 +339,7 @@ pub fn spawn_projectile_hit_effect(
     // Get the hit effect handle and apply scaling
     let particle_effect_handle = {
         let base_handle =
-            AssetResolver::get_game_particle_effect(effect_type, extended_assets, assets)?;
+            AssetResolver::get_game_particle_effect(effect_type, assets)?;
         if let Some(base_effect) = particle_effects.get(&base_handle) {
             let mut modified_effect = base_effect.clone();
 
@@ -390,8 +385,7 @@ pub fn spawn_spawner_effect(
     color: &Color,
     position: Vec2,
     key: &str,
-    extended_assets: &ExtendedGameAssets,
-    assets: &GameAssets,
+    assets: &MergedGameAssets,
     materials: &ParticleMaterials,
     _particle_effects: &mut Assets<Particle2dEffect>,
     color_materials: &mut Assets<ColorParticle2dMaterial>,
@@ -399,7 +393,7 @@ pub fn spawn_spawner_effect(
 ) -> Result<Entity, BevyError> {
     // Get the spawner effect handle (no scaling needed)
     let particle_effect_handle =
-        AssetResolver::get_game_particle_effect(effect_type, extended_assets, assets)?;
+        AssetResolver::get_game_particle_effect(effect_type, assets)?;
 
     // Create transform from Vec2 position
     let transform = Transform::from_translation(position.extend(0.0));
@@ -431,8 +425,7 @@ pub fn spawn_spawner_effect(
 
 pub(crate) fn spawn_blood_effect_system(
     mut cmds: Commands,
-    extended_assets: Res<ExtendedGameAssets>,
-    assets: Res<GameAssets>,
+    assets: Res<MergedGameAssets>,
     materials: Res<ParticleMaterials>,
     mut particle_effects: ResMut<Assets<Particle2dEffect>>,
     mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
@@ -447,7 +440,6 @@ pub(crate) fn spawn_blood_effect_system(
             &event.color,
             event.position,
             event.direction,
-            &extended_assets,
             &assets,
             &materials,
             &mut particle_effects,
@@ -462,8 +454,7 @@ pub(crate) fn spawn_blood_effect_system(
 
 pub(crate) fn spawn_projectile_trail_system(
     mut cmds: Commands,
-    extended_assets: Res<ExtendedGameAssets>,
-    assets: Res<GameAssets>,
+    assets: Res<MergedGameAssets>,
     materials: Res<ParticleMaterials>,
     mut particle_effects: ResMut<Assets<Particle2dEffect>>,
     mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
@@ -476,7 +467,6 @@ pub(crate) fn spawn_projectile_trail_system(
             event.parent_entity,
             &event.color,
             event.scale,
-            &extended_assets,
             &assets,
             &materials,
             &mut particle_effects,
@@ -491,8 +481,7 @@ pub(crate) fn spawn_projectile_trail_system(
 
 pub(crate) fn spawn_explosion_system(
     mut cmds: Commands,
-    extended_assets: Res<ExtendedGameAssets>,
-    assets: Res<GameAssets>,
+    assets: Res<MergedGameAssets>,
     materials: Res<ParticleMaterials>,
     mut particle_effects: ResMut<Assets<Particle2dEffect>>,
     mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
@@ -504,7 +493,6 @@ pub(crate) fn spawn_explosion_system(
             &event.color,
             event.position,
             event.scale,
-            &extended_assets,
             &assets,
             &materials,
             &mut particle_effects,
@@ -517,8 +505,7 @@ pub(crate) fn spawn_explosion_system(
 
 pub(crate) fn spawn_projectile_despawn_effect_system(
     mut cmds: Commands,
-    extended_assets: Res<ExtendedGameAssets>,
-    assets: Res<GameAssets>,
+    assets: Res<MergedGameAssets>,
     materials: Res<ParticleMaterials>,
     mut particle_effects: ResMut<Assets<Particle2dEffect>>,
     mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
@@ -531,7 +518,6 @@ pub(crate) fn spawn_projectile_despawn_effect_system(
             &event.color,
             event.position,
             event.scale,
-            &extended_assets,
             &assets,
             &materials,
             &mut particle_effects,
@@ -544,8 +530,7 @@ pub(crate) fn spawn_projectile_despawn_effect_system(
 
 pub(crate) fn spawn_projectile_hit_effect_system(
     mut cmds: Commands,
-    extended_assets: Res<ExtendedGameAssets>,
-    assets: Res<GameAssets>,
+    assets: Res<MergedGameAssets>,
     materials: Res<ParticleMaterials>,
     mut particle_effects: ResMut<Assets<Particle2dEffect>>,
     mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
@@ -558,7 +543,6 @@ pub(crate) fn spawn_projectile_hit_effect_system(
             &event.color,
             event.position,
             event.scale,
-            &extended_assets,
             &assets,
             &materials,
             &mut particle_effects,
@@ -571,8 +555,7 @@ pub(crate) fn spawn_projectile_hit_effect_system(
 
 pub(crate) fn spawn_spawner_effect_system(
     mut cmds: Commands,
-    extended_assets: Res<ExtendedGameAssets>,
-    assets: Res<GameAssets>,
+    assets: Res<MergedGameAssets>,
     materials: Res<ParticleMaterials>,
     mut particle_effects: ResMut<Assets<Particle2dEffect>>,
     mut color_materials: ResMut<Assets<ColorParticle2dMaterial>>,
@@ -587,7 +570,6 @@ pub(crate) fn spawn_spawner_effect_system(
             &event.color,
             event.position,
             &event.key,
-            &extended_assets,
             &assets,
             &materials,
             &mut particle_effects,

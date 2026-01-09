@@ -15,7 +15,8 @@
 //!     .add_plugins(DefaultPlugins)
 //!     .add_plugins(MobEditorPlugin {
 //!         base_assets_dir: PathBuf::from("assets/mobs"),
-//!         extended_assets_dir: Some(PathBuf::from("my-game/assets/mobs")),
+//!         game_assets_dir: Some(PathBuf::from("my-game/assets/mobs")),
+//!         mods_assets_dir: None, // Optional: mods directory
 //!         show_base_mobs: true,
 //!     })
 //!     .run();

@@ -14,9 +14,13 @@ use iyes_progress::ProgressTracker;
 use thetawave_core::{AppState, Faction};
 
 use super::data::{
-    BackgroundAssets, GameAssets, LoadingProgressEvent, MusicAssets, ParticleMaterials, UiAssets,
+    BackgroundAssets, GameAssets, LoadingProgressEvent, MergedBackgroundAssets, MergedGameAssets,
+    MergedMusicAssets, MergedUiAssets, MusicAssets, ParticleMaterials, UiAssets,
 };
-use crate::{ExtendedBackgroundAssets, ExtendedGameAssets, ExtendedMusicAssets, ExtendedUiAssets};
+use crate::{
+    ExtendedBackgroundAssets, ExtendedGameAssets, ExtendedMusicAssets, ExtendedUiAssets,
+    ModBackgroundAssets, ModGameAssets, ModMusicAssets, ModUiAssets,
+};
 
 /// Helper to get length of an optional HashMap, returning 0 if None.
 fn opt_map_len<K: Eq + Hash, V>(opt: &Option<HashMap<K, V>>) -> usize {
@@ -156,4 +160,175 @@ pub(super) fn log_game_assets_system(
             info!("  Extended particle effect: {:?}", key);
         }
     }
+}
+
+// ============================================================================
+// Asset Merge Systems
+// ============================================================================
+
+/// Merge UI, Music, and Background assets from all 3 tiers into single resources.
+/// Called on entering MainMenu state after all tiers are loaded.
+///
+/// Merge semantics:
+/// - HashMap fields (sprites, images, fonts, music): Override - mods > game > base
+/// - Vec fields (button effects, backgrounds, planets): Additive - all tiers combined
+pub(super) fn merge_main_menu_assets_system(
+    mut cmds: Commands,
+    // UI assets
+    base_ui: Res<UiAssets>,
+    game_ui: Res<ExtendedUiAssets>,
+    mod_ui: Res<ModUiAssets>,
+    // Music assets
+    base_music: Res<MusicAssets>,
+    game_music: Res<ExtendedMusicAssets>,
+    mod_music: Res<ModMusicAssets>,
+    // Background assets
+    base_bg: Res<BackgroundAssets>,
+    game_bg: Res<ExtendedBackgroundAssets>,
+    mod_bg: Res<ModBackgroundAssets>,
+) {
+    // Merge UI assets (base → game → mods, later overwrites earlier)
+    let mut merged_ui = MergedUiAssets::default();
+    merged_ui.sprites.extend(base_ui.sprites.clone());
+    merged_ui.images.extend(base_ui.images.clone());
+    merged_ui.fonts.extend(base_ui.fonts.clone());
+    merged_ui
+        .menu_button_select_effects
+        .extend(base_ui.menu_button_select_effects.clone());
+    merged_ui
+        .menu_button_release_effects
+        .extend(base_ui.menu_button_release_effects.clone());
+    merged_ui
+        .menu_button_confirm_effects
+        .extend(base_ui.menu_button_confirm_effects.clone());
+
+    if let Some(sprites) = &game_ui.sprites {
+        merged_ui.sprites.extend(sprites.clone());
+    }
+    if let Some(images) = &game_ui.images {
+        merged_ui.images.extend(images.clone());
+    }
+    if let Some(fonts) = &game_ui.fonts {
+        merged_ui.fonts.extend(fonts.clone());
+    }
+    if let Some(effects) = &game_ui.menu_button_select_effects {
+        merged_ui.menu_button_select_effects.extend(effects.clone());
+    }
+    if let Some(effects) = &game_ui.menu_button_release_effects {
+        merged_ui
+            .menu_button_release_effects
+            .extend(effects.clone());
+    }
+    if let Some(effects) = &game_ui.menu_button_confirm_effects {
+        merged_ui
+            .menu_button_confirm_effects
+            .extend(effects.clone());
+    }
+
+    if let Some(sprites) = &mod_ui.sprites {
+        merged_ui.sprites.extend(sprites.clone());
+    }
+    if let Some(images) = &mod_ui.images {
+        merged_ui.images.extend(images.clone());
+    }
+    if let Some(fonts) = &mod_ui.fonts {
+        merged_ui.fonts.extend(fonts.clone());
+    }
+    if let Some(effects) = &mod_ui.menu_button_select_effects {
+        merged_ui.menu_button_select_effects.extend(effects.clone());
+    }
+    if let Some(effects) = &mod_ui.menu_button_release_effects {
+        merged_ui
+            .menu_button_release_effects
+            .extend(effects.clone());
+    }
+    if let Some(effects) = &mod_ui.menu_button_confirm_effects {
+        merged_ui
+            .menu_button_confirm_effects
+            .extend(effects.clone());
+    }
+
+    cmds.insert_resource(merged_ui);
+
+    // Merge music assets
+    let mut merged_music = MergedMusicAssets::default();
+    merged_music.music.extend(base_music.music.clone());
+    if let Some(music) = &game_music.music {
+        merged_music.music.extend(music.clone());
+    }
+    if let Some(music) = &mod_music.music {
+        merged_music.music.extend(music.clone());
+    }
+    cmds.insert_resource(merged_music);
+
+    // Merge background assets (all tiers combined for random selection)
+    let mut merged_bg = MergedBackgroundAssets::default();
+    merged_bg
+        .space_backgrounds
+        .extend(base_bg.space_backgrounds.clone());
+    merged_bg.planets.extend(base_bg.planets.clone());
+    if let Some(backgrounds) = &game_bg.space_backgrounds {
+        merged_bg.space_backgrounds.extend(backgrounds.clone());
+    }
+    if let Some(planets) = &game_bg.planets {
+        merged_bg.planets.extend(planets.clone());
+    }
+    if let Some(backgrounds) = &mod_bg.space_backgrounds {
+        merged_bg.space_backgrounds.extend(backgrounds.clone());
+    }
+    if let Some(planets) = &mod_bg.planets {
+        merged_bg.planets.extend(planets.clone());
+    }
+    cmds.insert_resource(merged_bg);
+
+    info!("Merged main menu assets from 3 tiers (base, game, mods)");
+}
+
+/// Merge game assets from all 3 tiers into a single resource.
+/// Called on entering Game state after all tiers are loaded.
+pub(super) fn merge_game_assets_system(
+    mut cmds: Commands,
+    base: Res<GameAssets>,
+    game: Res<ExtendedGameAssets>,
+    mods: Res<ModGameAssets>,
+) {
+    let mut merged = MergedGameAssets::default();
+
+    // Base assets (required)
+    merged.sprites.extend(base.sprites.clone());
+    merged.particle_effects.extend(base.particle_effects.clone());
+
+    // Game assets (optional, overwrites base)
+    if let Some(sprites) = &game.sprites {
+        merged.sprites.extend(sprites.clone());
+    }
+    if let Some(effects) = &game.particle_effects {
+        merged.particle_effects.extend(effects.clone());
+    }
+
+    // Mod assets (optional, overwrites game+base)
+    if let Some(sprites) = &mods.sprites {
+        merged.sprites.extend(sprites.clone());
+    }
+    if let Some(effects) = &mods.particle_effects {
+        merged.particle_effects.extend(effects.clone());
+    }
+
+    info!(
+        "Merged game assets: {} sprites, {} particle effects",
+        merged.sprites.len(),
+        merged.particle_effects.len()
+    );
+
+    cmds.insert_resource(merged);
+}
+
+/// Unload merged game assets when exiting game state.
+///
+/// Note: MergedUiAssets, MergedMusicAssets, and MergedBackgroundAssets are NOT
+/// cleaned up because they persist for the app lifetime - music and backgrounds
+/// are needed during gameplay, not just in MainMenu. If the app were to restart
+/// and re-enter MainMenuLoading, insert_resource would replace the existing ones.
+pub(super) fn unload_merged_game_assets_system(mut cmds: Commands) {
+    cmds.remove_resource::<MergedGameAssets>();
 }

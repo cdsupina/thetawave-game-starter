@@ -5,7 +5,7 @@
     "extended_music": Files(
         paths: [
             // Add extended music paths here, e.g.:
-            // "extended://media/audio/music/custom_game_theme.mp3",
+            // "game://media/audio/music/custom_game_theme.mp3",
         ]
     ),
 })

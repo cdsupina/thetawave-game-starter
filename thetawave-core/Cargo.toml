@@ -6,6 +6,7 @@ edition.workspace = true
 [dependencies]
 bevy = { workspace = true, features = [
     "bevy_color",
+    "bevy_log",
     "serialize",
     "bevy_state",
 ] }

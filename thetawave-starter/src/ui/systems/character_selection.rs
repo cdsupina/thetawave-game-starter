@@ -1,6 +1,6 @@
 use super::{
     AudioEffectEvent, ButtonAction, Cleanup, MainMenuState, OptionsRes, PlayerJoinEvent, PlayerNum,
-    PlayerReadyEvent, UiAssets,
+    PlayerReadyEvent,
 };
 use crate::ui::data::{
     CarouselReadyTimer, CarouselSlotPosition, CharacterCarousel, CharacterSelector,
@@ -22,7 +22,7 @@ use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
 use bevy_persistent::Persistent;
 use leafwing_input_manager::prelude::{ActionState, InputMap};
-use thetawave_assets::{AssetResolver, ExtendedUiAssets};
+use thetawave_assets::{AssetResolver, MergedUiAssets};
 use thetawave_core::AppState;
 use thetawave_player::{
     CharacterCarouselAction, CharactersResource, ChosenCharacterData, ChosenCharactersResource,
@@ -32,8 +32,7 @@ use thetawave_player::{
 /// Spawn ui for character selection
 pub(in crate::ui) fn spawn_character_selection_system(
     mut cmds: Commands,
-    extended_ui_assets: Res<ExtendedUiAssets>,
-    ui_assets: Res<UiAssets>,
+    ui_assets: Res<MergedUiAssets>,
 ) {
     cmds.spawn((
         Cleanup::<MainMenuState> {
@@ -69,14 +68,12 @@ pub(in crate::ui) fn spawn_character_selection_system(
                     .with_children(|parent| {
                         // Player 1 character selection
                         parent.spawn_character_selection(
-                            &extended_ui_assets,
                             &ui_assets,
                             PlayerNum::One,
                         );
 
                         // Player 2 character selection
                         parent.spawn_character_selection(
-                            &extended_ui_assets,
                             &ui_assets,
                             PlayerNum::Two,
                         );
@@ -92,14 +89,12 @@ pub(in crate::ui) fn spawn_character_selection_system(
                     .with_children(|parent| {
                         // Player 3 character selection
                         parent.spawn_character_selection(
-                            &extended_ui_assets,
                             &ui_assets,
                             PlayerNum::Three,
                         );
 
                         // Player 4 character selection
                         parent.spawn_character_selection(
-                            &extended_ui_assets,
                             &ui_assets,
                             PlayerNum::Four,
                         );
@@ -119,7 +114,6 @@ pub(in crate::ui) fn spawn_character_selection_system(
             })
             .with_children(|parent| {
                 parent.spawn_menu_button(
-                    &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterAppState(AppState::GameLoading),
                     300.0,
@@ -128,7 +122,6 @@ pub(in crate::ui) fn spawn_character_selection_system(
                 );
 
                 parent.spawn_menu_button(
-                    &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterMainMenuState(MainMenuState::Title),
                     300.0,
@@ -202,8 +195,7 @@ pub(in crate::ui) fn cycle_player_one_carousel_system(
 pub(in crate::ui) fn update_carousel_ui_system(
     carousel_q: Query<(&Children, &CharacterCarousel), Changed<CharacterCarousel>>,
     mut carousel_slot_q: Query<(&VisibleCarouselSlot, &mut ImageNode)>,
-    extended_ui_assets: Res<ExtendedUiAssets>,
-    ui_assets: Res<UiAssets>,
+    ui_assets: Res<MergedUiAssets>,
 ) -> bevy::ecs::error::Result {
     for (children, carousel) in carousel_q.iter() {
         // Iterate through all of the visible character image nodes
@@ -219,7 +211,6 @@ pub(in crate::ui) fn update_carousel_ui_system(
                 if let Some(character_type) = maybe_character_type {
                     image_node.image = AssetResolver::get_ui_image(
                         character_type,
-                        &extended_ui_assets,
                         &ui_assets,
                     )?;
                 }
@@ -252,8 +243,7 @@ pub(in crate::ui) fn spawn_carousel_system(
     mut player_join_events: MessageReader<PlayerJoinEvent>,
     character_selector_q: Query<(Entity, &PlayerNum), With<CharacterSelector>>,
     mut cmds: Commands,
-    extended_ui_assets: Res<ExtendedUiAssets>,
-    ui_assets: Res<UiAssets>,
+    ui_assets: Res<MergedUiAssets>,
     options_res: Res<Persistent<OptionsRes>>,
     characters_resource: Res<CharactersResource>,
 ) {
@@ -266,14 +256,13 @@ pub(in crate::ui) fn spawn_carousel_system(
 
                 // Pre-resolve assets - will panic on failure
                 let arrow_sprite =
-                    AssetResolver::get_ui_sprite("arrow_button", &extended_ui_assets, &ui_assets)
+                    AssetResolver::get_ui_sprite("arrow_button", &ui_assets)
                         .expect("Failed to load arrow_button sprite");
 
                 // Pre-resolve character images - will panic on failure
                 let left_image = carousel.get_left_character().map(|left_character_type| {
                     AssetResolver::get_ui_image(
                         left_character_type,
-                        &extended_ui_assets,
                         &ui_assets,
                     )
                     .expect("Failed to load left character image")
@@ -283,7 +272,6 @@ pub(in crate::ui) fn spawn_carousel_system(
                     .map(|active_character_type| {
                         AssetResolver::get_ui_image(
                             active_character_type,
-                            &extended_ui_assets,
                             &ui_assets,
                         )
                         .expect("Failed to load active character image")
@@ -291,7 +279,6 @@ pub(in crate::ui) fn spawn_carousel_system(
                 let right_image = carousel.get_right_character().map(|right_character_type| {
                     AssetResolver::get_ui_image(
                         right_character_type,
-                        &extended_ui_assets,
                         &ui_assets,
                     )
                     .expect("Failed to load right character image")
@@ -421,8 +408,7 @@ pub(in crate::ui) fn spawn_carousel_system(
 pub(in crate::ui) fn spawn_ready_button_system(
     mut player_join_events: MessageReader<PlayerJoinEvent>,
     button_q: Query<(&ButtonAction, Entity, &ChildOf)>,
-    extended_ui_assets: Res<ExtendedUiAssets>,
-    ui_assets: Res<UiAssets>,
+    ui_assets: Res<MergedUiAssets>,
     mut cmds: Commands,
 ) {
     for event in player_join_events.read() {
@@ -437,7 +423,6 @@ pub(in crate::ui) fn spawn_ready_button_system(
 
                 menu_button_cmds.with_children(|parent| {
                     let mut entity_cmds = parent.spawn_menu_button(
-                        &extended_ui_assets,
                         &ui_assets,
                         ButtonAction::Ready(player_num.clone()),
                         300.0,
@@ -571,8 +556,7 @@ pub(in crate::ui) fn enable_join_button_system(
 pub(in crate::ui) fn spawn_join_prompt_system(
     mut player_join_events: MessageReader<PlayerJoinEvent>,
     character_selector_q: Query<(Entity, &PlayerNum), With<CharacterSelector>>,
-    extended_ui_assets: Res<ExtendedUiAssets>,
-    ui_assets: Res<UiAssets>,
+    ui_assets: Res<MergedUiAssets>,
     mut cmds: Commands,
 ) {
     for event in player_join_events.read() {
@@ -580,7 +564,7 @@ pub(in crate::ui) fn spawn_join_prompt_system(
             for (entity, player_num) in character_selector_q.iter() {
                 if next_player_num == *player_num {
                     cmds.entity(entity).with_children(|parent| {
-                        parent.spawn_join_prompt(&extended_ui_assets, &ui_assets);
+                        parent.spawn_join_prompt(&ui_assets);
                     });
                 }
             }

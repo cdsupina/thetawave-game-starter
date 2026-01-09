@@ -33,7 +33,7 @@ pub struct JointedMobCache {
 /// A resolved jointed mob ready for rendering
 #[derive(Debug, Clone)]
 pub struct ResolvedJointedMob {
-    /// Path to the sprite (may include extended:// prefix)
+    /// Path to the sprite (may include game:// prefix)
     pub sprite_path: Option<String>,
     /// Cumulative offset from the main mob
     pub offset_pos: Vec2,

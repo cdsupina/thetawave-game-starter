@@ -178,7 +178,7 @@ pub fn update_preview_mob(
 
     // Get sprite path from mob data
     let sprite_path = get_sprite_path(mob);
-    // For change detection, use the path with extended:// stripped
+    // For change detection, use the path with game:// stripped
     let sprite_key = sprite_path
         .as_ref()
         .map(|p| sprite_path_to_key(strip_extended_prefix(p)));
@@ -309,17 +309,17 @@ pub struct SpriteLoadResult {
     pub searched_paths: Vec<PathBuf>,
 }
 
-/// Check if a sprite path uses the extended:// prefix
+/// Check if a sprite path uses the game:// prefix
 fn is_extended_path(path: &str) -> bool {
-    path.starts_with("extended://")
+    path.starts_with("game://")
 }
 
-/// Strip the extended:// prefix from a path if present
+/// Strip the game:// prefix from a path if present
 fn strip_extended_prefix(path: &str) -> &str {
-    path.strip_prefix("extended://").unwrap_or(path)
+    path.strip_prefix("game://").unwrap_or(path)
 }
 
-/// Try to load a sprite from a full path (supports extended:// prefix)
+/// Try to load a sprite from a full path (supports game:// prefix)
 pub fn try_load_sprite_from_path(
     sprite_path: &str,
     asset_server: &AssetServer,
@@ -327,7 +327,7 @@ pub fn try_load_sprite_from_path(
 ) -> SpriteLoadResult {
     let cwd = std::env::current_dir().unwrap_or_default();
 
-    // Check for extended:// prefix
+    // Check for game:// prefix
     let (relative_path, search_extended_first) = if is_extended_path(sprite_path) {
         (strip_extended_prefix(sprite_path), true)
     } else {
@@ -338,9 +338,9 @@ pub fn try_load_sprite_from_path(
     let mut search_paths: Vec<PathBuf> = Vec::new();
 
     if search_extended_first {
-        // Extended assets first
-        if let Some(extended_root) = config.extended_assets_root() {
-            search_paths.push(cwd.join(&extended_root).join(relative_path));
+        // Game assets first (then mods would be checked, but use game for simplicity)
+        if let Some(game_root) = config.game_assets_root() {
+            search_paths.push(cwd.join(&game_root).join(relative_path));
         }
         // Fall back to base assets
         if let Some(base_root) = config.base_assets_root() {
@@ -351,9 +351,9 @@ pub fn try_load_sprite_from_path(
         if let Some(base_root) = config.base_assets_root() {
             search_paths.push(cwd.join(&base_root).join(relative_path));
         }
-        // Extended assets
-        if let Some(extended_root) = config.extended_assets_root() {
-            search_paths.push(cwd.join(&extended_root).join(relative_path));
+        // Game assets
+        if let Some(game_root) = config.game_assets_root() {
+            search_paths.push(cwd.join(&game_root).join(relative_path));
         }
     };
 
@@ -402,7 +402,7 @@ fn spawn_decorations(
         }
 
         // First element is the sprite path (e.g., "media/aseprite/xhitara_grunt_thrusters.aseprite")
-        // May also use extended:// prefix for extended assets
+        // May also use game:// prefix for extended assets
         let Some(sprite_path) = arr[0].as_str() else {
             continue;
         };
@@ -416,7 +416,7 @@ fn spawn_decorations(
             Vec2::ZERO
         };
 
-        // Try to load the decoration sprite using the full path (supports extended:// prefix)
+        // Try to load the decoration sprite using the full path (supports game:// prefix)
         let load_result = try_load_sprite_from_path(sprite_path, asset_server, config);
         if let Some(handle) = load_result.handle {
             debug!(

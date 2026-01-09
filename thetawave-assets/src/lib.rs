@@ -12,14 +12,16 @@ use std::fmt;
 // Re-export asset types
 pub use data::{
     AssetResolver, BackgroundAssets, ExtendedBackgroundAssets, ExtendedGameAssets,
-    ExtendedMusicAssets, ExtendedUiAssets, GameAssets, MusicAssets, ParticleMaterials, UiAssets,
+    ExtendedMusicAssets, ExtendedUiAssets, GameAssets, MergedBackgroundAssets, MergedGameAssets,
+    MergedMusicAssets, MergedUiAssets, ModBackgroundAssets, ModGameAssets, ModMusicAssets,
+    ModUiAssets, MusicAssets, ParticleMaterials, UiAssets,
 };
 
 pub use bevy_asset_loader::mapped::AssetFileStem;
 
 pub use data::LoadingProgressEvent;
 
-pub use plugin::ThetawaveAssetsPlugin;
+pub use plugin::{AssetMergeSet, ThetawaveAssetsPlugin};
 
 /// Errors that can occur during asset resolution
 #[derive(Debug, Clone)]

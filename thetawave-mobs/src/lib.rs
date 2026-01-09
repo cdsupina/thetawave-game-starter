@@ -15,7 +15,8 @@ pub use spawn::MobDebugSettings;
 
 // Internal imports for this crate
 use asset::{
-    ExtendedMobPatches, ExtendedMobs, MobAssetLoader, MobAssets, MobPatch, MobPatchLoader, RawMob,
+    ExtendedMobPatches, ExtendedMobs, MobAssetLoader, MobAssets, MobPatch, MobPatchLoader,
+    ModMobPatches, ModMobs, RawMob,
 };
 
 use bevy::{
@@ -55,18 +56,24 @@ impl Plugin for ThetawaveMobsPlugin {
             .init_asset::<MobPatch>()
             .init_asset_loader::<MobPatchLoader>();
 
-        // Configure mob asset loading during game loading state
+        // Configure mob asset loading during game loading state (3-tier: base → game → mods)
         app.configure_loading_state(
             LoadingStateConfig::new(AppState::GameLoading)
-                // Load base .mob files
+                // Tier 1: Base .mob files (embedded)
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>("mobs.assets.ron")
                 .load_collection::<MobAssets>()
-                // Load extended .mob and .mobpatch files
+                // Tier 2: Game .mob and .mobpatch files (developer assets)
                 .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
-                    "extended://mobs.assets.ron",
+                    "game://mobs.assets.ron",
                 )
                 .load_collection::<ExtendedMobs>()
-                .load_collection::<ExtendedMobPatches>(),
+                .load_collection::<ExtendedMobPatches>()
+                // Tier 3: Mod .mob and .mobpatch files (user/modder assets)
+                .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
+                    "mods://mobs.assets.ron",
+                )
+                .load_collection::<ModMobs>()
+                .load_collection::<ModMobPatches>(),
         );
 
         #[cfg(feature = "debug")]
@@ -95,18 +102,22 @@ impl Plugin for ThetawaveMobsPlugin {
 /// System to build the MobRegistry from loaded RawMob assets and MobPatches
 fn build_mob_registry_system(
     mut commands: Commands,
-    mob_assets_collection: Res<MobAssets>,
-    extended_mobs: Res<ExtendedMobs>,
-    extended_mob_patches: Res<ExtendedMobPatches>,
+    base_mobs: Res<MobAssets>,
+    game_mobs: Res<ExtendedMobs>,
+    mod_mobs: Res<ModMobs>,
+    game_patches: Res<ExtendedMobPatches>,
+    mod_patches: Res<ModMobPatches>,
     raw_mob_assets: Res<Assets<RawMob>>,
-    mob_patches: Res<Assets<MobPatch>>,
+    patch_assets: Res<Assets<MobPatch>>,
 ) {
     let registry = MobRegistry::build(
-        &mob_assets_collection,
-        &extended_mobs,
-        &extended_mob_patches,
+        &base_mobs,
+        &game_mobs,
+        &mod_mobs,
+        &game_patches,
+        &mod_patches,
         &raw_mob_assets,
-        &mob_patches,
+        &patch_assets,
     );
     commands.insert_resource(registry);
 }

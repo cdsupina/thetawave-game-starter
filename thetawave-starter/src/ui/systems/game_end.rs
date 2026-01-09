@@ -13,19 +13,18 @@ use bevy::{
     },
     utils::default,
 };
-use thetawave_assets::{AssetResolver, ExtendedUiAssets, UiAssets};
+use thetawave_assets::{AssetResolver, MergedUiAssets};
 use thetawave_core::{AppState, Cleanup, GameState};
 
 /// Spawns the game over/victory ui
 pub(in crate::ui) fn spawn_game_end_system(
     mut cmds: Commands,
-    extended_ui_assets: Res<ExtendedUiAssets>,
-    ui_assets: Res<UiAssets>,
+    ui_assets: Res<MergedUiAssets>,
     game_end_result_res: Res<GameEndResultResource>,
 ) {
     // Pre-resolve assets - will panic on failure
     let dank_depths_font =
-        AssetResolver::get_ui_font("Dank-Depths", &extended_ui_assets, &ui_assets)
+        AssetResolver::get_ui_font("Dank-Depths", &ui_assets)
             .expect("Failed to load Dank-Depths font");
 
     cmds.spawn((
@@ -93,7 +92,6 @@ pub(in crate::ui) fn spawn_game_end_system(
             })
             .with_children(|parent| {
                 parent.spawn_menu_button(
-                    &extended_ui_assets,
                     &ui_assets,
                     ButtonAction::EnterAppState(AppState::MainMenuLoading),
                     300.0,

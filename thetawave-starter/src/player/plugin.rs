@@ -8,7 +8,7 @@ use bevy::{
     prelude::OnEnter,
 };
 use bevy_platform::collections::{HashMap, HashSet};
-use thetawave_core::AppState;
+use thetawave_core::GameState;
 
 /// Plugin for managing player entities
 pub(crate) struct ThetawavePlayerPlugin {
@@ -22,6 +22,7 @@ impl Plugin for ThetawavePlayerPlugin {
             extended_abilities: self.extended_abilities.clone(),
             extended_duration_abilities: self.extended_duration_abilities.clone(),
         })
-        .add_systems(OnEnter(AppState::Game), spawn_players_system);
+        // Spawn players on GameState::Playing entry (after assets are merged)
+        .add_systems(OnEnter(GameState::Playing), spawn_players_system);
     }
 }

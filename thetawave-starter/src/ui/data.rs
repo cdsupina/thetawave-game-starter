@@ -11,7 +11,7 @@ use bevy::{
 };
 use bevy_alt_ui_navigation_lite::prelude::Focusable;
 use bevy_aseprite_ultra::prelude::{Animation, AseAnimation};
-use thetawave_assets::{AssetResolver, ExtendedUiAssets, UiAssets};
+use thetawave_assets::{AssetResolver, MergedUiAssets};
 use thetawave_core::{AppState, GameState, MainMenuState, PauseMenuState};
 use thetawave_player::{CharactersResource, InputType, PlayerNum};
 
@@ -261,19 +261,17 @@ impl Default for ButtonActionDelayTimer {
 }
 
 pub(super) trait UiChildBuilderExt {
-    fn spawn_join_prompt(&mut self, extended_ui_assets: &ExtendedUiAssets, ui_assets: &UiAssets);
+    fn spawn_join_prompt(&mut self, ui_assets: &MergedUiAssets);
 
     fn spawn_character_selection(
         &mut self,
-        extended_ui_assets: &ExtendedUiAssets,
-        ui_assets: &UiAssets,
+        ui_assets: &MergedUiAssets,
         player_num: PlayerNum,
     );
 
     fn spawn_menu_button(
         &mut self,
-        extended_ui_assets: &ExtendedUiAssets,
-        ui_assets: &UiAssets,
+        ui_assets: &MergedUiAssets,
         button_action: ButtonAction,
         width: f32,
         is_first: bool,
@@ -283,13 +281,13 @@ pub(super) trait UiChildBuilderExt {
 
 impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
     /// Spawn a join prompt
-    fn spawn_join_prompt(&mut self, extended_ui_assets: &ExtendedUiAssets, ui_assets: &UiAssets) {
+    fn spawn_join_prompt(&mut self, ui_assets: &MergedUiAssets) {
         // Resolve assets outside the closure, panic on failure
         let return_button_sprite =
-            AssetResolver::get_ui_sprite("return_button", extended_ui_assets, ui_assets)
+            AssetResolver::get_ui_sprite("return_button", ui_assets)
                 .expect("Failed to load return_button sprite");
         let xbox_buttons_sprite =
-            AssetResolver::get_ui_sprite("xbox_letter_buttons", extended_ui_assets, ui_assets)
+            AssetResolver::get_ui_sprite("xbox_letter_buttons", ui_assets)
                 .expect("Failed to load xbox_letter_buttons sprite");
 
         self.spawn(Node {
@@ -325,8 +323,7 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
     /// Spawn a character selection ui for the provided character
     fn spawn_character_selection(
         &mut self,
-        extended_ui_assets: &ExtendedUiAssets,
-        ui_assets: &UiAssets,
+        ui_assets: &MergedUiAssets,
         player_num: PlayerNum,
     ) {
         self.spawn(Node {
@@ -354,14 +351,13 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
             // Spawn input prompt for player 1
             if matches!(player_num, PlayerNum::One) {
                 entity_cmds.with_children(|parent| {
-                    parent.spawn_join_prompt(extended_ui_assets, ui_assets);
+                    parent.spawn_join_prompt(ui_assets);
                 });
             }
 
             // Spawn join button
             // Player 1 button is not disabled and is first
             parent.spawn_menu_button(
-                extended_ui_assets,
                 ui_assets,
                 ButtonAction::Join(player_num.clone()),
                 300.0,
@@ -374,8 +370,7 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
     /// Spawns a rectangular stylized menu button
     fn spawn_menu_button(
         &mut self,
-        extended_ui_assets: &ExtendedUiAssets,
-        ui_assets: &UiAssets,
+        ui_assets: &MergedUiAssets,
         button_action: ButtonAction,
         width: f32,
         is_first: bool,
@@ -383,9 +378,9 @@ impl UiChildBuilderExt for ChildSpawnerCommands<'_> {
     ) -> EntityCommands<'_> {
         // Resolve assets outside the closures, panic on failure
         let menu_button_sprite =
-            AssetResolver::get_ui_sprite("menu_button", extended_ui_assets, ui_assets)
+            AssetResolver::get_ui_sprite("menu_button", ui_assets)
                 .expect("Failed to load menu_button sprite");
-        let font = AssetResolver::get_ui_font("Dank-Depths", extended_ui_assets, ui_assets)
+        let font = AssetResolver::get_ui_font("Dank-Depths", ui_assets)
             .expect("Failed to load Dank-Depths font");
 
         let mut entity_cmds = self.spawn_empty();
