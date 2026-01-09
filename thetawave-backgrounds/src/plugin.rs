@@ -4,15 +4,16 @@ use bevy::{
     ecs::schedule::{SystemCondition, common_conditions::not},
     prelude::{IntoScheduleConfigs, OnEnter, in_state},
 };
-use thetawave_core::{AppState, GameState};
+use thetawave_core::{AppState, GameState, MainMenuState};
 
 /// Plugin for managing background elements in Thetawave
 pub struct ThetawaveBackgroundsPlugin;
 
 impl Plugin for ThetawaveBackgroundsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(OnEnter(AppState::MainMenu), spawn_bg_system)
-            .add_systems(OnEnter(AppState::Game), spawn_bg_system)
+        // Spawn background on sub-state entry (after assets are merged)
+        app.add_systems(OnEnter(MainMenuState::Title), spawn_bg_system)
+            .add_systems(OnEnter(GameState::Playing), spawn_bg_system)
             .add_systems(
                 Update,
                 rotate_planet_system

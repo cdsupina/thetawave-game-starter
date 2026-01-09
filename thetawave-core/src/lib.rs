@@ -15,6 +15,7 @@ pub use logging::LoggingSettings;
 pub use plugin::ThetawaveCorePlugin;
 pub use states::{
     AppState, Cleanup, DebugState, GameState, MainMenuState, PauseMenuState, ThetawaveStatesPlugin,
-    ToggleDebugStateEvent, ToggleGameStateEvent,
+    ToggleDebugStateEvent, ToggleGameStateEvent, enter_playing_state_system,
+    enter_title_menu_state_system,
 };
 pub use tags::PlayerTag;

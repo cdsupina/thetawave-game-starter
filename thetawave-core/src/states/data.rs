@@ -36,8 +36,10 @@ pub enum MainMenuState {
 /// States enum for managing gameplay states
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
 pub enum GameState {
-    /// Normal gameplay state
+    /// Initial state when entering Game - assets are being merged
     #[default]
+    Initializing,
+    /// Normal gameplay state
     Playing,
     /// Paused gameplay state
     Paused,

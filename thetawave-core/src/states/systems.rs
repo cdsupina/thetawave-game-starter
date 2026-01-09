@@ -56,6 +56,7 @@ pub(super) fn reset_states_on_game_state_transition_system(
     for event in state_trans_event.read() {
         if let Some(exited_state) = event.exited {
             match exited_state {
+                GameState::Initializing => {}
                 GameState::Playing => {}
                 GameState::End => {}
                 GameState::Paused => {
@@ -66,9 +67,20 @@ pub(super) fn reset_states_on_game_state_transition_system(
     }
 }
 
-/// System to enter the title menu state
-pub(super) fn enter_title_menu_state_system(mut next_state: ResMut<NextState<MainMenuState>>) {
+/// System to enter the title menu state (runs after assets are merged)
+///
+/// This should be registered on `OnEnter(AppState::MainMenu)` with ordering
+/// `.after(AssetMergeSet)` to ensure assets are merged before entering Title.
+pub fn enter_title_menu_state_system(mut next_state: ResMut<NextState<MainMenuState>>) {
     next_state.set(MainMenuState::Title);
+}
+
+/// System to enter the playing state (runs after assets are merged)
+///
+/// This should be registered on `OnEnter(AppState::Game)` with ordering
+/// `.after(AssetMergeSet)` to ensure assets are merged before entering Playing.
+pub fn enter_playing_state_system(mut next_state: ResMut<NextState<GameState>>) {
+    next_state.set(GameState::Playing);
 }
 
 /// Toggle weather the game is paused or playing
@@ -81,6 +93,7 @@ pub(super) fn toggle_game_state_system(
 ) {
     if toggle_game_state_event.read().next().is_some() {
         match **current_state {
+            GameState::Initializing => {}
             GameState::Playing => {
                 next_game_state.set(GameState::Paused);
                 next_pause_state.set(PauseMenuState::Main);

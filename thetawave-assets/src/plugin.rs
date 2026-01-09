@@ -5,10 +5,25 @@
 use bevy::{
     app::{Plugin, Update},
     diagnostic::FrameTimeDiagnosticsPlugin,
-    ecs::schedule::SystemCondition,
+    ecs::schedule::{SystemCondition, SystemSet},
     prelude::{IntoScheduleConfigs, in_state},
     state::state::{OnEnter, OnExit},
 };
+
+/// System set for asset merge operations.
+///
+/// Systems that depend on merged assets (MergedGameAssets, MergedUiAssets, etc.)
+/// should be ordered after this set using `.after(AssetMergeSet)`.
+///
+/// # Example
+/// ```ignore
+/// app.add_systems(
+///     OnEnter(AppState::MainMenu),
+///     my_system.after(AssetMergeSet),
+/// );
+/// ```
+#[derive(SystemSet, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AssetMergeSet;
 use bevy_asset_loader::{
     loading_state::{
         LoadingState, LoadingStateAppExt, LoadingStateSet, config::ConfigureLoadingState,
@@ -105,13 +120,18 @@ impl Plugin for ThetawaveAssetsPlugin {
             setup_particle_materials_system,
         )
         // Merge assets after loading completes (before logging)
+        // Systems that need merged assets should use .after(AssetMergeSet)
         .add_systems(
             OnEnter(AppState::MainMenu),
-            (merge_main_menu_assets_system, log_main_menu_assets_system).chain(),
+            (merge_main_menu_assets_system, log_main_menu_assets_system)
+                .chain()
+                .in_set(AssetMergeSet),
         )
         .add_systems(
             OnEnter(AppState::Game),
-            (merge_game_assets_system, log_game_assets_system).chain(),
+            (merge_game_assets_system, log_game_assets_system)
+                .chain()
+                .in_set(AssetMergeSet),
         )
         .add_systems(
             OnExit(AppState::Game),
